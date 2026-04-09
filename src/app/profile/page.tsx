@@ -163,16 +163,7 @@ export default function ProfilePage() {
     return (
         <div className="min-h-screen bg-[var(--color-bg-page)] p-4 sm:p-8 transition-colors duration-200 font-sans text-[var(--color-text-body)]">
             <div className="mx-auto max-w-5xl space-y-8">
-                {/* Header */}
-                <div className="flex items-center space-x-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                        <UserCircleIcon className="h-10 w-10 text-red-600 dark:text-red-400" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-[var(--color-text-title)]">Profile Settings</h1>
-                        <p className="text-[var(--color-text-muted)]">Manage your personal information and security</p>
-                    </div>
-                </div>
+                {/* Profile Header Removed (Moved to Layout Header) */}
 
                 {/* Message Toast (Global) */}
                 {message && (

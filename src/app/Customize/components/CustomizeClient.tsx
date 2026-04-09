@@ -215,21 +215,8 @@ const CustomizeClient = () => {
                 {!orgId && !loadingChart && (
                     <div className="absolute inset-0 z-20 flex flex-col p-8 overflow-y-auto">
 
-                        {/* BREADCRUMB / TITLE */}
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-2 text-xl font-semibold text-slate-700">
-                                {explorerPath === 'root' ? (
-                                    <span>Organization Charts</span>
-                                ) : (
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => setExplorerPath('root')} className="hover:underline text-slate-500">
-                                            Organization Charts
-                                        </button>
-                                        <span className="text-slate-400">/</span>
-                                        <span>{explorerPath === 'personal' ? 'Personal' : 'Public'}</span>
-                                    </div>
-                                )}
-                            </div>
+                        {/* ACTION BUTTONS (Title moved to header) */}
+                        <div className="flex items-center justify-end mb-6">
 
                             {/* New Item Button - Visible in Root (defaults to personal) or Personal folder */}
                             {(explorerPath === 'root' || explorerPath === 'personal') && (

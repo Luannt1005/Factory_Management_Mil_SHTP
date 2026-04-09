@@ -27,19 +27,19 @@ export async function POST(req: Request) {
         const buffer = new Uint8Array(arrayBuffer);
 
         // Ensure the directory exists
-        const uploadDir = path.join(process.cwd(), "public", "uploads");
+        const uploadDir = "D:\\Images emp\\uploads";
         try {
             await fs.access(uploadDir);
         } catch {
             await fs.mkdir(uploadDir, { recursive: true });
         }
 
-        // Save file locally to public/uploads
+        // Save file locally to external D:\Images emp\uploads
         const filePath = path.join(uploadDir, `${filename}.webp`);
         await fs.writeFile(filePath, buffer);
 
         // Calculate public URL
-        const publicUrl = `/uploads/${filename}.webp`;
+        const publicUrl = `/api/uploads/${filename}.webp`;
 
         return NextResponse.json({
             success: true,

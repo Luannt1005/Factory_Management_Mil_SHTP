@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function downloadImages() {
     const bucket = 'Mil VN Images';
     const folder = 'uploads';
-    const outDir = path.join(process.cwd(), 'public', folder);
+    const outDir = "D:\\Images emp\\uploads";
 
     if (!fs.existsSync(outDir)) {
         fs.mkdirSync(outDir, { recursive: true });

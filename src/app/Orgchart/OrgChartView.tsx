@@ -7,6 +7,7 @@ import LoadingScreen from "@/components/loading-screen";
 import { useFilteredOrgData } from "@/hooks/useOrgData";
 import styles from "./OrgChart.module.css";
 import NodeDetailsModal from "./NodeDetailsModal";
+import Link from "next/link";
 
 interface OrgChartProps {
   selectedGroup?: string;
@@ -28,6 +29,7 @@ interface OrgChartNode {
   location: string | null;
   description: string;
   joiningDate: string;
+  lineManager: string | null;
 }
 
 export default function OrgChartView({ selectedGroup, selectedType }: OrgChartProps) {
@@ -137,7 +139,8 @@ export default function OrgChartView({ selectedGroup, selectedType }: OrgChartPr
       type: item.type || "",
       location: item.location || null,
       description: item.description || "",
-      joiningDate: item.joiningDate || item.joining_date || ""
+      joiningDate: item.joiningDate || item.joining_date || "",
+      lineManager: item.lineManager || item.line_manager || ""
     } as OrgChartNode));
   }, [rawNodes, selectedType]);
 
@@ -250,10 +253,10 @@ export default function OrgChartView({ selectedGroup, selectedType }: OrgChartPr
     // Create new chart only on first mount
     console.log("🆕 Creating new OrgChart instance...");
     const chart = new OrgChart(el, {
-      mouseScrool: OrgChart.action.zoom,
+      // mouseScrool: OrgChart.action.zoom,
       collapse: { level: 1, allChildren: true },
       scaleInitial: 1,
-      enableSearch: true,
+      enableSearch: false,
       // enableAI: false,
       enableDragDrop: false,
       layout: OrgChart.normal,
@@ -290,6 +293,13 @@ export default function OrgChartView({ selectedGroup, selectedType }: OrgChartPr
           template: "big_hc_open",
         },
       },
+    });
+
+    chart.on("init", function (sender) {
+      if (chartNodes && chartNodes.length > 0) {
+        const rootNode = chartNodes.find((n: any) => !n.pid && !n.stpid) || chartNodes[0];
+        sender.center(rootNode.id);
+      }
     });
 
     // Custom click handler
@@ -330,7 +340,8 @@ export default function OrgChartView({ selectedGroup, selectedType }: OrgChartPr
             type: node.type ?? "",
             location: node.location ?? null,
             description: node.description ?? "",
-            joiningDate: node.joiningDate ?? ""
+            joiningDate: node.joiningDate ?? "",
+            lineManager: node.lineManager ?? ""
           };
 
           const response = await fetch("/api/orgchart", {
@@ -386,7 +397,8 @@ export default function OrgChartView({ selectedGroup, selectedType }: OrgChartPr
               type: draggedNodeData.type ?? "",
               location: draggedNodeData.location ?? null,
               description: draggedNodeData.description ?? "",
-              joiningDate: draggedNodeData.joiningDate ?? ""
+              joiningDate: draggedNodeData.joiningDate ?? "",
+              lineManager: draggedNodeData.lineManager ?? ""
             };
 
             const response = await fetch("/api/orgchart", {

@@ -125,7 +125,7 @@ const formatDate = (value: any): string => {
   }
 };
 
-const IMAGE_BASE_URL = "/uploads/";
+const IMAGE_BASE_URL = "/api/uploads/";
 
 const getStatusColor = (value: string, type: string) => {
   const v = String(value).toLowerCase().trim();
@@ -708,11 +708,9 @@ const SheetManager = ({
 
   return (
     <div className={styles.container}>
-      {/* Header */}
-      <div className={styles.header}>
-        <div className="flex items-center gap-4">
-          <ShieldCheckIcon className="w-8 h-8 text-[#DB011C]" />
-          <h1>Milwaukee Tool HR Registry</h1>
+      {/* Header Buttons (Title moved to layout header) */}
+      <div className="flex items-center justify-end gap-3 mb-4">
+        <div className="flex-1 flex items-center gap-2">
           {isValidating && (
             <ArrowPathIcon className="w-5 h-5 text-gray-400 animate-spin" />
           )}

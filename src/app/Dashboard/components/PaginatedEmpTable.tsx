@@ -74,7 +74,7 @@ const PaginatedEmployeeTable: React.FC<PaginatedEmployeeTableProps> = ({
             experience: calculateExperience(node['Joining\r\n Date'] || node['Joining Date'] || ''),
             fullName: node['FullName '] || node['FullName'] || node.name || 'Unknown',
             dlIdlStaff: node['DL/IDL/Staff'] || '',
-            imageUrl: `https://raw.githubusercontent.com/Luannt1005/test-images/main/${node['Emp ID'] || node.id}.jpg`
+            imageUrl: node.image || node.img || `/api/uploads/${node['Emp ID'] || node.id}.webp`
         }));
     }, [nodes]);
 

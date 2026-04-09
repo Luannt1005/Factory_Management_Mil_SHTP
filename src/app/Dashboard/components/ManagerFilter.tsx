@@ -48,7 +48,7 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
     }, []);
 
     // Helper to get avatar URL
-    const getAvatarUrl = (id: string | number) => `https://raw.githubusercontent.com/Luannt1005/test-images/main/${String(id).trim()}.jpg`;
+    const getAvatarUrl = (node: any) => node.image || node.img || `/api/uploads/${String(node.id).trim()}.webp`;
 
     // Separate suggestions for outside render
     const suggestedManagers = useMemo(() => {
@@ -68,7 +68,7 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
                     {selectedManager && (
                         <div className="absolute left-1.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
                             <img
-                                src={getAvatarUrl(selectedManager.id)}
+                                src={getAvatarUrl(selectedManager)}
                                 alt=""
                                 className="w-6 h-6 rounded-full object-cover border border-purple-200"
                                 onError={(e) => {
@@ -133,7 +133,7 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
                                 }}
                             >
                                 <img
-                                    src={getAvatarUrl(node.id)}
+                                    src={getAvatarUrl(node)}
                                     alt={node.name}
                                     className="w-6 h-6 rounded-full object-cover bg-purple-100 shrink-0"
                                     onError={(e) => {
@@ -162,7 +162,7 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
                             title={manager.title}
                         >
                             <img
-                                src={getAvatarUrl(manager.id)}
+                                src={getAvatarUrl(manager)}
                                 alt={manager.name}
                                 className="w-6 h-6 rounded-full object-cover border border-gray-100 group-hover:border-purple-200"
                                 onError={(e) => {

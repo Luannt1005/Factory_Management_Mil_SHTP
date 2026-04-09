@@ -74,7 +74,7 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={chartData}
-                        margin={{ top: 5, right: 10, left: 10, bottom: 60 }} // Increased bottom margin
+                        margin={{ top: 25, right: 10, left: 10, bottom: 60 }} // Increased top/bottom margin
                     >
                         <defs>
                             <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
@@ -82,6 +82,7 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
                                 <stop offset="100%" stopColor="#6366F1" stopOpacity={1} />
                             </linearGradient>
                         </defs>
+                        <YAxis hide domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.15) + 2]} />
                         <XAxis
                             dataKey="name"
                             angle={-35}
@@ -120,8 +121,9 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
                             <LabelList
                                 dataKey="count"
                                 position="top"
-                                offset={8}
-                                style={{ fill: 'var(--color-text-title)', fontWeight: 800, fontSize: 11 }}
+                                offset={10}
+                                style={{ fill: 'var(--color-text-title)', fontWeight: 800, fontSize: 12 }}
+                                formatter={(val: any) => val > 0 ? val : ''}
                             />
                         </Bar>
                     </BarChart>

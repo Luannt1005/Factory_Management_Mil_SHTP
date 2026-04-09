@@ -21,21 +21,21 @@ export async function POST(req: Request) {
         const buffer = new Uint8Array(arrayBuffer);
 
         // Ensure the directory exists
-        const uploadDir = path.join(process.cwd(), "public", "uploads");
+        const uploadDir = "D:\\Images emp\\uploads";
         try {
             await fs.access(uploadDir);
         } catch {
             await fs.mkdir(uploadDir, { recursive: true });
         }
 
-        // Save file locally to public/uploads
+        // Save file locally to external D:\Images emp\uploads
         const filePath = path.join(uploadDir, filename);
         await fs.writeFile(filePath, buffer);
 
         return NextResponse.json({
             success: true,
             message: "Uploaded successfully",
-            path: `/uploads/${filename}`
+            path: `/api/uploads/${filename}`
         });
 
     } catch (error: any) {

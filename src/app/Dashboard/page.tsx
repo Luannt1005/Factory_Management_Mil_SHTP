@@ -173,17 +173,8 @@ export default function DashboardPage() {
         <DashboardContainer className="pt-0">
 
             {/* ===== HEADER BAR (40px) ===== */}
-            <header className="h-20 shrink-0 layout-header px-5 flex items-center justify-between">
-                {/* Left: Title */}
-
-                <div>
-                    <h1 className="text-[22px] font-bold text-title leading-tight">
-                        HR Dashboard
-                    </h1>
-                    <p className="text-[11px] text-muted mt-0.5">
-                        Organization metrics overview
-                    </p>
-                </div>
+            <header className="h-10 shrink-0 layout-header px-5 flex items-center justify-end">
+                {/* Left: Title Removed (Moved to Layout Header) */}
 
                 {/* Right: Filters & Actions */}
                 <div className="flex items-center gap-4">

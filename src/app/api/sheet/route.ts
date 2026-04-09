@@ -9,7 +9,7 @@ import { isAuthenticated, unauthorizedResponse, getCurrentUser } from "@/lib/aut
 const EMPLOYEES_CACHE_TTL = 15 * 60 * 1000;
 
 // Columns to select for listing - all employee data columns
-const LIST_COLUMNS = 'id, emp_id, full_name, job_title, dept, bu, bu_org_3, dl_idl_staff, location, employee_type, line_manager, joining_date, last_working_day, line_manager_status, pending_line_manager, is_direct, requester';
+const LIST_COLUMNS = 'id, emp_id, full_name, job_title, dept, bu, bu_org_3, dl_idl_staff, location, employee_type, line_manager, joining_date, last_working_day, line_manager_status, pending_line_manager, is_direct, requester, status';
 
 // Whitelist of allowed filter params -> database columns
 const FILTER_MAPPING: { [key: string]: string } = {
@@ -82,7 +82,7 @@ export async function GET(req: Request) {
       });
 
       const hasFilters = Object.keys(filters).length > 0;
-      let whereClause = "1=1";
+      let whereClause = "(status = 'Active' OR status IS NULL)";
       const queryValues: any[] = [];
 
       Object.entries(filters).forEach(([key, value]) => {
@@ -133,7 +133,8 @@ export async function GET(req: Request) {
         "Last Working\r\nDay": emp.last_working_day,
         lineManagerStatus: emp.line_manager_status,
         pendingLineManager: emp.pending_line_manager,
-        requester: emp.requester
+        requester: emp.requester,
+        Status: emp.status
       }));
 
       const total = totalCount || 0;
@@ -165,7 +166,7 @@ export async function GET(req: Request) {
       async () => {
         console.log("📡 Fetching all employees for dashboard...");
 
-        const result = await pool.query(`SELECT ${LIST_COLUMNS} FROM employees ORDER BY full_name ASC`);
+        const result = await pool.query(`SELECT ${LIST_COLUMNS} FROM employees WHERE status = 'Active' OR status IS NULL ORDER BY full_name ASC`);
         const employees = result.rows;
 
         // Transform
@@ -186,7 +187,8 @@ export async function GET(req: Request) {
           "Last Working\r\nDay": emp.last_working_day,
           lineManagerStatus: emp.line_manager_status,
           pendingLineManager: emp.pending_line_manager,
-          requester: emp.requester
+          requester: emp.requester,
+          Status: emp.status
         }));
 
         console.log(`✅ Loaded ${transformedEmployees.length} employees`);

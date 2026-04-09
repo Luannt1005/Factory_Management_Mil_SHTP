@@ -31,8 +31,8 @@ graph TD
             Transform["⚙️ Data Transformer"]
         end
         
-        subgraph "Local Storage"
-            LocalFiles[("📁 public/uploads<br/>(Local Images)")]
+        subgraph "External Storage"
+            LocalFiles[("📁 D:\Images emp\uploads<br/>(External Images)")]
         end
     end
 
@@ -258,7 +258,7 @@ sequenceDiagram
     actor User
     participant UI as Upload Form
     participant API as /api/upload-image
-    participant FS as Local File System (public/uploads)
+    participant FS as Local File System (D:\Images emp\uploads)
 
     User->>UI: Select Image File
     UI->>API: POST /api/upload-image (FormData)
@@ -270,7 +270,7 @@ sequenceDiagram
     alt Invalid File
         API-->>UI: 400 Bad Request
     else Valid File
-        API->>FS: fs.writeFile('public/uploads/ID.webp')
+        API->>FS: fs.writeFile('D:\Images emp\uploads\ID.webp')
         FS-->>API: File Written
         
         API-->>UI: 200 OK {url: '/uploads/ID.webp'}
@@ -278,7 +278,7 @@ sequenceDiagram
         UI-->>User: Show Uploaded Image
     end
     
-    Note over FS: Images served directly<br/>by Next.js from public/
+    Note over FS: Images served via Nginx proxy<br/>from external D:\ drive
 ```
 
 ## 3. Cache Strategy & Invalidation
@@ -435,7 +435,7 @@ sequenceDiagram
 | **Database** | PostgreSQL (Local) | Primary data storage (employees, users, departments) |
 | **ORM/Client** | `pg` (node-postgres) | Direct SQL queries to PostgreSQL |
 | **Authentication** | Custom JWT + HttpOnly Cookies | Session management |
-| **Storage** | Local File System | Image storage in `public/uploads` |
+| **Storage** | Local File System | Image storage in `D:\Images emp\uploads` |
 | **Visualization** | OrgChart.js | Interactive org chart rendering |
 | **Excel Processing** | `xlsx` library | Import/export employee data |
 | **Cache** | In-memory Map | App-level caching (15min TTL) |

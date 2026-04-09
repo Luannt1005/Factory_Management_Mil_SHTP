@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import { hashPassword } from "@/lib/password";
 import "./view_account.css";
 
@@ -95,21 +94,6 @@ export default function ViewAccountPage() {
 
         try {
             if (modalMode === "add") {
-                // Check if username already exists
-                const { data: existing, error: checkError } = await supabase
-                    .from('users')
-                    .select('username')
-                    .eq('username', formData.username)
-                    .limit(1);
-
-                if (checkError) throw checkError;
-
-                if (existing && existing.length > 0) {
-                    setError("Tên đăng nhập đã tồn tại trong hệ thống.");
-                    setIsSaving(false);
-                    return;
-                }
-
                 if (formData.password.length < 6) {
                     setError("Mật khẩu phải có ít nhất 6 ký tự.");
                     setIsSaving(false);
@@ -119,21 +103,23 @@ export default function ViewAccountPage() {
                 // Hash password
                 const hashedPassword = await hashPassword(formData.password);
 
-                // Insert to Supabase
-                const { data: newUser, error: insertError } = await supabase
-                    .from('users')
-                    .insert({
+                const res = await fetch("/api/users", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
                         username: formData.username,
                         full_name: formData.full_name,
                         password: hashedPassword,
                         role: formData.role
                     })
-                    .select()
-                    .single();
+                });
 
-                if (insertError) throw insertError;
+                const result = await res.json();
+                if (!result.success) {
+                    throw new Error(result.message || "Không thể tạo tài khoản");
+                }
 
-                // Update local state
+                const newUser = result.data;
                 const addedUser: UserAccount = {
                     id: newUser.id,
                     username: newUser.username,
@@ -144,11 +130,11 @@ export default function ViewAccountPage() {
 
             } else if (modalMode === "edit" && currentUserId) {
                 const updateData: any = {
+                    id: currentUserId,
                     full_name: formData.full_name,
                     role: formData.role
                 };
 
-                // Only update password if provided
                 if (formData.password.trim() !== "") {
                     if (formData.password.length < 6) {
                         setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
@@ -158,14 +144,17 @@ export default function ViewAccountPage() {
                     updateData.password = await hashPassword(formData.password);
                 }
 
-                const { error: updateError } = await supabase
-                    .from('users')
-                    .update(updateData)
-                    .eq('id', currentUserId);
+                const res = await fetch("/api/users", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(updateData)
+                });
 
-                if (updateError) throw updateError;
+                const result = await res.json();
+                if (!result.success) {
+                    throw new Error(result.message || "Không thể cập nhật tài khoản");
+                }
 
-                // Update local state
                 setUsers(users.map(u =>
                     u.id === currentUserId
                         ? { ...u, full_name: formData.full_name, role: formData.role }
@@ -188,17 +177,17 @@ export default function ViewAccountPage() {
         }
 
         try {
-            const { error } = await supabase
-                .from('users')
-                .delete()
-                .eq('id', user.id);
+            const res = await fetch(`/api/users?id=${user.id}`, {
+                method: "DELETE"
+            });
+            const result = await res.json();
 
-            if (error) throw error;
+            if (!result.success) throw new Error(result.message || "Lỗi khi xóa tài khoản");
 
             setUsers(users.filter(u => u.id !== user.id));
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error deleting user:", err);
-            alert("Lỗi khi xóa tài khoản.");
+            alert(err.message || "Lỗi khi xóa tài khoản.");
         }
     };
 
@@ -370,7 +359,8 @@ export default function ViewAccountPage() {
                                     value={formData.role}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                 >
-                                    <option value="user">User - Chỉ xem</option>
+                                    <option value="user">User - Đọc/Ghi</option>
+                                    <option value="viewer">Viewer - Chỉ xem (Biểu đồ)</option>
                                     <option value="admin">Admin - Toàn quyền</option>
                                 </select>
                             </div>

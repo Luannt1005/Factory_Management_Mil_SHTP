@@ -1,0 +1,51 @@
+   ▲ Next.js 15.5.9
+   - Local:        http://localhost:3000
+   - Network:      http://0.0.0.0:3000
+
+ ✓ Starting...
+ ✓ Ready in 655ms
+[DB Config] Server: 10.147.36.55, Port: 5432, User: ***, DB: Orgchart_TTI_Mil
+[Visitor DB Config] Server: 10.147.36.55, Port: 5432, User: ***, DB: Visitor_database
+   ▲ Next.js 15.5.9
+   - Local:        http://localhost:3000
+   - Network:      http://0.0.0.0:3000
+
+ ✓ Starting...
+ ✓ Ready in 641ms
+[DB Config] Server: 10.147.36.55, Port: 5432, User: ***, DB: Orgchart_TTI_Mil
+[Visitor DB Config] Server: 10.147.36.55, Port: 5432, User: ***, DB: Visitor_database
+[Cache] 📡 MISS: orgchart_direct_all
+📡 [Cache MISS] Fetching employees from Azure SQL (dept: all)...
+✅ Transformed 1567 employees into 1783 nodes
+[Cache] 📡 MISS: employees_all
+📡 Fetching all employees for dashboard...
+✅ Loaded 1567 employees
+📄 Page 1: 10 records
+[Cache] ✅ HIT: employees_all
+[Cache] ✅ HIT: employees_all
+[Cache] ✅ HIT: orgchart_direct_all
+[Cache] ✅ HIT: employees_all
+📄 Page 1: 10 records
+[Cache] ✅ HIT: employees_all
+📄 Page 1: 20 records
+📄 Page 2: 20 records
+📄 Page 1: 0 records
+[Cache] 📡 MISS: orgchart_direct_all
+📡 [Cache MISS] Fetching employees from Azure SQL (dept: all)...
+✅ Transformed 1567 employees into 1783 nodes
+[Cache] ✅ HIT: orgchart_direct_all
+[Cache] 📡 MISS: employees_all
+📡 Fetching all employees for dashboard...
+✅ Loaded 1567 employees
+📄 Page 1: 10 records
+[Cache] ✅ HIT: employees_all
+📄 Page 1: 20 records
+📄 Page 2: 20 records
+📄 Page 1: 0 records
+📄 Page 1: 0 records
+📄 Page 1: 0 records
+📄 Page 1: 20 records
+📄 Page 1: 0 records
+[Cache] 📡 MISS: orgchart_direct_all
+📡 [Cache MISS] Fetching employees from Azure SQL (dept: all)...
+✅ Transformed 1567 employees into 1783 nodes

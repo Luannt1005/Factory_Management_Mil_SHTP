@@ -48,7 +48,7 @@ export default function LoginPage() {
 
       // Redirect after animation
       setTimeout(() => {
-        router.replace("/Orgchart");
+        router.replace("/");
       }, 2000);
 
     } catch (err: any) {

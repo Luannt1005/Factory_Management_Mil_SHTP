@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+build
+dist
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+README.md
+ecosystem.config.js
+.pm2
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.env.local

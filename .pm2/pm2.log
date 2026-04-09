@@ -1,0 +1,38 @@
+2026-04-06T13:43:03: PM2 log: ===============================================================================
+2026-04-06T13:43:03: PM2 log: --- New PM2 Daemon started ----------------------------------------------------
+2026-04-06T13:43:03: PM2 log: Time                 : Mon Apr 06 2026 13:43:03 GMT+0700 (Indochina Time)
+2026-04-06T13:43:03: PM2 log: PM2 version          : 6.0.14
+2026-04-06T13:43:03: PM2 log: Node.js version      : 24.12.0
+2026-04-06T13:43:03: PM2 log: Current arch         : x64
+2026-04-06T13:43:03: PM2 log: PM2 home             : c:\Users\idmcauto.svc\Desktop\Orgchart_TTI_onprem\.pm2
+2026-04-06T13:43:03: PM2 log: PM2 PID file         : c:\Users\idmcauto.svc\Desktop\Orgchart_TTI_onprem\.pm2\pm2.pid
+2026-04-06T13:43:03: PM2 log: RPC socket file      : \\.\pipe\rpc.sock
+2026-04-06T13:43:03: PM2 log: BUS socket file      : \\.\pipe\pub.sock
+2026-04-06T13:43:03: PM2 log: Application log path : c:\Users\idmcauto.svc\Desktop\Orgchart_TTI_onprem\.pm2\logs
+2026-04-06T13:43:03: PM2 log: Worker Interval      : 30000
+2026-04-06T13:43:03: PM2 log: Process dump file    : c:\Users\idmcauto.svc\Desktop\Orgchart_TTI_onprem\.pm2\dump.pm2
+2026-04-06T13:43:03: PM2 log: Concurrent actions   : 2
+2026-04-06T13:43:03: PM2 log: SIGTERM timeout      : 1600
+2026-04-06T13:43:03: PM2 log: Runtime Binary       : C:\Program Files\nodejs\node.exe
+2026-04-06T13:43:03: PM2 log: ===============================================================================
+2026-04-06T13:43:04: PM2 log: App [orgchart:0] starting in -fork mode-
+2026-04-06T13:43:04: PM2 log: App [orgchart:0] online
+2026-04-06T14:30:55: PM2 log: ===============================================================================
+2026-04-06T14:30:55: PM2 log: --- New PM2 Daemon started ----------------------------------------------------
+2026-04-06T14:30:55: PM2 log: Time                 : Mon Apr 06 2026 14:30:55 GMT+0700 (Indochina Time)
+2026-04-06T14:30:55: PM2 log: PM2 version          : 6.0.14
+2026-04-06T14:30:55: PM2 log: Node.js version      : 24.12.0
+2026-04-06T14:30:55: PM2 log: Current arch         : x64
+2026-04-06T14:30:55: PM2 log: PM2 home             : c:\Users\idmcauto.svc\Desktop\Orgchart_TTI_onprem\.pm2
+2026-04-06T14:30:55: PM2 log: PM2 PID file         : c:\Users\idmcauto.svc\Desktop\Orgchart_TTI_onprem\.pm2\pm2.pid
+2026-04-06T14:30:55: PM2 log: RPC socket file      : \\.\pipe\rpc.sock
+2026-04-06T14:30:55: PM2 log: BUS socket file      : \\.\pipe\pub.sock
+2026-04-06T14:30:55: PM2 log: Application log path : c:\Users\idmcauto.svc\Desktop\Orgchart_TTI_onprem\.pm2\logs
+2026-04-06T14:30:55: PM2 log: Worker Interval      : 30000
+2026-04-06T14:30:55: PM2 log: Process dump file    : c:\Users\idmcauto.svc\Desktop\Orgchart_TTI_onprem\.pm2\dump.pm2
+2026-04-06T14:30:55: PM2 log: Concurrent actions   : 2
+2026-04-06T14:30:55: PM2 log: SIGTERM timeout      : 1600
+2026-04-06T14:30:55: PM2 log: Runtime Binary       : C:\Program Files\nodejs\node.exe
+2026-04-06T14:30:55: PM2 log: ===============================================================================
+2026-04-06T14:30:55: PM2 log: App [orgchart:0] starting in -fork mode-
+2026-04-06T14:30:55: PM2 log: App [orgchart:0] online

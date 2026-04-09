@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import { hashPassword } from "@/lib/password";
 import {
     MagnifyingGlassIcon,
@@ -100,21 +99,6 @@ export default function UserManagement() {
 
         try {
             if (modalMode === "add") {
-                // Check if username exists
-                const { data: existing, error: checkError } = await supabase
-                    .from('users')
-                    .select('username')
-                    .eq('username', formData.username)
-                    .limit(1);
-
-                if (checkError) throw checkError;
-
-                if (existing && existing.length > 0) {
-                    setError("Username already exists");
-                    setIsSaving(false);
-                    return;
-                }
-
                 if (formData.password.length < 6) {
                     setError("Password must be at least 6 chars");
                     setIsSaving(false);
@@ -123,19 +107,23 @@ export default function UserManagement() {
 
                 const hashedPassword = await hashPassword(formData.password);
 
-                const { data: newUser, error: insertError } = await supabase
-                    .from('users')
-                    .insert({
+                const res = await fetch("/api/users", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
                         username: formData.username,
                         full_name: formData.full_name,
                         password: hashedPassword,
                         role: formData.role
                     })
-                    .select()
-                    .single();
+                });
 
-                if (insertError) throw insertError;
+                const result = await res.json();
+                if (!result.success) {
+                    throw new Error(result.message || "Failed to add user");
+                }
 
+                const newUser = result.data;
                 const addedUser: UserAccount = {
                     id: newUser.id,
                     username: newUser.username,
@@ -146,6 +134,7 @@ export default function UserManagement() {
 
             } else if (modalMode === "edit" && currentUserId) {
                 const updateData: any = {
+                    id: currentUserId,
                     full_name: formData.full_name,
                     role: formData.role
                 };
@@ -159,12 +148,16 @@ export default function UserManagement() {
                     updateData.password = await hashPassword(formData.password);
                 }
 
-                const { error: updateError } = await supabase
-                    .from('users')
-                    .update(updateData)
-                    .eq('id', currentUserId);
+                const res = await fetch("/api/users", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(updateData)
+                });
 
-                if (updateError) throw updateError;
+                const result = await res.json();
+                if (!result.success) {
+                    throw new Error(result.message || "Failed to update user");
+                }
 
                 setUsers(users.map(u =>
                     u.id === currentUserId
@@ -184,16 +177,16 @@ export default function UserManagement() {
         if (!confirm(`Are you sure you want to delete ${user.full_name}?`)) return;
 
         try {
-            const { error } = await supabase
-                .from('users')
-                .delete()
-                .eq('id', user.id);
+            const res = await fetch(`/api/users?id=${user.id}`, {
+                method: "DELETE"
+            });
+            const result = await res.json();
 
-            if (error) throw error;
+            if (!result.success) throw new Error(result.message || "Delete failed");
 
             setUsers(users.filter(u => u.id !== user.id));
-        } catch (err) {
-            alert("Delete failed");
+        } catch (err: any) {
+            alert(err.message || "Delete failed");
         }
     };
 
@@ -264,7 +257,9 @@ export default function UserManagement() {
                                         <td className="py-3 px-4">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium capitalize border ${user.role === 'admin'
                                                 ? 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
-                                                : 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
+                                                : user.role === 'viewer'
+                                                    ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
+                                                    : 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
                                                 }`}>
                                                 {user.role || 'user'}
                                             </span>
@@ -367,8 +362,9 @@ export default function UserManagement() {
                                     value={formData.role}
                                     onChange={e => setFormData({ ...formData, role: e.target.value })}
                                 >
-                                    <option value="user">User (Read Only)</option>
-                                    <option value="admin">Admin (Full Access)</option>
+                                    <option value="user">User - Read/Write</option>
+                                    <option value="viewer">Viewer - Read Only (Charts)</option>
+                                    <option value="admin">Admin - Full Access</option>
                                 </select>
                             </div>
 

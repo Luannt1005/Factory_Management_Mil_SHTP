@@ -12,7 +12,7 @@ export interface Database {
                     username: string;
                     password: string;
                     full_name: string;
-                    role: 'user' | 'admin';
+                    role: 'user' | 'admin' | 'viewer';
                     created_at: string;
                     updated_at: string;
                 };
@@ -21,7 +21,7 @@ export interface Database {
                     username: string;
                     password: string;
                     full_name: string;
-                    role?: 'user' | 'admin';
+                    role?: 'user' | 'admin' | 'viewer';
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -30,7 +30,7 @@ export interface Database {
                     username?: string;
                     password?: string;
                     full_name?: string;
-                    role?: 'user' | 'admin';
+                    role?: 'user' | 'admin' | 'viewer';
                     updated_at?: string;
                 };
             };

@@ -204,6 +204,11 @@ export default function NodeDetailsModal({
                                         </div>
 
                                         <div className="col-span-2 sm:col-span-1">
+                                            <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Line Manager</p>
+                                            <p className="font-medium text-[var(--color-text-body)]">{nodeData.lineManager || "-"}</p>
+                                        </div>
+
+                                        <div className="col-span-2 sm:col-span-1">
                                             <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Joining Date</p>
                                             <p className="font-medium text-[var(--color-text-body)]">{nodeData.joiningDate || "-"}</p>
                                         </div>

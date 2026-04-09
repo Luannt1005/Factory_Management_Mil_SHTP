@@ -5,7 +5,7 @@ import { isAuthenticated, unauthorizedResponse } from "@/lib/auth-server";
 
 // Cache TTL: 15 minutes for orgchart data
 const ORGCHART_CACHE_TTL = 15 * 60 * 1000;
-const IMAGE_BASE_URL = "/uploads/";
+const IMAGE_BASE_URL = "/api/uploads/";
 
 interface Employee {
   id: string;
@@ -104,7 +104,7 @@ export async function GET(req: Request) {
 
         const pool = await getDbConnection();
         const queryValues: any[] = [];
-        let queryStr = "SELECT * FROM employees WHERE emp_id IS NOT NULL AND emp_id <> ''";
+        let queryStr = "SELECT * FROM employees WHERE emp_id IS NOT NULL AND emp_id <> '' AND (status = 'Active' OR status IS NULL)";
 
         if (dept && dept !== "all") {
           queryStr += " AND dept = $1";
@@ -193,7 +193,8 @@ export async function GET(req: Request) {
             type: emp.dl_idl_staff || null,
             location: emp.location || null,
             description: emp.employee_type || "",
-            joining_date: joiningDate
+            joining_date: joiningDate,
+            line_manager: emp.line_manager
           });
         });
 

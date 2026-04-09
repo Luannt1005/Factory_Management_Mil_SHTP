@@ -71,10 +71,59 @@ export default function Header() {
         return null;
     }
 
+    // Define page titles and subtitles
+    const pageTitles: Record<string, { title: string; subtitle?: string }> = {
+        '/Dashboard': {
+            title: 'HR Dashboard',
+            subtitle: 'Organization metrics overview'
+        },
+        '/Orgchart': {
+            title: 'Organization Charts',
+            subtitle: 'Visual representation of hierarchy'
+        },
+        '/Customize': {
+            title: 'Organization Charts',
+            subtitle: 'Edit and manage organization profiles'
+        },
+        '/SheetManager': {
+            title: 'Headcount Management',
+            subtitle: 'Track and manage staff details'
+        },
+        '/Headcount_open': {
+            title: 'Headcount Open',
+            subtitle: 'View open positions'
+        },
+        '/Import_HR_Data': {
+            title: 'Import HR Data',
+            subtitle: 'Upload and sync employee information'
+        },
+        '/Admin': {
+            title: 'Admin Console',
+            subtitle: 'System configuration and user management'
+        },
+        '/profile': {
+            title: 'Profile Setting',
+            subtitle: 'Manage your account information'
+        }
+    };
+
+    const currentPage = pageTitles[pathname] || { title: '' };
+
     return (
         <header className="sticky top-0 z-40 flex w-full bg-[var(--color-bg-card)] drop-shadow-1 border-b border-[var(--color-border)] shadow-md">
-            <div className="h-15 flex flex-grow items-center justify-end px-4 py-4 shadow-2 md:px-6 2xl:px-11">
-                {/* Search Bar */}
+            <div className="h-15 flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
+                {/* Left Side: Page Title */}
+                <div className="flex flex-col">
+                    <h1 className="text-lg md:text-xl font-bold text-title tracking-tight leading-none">
+                        {currentPage.title}
+                    </h1>
+                    {currentPage.subtitle && (
+                        <p className="text-[10px] md:text-xs text-muted mt-1 font-medium italic">
+                            {currentPage.subtitle}
+                        </p>
+                    )}
+                </div>
+
                 {/* Right Side */}
                 <div className="flex items-center gap-3 2xsm:gap-7">
                     <ul className="flex items-center gap-2 2xsm:gap-4">
@@ -119,7 +168,7 @@ export default function Header() {
                                 <span className="block text-sm font-medium text-title">
                                     {user?.full_name || 'Loading...'}
                                 </span>
-                                <span className="block text-xs font-medium text-muted">
+                                <span className="block text-xs font-medium text-muted capitalize">
                                     {user?.role || 'User'}
                                 </span>
                             </span>
@@ -135,7 +184,7 @@ export default function Header() {
 
                         {/* Dropdown Start */}
                         {isDropdownOpen && (
-                            <div className="absolute right-0 mt-4 w-48 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-lg ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+                            <div className="absolute right-0 mt-4 w-56 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-lg ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
                                 <ul className="flex flex-col gap-1 border-b border-[var(--color-border)] py-2">
                                     <li>
                                         <Link
@@ -146,6 +195,26 @@ export default function Header() {
                                             My Profile
                                         </Link>
                                     </li>
+                                    <li>
+                                        <Link
+                                            href="/VisitorDashboard"
+                                            className="flex items-center gap-3.5 px-6 py-2 text-sm font-medium duration-300 ease-in-out hover:text-primary hover:bg-[var(--color-bg-page)] lg:text-base text-body"
+                                        >
+                                            <span className="w-5 h-5 flex items-center justify-center text-lg">📝</span>
+                                            My Visitor Requests
+                                        </Link>
+                                    </li>
+                                    {user?.role === 'admin' && (
+                                        <li>
+                                            <Link
+                                                href="/VisitorAdmin"
+                                                className="flex items-center gap-3.5 px-6 py-2 text-sm font-medium duration-300 ease-in-out text-red-500 hover:text-red-600 hover:bg-red-50 lg:text-base"
+                                            >
+                                                <span className="w-5 h-5 flex items-center justify-center text-lg">🛡️</span>
+                                                Visitor Admin
+                                            </Link>
+                                        </li>
+                                    )}
                                 </ul>
                                 <button
                                     onClick={handleLogout}

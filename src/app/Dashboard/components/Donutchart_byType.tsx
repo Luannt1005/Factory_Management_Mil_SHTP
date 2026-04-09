@@ -37,29 +37,44 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
         ].filter(item => item.value > 0);
     }, [nodes]);
 
-    const total = chartData.reduce((sum, item) => sum + item.value, 0);
-
-    // Custom Label with Line
+    // Professional Label with Elbow Line
     const renderCustomizedLabel = (props: any) => {
-        const { cx, cy, midAngle, innerRadius, outerRadius, percent, index, value, name } = props;
+        const { cx, cy, midAngle, innerRadius, outerRadius, value, name } = props;
         const RADIAN = Math.PI / 180;
-        const radius = innerRadius + (outerRadius - innerRadius) * 1.4;
-        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+        
+        // Start point at donut edge
+        const sx = cx + outerRadius * Math.cos(-midAngle * RADIAN);
+        const sy = cy + outerRadius * Math.sin(-midAngle * RADIAN);
+        
+        // Middle point (elbow)
+        const mx = cx + (outerRadius + 20) * Math.cos(-midAngle * RADIAN);
+        const my = cy + (outerRadius + 20) * Math.sin(-midAngle * RADIAN);
+        
+        // End point (horizontal extension)
+        const ex = mx + (Math.cos(-midAngle * RADIAN) >= 0 ? 1 : -1) * 20;
+        const ey = my;
+        
+        const textAnchor = Math.cos(-midAngle * RADIAN) >= 0 ? 'start' : 'end';
 
         return (
-            <text
-                x={x}
-                y={y}
-                fill="var(--color-text-body)"
-                textAnchor={x > cx ? 'start' : 'end'}
-                dominantBaseline="central"
-                className="text-[10px] font-bold"
-            >
-                {`${value}`}
-            </text>
+            <g>
+                <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="var(--color-text-light)" fill="none" strokeWidth={1} />
+                <circle cx={ex} cy={ey} r={2} fill="var(--color-text-light)" stroke="none" />
+                <text 
+                    x={ex + (Math.cos(-midAngle * RADIAN) >= 0 ? 1 : -1) * 8} 
+                    y={ey} 
+                    textAnchor={textAnchor} 
+                    fill="var(--color-text-body)" 
+                    dominantBaseline="central"
+                    className="text-[12px] font-bold"
+                >
+                    {value}
+                </text>
+            </g>
         );
     };
+
+    const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
     if (loading) {
         return (
@@ -107,13 +122,13 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                         <Pie
                             data={chartData}
                             cx="50%"
-                            cy="45%"
-                            innerRadius="45%" // Slightly smaller inner radius to fit centered text better
-                            outerRadius="70%" // Slightly smaller outer radius to make room for labels
-                            paddingAngle={2}
+                            cy="50%"
+                            innerRadius="55%"
+                            outerRadius="75%"
+                            paddingAngle={3}
                             dataKey="value"
                             animationDuration={600}
-                            labelLine={true}
+                            labelLine={false}
                             label={renderCustomizedLabel}
                         >
                             {chartData.map((entry, index) => {
@@ -145,9 +160,9 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                         />
                         <Legend
                             verticalAlign="bottom"
-                            height={30}
+                            height={36}
                             content={({ payload }) => (
-                                <div className="flex justify-center gap-4 mt-1">
+                                <div className="flex justify-center gap-6 mt-4">
                                     {payload?.map((entry: any, index: number) => {
                                         const data = chartData.find(d => d.name === entry.value);
                                         let dotColor = '#3B82F6';
@@ -157,12 +172,12 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                                         return (
                                             <button
                                                 key={`legend-${index}`}
-                                                className="flex items-center gap-1.5 text-xs hover:opacity-70 transition-opacity"
-                                                onClick={() => onFilterChange?.({ type: 'type', value: entry.value, label: `Type: ${entry.value}` })}
+                                                className="flex items-center gap-2 text-xs hover:opacity-70 transition-opacity"
+                                                onClick={() => onFilterChange?.({ type: 'type', value: entry.value, label: `Type: ${entry.name}` })}
                                             >
-                                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: dotColor }}></span>
-                                                <span className="text-body font-medium">{entry.value}</span>
-                                                <span className="text-muted">({data?.percentage}%)</span>
+                                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: dotColor }}></span>
+                                                <span className="text-body font-bold">{entry.value}</span>
+                                                <span className="text-muted font-medium">({data?.value} - {data?.percentage}%)</span>
                                             </button>
                                         );
                                     })}
@@ -172,9 +187,9 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                     </PieChart>
                 </ResponsiveContainer>
 
-                <div className="absolute top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                    <div className="text-2xl font-bold text-title">{total}</div>
-                    <div className="text-[10px] text-muted uppercase tracking-wide">Total</div>
+                <div className="absolute top-[50%] left-1/2 transform -translate-x-1/2 -translate-y-[60%] text-center pointer-events-none">
+                    <div className="text-3xl font-bold text-title tracking-tight">{total}</div>
+                    <div className="text-[11px] text-muted font-bold uppercase tracking-[0.1em] mt-0.5">Total</div>
                 </div>
             </div>
         </div>

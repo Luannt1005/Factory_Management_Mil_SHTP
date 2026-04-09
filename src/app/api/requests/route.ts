@@ -1,0 +1,170 @@
+import { NextResponse } from 'next/server';
+import { getVisitorDbConnection } from '@/lib/visitor-db';
+import { decrypt } from '@/lib/auth';
+import { cookies } from 'next/headers';
+
+async function getOrCreateVisitorProfile(user: any, visitorPool: any) {
+    const email = user.username;
+    const name = user.full_name || user.username;
+
+    const { rows: profiles } = await visitorPool.query(
+        'SELECT id FROM "User" WHERE email = $1',
+        [email]
+    );
+
+    if (profiles.length > 0) return profiles[0].id;
+
+    const role = user.role === 'admin' ? 'ADMIN' : 'USER';
+    const { rows: newProfiles } = await visitorPool.query(
+        `INSERT INTO "User" (id, email, name, password, role, department, "updatedAt") 
+         VALUES (gen_random_uuid(), $1, $2, 'BRIDGE_AUTO_GENERATED', $3, 'AUTO_SYNC', NOW()) 
+         RETURNING id`,
+        [email, name, role]
+    );
+
+    return newProfiles[0].id;
+}
+
+export async function POST(request: Request) {
+    let visitorPool;
+    try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('auth')?.value;
+
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const session = await decrypt(token);
+        if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const body = await request.json();
+        const {
+            visitorName, visitorTitle, currentCompany, startDate, endDate,
+            purposeOfVisit, visitorCategory, details, roomIds,
+        } = body;
+
+        visitorPool = await getVisitorDbConnection();
+
+        await visitorPool.query('BEGIN');
+
+        const submitterId = await getOrCreateVisitorProfile(session.user, visitorPool);
+
+        const { rows: visitorRequests } = await visitorPool.query(
+            `INSERT INTO "VisitorRequest" 
+             (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt")
+             VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, 'IN PROCESS', NOW())
+             RETURNING id`,
+            [submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate), purposeOfVisit, visitorCategory, JSON.stringify(details)]
+        );
+
+        const visitorRequestId = visitorRequests[0].id;
+
+        if (roomIds && roomIds.length > 0) {
+            const { rows: rooms } = await visitorPool.query(
+                'SELECT id, name, "approverEmail" FROM "RoomArea" WHERE id = ANY($1::text[])',
+                [roomIds]
+            );
+
+            const powerAutomateUrl = process.env.POWER_AUTOMATE_FOR_LEAVE_URL;
+
+            for (const room of rooms) {
+                const { rows: approvalRows } = await visitorPool.query(
+                    `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
+                     VALUES (gen_random_uuid(), $1, $2, $3, 'PENDING', NOW())
+                     RETURNING id`,
+                    [visitorRequestId, room.id, room.approverEmail]
+                );
+
+                const approvalId = approvalRows[0].id;
+
+                // Trigger Power Automate per room (department-specific approval)
+                if (powerAutomateUrl) {
+                    try {
+                        await fetch(powerAutomateUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                record: {
+                                    approval_id: approvalId,
+                                    id: visitorRequestId,
+                                    approver_email: room.approverEmail,
+                                    room_name: room.name,
+                                    visitor_name: visitorName,
+                                    visitorTitle: visitorTitle,
+                                    currentCompany: currentCompany,
+                                    startDate: startDate,
+                                    endDate: endDate,
+                                    purposeOfVisit: purposeOfVisit,
+                                    submitterName: session.user.username
+                                }
+                            }),
+                        });
+                        console.log(`Power Automate triggered successfully for room: ${room.name} (${room.approverEmail})`);
+                    } catch (paError) {
+                        console.error(`Failed to trigger Power Automate for room ${room.name}:`, paError);
+                    }
+                }
+            }
+        }
+
+        await visitorPool.query('COMMIT');
+        return NextResponse.json({ message: 'Request created successfully', id: visitorRequestId }, { status: 201 });
+
+    } catch (error: any) {
+        if (visitorPool) await visitorPool.query('ROLLBACK');
+        console.error('Create request error:', error);
+        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    }
+}
+
+export async function GET(request: Request) {
+    try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('auth')?.value;
+
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const session = await decrypt(token);
+        if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const visitorPool = await getVisitorDbConnection();
+        const submitterId = await getOrCreateVisitorProfile(session.user, visitorPool);
+
+        // Fetch requests for this submitter with approvals
+        const { rows } = await visitorPool.query(`
+            SELECT 
+                r.id,
+                r.status,
+                r."visitorName" as visitor_name,
+                r."visitorTitle" as visitor_title,
+                r."currentCompany" as current_company,
+                r."startDate" as start_date,
+                r."endDate" as end_date,
+                r."purposeOfVisit" as purpose_of_visit,
+                r."visitorCategory" as visitor_category,
+                r.details,
+                r."createdAt" as created_at,
+                (
+                    SELECT COALESCE(json_agg(
+                        json_build_object(
+                            'id', a.id,
+                            'status', a.status,
+                            'approver_email', a."approverEmail",
+                            'room_areas', CASE WHEN ra.id IS NOT NULL THEN json_build_object('name', ra.name, 'category', ra.category) ELSE NULL END
+                        )
+                    ), '[]'::json)
+                    FROM "RequestApproval" a
+                    LEFT JOIN "RoomArea" ra ON a."roomAreaId" = ra.id
+                    WHERE a."requestId" = r.id
+                ) as request_approvals
+            FROM "VisitorRequest" r
+            WHERE r."submitterId" = $1
+            ORDER BY r."createdAt" DESC
+        `, [submitterId]);
+
+        return NextResponse.json({ requests: rows }, { status: 200 });
+
+    } catch (error: any) {
+        console.error('Fetch requests error:', error);
+        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    }
+}

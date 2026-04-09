@@ -131,7 +131,7 @@ const UpcomingResignTable: React.FC<UpcomingResignTableProps> = ({ className, no
                     dept: getValue(node, ['BU Org 3', 'Department', 'Dept', 'bu_org_3']),
                     lastWorkingDay: lastWorkingDay,
                     seniority: calculateSeniority(joiningDate, lastWorkingDay),
-                    imageUrl: `https://raw.githubusercontent.com/Luannt1005/test-images/main/${getValue(node, ['Employee ID', 'Emp ID', 'emp_id'])}.jpg`
+                    imageUrl: node.image || node.img || `/api/uploads/${getValue(node, ['Employee ID', 'Emp ID', 'emp_id'])}.webp`
                 };
             })
             .sort((a, b) => {

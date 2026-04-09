@@ -7,17 +7,17 @@ import { isAuthenticated, unauthorizedResponse, getCurrentUser } from "@/lib/aut
 /**
  * Get existing Emp IDs from database
  */
-async function getExistingEmpIds(client: any): Promise<Map<string, string>> {
-  const result = await client.query("SELECT id, emp_id FROM employees");
+async function getExistingEmployees(client: any): Promise<Map<string, { id: string; is_direct: string | null }>> {
+  const result = await client.query("SELECT id, emp_id, is_direct FROM employees");
 
-  const empIds = new Map<string, string>();
+  const employees = new Map<string, { id: string; is_direct: string | null }>();
   result.rows.forEach((row: any) => {
     if (row.emp_id) {
-      empIds.set(row.emp_id, row.id);
+      employees.set(row.emp_id, { id: row.id, is_direct: row.is_direct });
     }
   });
 
-  return empIds;
+  return employees;
 }
 
 /**
@@ -69,11 +69,31 @@ export async function POST(req: Request) {
     await client.query('BEGIN');
 
     // Get existing Emp IDs
-    const existingEmpIds = await getExistingEmpIds(client);
+    const existingEmployees = await getExistingEmployees(client);
+
+    // Filter rows based on requested criteria
+    const validRows = rows.filter((row: any) => {
+      const location = String(row["Location"] || "").trim().toUpperCase();
+      const type = String(row["DL/IDL/Staff"] || "").trim().toUpperCase();
+      const bu = String(row["BU"] || "").trim().toUpperCase();
+      const buOrg2 = String(row["BU Org 2"] || row["BU Org 2 "] || "").trim().toUpperCase();
+
+      return (["SHTP", "DDK", "SHTP-3F", "SHTP-5F"].includes(location)) &&
+             (type === "IDL" || type === "STAFF") &&
+             bu === "MILWAUKEE" &&
+             buOrg2 === "POWER TOOL";
+    });
+
+    if (validRows.length === 0) {
+      return NextResponse.json(
+        { error: "No matching records found after filtering." },
+        { status: 400 }
+      );
+    }
 
     // Get Emp IDs from import file for "Full Sync" check
     const newEmpIds = new Set(
-      rows
+      validRows
         .map((row: any) => row["Emp ID"])
         .filter((id: any) => id !== null && id !== undefined && String(id).trim() !== '')
         .map((id: any) => String(id).trim())
@@ -81,9 +101,9 @@ export async function POST(req: Request) {
 
     // Find Emp IDs to delete (in database but not in new file)
     const dbIdsToDelete: string[] = [];
-    existingEmpIds.forEach((dbId, empId) => {
-      if (!newEmpIds.has(empId)) {
-        dbIdsToDelete.push(dbId);
+    existingEmployees.forEach((empInfo, empId) => {
+      if (!newEmpIds.has(empId) && String(empId).trim() !== "500011") {
+        dbIdsToDelete.push(empInfo.id);
       }
     });
 
@@ -91,12 +111,16 @@ export async function POST(req: Request) {
     let deletedCount = 0;
 
     // 1. Process Insert/Update
-    for (const row of rows as any[]) {
+    for (const row of validRows as any[]) {
       const rawId = row["Emp ID"];
       if (rawId === null || rawId === undefined || String(rawId).trim() === '') continue;
 
       const empId = String(rawId).trim();
-      const dbId = existingEmpIds.get(empId);
+      
+      if (empId === "500011") continue; // Never update 500011
+
+      const existingEmp = existingEmployees.get(empId);
+      const dbId = existingEmp?.id;
 
       const safeString = (val: any) => (val === null || val === undefined) ? null : String(val);
 
@@ -111,6 +135,7 @@ export async function POST(req: Request) {
       const line_manager = safeString(row["Line Manager"]);
       const is_direct = safeString(row["Is Direct"] || "YES");
       const joining_date = safeString(row["Joining\r\n Date"] || row["Joining Date"]);
+      const status = safeString(row["Status"] || row["status"]);
 
       const last_working_day = safeString(
         row["Last Working\r\nDay"] ||
@@ -123,36 +148,42 @@ export async function POST(req: Request) {
 
       if (dbId) {
         // UPDATE
+        const setClauses: string[] = [];
+        const queryParams: any[] = [dbId];
+        let pIndex = 2; // $1 is dbId
+
+        if (last_working_day !== null) { setClauses.push(`last_working_day = $${pIndex++}`); queryParams.push(last_working_day); }
+        if (status !== null) { setClauses.push(`status = $${pIndex++}`); queryParams.push(status); } else { setClauses.push(`status = $${pIndex++}`); queryParams.push("Active"); }
+        if (job_title !== null) { setClauses.push(`job_title = $${pIndex++}`); queryParams.push(job_title); }
+        if (dl_idl_staff !== null) { setClauses.push(`dl_idl_staff = $${pIndex++}`); queryParams.push(dl_idl_staff); }
+        
+        // Conditional line manager update
+        // Skip update if Excel is "No" OR if Database is already "No"
+        const excelIsDirect = String(row["Is Direct"] || "YES").trim().toUpperCase();
+        const dbIsDirect = String(existingEmp?.is_direct || "YES").trim().toUpperCase();
+
+        if (excelIsDirect !== "NO" && dbIsDirect !== "NO") {
+          if (line_manager !== null) { setClauses.push(`line_manager = $${pIndex++}`); queryParams.push(line_manager); }
+        }
+
+        setClauses.push(`updated_at = CURRENT_TIMESTAMP`);
+
         await client.query(`
           UPDATE employees SET
-            full_name = $1,
-            job_title = $2,
-            dept = $3,
-            bu = $4,
-            bu_org_3 = $5,
-            dl_idl_staff = $6,
-            location = $7,
-            employee_type = $8,
-            line_manager = $9,
-            is_direct = $10,
-            joining_date = $11,
-            last_working_day = $12,
-            updated_at = CURRENT_TIMESTAMP
-          WHERE id = $13
-        `, [
-          full_name, job_title, dept, bu, bu_org_3, dl_idl_staff, location, employee_type, line_manager, is_direct, joining_date, last_working_day, dbId
-        ]);
+            ${setClauses.join(', ')}
+          WHERE id = $1
+        `, queryParams);
       } else {
         // INSERT
         await client.query(`
           INSERT INTO employees (
             emp_id, full_name, job_title, dept, bu, bu_org_3, dl_idl_staff, 
-            location, employee_type, line_manager, is_direct, joining_date, last_working_day
+            location, employee_type, line_manager, is_direct, joining_date, last_working_day, status
           ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
           )
         `, [
-          empId, full_name, job_title, dept, bu, bu_org_3, dl_idl_staff, location, employee_type, line_manager, is_direct, joining_date, last_working_day
+          empId, full_name, job_title, dept, bu, bu_org_3, dl_idl_staff, location, employee_type, line_manager, is_direct, joining_date, last_working_day, status || "Active"
         ]);
       }
       savedCount++;

@@ -19,8 +19,8 @@ graph TD
             Transformer["⚙️ Data Transformer"]
         end
         
-        subgraph "Local Storage"
-            FS[("📁 public/uploads<br/>(Local Images)")]
+        subgraph "External Storage"
+            FS[("📁 D:\Images emp\uploads<br/>(External Images)")]
         end
     end
 
@@ -47,7 +47,7 @@ The following table maps the various components, services, and protocols used ac
 | :--- | :--- | :--- | :--- | :--- |
 | **Next.js Web App** | Web Server | HTTP / HTTPS | 3000 | Main application logic and UI shell |
 | **PostgreSQL** | Database | TCP/IP | 5432 | Primary data storage (employees, users, configs) |
-| **File System** | Local Storage | File IO (fs) | N/A | Storage for profile images in `public/uploads` |
+| **File System** | External Storage | File IO (fs) | N/A | Storage for profile images in `D:\Images emp\uploads`, served via Nginx |
 | **JWT Service** | Authentication | JSON Web Token | Stateless | Session management via HttpOnly cookies |
 | **Memory Cache** | Key-Value Store | In-process Map | N/A | 15-minute TTL cache for API responses |
 
@@ -69,8 +69,8 @@ The following table maps the various components, services, and protocols used ac
   - **Port**: `5432`
   - **Scope**: Manages all relational data including employee profiles and user credentials.
 - **Local Storage**:
-  - **Path**: `src/public/uploads`
-  - **Scope**: Serves employee avatars and chart assets directly through Next.js static file serving.
+  - **Path**: `D:\Images emp\uploads`
+  - **Scope**: Serves employee avatars and chart assets via Nginx proxy at `/uploads/`.
 
 ## Data Flow Summary
 

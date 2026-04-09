@@ -23,7 +23,7 @@ export async function POST(req: Request) {
         cookieStore.set("auth", session, {
             expires,
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
+            secure: false, // Set to false to allow HTTP on-premise access
             path: "/",
             sameSite: "lax",
         });

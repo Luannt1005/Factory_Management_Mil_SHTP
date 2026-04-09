@@ -510,13 +510,11 @@ const HeadcountManager = () => {
 
     return (
         <div className={styles.container}>
-            {/* Header */}
-            <div className={styles.header}>
-                <div className="flex items-center gap-4">
-                    <BriefcaseIcon className="w-8 h-8 text-[#DB011C]" />
-                    <h1>Open Headcount Management</h1>
+            {/* Header Buttons (Title moved to layout header) */}
+            <div className="flex items-center justify-end gap-3 mb-4">
+                <div className="flex-1 flex items-center gap-2">
                     {isValidating && (
-                        <ArrowPathIcon className="w-5 h-5 text-gray-400 animate-spin" />
+                        <ArrowPathIcon className="w-4 h-4 text-gray-400 animate-spin" />
                     )}
                 </div>
                 <div className="flex items-center gap-3">

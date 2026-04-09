@@ -96,8 +96,8 @@ export default function Sidebar() {
         router.push('/login');
     };
 
-    // Hide sidebar on auth pages
-    if (['/login', '/signup'].includes(pathname)) {
+    // Hide sidebar on auth pages, landing page, and visitor functions
+    if (['/', '/login', '/signup', '/VisitorRequest', '/VisitorDashboard', '/VisitorAdmin', '/VisitorAdmin/rooms'].includes(pathname) || pathname.startsWith('/VisitorAdmin')) {
         return null;
     }
 
@@ -146,7 +146,16 @@ export default function Sidebar() {
                 <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                     {navGroups.map((group, groupIndex) => {
                         // Filter items based on role
-                        const visibleItems = group.items.filter(item => !item.requiredRole || item.requiredRole === userRole);
+                        const visibleItems = group.items.filter(item => {
+                            if (userRole === 'admin') return true;
+                            if (userRole === 'viewer') {
+                                // Viewer only sees specific paths in Chart and Profile groups
+                                const allowedPaths = ['/Orgchart', '/Dashboard', '/Customize', '/profile'];
+                                return allowedPaths.some(path => item.path.startsWith(path));
+                            }
+                            // Default (user) role
+                            return !item.requiredRole || item.requiredRole === userRole;
+                        });
 
                         if (visibleItems.length === 0) return null;
 
