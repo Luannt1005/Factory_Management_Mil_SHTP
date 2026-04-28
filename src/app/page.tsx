@@ -8,7 +8,7 @@ export default async function Home() {
   const token = cookieStore.get('auth')?.value;
 
   // With our system, user always comes from internal login or AD, so redirect to login if no token.
-  const orgchartLink = token ? "/Orgchart" : "/login";
+  const orgchartLink = token ? "/Orgchart" : "/login?redirect=/Orgchart";
   const requestLink = token ? "/VisitorRequest" : "/login?redirect=/VisitorRequest";
 
   return (
@@ -74,7 +74,7 @@ export default async function Home() {
                 <p className="text-[#ffe5e5] text-lg max-w-md mb-8">
                   You must be logged in to view the interactive Organization Chart.
                 </p>
-                <Link href="/login" className="px-8 py-3 bg-[#db011c] hover:bg-[#b90118] text-white rounded-full font-bold transition-colors shadow-lg">
+                <Link href="/login?redirect=/Orgchart" className="px-8 py-3 bg-[#db011c] hover:bg-[#b90118] text-white rounded-full font-bold transition-colors shadow-lg">
                   Login to Access
                 </Link>
               </div>

@@ -58,8 +58,8 @@ export default function NewRequestPage() {
             });
 
             if (res.ok) {
-                alert('Khởi tạo yêu cầu Visitor thành công!');
-                router.push('/');
+                alert('Registration successful!');
+                router.push('/VisitorDashboard');
                 router.refresh();
             } else {
                 const error = await res.json();
@@ -127,13 +127,6 @@ export default function NewRequestPage() {
         <div style={{ minHeight: '100vh', background: 'var(--background)', padding: '2rem 1rem' }}>
             <div className="container mx-auto" style={{ maxWidth: '1000px' }}>
                 
-                {/* Back Button */}
-                <div className="mb-4">
-                    <Link href="/" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-red-700 transition-colors">
-                        <ArrowLeftIcon className="w-5 h-5 mr-2" />
-                        Back to Home
-                    </Link>
-                </div>
 
                 {/* Header Image Section */}
                 <div style={{ 

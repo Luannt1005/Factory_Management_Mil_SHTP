@@ -1,18 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./login.module.css";
 import { EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
-// Supabase client
-import { supabase } from "@/lib/supabase";
 import { verifyPassword } from "@/lib/password";
 import { useUser } from "@/app/context/UserContext";
 
-export default function LoginPage() {
+function LoginContent() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
@@ -20,6 +18,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/";
   const { setUser } = useUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,7 +48,7 @@ export default function LoginPage() {
 
       // Redirect after animation
       setTimeout(() => {
-        router.replace("/");
+        router.replace(redirect);
       }, 2000);
 
     } catch (err: any) {
@@ -193,5 +193,19 @@ export default function LoginPage() {
       <div className={`${styles['bg-decoration']} ${styles['bg-1']}`}></div>
       <div className={`${styles['bg-decoration']} ${styles['bg-2']}`}></div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className={styles['login-container']}>
+        <div className={styles['login-card']} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+          <div className={styles['button-spinner']}></div>
+        </div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

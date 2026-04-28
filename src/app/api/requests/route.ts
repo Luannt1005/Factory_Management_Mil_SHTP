@@ -46,14 +46,38 @@ export async function POST(request: Request) {
 
         await visitorPool.query('BEGIN');
 
+        // Generate Custom ID: DDMMYY_N
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yy = String(now.getFullYear()).slice(-2);
+        const datePrefix = `${dd}${mm}${yy}`;
+
+        // Find the last sequence for today
+        const { rows: lastReq } = await visitorPool.query(
+            `SELECT id FROM "VisitorRequest" WHERE id LIKE $1 ORDER BY id DESC LIMIT 1`,
+            [`${datePrefix}_%`]
+        );
+
+        let sequence = 1;
+        if (lastReq.length > 0) {
+            const lastId = lastReq[0].id;
+            const lastSeqStr = lastId.split('_')[1];
+            if (lastSeqStr) {
+                sequence = parseInt(lastSeqStr) + 1;
+            }
+        }
+        
+        const newRequestId = `${datePrefix}_${String(sequence).padStart(2, '0')}`;
+
         const submitterId = await getOrCreateVisitorProfile(session.user, visitorPool);
 
         const { rows: visitorRequests } = await visitorPool.query(
             `INSERT INTO "VisitorRequest" 
              (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt")
-             VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, 'IN PROCESS', NOW())
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'IN PROCESS', NOW())
              RETURNING id`,
-            [submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate), purposeOfVisit, visitorCategory, JSON.stringify(details)]
+            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate), purposeOfVisit, visitorCategory, JSON.stringify(details)]
         );
 
         const visitorRequestId = visitorRequests[0].id;
@@ -126,8 +150,30 @@ export async function GET(request: Request) {
         const session = await decrypt(token);
         if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+        const { searchParams } = new URL(request.url);
+        const startDate = searchParams.get('startDate');
+        const endDate = searchParams.get('endDate');
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = parseInt(searchParams.get('limit') || '20');
+        const offset = (page - 1) * limit;
+
         const visitorPool = await getVisitorDbConnection();
         const submitterId = await getOrCreateVisitorProfile(session.user, visitorPool);
+
+        let whereClause = 'WHERE r."submitterId" = $1';
+        const queryParams: any[] = [submitterId];
+        let paramCount = 2;
+
+        if (startDate && endDate) {
+            whereClause += ` AND (r."startDate" <= $${paramCount+1} AND r."endDate" >= $${paramCount})`;
+            queryParams.push(startDate, endDate);
+            paramCount += 2;
+        }
+
+        // Get total count for pagination
+        const countQuery = `SELECT COUNT(*) FROM "VisitorRequest" r ${whereClause}`;
+        const { rows: countRows } = await visitorPool.query(countQuery, queryParams);
+        const total = parseInt(countRows[0].count);
 
         // Fetch requests for this submitter with approvals
         const { rows } = await visitorPool.query(`
@@ -157,11 +203,20 @@ export async function GET(request: Request) {
                     WHERE a."requestId" = r.id
                 ) as request_approvals
             FROM "VisitorRequest" r
-            WHERE r."submitterId" = $1
+            ${whereClause}
             ORDER BY r."createdAt" DESC
-        `, [submitterId]);
+            LIMIT $${paramCount} OFFSET $${paramCount+1}
+        `, [...queryParams, limit, offset]);
 
-        return NextResponse.json({ requests: rows }, { status: 200 });
+        return NextResponse.json({ 
+            requests: rows,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        }, { status: 200 });
 
     } catch (error: any) {
         console.error('Fetch requests error:', error);

@@ -9,7 +9,6 @@ import {
     PhotoIcon,
     TableCellsIcon
 } from "@heroicons/react/24/outline";
-import { supabase } from "@/lib/supabase";
 
 type ImportTab = 'excel' | 'images';
 

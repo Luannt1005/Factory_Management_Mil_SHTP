@@ -49,19 +49,8 @@ export default function AdminRoomsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--background)] py-10 px-4 text-white">
-            <div className="container mx-auto max-w-7xl relative">
-                <div className="flex flex-wrap gap-4 justify-between items-center mb-10">
-                    <div>
-                        <h1 className="text-4xl font-extrabold mb-2 tracking-tight text-white drop-shadow-md">Manage Rooms & Approvers</h1>
-                        <p className="text-[#ffe5e5]">Assign specific approver emails to each factory area.</p>
-                    </div>
-                    <Link href="/VisitorAdmin" className="inline-flex items-center justify-center px-6 py-3 rounded-full font-bold text-white bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-all border border-white/30 shadow-lg">
-                        Back to Dashboard
-                    </Link>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="flex flex-col gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* ADD NEW ROOM */}
                     <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/20 text-[#0f172a] h-fit sticky top-20">
                         <h2 className="text-xl font-extrabold mb-6">Add New Room</h2>
@@ -177,7 +166,6 @@ export default function AdminRoomsPage() {
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     );
 }

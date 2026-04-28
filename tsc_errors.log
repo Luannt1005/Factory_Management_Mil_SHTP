@@ -1,4 +1,0 @@
-.next/types/app/SheetManager/page.ts(34,13): error TS2344: Type 'OmitWithTag<SheetManagerProps, keyof PageProps, "default">' does not satisfy the constraint '{ [x: string]: never; }'.
-  Property 'initialShowApprovalOnly' is incompatible with index signature.
-    Type 'boolean' is not assignable to type 'never'.
-.next/types/app/SheetManager/page.ts(34,29): error TS2559: Type 'SheetManagerProps' has no properties in common with type 'PageProps'.

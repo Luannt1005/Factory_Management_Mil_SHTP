@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 export default function Header() {
     const pathname = usePathname();
@@ -71,57 +72,67 @@ export default function Header() {
         return null;
     }
 
-    // Define page titles and subtitles
-    const pageTitles: Record<string, { title: string; subtitle?: string }> = {
-        '/Dashboard': {
-            title: 'HR Dashboard',
-            subtitle: 'Organization metrics overview'
-        },
-        '/Orgchart': {
-            title: 'Organization Charts',
-            subtitle: 'Visual representation of hierarchy'
-        },
-        '/Customize': {
-            title: 'Organization Charts',
-            subtitle: 'Edit and manage organization profiles'
-        },
-        '/SheetManager': {
-            title: 'Headcount Management',
-            subtitle: 'Track and manage staff details'
-        },
-        '/Headcount_open': {
-            title: 'Headcount Open',
-            subtitle: 'View open positions'
-        },
-        '/Import_HR_Data': {
-            title: 'Import HR Data',
-            subtitle: 'Upload and sync employee information'
-        },
-        '/Admin': {
-            title: 'Admin Console',
-            subtitle: 'System configuration and user management'
-        },
-        '/profile': {
-            title: 'Profile Setting',
-            subtitle: 'Manage your account information'
-        }
-    };
-
-    const currentPage = pageTitles[pathname] || { title: '' };
-
     return (
         <header className="sticky top-0 z-40 flex w-full bg-[var(--color-bg-card)] drop-shadow-1 border-b border-[var(--color-border)] shadow-md">
             <div className="h-15 flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
-                {/* Left Side: Page Title */}
-                <div className="flex flex-col">
-                    <h1 className="text-lg md:text-xl font-bold text-title tracking-tight leading-none">
-                        {currentPage.title}
-                    </h1>
-                    {currentPage.subtitle && (
-                        <p className="text-[10px] md:text-xs text-muted mt-1 font-medium italic">
-                            {currentPage.subtitle}
-                        </p>
-                    )}
+                {/* Left Side: Brand Logo and Main Navigation */}
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center border-r border-gray-200 dark:border-white/10 pr-6">
+                        <Link href="/" className="relative h-8 w-24 md:w-28">
+                            <Image
+                                src="/Milwaukee-logo-red.png"
+                                alt="Milwaukee Logo"
+                                fill
+                                className="object-contain"
+                                priority
+                            />
+                        </Link>
+                    </div>
+
+                    {/* Main Navigation (Simplified - No Icons) */}
+                    <nav className="hidden md:flex items-center gap-1 relative">
+                        {[
+                            { 
+                                name: 'Introduction', 
+                                path: '/Introduction', 
+                                matches: ['/Introduction']
+                            },
+                            { 
+                                name: 'Visitor Management', 
+                                path: '/VisitorRequest', 
+                                matches: ['/VisitorRequest', '/VisitorDashboard', '/VisitorAdmin']
+                            },
+                            { 
+                                name: 'Orgchart', 
+                                path: '/Orgchart', 
+                                matches: ['/Orgchart', '/Dashboard', '/Customize', '/SheetManager', '/Headcount_open', '/Import_HR_Data', '/Admin', '/viewdata_org']
+                            },
+                        ].map((item) => {
+                            const isActive = item.matches.some(match => pathname.startsWith(match));
+                            return (
+                                <Link
+                                    key={item.path}
+                                    href={item.path}
+                                    className={`
+                                        group relative flex flex-col items-center px-6 py-2 transition-all duration-300
+                                        ${isActive 
+                                            ? 'text-[#db011c]' 
+                                            : 'text-muted hover:text-title'}
+                                    `}
+                                >
+                                    <span className="text-xs font-bold tracking-[0.1em] uppercase leading-none">
+                                        {item.name}
+                                    </span>
+                                    <div className={`h-[3px] mt-1.5 bg-[#db011c] rounded-full transition-all duration-500 ease-out ${isActive ? 'w-full opacity-100' : 'w-0 opacity-0 group-hover:w-1/2 group-hover:opacity-100'}`} />
+                                    
+                                    {/* Subtle active glow */}
+                                    {isActive && (
+                                        <div className="absolute inset-0 bg-[#db011c]/[0.02] dark:bg-white/[0.02] rounded-lg -z-10" />
+                                    )}
+                                </Link>
+                            );
+                        })}
+                    </nav>
                 </div>
 
                 {/* Right Side */}

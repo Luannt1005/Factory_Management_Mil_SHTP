@@ -108,7 +108,7 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
                                 fontSize: '12px'
                             }}
                             itemStyle={{ color: 'var(--color-text-body)' }}
-                            formatter={(value: number | undefined) => [value ?? 0, 'Employees']}
+                            formatter={(value: any) => [value ?? 0, 'Employees']}
                             labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
                             labelStyle={{ color: '#64748B', fontWeight: 600, marginBottom: '4px' }}
                         />

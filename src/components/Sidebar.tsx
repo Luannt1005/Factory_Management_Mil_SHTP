@@ -15,7 +15,13 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon,
     UserIcon,
-    ArrowLeftOnRectangleIcon
+    TicketIcon,
+    ClipboardDocumentListIcon,
+    BuildingOfficeIcon,
+    PhoneIcon,
+    KeyIcon,
+    ArrowLeftOnRectangleIcon,
+    GlobeAsiaAustraliaIcon
 } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { preload } from 'swr';
@@ -47,36 +53,62 @@ export default function Sidebar() {
         items: NavItem[];
     }
 
-    const navGroups: NavGroup[] = [
-        {
-            title: 'Chart',
+    // Determine the active section
+    const isIntroduction = pathname.startsWith('/Introduction');
+    const isVisitorApp = pathname.startsWith('/VisitorRequest') || pathname.startsWith('/VisitorDashboard') || pathname.startsWith('/VisitorAdmin') || pathname.startsWith('/VisitorAnalytics');
+    const isOrgchart = pathname.startsWith('/Orgchart') || pathname.startsWith('/Dashboard') || pathname.startsWith('/Customize') || pathname.startsWith('/SheetManager') || pathname.startsWith('/Headcount_open') || pathname.startsWith('/Import_HR_Data') || pathname.startsWith('/Admin') || pathname.startsWith('/viewdata_org');
+
+    const navGroups: NavGroup[] = [];
+
+    if (isIntroduction) {
+        navGroups.push({
+            title: 'Introduction',
             items: [
-                { name: 'Org Chart', path: '/Orgchart', icon: ShareIcon },
-                { name: 'Dashboard', path: '/Dashboard', icon: ChartBarSquareIcon },
-                { name: 'Customize Chart', path: '/Customize', icon: PencilSquareIcon },
+                { name: 'About SHTP', path: '/Introduction/about_shtp', icon: BuildingOfficeIcon },
+                { name: 'About VN', path: '/Introduction/about_vn', icon: GlobeAsiaAustraliaIcon },
+                { name: 'Contact', path: '/Introduction/contacts', icon: PhoneIcon },
             ]
-        },
-        {
-            title: 'Management',
+        });
+    } else if (isVisitorApp) {
+        navGroups.push({
+            title: 'Visitor Management',
             items: [
-                { name: 'Headcount Management', path: '/SheetManager', icon: TableCellsIcon },
-                { name: 'Headcount Open', path: '/Headcount_open', icon: UserGroupIcon },
-                { name: 'Import Images', path: '/Import_HR_Data', icon: CloudArrowUpIcon },
+                { name: 'Registration', path: '/VisitorRequest', icon: TicketIcon },
+                { name: 'My Request', path: '/VisitorDashboard', icon: ClipboardDocumentListIcon },
+                { name: 'Visitor Admin', path: '/VisitorAdmin', icon: Cog6ToothIcon, requiredRole: 'admin' },
+                { name: 'Manage Room', path: '/VisitorAdmin/rooms', icon: KeyIcon, requiredRole: 'admin' },
+                { name: 'Visitor Dashboard', path: '/VisitorAnalytics', icon: ChartBarSquareIcon, requiredRole: 'admin' },
             ]
-        },
-        {
-            title: 'Admin',
-            items: [
-                { name: 'Admin Console', path: '/Admin', icon: Cog6ToothIcon, requiredRole: 'admin' },
-            ]
-        },
-        {
-            title: 'Profile',
-            items: [
-                { name: 'Profile Setting', path: '/profile', icon: UserIcon },
-            ]
-        }
-    ];
+        });
+    } else {
+        // Default to Orgchart if none match, or if specifically in Orgchart
+        navGroups.push(
+            {
+                title: 'Chart',
+                items: [
+                    { name: 'Org Chart', path: '/Orgchart', icon: ShareIcon },
+                    { name: 'Dashboard', path: '/Dashboard', icon: ChartBarSquareIcon },
+                    { name: 'Customize Chart', path: '/Customize', icon: PencilSquareIcon },
+                ]
+            },
+            {
+                title: 'Management',
+                items: [
+                    { name: 'Headcount Management', path: '/SheetManager', icon: TableCellsIcon },
+                    { name: 'Headcount Open', path: '/Headcount_open', icon: UserGroupIcon },
+                    { name: 'Import Images', path: '/Import_HR_Data', icon: CloudArrowUpIcon },
+                ]
+            },
+            {
+                title: 'Admin',
+                items: [
+                    { name: 'Admin Console', path: '/Admin', icon: Cog6ToothIcon, requiredRole: 'admin' },
+                ]
+            }
+        );
+    }
+
+
 
     // Prefetch data when hovering over nav items
     const handleMouseEnter = useCallback((path: string) => {
@@ -96,21 +128,19 @@ export default function Sidebar() {
         router.push('/login');
     };
 
-    // Hide sidebar on auth pages, landing page, and visitor functions
-    if (['/', '/login', '/signup', '/VisitorRequest', '/VisitorDashboard', '/VisitorAdmin', '/VisitorAdmin/rooms'].includes(pathname) || pathname.startsWith('/VisitorAdmin')) {
+    // Hide sidebar on auth pages, landing page, and profile page
+    if (['/', '/login', '/signup', '/profile'].includes(pathname)) {
         return null;
     }
 
     return (
         <>
-            {/* Spacer to push content over */}
-            <div className={`shrink-0 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`} />
-            <div
-                className={`
-        fixed left-0 top-0 flex flex-col h-screen bg-gradient-to-b from-[#86010f] to-[#500000] text-white transition-all duration-300 ease-in-out shadow-2xl z-50
-        ${isCollapsed ? 'w-20' : 'w-64'}
-      `}
-            >
+        <div
+            className={`
+                relative flex flex-col h-full bg-gradient-to-b from-[#86010f] to-[#500000] text-white transition-all duration-300 ease-in-out shadow-2xl z-30 shrink-0
+                ${isCollapsed ? 'w-20' : 'w-64'}
+            `}
+        >
                 {/* Toggle Button */}
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
@@ -118,29 +148,6 @@ export default function Sidebar() {
                 >
                     {isCollapsed ? <ChevronRightIcon className="w-3 h-3" /> : <ChevronLeftIcon className="w-3 h-3" />}
                 </button>
-
-                {/* Brand / Logo */}
-                <div className={`h-16 flex items-center ${isCollapsed ? 'justify-center' : 'px-6'} border-b border-white/10 shrink-0`}>
-                    {isCollapsed ? (
-                        <div className="w-10 h-10 relative">
-                            <Image src="/milwaukee_logo.png" alt="Logo" fill className="object-contain brightness-0 invert" unoptimized />
-                        </div>
-                    ) : (
-                        <Link href="/" className="flex items-center justify-center w-full">
-                            <div className="relative h-12 w-40">
-                                <Image
-                                    src="/milwaukee_logo.png"
-                                    alt="Milwaukee Logo"
-                                    fill
-                                    className="object-contain brightness-0 invert filter drop-shadow-md"
-                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                    priority
-                                    unoptimized
-                                />
-                            </div>
-                        </Link>
-                    )}
-                </div>
 
                 {/* Navigation */}
                 <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">

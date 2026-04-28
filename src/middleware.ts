@@ -5,7 +5,10 @@ export function middleware(request: NextRequest) {
   const auth = request.cookies.get("auth")?.value;
 
   if (!auth) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const url = new URL("/login", request.url);
+    // Store where the user was trying to go
+    url.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

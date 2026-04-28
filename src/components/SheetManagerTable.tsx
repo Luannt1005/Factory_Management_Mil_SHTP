@@ -39,6 +39,7 @@ const VISIBLE_COLUMNS = [
   "Emp ID",
   "Dept",
   "Line Manager",
+  "DL/IDL/Staff",
   "Is Direct",
   "Cost Center",
   "Joining\r\n Date",
@@ -428,12 +429,12 @@ const SheetManager = ({
         let value = formData[key] || "";
         if (DATE_COLUMNS.includes(key) && value) {
           if (/\d{4}-\d{2}-\d{2}/.test(value)) {
-            dataToSave[normalizeFieldName(key)] = new Date(value).toISOString();
+            dataToSave[key] = new Date(value).toISOString();
           } else {
-            dataToSave[normalizeFieldName(key)] = value;
+            dataToSave[key] = value;
           }
         } else {
-          dataToSave[normalizeFieldName(key)] = value;
+          dataToSave[key] = value;
         }
       });
 
@@ -485,13 +486,11 @@ const SheetManager = ({
             originalValue = formatDateToISO(originalValue);
           }
 
-          const normalizedHeader = normalizeFieldName(header);
-
           if (isLineManagerCol(header) && value !== originalValue) {
             dataToSave["pendingLineManager"] = value;
             dataToSave["lineManagerStatus"] = "pending";
           } else {
-            dataToSave[normalizedHeader] = value;
+            dataToSave[header] = value;
           }
         });
 
@@ -869,14 +868,56 @@ const SheetManager = ({
                         onClick={() => handleCellClick(row.id, header)}
                       >
                         {isEditing ? (
-                          <input
-                            autoFocus
-                            value={String(row[header] || "")}
-                            onChange={(e) => handleCellChange(row.id, header, e.target.value)}
-                            onBlur={() => setEditingCell(null)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setEditingCell(null); }}
-                            className={styles.cellInput}
-                          />
+                          header === "DL/IDL/Staff" ? (
+                            <select
+                              autoFocus
+                              value={String(row[header] || "")}
+                              onChange={(e) => handleCellChange(row.id, header, e.target.value)}
+                              onBlur={() => setEditingCell(null)}
+                              className={styles.cellInput}
+                            >
+                              <option value="">Select...</option>
+                              <option value="DL">DL</option>
+                              <option value="IDL">IDL</option>
+                              <option value="Staff">Staff</option>
+                            </select>
+                          ) : header === "Status" ? (
+                            <select
+                              autoFocus
+                              value={String(row[header] || "")}
+                              onChange={(e) => handleCellChange(row.id, header, e.target.value)}
+                              onBlur={() => setEditingCell(null)}
+                              className={styles.cellInput}
+                            >
+                              <option value="">Select...</option>
+                              <option value="Active">Active</option>
+                              <option value="Active (Probation)">Active (Probation)</option>
+                              <option value="Resigned">Resigned</option>
+                              <option value="Maternity">Maternity</option>
+                            </select>
+                          ) : header === "Employee\r\n Type" ? (
+                            <select
+                              autoFocus
+                              value={String(row[header] || "")}
+                              onChange={(e) => handleCellChange(row.id, header, e.target.value)}
+                              onBlur={() => setEditingCell(null)}
+                              className={styles.cellInput}
+                            >
+                              <option value="">Select...</option>
+                              <option value="Official">Official</option>
+                              <option value="Probation">Probation</option>
+                              <option value="Contractor">Contractor</option>
+                            </select>
+                          ) : (
+                            <input
+                              autoFocus
+                              value={String(row[header] || "")}
+                              onChange={(e) => handleCellChange(row.id, header, e.target.value)}
+                              onBlur={() => setEditingCell(null)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setEditingCell(null); }}
+                              className={styles.cellInput}
+                            />
+                          )
                         ) : (
                           <div className={`flex items-center gap-3 min-h-[40px] ${styles.cellContent}`}>
                             {/* Avatar for FullName */}

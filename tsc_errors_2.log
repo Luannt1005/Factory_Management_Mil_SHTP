@@ -1,2 +1,0 @@
-src/app/Admin/page.tsx(96,43): error TS2322: Type '{ initialShowApprovalOnly: boolean; enableApproval: boolean; }' is not assignable to type 'IntrinsicAttributes'.
-  Property 'initialShowApprovalOnly' does not exist on type 'IntrinsicAttributes'.

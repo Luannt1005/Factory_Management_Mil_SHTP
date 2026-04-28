@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import UserManagement from "./components/UserManagement";
 import DataImport from "@/components/DataImport";
@@ -15,7 +15,7 @@ import {
     ClockIcon
 } from "@heroicons/react/24/outline";
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
     type MainTab = 'users' | 'import' | 'approvals';
     type ApprovalSubTab = 'allData' | 'reviewChanges';
 
@@ -206,5 +206,17 @@ export default function AdminDashboard() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function AdminDashboard() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            </div>
+        }>
+            <AdminDashboardContent />
+        </Suspense>
     );
 }

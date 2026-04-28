@@ -4,6 +4,7 @@ import { decrypt } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export async function GET(request: Request) {
+
     try {
         const cookieStore = await cookies();
         const token = cookieStore.get('auth')?.value;
@@ -15,9 +16,31 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
+        const { searchParams } = new URL(request.url);
+        const startDate = searchParams.get('startDate');
+        const endDate = searchParams.get('endDate');
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = parseInt(searchParams.get('limit') || '20');
+        const offset = (page - 1) * limit;
+
         const visitorPool = await getVisitorDbConnection();
 
-        const { rows } = await visitorPool.query(`
+        let whereClause = '';
+        const queryParams: any[] = [];
+        let paramCount = 1;
+
+        if (startDate && endDate) {
+            whereClause = `WHERE (r."startDate" <= $${paramCount+1} AND r."endDate" >= $${paramCount})`;
+            queryParams.push(startDate, endDate);
+            paramCount += 2;
+        }
+
+        // Get total count for pagination
+        const countQuery = `SELECT COUNT(*) FROM "VisitorRequest" r ${whereClause}`;
+        const { rows: countRows } = await visitorPool.query(countQuery, queryParams);
+        const total = parseInt(countRows[0].count);
+
+        const mainQuery = `
             SELECT 
                 r.id,
                 r.status,
@@ -47,8 +70,13 @@ export async function GET(request: Request) {
                 ) as request_approvals
             FROM "VisitorRequest" r
             LEFT JOIN "User" p ON r."submitterId" = p.id
+            ${whereClause}
             ORDER BY r."createdAt" DESC
-        `);
+            LIMIT $${paramCount} OFFSET $${paramCount+1}
+        `;
+        queryParams.push(limit, offset);
+
+        const { rows } = await visitorPool.query(mainQuery, queryParams);
 
         // Format for the frontend
         const formattedRows = rows.map(r => ({
@@ -56,7 +84,15 @@ export async function GET(request: Request) {
             profiles: { name: r.profile_name, department: r.profile_department }
         }));
 
-        return NextResponse.json({ requests: formattedRows }, { status: 200 });
+        return NextResponse.json({ 
+            requests: formattedRows,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        }, { status: 200 });
 
     } catch (error: any) {
         console.error('Fetch requests error:', error);

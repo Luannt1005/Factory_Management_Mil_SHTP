@@ -7,8 +7,6 @@ import Image from "next/image";
 import styles from "./signup.module.css";
 import { EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
-// Supabase client
-import { supabase } from "@/lib/supabase";
 import { hashPassword } from "@/lib/password";
 
 export default function SignupPage() {
