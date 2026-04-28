@@ -43,7 +43,7 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === "azure-ad") {
         const pool = await getDbConnection();
-        const email = user.email || profile?.preferred_username || profile?.upn;
+        const email = user.email || (profile as any)?.preferred_username || (profile as any)?.upn;
         const name = user.name || profile?.name || email;
         
         if (!email) return false;

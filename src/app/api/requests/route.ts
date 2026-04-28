@@ -113,7 +113,7 @@ export async function POST(request: Request) {
                                     startDate: startDate,
                                     endDate: endDate,
                                     purposeOfVisit: purposeOfVisit,
-                                    submitterName: session.user.username
+                                    submitterName: (session.user as any).username
                                 }
                             }),
                         });
