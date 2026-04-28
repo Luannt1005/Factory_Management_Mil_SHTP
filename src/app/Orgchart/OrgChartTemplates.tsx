@@ -104,7 +104,7 @@ export function patchOrgChartTemplates(enableEditFeatures = false) {
 
   OrgChart.templates.big.minus = `
 <rect x="15" y="15" height="24" width="24"
-      fill="#000"
+      fill="#DB011C"
       rx="2" ry="2"></rect>
 <line x1="20" y1="27" x2="34" y2="27"
       stroke="white"
@@ -177,8 +177,7 @@ export function patchOrgChartTemplates(enableEditFeatures = false) {
   OrgChart.templates.group.padding = [70, 10, 1, 10];
 
   OrgChart.templates.group.node =
-    '<rect x="0" y="0" height="60" width="{w}" rx="0" ry="0" fill="#828282" stroke="#000" stroke-width="4" filter="url(#mil-shadow)"></rect>' +
-    '<rect x="0" y="0" height="60" width="{w}" rx="0" ry="0" fill="#828282" stroke="#000" stroke-width="4" filter="url(#mil-shadow)"></rect>' +
+    '<rect x="0" y="0" height="60" width="{w}" rx="0" ry="0" fill="#DB011C" stroke="#DB011C" stroke-width="4" filter="url(#mil-shadow)"></rect>' +
     '<rect x="0" y="0" height="8" width="{w}" fill="#DB011C"></rect>';
 
   if (enableEditFeatures) {
@@ -189,7 +188,7 @@ export function patchOrgChartTemplates(enableEditFeatures = false) {
     <g transform="translate({cw}, 0)">
         <foreignObject x="-140" y="0" width="280" height="60">
             <div xmlns="http://www.w3.org/1999/xhtml" style="width: 280px; height: 60px; display: flex; align-items: center; justify-content: center; text-align: center; white-space: normal; word-break: break-word; overflow: hidden;">
-                <div style="font-size: 18px; font-weight: 900; text-transform: uppercase; color: #000; line-height: 1.1; max-height: 55px; padding: 0 5px;">
+                <div style="font-size: 18px; font-weight: 900; text-transform: uppercase; color: #ffffff; line-height: 1.1; max-height: 55px; padding: 0 5px;">
                     {val}
                 </div>
             </div>
@@ -198,7 +197,7 @@ export function patchOrgChartTemplates(enableEditFeatures = false) {
   `;
 
   OrgChart.templates.group.link =
-    '<path stroke-linejoin="round" stroke="var(--color-org-line)" stroke-width="2px" fill="none" d="M{xa},{ya} {xb},{yb} {xc},{yc} L{xd},{yd}" />';
+    '<path stroke-linejoin="round" stroke="#DB011C" stroke-width="4px" fill="none" d="M{xa},{ya} {xb},{yb} {xc},{yc} L{xd},{yd}" />';
 
   OrgChart.templates.group.nodeMenuButton = "";
   OrgChart.templates.group.up = '';
@@ -266,8 +265,8 @@ export function patchOrgChartTemplates(enableEditFeatures = false) {
   OrgChart.templates.indirect_group = Object.assign({}, OrgChart.templates.group);
 
   OrgChart.templates.indirect_group.node =
-    '<rect x="0" y="0" height="60" width="{w}" rx="0" ry="0" fill="#828282" stroke="#1e90ff" stroke-width="4" stroke-dasharray="10" filter="url(#mil-shadow)"></rect>' +
-    '<rect x="0" y="0" height="60" width="{w}" rx="0" ry="0" fill="#828282" stroke="#1e90ff" stroke-width="4" stroke-dasharray="10" filter="url(#mil-shadow)"></rect>' +
+    '<rect x="0" y="0" height="60" width="{w}" rx="0" ry="0" fill="#DB011C" stroke="#DB011C" stroke-width="4" stroke-dasharray="10" filter="url(#mil-shadow)"></rect>' +
+    '<rect x="0" y="0" height="60" width="{w}" rx="0" ry="0" fill="#DB011C" stroke="#DB011C" stroke-width="4" stroke-dasharray="10" filter="url(#mil-shadow)"></rect>' +
     '<rect x="0" y="0" height="8" width="{w}" fill="#DB011C"></rect>';
 
   if (enableEditFeatures) {
@@ -275,7 +274,7 @@ export function patchOrgChartTemplates(enableEditFeatures = false) {
   }
 
   OrgChart.templates.indirect_group.link =
-    '<path stroke-linejoin="round" stroke="#1e90ff" stroke-width="4px" stroke-dasharray="10" fill="none" d="M{xa},{ya} {xb},{yb} {xc},{yc} L{xd},{yd}" />';
+    '<path stroke-linejoin="round" stroke="#DB011C" stroke-width="4px" stroke-dasharray="10" fill="none" d="M{xa},{ya} {xb},{yb} {xc},{yc} L{xd},{yd}" />';
 
 
   // --- TEMPLATE BIG TABLE (Description Table) ---
@@ -289,8 +288,8 @@ export function patchOrgChartTemplates(enableEditFeatures = false) {
   OrgChart.templates.big_table.node = `
   <rect x="0" y="0" height="{h}" width="{w}"
         fill="#ffffff"
-        stroke="#E5E7EB"
-        stroke-width="1"
+        stroke="#DB011C"
+        stroke-width="4"
         filter="url(#mil-shadow)"></rect>
   <rect x="0" y="0" height="10" width="{w}"
         fill="#DB011C" class="move-handle" style="cursor: move;"></rect>

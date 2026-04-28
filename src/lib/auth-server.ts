@@ -1,18 +1,14 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { decrypt } from './auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./authOptions";
 
 /**
- * Checks if the request is authenticated by verifying the 'auth' cookie using JWT verification.
+ * Checks if the request is authenticated by verifying NextAuth session.
  * @returns {Promise<boolean>} True if authenticated, false otherwise.
  */
 export async function isAuthenticated(): Promise<boolean> {
-    const cookieStore = await cookies();
-    const auth = cookieStore.get('auth');
-    if (!auth?.value) return false;
-
-    const payload = await decrypt(auth.value);
-    return !!payload;
+    const session = await getServerSession(authOptions);
+    return !!session;
 }
 
 /**
@@ -30,19 +26,18 @@ export function unauthorizedResponse() {
 }
 
 /**
- * Helper to get current username from cookie
+ * Helper to get current username from session
  */
 export async function getCurrentUser(): Promise<string | null> {
-    const cookieStore = await cookies();
-    const auth = cookieStore.get('auth');
-    if (!auth || !auth.value) return null;
-
     try {
-        const payload = await decrypt(auth.value);
-        if (payload?.user?.username) {
-            return payload.user.username;
+        const session = await getServerSession(authOptions);
+        if (session?.user && (session.user as any).username) {
+            return (session.user as any).username;
         }
-        return null; // Return null if username not found found in token
+        if (session?.user?.email) {
+            return session.user.email;
+        }
+        return null;
     } catch (e) {
         return null;
     }

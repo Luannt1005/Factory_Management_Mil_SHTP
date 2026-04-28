@@ -5,6 +5,8 @@ export async function POST() {
     try {
         const cookieStore = await cookies();
         cookieStore.delete("auth");
+        cookieStore.delete("next-auth.session-token");
+        cookieStore.delete("__Secure-next-auth.session-token");
 
         return NextResponse.json({
             success: true,

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { signIn } from "next-auth/react";
 import styles from "./login.module.css";
 import { EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
@@ -22,28 +23,31 @@ function LoginContent() {
   const redirect = searchParams.get("redirect") || "/";
   const { setUser } = useUser();
 
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam).replace(/_/g, " "));
+    }
+  }, [searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+      const res = await signIn("credentials", {
+        redirect: false,
+        username,
+        password,
       });
 
-      const data = await res.json();
-
-      if (!data.success) {
-        throw new Error(data.error || "Login failed");
+      if (res?.error) {
+        throw new Error(res.error || "Sai tài khoản hoặc mật khẩu");
       }
 
-      // 6. Save user info to context for UI
-      setUser(data.user);
-
-      // ✅ Show success animation
+      // We no longer have `data.user` from custom API, but we can just set success
+      // Or we can rely on `SessionProvider` or just proceed
       setSuccess(true);
 
       // Redirect after animation
@@ -176,7 +180,26 @@ function LoginContent() {
         </form>
 
         {/* Divider */}
-        <div className={styles['divider-line']}></div>
+        <div className={styles['divider-line']}>
+           <span className="text-sm text-gray-500 bg-white px-2 absolute left-1/2 -translate-x-1/2 -top-2.5">Hoặc</span>
+        </div>
+
+        {/* SSO Button */}
+        <div className="mt-4 flex flex-col gap-3 px-6">
+          <button
+            type="button"
+            onClick={() => signIn("azure-ad", { callbackUrl: redirect })}
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 21 21">
+              <path fill="#f25022" d="M1 1h9v9H1z" />
+              <path fill="#7fba00" d="M11 1h9v9h-9z" />
+              <path fill="#00a4ef" d="M1 11h9v9H1z" />
+              <path fill="#ffb900" d="M11 11h9v9h-9z" />
+            </svg>
+            Đăng nhập với Microsoft (SSO)
+          </button>
+        </div>
 
         {/* Footer Links */}
         <div className={styles['login-footer']}>
