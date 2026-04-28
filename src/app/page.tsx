@@ -1,15 +1,15 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import DepartmentSlider from '@/components/DepartmentSlider';
-import OrgChartView from '@/app/Orgchart/OrgChartView';
+import OrgChartView from '@/app/orgchart/OrgChartView';
 
 export default async function Home() {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth')?.value;
 
   // With our system, user always comes from internal login or AD, so redirect to login if no token.
-  const orgchartLink = token ? "/Orgchart" : "/login?redirect=/Orgchart";
-  const requestLink = token ? "/VisitorRequest" : "/login?redirect=/VisitorRequest";
+  const orgchartLink = token ? "/orgchart" : "/login?redirect=/orgchart";
+  const requestLink = token ? "/visitorrequest" : "/login?redirect=/visitorrequest";
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-gradient-to-br from-[#db011c] to-[#900112] text-white font-sans overflow-y-auto">
@@ -32,7 +32,7 @@ export default async function Home() {
           </Link>
           {token && (
             <Link 
-              href="/VisitorDashboard" 
+              href="/visitordashboard" 
               className="inline-flex items-center justify-center px-10 py-4 rounded-md text-lg font-bold text-white border-2 border-white/50 hover:border-white hover:bg-white/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm"
             >
               My Dashboard
@@ -74,7 +74,7 @@ export default async function Home() {
                 <p className="text-[#ffe5e5] text-lg max-w-md mb-8">
                   You must be logged in to view the interactive Organization Chart.
                 </p>
-                <Link href="/login?redirect=/Orgchart" className="px-8 py-3 bg-[#db011c] hover:bg-[#b90118] text-white rounded-full font-bold transition-colors shadow-lg">
+                <Link href="/login?redirect=/orgchart" className="px-8 py-3 bg-[#db011c] hover:bg-[#b90118] text-white rounded-full font-bold transition-colors shadow-lg">
                   Login to Access
                 </Link>
               </div>
@@ -83,7 +83,7 @@ export default async function Home() {
 
           <div className="mt-12 text-center">
             <Link 
-              href="/Orgchart" 
+              href="/orgchart" 
               className="inline-flex items-center gap-2 px-10 py-4 rounded-md text-lg font-bold text-white bg-white/10 border-2 border-white hover:bg-white/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm"
             >
               Explore Full Organization Details

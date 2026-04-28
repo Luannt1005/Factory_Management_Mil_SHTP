@@ -17,7 +17,7 @@ export default function IntroductionPage() {
 
             <div className="grid md:grid-cols-3 gap-8 px-4">
                 {/* About SHTP */}
-                <Link href="/Introduction/about_shtp" className="group">
+                <Link href="/introduction/about_shtp" className="group">
                     <div className="h-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-3xl p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-[#db011c]/10 hover:-translate-y-2 relative overflow-hidden flex flex-col">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#db011c]/5 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110" />
                         
@@ -37,7 +37,7 @@ export default function IntroductionPage() {
                 </Link>
 
                 {/* About VN */}
-                <Link href="/Introduction/about_vn" className="group">
+                <Link href="/introduction/about_vn" className="group">
                     <div className="h-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-3xl p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-[#db011c]/10 hover:-translate-y-2 relative overflow-hidden flex flex-col">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#db011c]/5 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110" />
                         
@@ -57,7 +57,7 @@ export default function IntroductionPage() {
                 </Link>
 
                 {/* Contact */}
-                <Link href="/Introduction/contacts" className="group">
+                <Link href="/introduction/contacts" className="group">
                     <div className="h-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-3xl p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-[#db011c]/10 hover:-translate-y-2 relative overflow-hidden flex flex-col">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#db011c]/5 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110" />
                         

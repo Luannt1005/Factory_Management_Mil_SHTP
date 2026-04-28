@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useOrgData } from "@/hooks/useOrgData";
 import LoadingScreen from "@/components/loading-screen";
-import styles from "../../Orgchart/OrgChart.module.css";
+import styles from "../../orgchart/OrgChart.module.css";
 import CustomizeHeader from "./CustomizeHeader";
 import CreateProfileModal from "./CreateProfileModal";
 import { useOrgProfileManager } from "../hooks/useOrgProfileManager";

@@ -29,8 +29,8 @@ import { swrFetcher } from '@/lib/api-client';
 
 // API endpoints for prefetching
 const API_ENDPOINTS: { [key: string]: string } = {
-    '/Dashboard': '/api/sheet',
-    '/SheetManager': '/api/sheet',
+    '/dashboard': '/api/sheet',
+    '/sheetmanager': '/api/sheet',
 };
 
 export default function Sidebar() {
@@ -54,9 +54,9 @@ export default function Sidebar() {
     }
 
     // Determine the active section
-    const isIntroduction = pathname.startsWith('/Introduction');
-    const isVisitorApp = pathname.startsWith('/VisitorRequest') || pathname.startsWith('/VisitorDashboard') || pathname.startsWith('/VisitorAdmin') || pathname.startsWith('/VisitorAnalytics');
-    const isOrgchart = pathname.startsWith('/Orgchart') || pathname.startsWith('/Dashboard') || pathname.startsWith('/Customize') || pathname.startsWith('/SheetManager') || pathname.startsWith('/Headcount_open') || pathname.startsWith('/Import_HR_Data') || pathname.startsWith('/Admin') || pathname.startsWith('/viewdata_org');
+    const isIntroduction = pathname.startsWith('/introduction');
+    const isVisitorApp = pathname.startsWith('/visitorrequest') || pathname.startsWith('/visitordashboard') || pathname.startsWith('/visitoradmin') || pathname.startsWith('/visitoranalytics');
+    const isOrgchart = pathname.startsWith('/orgchart') || pathname.startsWith('/dashboard') || pathname.startsWith('/customize') || pathname.startsWith('/sheetmanager') || pathname.startsWith('/headcount_open') || pathname.startsWith('/import_hr_data') || pathname.startsWith('/admin') || pathname.startsWith('/viewdata_org');
 
     const navGroups: NavGroup[] = [];
 
@@ -64,20 +64,20 @@ export default function Sidebar() {
         navGroups.push({
             title: 'Introduction',
             items: [
-                { name: 'About SHTP', path: '/Introduction/about_shtp', icon: BuildingOfficeIcon },
-                { name: 'About VN', path: '/Introduction/about_vn', icon: GlobeAsiaAustraliaIcon },
-                { name: 'Contact', path: '/Introduction/contacts', icon: PhoneIcon },
+                { name: 'About SHTP', path: '/introduction/about_shtp', icon: BuildingOfficeIcon },
+                { name: 'About VN', path: '/introduction/about_vn', icon: GlobeAsiaAustraliaIcon },
+                { name: 'Contact', path: '/introduction/contacts', icon: PhoneIcon },
             ]
         });
     } else if (isVisitorApp) {
         navGroups.push({
             title: 'Visitor Management',
             items: [
-                { name: 'Registration', path: '/VisitorRequest', icon: TicketIcon },
-                { name: 'My Request', path: '/VisitorDashboard', icon: ClipboardDocumentListIcon },
-                { name: 'Visitor Admin', path: '/VisitorAdmin', icon: Cog6ToothIcon, requiredRole: 'admin' },
-                { name: 'Manage Room', path: '/VisitorAdmin/rooms', icon: KeyIcon, requiredRole: 'admin' },
-                { name: 'Visitor Dashboard', path: '/VisitorAnalytics', icon: ChartBarSquareIcon, requiredRole: 'admin' },
+                { name: 'Registration', path: '/visitorrequest', icon: TicketIcon },
+                { name: 'My Request', path: '/visitordashboard', icon: ClipboardDocumentListIcon },
+                { name: 'Visitor Admin', path: '/visitoradmin', icon: Cog6ToothIcon, requiredRole: 'admin' },
+                { name: 'Manage Room', path: '/visitoradmin/rooms', icon: KeyIcon, requiredRole: 'admin' },
+                { name: 'Visitor Dashboard', path: '/visitoranalytics', icon: ChartBarSquareIcon, requiredRole: 'admin' },
             ]
         });
     } else {
@@ -86,23 +86,23 @@ export default function Sidebar() {
             {
                 title: 'Chart',
                 items: [
-                    { name: 'Org Chart', path: '/Orgchart', icon: ShareIcon },
-                    { name: 'Dashboard', path: '/Dashboard', icon: ChartBarSquareIcon },
-                    { name: 'Customize Chart', path: '/Customize', icon: PencilSquareIcon },
+                    { name: 'Org Chart', path: '/orgchart', icon: ShareIcon },
+                    { name: 'Dashboard', path: '/dashboard', icon: ChartBarSquareIcon },
+                    { name: 'Customize Chart', path: '/customize', icon: PencilSquareIcon },
                 ]
             },
             {
                 title: 'Management',
                 items: [
-                    { name: 'Headcount Management', path: '/SheetManager', icon: TableCellsIcon },
-                    { name: 'Headcount Open', path: '/Headcount_open', icon: UserGroupIcon },
-                    { name: 'Import Images', path: '/Import_HR_Data', icon: CloudArrowUpIcon },
+                    { name: 'Headcount Management', path: '/sheetmanager', icon: TableCellsIcon },
+                    { name: 'Headcount Open', path: '/headcount_open', icon: UserGroupIcon },
+                    { name: 'Import Images', path: '/import_hr_data', icon: CloudArrowUpIcon },
                 ]
             },
             {
                 title: 'Admin',
                 items: [
-                    { name: 'Admin Console', path: '/Admin', icon: Cog6ToothIcon, requiredRole: 'admin' },
+                    { name: 'Admin Console', path: '/admin', icon: Cog6ToothIcon, requiredRole: 'admin' },
                 ]
             }
         );
@@ -157,7 +157,7 @@ export default function Sidebar() {
                             if (userRole === 'admin') return true;
                             if (userRole === 'viewer') {
                                 // Viewer only sees specific paths in Chart and Profile groups
-                                const allowedPaths = ['/Orgchart', '/Dashboard', '/Customize', '/profile'];
+                                const allowedPaths = ['/orgchart', '/dashboard', '/customize', '/profile'];
                                 return allowedPaths.some(path => item.path.startsWith(path));
                             }
                             // Default (user) role

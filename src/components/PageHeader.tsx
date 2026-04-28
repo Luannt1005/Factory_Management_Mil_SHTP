@@ -6,55 +6,55 @@ export default function PageHeader() {
     const pathname = usePathname();
 
     const pageTitles: Record<string, { title: string; subtitle?: string }> = {
-        '/Dashboard': {
+        '/dashboard': {
             title: 'HR Dashboard',
             subtitle: 'Organization metrics overview'
         },
-        '/Introduction': {
+        '/introduction': {
             title: 'Welcome to TTI',
             subtitle: 'Overview and general information'
         },
-        '/Introduction/departments': {
+        '/introduction/departments': {
             title: 'Departments',
             subtitle: 'Detailed information about our units'
         },
-        '/Introduction/contacts': {
+        '/introduction/contacts': {
             title: 'Contact Persons',
             subtitle: 'Key contacts across the organization'
         },
-        '/VisitorRequest': {
+        '/visitorrequest': {
             title: 'Visitor Request',
             subtitle: 'Register and manage visitor appointments'
         },
-        '/VisitorDashboard': {
+        '/visitordashboard': {
             title: 'My Requests',
             subtitle: 'Track your visitor registration status'
         },
-        '/Orgchart': {
+        '/orgchart': {
             title: 'Organization Charts',
             subtitle: 'Visual representation of hierarchy'
         },
-        '/Customize': {
+        '/customize': {
             title: 'Chart Customization',
             subtitle: 'Edit and manage organization profiles'
         },
-        '/SheetManager': {
+        '/sheetmanager': {
             title: 'Headcount Management',
             subtitle: 'Track and manage staff details'
         },
-        '/Headcount_open': {
+        '/headcount_open': {
             title: 'Headcount Open',
             subtitle: 'View and manage open positions'
         },
-        '/Import_HR_Data': {
+        '/import_hr_data': {
             title: 'Data Integration',
             subtitle: 'Upload and sync employee information'
         },
-        '/Admin': {
+        '/admin': {
             title: 'Admin Console',
             subtitle: 'System configuration and user management'
         },
-        '/VisitorAdmin': {
+        '/visitoradmin': {
             title: 'Visitor Management Admin',
             subtitle: 'Overall management of visitor requests and factory access'
         },

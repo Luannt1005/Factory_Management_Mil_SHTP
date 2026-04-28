@@ -28,7 +28,7 @@ export default function ContactsPage() {
     return (
         <div className="max-w-6xl mx-auto space-y-12 py-8 px-4">
             <div className="flex items-center gap-4">
-                <Link href="/Introduction" className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors">
+                <Link href="/introduction" className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors">
                     <ArrowLeftIcon className="w-6 h-6 text-muted" />
                 </Link>
                 <div>

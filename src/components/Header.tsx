@@ -94,18 +94,18 @@ export default function Header() {
                         {[
                             { 
                                 name: 'Introduction', 
-                                path: '/Introduction', 
-                                matches: ['/Introduction']
+                                path: '/introduction', 
+                                matches: ['/introduction']
                             },
                             { 
                                 name: 'Visitor Management', 
-                                path: '/VisitorRequest', 
-                                matches: ['/VisitorRequest', '/VisitorDashboard', '/VisitorAdmin']
+                                path: '/visitorrequest', 
+                                matches: ['/visitorrequest', '/visitordashboard', '/visitoradmin']
                             },
                             { 
                                 name: 'Orgchart', 
-                                path: '/Orgchart', 
-                                matches: ['/Orgchart', '/Dashboard', '/Customize', '/SheetManager', '/Headcount_open', '/Import_HR_Data', '/Admin', '/viewdata_org']
+                                path: '/orgchart', 
+                                matches: ['/orgchart', '/dashboard', '/customize', '/sheetmanager', '/headcount_open', '/import_hr_data', '/admin', '/viewdata_org']
                             },
                         ].map((item) => {
                             const isActive = item.matches.some(match => pathname.startsWith(match));
@@ -208,7 +208,7 @@ export default function Header() {
                                     </li>
                                     <li>
                                         <Link
-                                            href="/VisitorDashboard"
+                                            href="/visitordashboard"
                                             className="flex items-center gap-3.5 px-6 py-2 text-sm font-medium duration-300 ease-in-out hover:text-primary hover:bg-[var(--color-bg-page)] lg:text-base text-body"
                                         >
                                             <span className="w-5 h-5 flex items-center justify-center text-lg">📝</span>
@@ -218,7 +218,7 @@ export default function Header() {
                                     {user?.role === 'admin' && (
                                         <li>
                                             <Link
-                                                href="/VisitorAdmin"
+                                                href="/visitoradmin"
                                                 className="flex items-center gap-3.5 px-6 py-2 text-sm font-medium duration-300 ease-in-out text-red-500 hover:text-red-600 hover:bg-red-50 lg:text-base"
                                             >
                                                 <span className="w-5 h-5 flex items-center justify-center text-lg">🛡️</span>

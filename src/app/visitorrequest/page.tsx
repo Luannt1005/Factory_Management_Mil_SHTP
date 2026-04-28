@@ -59,7 +59,7 @@ export default function NewRequestPage() {
 
             if (res.ok) {
                 alert('Registration successful!');
-                router.push('/VisitorDashboard');
+                router.push('/visitordashboard');
                 router.refresh();
             } else {
                 const error = await res.json();

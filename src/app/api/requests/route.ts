@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
-import { decrypt } from '@/lib/auth';
-import { cookies } from 'next/headers';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
 
 async function getOrCreateVisitorProfile(user: any, visitorPool: any) {
     const email = user.username;
@@ -28,12 +28,7 @@ async function getOrCreateVisitorProfile(user: any, visitorPool: any) {
 export async function POST(request: Request) {
     let visitorPool;
     try {
-        const cookieStore = await cookies();
-        const token = cookieStore.get('auth')?.value;
-
-        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-        const session = await decrypt(token);
+        const session = await getServerSession(authOptions);
         if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await request.json();
@@ -142,12 +137,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
     try {
-        const cookieStore = await cookies();
-        const token = cookieStore.get('auth')?.value;
-
-        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-        const session = await decrypt(token);
+        const session = await getServerSession(authOptions);
         if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const { searchParams } = new URL(request.url);

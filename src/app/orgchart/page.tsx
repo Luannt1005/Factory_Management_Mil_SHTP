@@ -57,7 +57,7 @@ function OrgChartPageContent() {
     } else {
       params.set("group", sector);
     }
-    router.push(`/Orgchart?${params.toString()}`);
+    router.push(`/orgchart?${params.toString()}`);
   };
 
   const dispatchTypeChange = (type: string) => {
@@ -67,7 +67,7 @@ function OrgChartPageContent() {
     } else {
       params.set("type", type);
     }
-    router.push(`/Orgchart?${params.toString()}`);
+    router.push(`/orgchart?${params.toString()}`);
   }
 
   return (

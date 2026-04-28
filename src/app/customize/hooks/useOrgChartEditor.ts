@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, RefObject } from "react";
 import OrgChart from "@/lib/orgchart";
-import { patchOrgChartTemplates } from "@/app/Orgchart/OrgChartTemplates";
+import { patchOrgChartTemplates } from "@/app/orgchart/OrgChartTemplates";
 
 export function useOrgChartEditor(
     chartContainerRef: RefObject<HTMLDivElement | null>,

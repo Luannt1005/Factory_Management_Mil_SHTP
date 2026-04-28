@@ -1,19 +1,15 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { decrypt } from "@/lib/auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
 import { getDbConnection } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
 export async function PUT(req: Request) {
     try {
-        const cookieStore = await cookies();
-        const session = cookieStore.get("auth")?.value;
-        if (!session) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
-        const payload = await decrypt(session);
-        if (!payload || !payload.user) return NextResponse.json({ success: false, message: "Invalid session" }, { status: 401 });
-
-        const userId = payload.user.id;
+        const userId = (session.user as any).id;
         const { currentPassword, newPassword } = await req.json();
 
         if (!currentPassword || !newPassword) {

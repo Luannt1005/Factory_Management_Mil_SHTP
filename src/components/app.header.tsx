@@ -104,33 +104,33 @@ function AppHeader() {
           {/* Navigation - Center */}
           <nav className="mwk-nav">
             <Link
-              href="/Orgchart"
-              className={`mwk-nav-link ${pathname === "/Orgchart" ? "active" : ""}`}
+              href="/orgchart"
+              className={`mwk-nav-link ${pathname === "/orgchart" ? "active" : ""}`}
             >
               Sơ đồ Tổ chức
             </Link>
             <Link
-              href="/Import_HR_Data"
-              className={`mwk-nav-link ${pathname === "/Import_HR_Data" ? "active" : ""}`}
+              href="/import_hr_data"
+              className={`mwk-nav-link ${pathname === "/import_hr_data" ? "active" : ""}`}
             >
               Import Data HR
             </Link>
             <Link
-              href="/Dashboard"
-              className={`mwk-nav-link ${pathname === "/Dashboard" ? "active" : ""}`}
+              href="/dashboard"
+              className={`mwk-nav-link ${pathname === "/dashboard" ? "active" : ""}`}
             >
               Dashboard
             </Link>
             <Link
-              href="/SheetManager"
-              className={`mwk-nav-link ${pathname === "/SheetManager" ? "active" : ""}`}
+              href="/sheetmanager"
+              className={`mwk-nav-link ${pathname === "/sheetmanager" ? "active" : ""}`}
             >
               Edit table HR
             </Link>
 
             <Link
-              href="/Customize"
-              className={`mwk-nav-link ${pathname === "/Customize" ? "active" : ""}`}
+              href="/customize"
+              className={`mwk-nav-link ${pathname === "/customize" ? "active" : ""}`}
             >
               Orgchart tùy chỉnh
             </Link>
