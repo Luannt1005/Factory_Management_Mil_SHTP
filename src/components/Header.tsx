@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { signOut } from "next-auth/react";
 
 export default function Header() {
     const pathname = usePathname();
@@ -57,9 +58,8 @@ export default function Header() {
 
     const handleLogout = async () => {
         try {
-            await fetch('/api/logout', { method: 'POST' });
+            await signOut({ callbackUrl: '/login' });
             localStorage.removeItem('user');
-            window.location.href = '/login';
         } catch (e) {
             console.error(e);
             localStorage.removeItem('user');

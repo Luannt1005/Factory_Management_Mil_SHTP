@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 
+import { NextAuthProvider } from "@/components/NextAuthProvider";
 import PageHeader from "@/components/PageHeader";
 
 export default function RootLayout({
@@ -30,23 +31,25 @@ export default function RootLayout({
         className="antialiased bg-[var(--color-bg-page)]"
         suppressHydrationWarning
       >
-        <UserProvider>
-          <div className="flex flex-col w-full h-screen overflow-hidden">
-            <Header />
-            <div className="flex-1 flex overflow-hidden">
-              <Sidebar />
-              <main className="flex-1 overflow-auto bg-[var(--color-bg-page)] relative scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent transition-colors duration-300 flex flex-col">
-                <div className="p-6 md:p-8 flex-1">
-                  <PageHeader />
-                  <PageTransition>
-                    {children}
-                  </PageTransition>
-                </div>
-                <AppFooter />
-              </main>
+        <NextAuthProvider>
+          <UserProvider>
+            <div className="flex flex-col w-full h-screen overflow-hidden">
+              <Header />
+              <div className="flex-1 flex overflow-hidden">
+                <Sidebar />
+                <main className="flex-1 overflow-auto bg-[var(--color-bg-page)] relative scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent transition-colors duration-300 flex flex-col">
+                  <div className="p-6 md:p-8 flex-1">
+                    <PageHeader />
+                    <PageTransition>
+                      {children}
+                    </PageTransition>
+                  </div>
+                  <AppFooter />
+                </main>
+              </div>
             </div>
-          </div>
-        </UserProvider>
+          </UserProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );
