@@ -47,12 +47,7 @@ export const authOptions: NextAuthOptions = {
           const email = user.email || (profile as any)?.preferred_username || (profile as any)?.upn;
           const name = user.name || profile?.name || email;
           
-          console.log(`[SSO Login Attempt] Email: ${email}, Name: ${name}`);
-
-          if (!email) {
-            console.error("[SSO Login Error] Could not find email/username for user:", profile);
-            return false;
-          }
+          if (!email) return false;
 
           // Ensure user exists in DB
           const result = await pool.query("SELECT * FROM users WHERE username = $1", [email]);
