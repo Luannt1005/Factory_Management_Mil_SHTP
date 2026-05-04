@@ -41,36 +41,41 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === "azure-ad") {
-        const pool = await getDbConnection();
-        const email = user.email || (profile as any)?.preferred_username || (profile as any)?.upn;
-        const name = user.name || profile?.name || email;
-        
-        console.log(`[SSO Login Attempt] Email: ${email}, Name: ${name}`);
+      try {
+        if (account?.provider === "azure-ad") {
+          const pool = await getDbConnection();
+          const email = user.email || (profile as any)?.preferred_username || (profile as any)?.upn;
+          const name = user.name || profile?.name || email;
+          
+          console.log(`[SSO Login Attempt] Email: ${email}, Name: ${name}`);
 
-        if (!email) {
-          console.error("[SSO Login Error] Could not find email/username for user:", profile);
-          return false;
-        }
+          if (!email) {
+            console.error("[SSO Login Error] Could not find email/username for user:", profile);
+            return false;
+          }
 
-        // Ensure user exists in DB
-        const result = await pool.query("SELECT * FROM users WHERE username = $1", [email]);
-        if (result.rows.length === 0) {
-          const dummyPassword = "sso_user_no_password_" + Math.random().toString(36).substring(7);
-          const insertResult = await pool.query(
-              "INSERT INTO users (username, password, full_name, role) VALUES ($1, $2, $3, $4) RETURNING *",
-              [email, dummyPassword, name, "user"]
-          );
-          const newUser = insertResult.rows[0];
-          user.id = newUser.id.toString();
-          (user as any).role = newUser.role;
-        } else {
-          const existingUser = result.rows[0];
-          user.id = existingUser.id.toString();
-          (user as any).role = existingUser.role || "user";
+          // Ensure user exists in DB
+          const result = await pool.query("SELECT * FROM users WHERE username = $1", [email]);
+          if (result.rows.length === 0) {
+            const dummyPassword = "sso_user_no_password_" + Math.random().toString(36).substring(7);
+            const insertResult = await pool.query(
+                "INSERT INTO users (username, password, full_name, role) VALUES ($1, $2, $3, $4) RETURNING *",
+                [email, dummyPassword, name, "user"]
+            );
+            const newUser = insertResult.rows[0];
+            user.id = newUser.id.toString();
+            (user as any).role = newUser.role;
+          } else {
+            const existingUser = result.rows[0];
+            user.id = existingUser.id.toString();
+            (user as any).role = existingUser.role || "user";
+          }
         }
+        return true;
+      } catch (error) {
+        console.error("[SSO Critical Error]", error);
+        return false;
       }
-      return true;
     },
     async jwt({ token, user }) {
       if (user) {
