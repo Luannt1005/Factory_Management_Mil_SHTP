@@ -74,19 +74,18 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) {
-        console.log(`[JWT Callback] User logged in: ${user.email || (user as any).username}`);
+        // Chỉ lưu những thông tin thực sự cần thiết để giảm dung lượng Cookie
         token.id = user.id;
         token.role = (user as any).role || "user";
-        token.username = user.email || (user as any).username || user.name;
+        token.email = user.email || (user as any).username;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        console.log(`[Session Callback] Creating session for: ${token.username}`);
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
-        (session.user as any).username = token.username;
+        (session.user as any).username = token.email;
       }
       return session;
     },
