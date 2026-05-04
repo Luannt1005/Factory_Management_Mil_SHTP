@@ -74,14 +74,16 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) {
+        console.log(`[JWT Callback] User logged in: ${user.email || (user as any).username}`);
         token.id = user.id;
         token.role = (user as any).role || "user";
-        token.username = user.email || user.name;
+        token.username = user.email || (user as any).username || user.name;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
+        console.log(`[Session Callback] Creating session for: ${token.username}`);
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
         (session.user as any).username = token.username;

@@ -4,9 +4,10 @@ module.exports = {
             name: "orgchart",
             script: "node_modules/next/dist/bin/next",
             args: "start -p 3000 --hostname 0.0.0.0",
-            cwd: "c:/Users/idmcauto.svc/Desktop/Orgchart_TTI_onprem",
+            cwd: "./",
             env: {
-                NODE_ENV: "production"
+                NODE_ENV: "production",
+                NODE_OPTIONS: "--max-http-header-size=65536"
             },
             autorestart: true,
             watch: false,
