@@ -3,9 +3,16 @@ import { cookies } from 'next/headers';
 import DepartmentSlider from '@/components/DepartmentSlider';
 import OrgChartView from '@/app/orgchart/OrgChartView';
 
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
+
 export default async function Home() {
+  const session = await getServerSession(authOptions);
   const cookieStore = await cookies();
-  const token = cookieStore.get('auth')?.value;
+  const legacyToken = cookieStore.get('auth')?.value;
+
+  // Hỗ trợ cả session mới (NextAuth) và token cũ (legacy auth cookie)
+  const token = session || legacyToken;
 
   // With our system, user always comes from internal login or AD, so redirect to login if no token.
   const orgchartLink = token ? "/orgchart" : "/login?redirect=/orgchart";
@@ -24,15 +31,15 @@ export default async function Home() {
         </p>
 
         <div className="flex flex-wrap gap-6 justify-center mb-16">
-          <Link 
-            href={requestLink} 
+          <Link
+            href={requestLink}
             className="inline-flex items-center justify-center px-10 py-4 rounded-md text-lg font-bold text-[#db011c] bg-white border border-white hover:bg-white/95 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 shadow-lg"
           >
             Request Visitor
           </Link>
           {token && (
-            <Link 
-              href="/visitordashboard" 
+            <Link
+              href="/visitordashboard"
               className="inline-flex items-center justify-center px-10 py-4 rounded-md text-lg font-bold text-white border-2 border-white/50 hover:border-white hover:bg-white/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm"
             >
               My Dashboard
@@ -48,7 +55,7 @@ export default async function Home() {
           <p className="text-center text-xl text-[#ffe5e5] mb-16 max-w-3xl mx-auto">
             Explore the various divisions driving innovation and excellence at our facility.
           </p>
-          
+
           <DepartmentSlider />
         </div>
       </section>
@@ -62,7 +69,7 @@ export default async function Home() {
               Pan, zoom, and explore our organizational structure right from the home page.
             </p>
           </div>
-          
+
           <div className="w-full h-[600px] bg-white rounded-2xl shadow-2xl overflow-hidden border border-white/20 relative">
             <div className="absolute inset-0 bg-white">
               <OrgChartView />
@@ -78,12 +85,12 @@ export default async function Home() {
                   Login to Access
                 </Link>
               </div>
-             )}
+            )}
           </div>
 
           <div className="mt-12 text-center">
-            <Link 
-              href="/orgchart" 
+            <Link
+              href="/orgchart"
               className="inline-flex items-center gap-2 px-10 py-4 rounded-md text-lg font-bold text-white bg-white/10 border-2 border-white hover:bg-white/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm"
             >
               Explore Full Organization Details

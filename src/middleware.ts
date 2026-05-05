@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const auth = request.cookies.get("next-auth.session-token")?.value || request.cookies.get("__Secure-next-auth.session-token")?.value;
+  const auth = 
+    request.cookies.get("next-auth.session-token")?.value || 
+    request.cookies.get("__Secure-next-auth.session-token")?.value ||
+    request.cookies.get("auth")?.value;
 
   if (!auth) {
     const url = new URL("/login", request.url);
