@@ -1,16 +1,22 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export function middleware(request: NextRequest) {
-  const auth = 
-    request.cookies.get("next-auth.session-token")?.value || 
-    request.cookies.get("__Secure-next-auth.session-token")?.value ||
-    request.cookies.get("auth")?.value;
 
-  if (!auth) {
+export async function middleware(request: NextRequest) {
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  // console.log("MIDDLEWARE TOKEN:", token);
+
+  if (!token) {
     const url = new URL("/login", request.url);
-    // Store where the user was trying to go
-    url.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);
+    url.searchParams.set(
+      "redirect",
+      request.nextUrl.pathname + request.nextUrl.search
+    );
     return NextResponse.redirect(url);
   }
 
