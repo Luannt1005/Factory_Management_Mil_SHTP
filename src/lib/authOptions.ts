@@ -147,6 +147,31 @@ export const authOptions: NextAuthOptions = {
               token.email = email;
             }
           }
+
+          // Fetch Azure AD Profile Photo if using SSO
+          if (account?.provider === "azure-ad") {
+            const profileData = profile as any;
+            // Nếu trong profile đã có sẵn chuỗi ảnh (base64 hoặc url), dùng luôn
+            if (profileData?.picture || profileData?.image || user.image) {
+              token.picture = profileData?.picture || profileData?.image || user.image;
+            } 
+            // Nếu không có, mới gọi Graph API để lấy
+            else if (account.access_token) {
+              try {
+                const photoResponse = await fetch("https://graph.microsoft.com/v1.0/me/photo/$value", {
+                  headers: { Authorization: `Bearer ${account.access_token}` }
+                });
+                
+                if (photoResponse.ok) {
+                  const buffer = await photoResponse.arrayBuffer();
+                  const base64 = Buffer.from(buffer).toString("base64");
+                  token.picture = `data:image/jpeg;base64,${base64}`;
+                }
+              } catch (photoErr) {
+                console.error("[SSO Photo Fetch Error]", photoErr);
+              }
+            }
+          }
         } catch (error) {
           console.error("[JWT Callback Error]", error);
         }
@@ -158,6 +183,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
         (session.user as any).username = token.email;
+        session.user.image = token.picture as string;
         // Đảm bảo session.user.email cũng khớp với email trong DB
         session.user.email = token.email as string;
       }

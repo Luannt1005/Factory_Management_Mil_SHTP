@@ -126,6 +126,12 @@ const formatDate = (value: any): string => {
   }
 };
 
+const trimLeadingZeros = (value: string | null | undefined): string => {
+  if (!value) return "";
+  const trimmed = String(value).replace(/^0+/, '') || '0';
+  return trimmed;
+};
+
 const IMAGE_BASE_URL = "/api/uploads/";
 
 const getStatusColor = (value: string, type: string) => {
@@ -266,7 +272,7 @@ const SheetManager = ({
       // 2. Prepare Upload
       const formData = new FormData();
       formData.append("file", blob);
-      formData.append("filename", empId); // Name is Emp ID
+      formData.append("filename", trimLeadingZeros(empId)); // Name is trimmed Emp ID
 
       // 3. Upload via API
       const response = await fetch("/api/upload-image", {
@@ -928,7 +934,9 @@ const SheetManager = ({
                                 title="Click to change photo"
                               >
                                 <img
-                                  src={`${IMAGE_BASE_URL}${row["Emp ID"]}.webp?v=${imageVersion}`}
+                                  src={row["Employee\r\n Type"] === 'hc_open' 
+                                    ? '/headcount_open.png' 
+                                    : `${IMAGE_BASE_URL}${trimLeadingZeros(row["Emp ID"])}.webp?v=${imageVersion}`}
                                   alt=""
                                   loading="lazy"
                                   className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"

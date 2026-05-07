@@ -66,7 +66,10 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ className, filter, nodes,
             experience: calculateExperience(node['Joining\r\n Date'] || node['Joining Date'] || ''),
             fullName: node['FullName '] || node['FullName'] || node.name || 'Unknown',
             dlIdlStaff: node['DL/IDL/Staff'] || '',
-            imageUrl: node.image || node.img || `/api/uploads/${node['Emp ID'] || node.id}.webp`
+            imageUrl: node.image || node.img || 
+                ((node['Employee Type'] === 'hc_open' || (node.tags && node.tags.includes('headcount_open')))
+                    ? '/headcount_open.png' 
+                    : `/api/uploads/${String(node['Emp ID'] || node.id || '').replace(/^0+/, '')}.webp?v=${Date.now()}`)
         }));
 
         // Apply filters

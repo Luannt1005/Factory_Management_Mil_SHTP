@@ -185,9 +185,17 @@ export default function Header() {
                             </span>
 
                             <span className="h-10 w-10 rounded-full overflow-hidden bg-[var(--color-bg-page)] border border-[var(--color-border)]">
-                                <div className="w-full h-full flex items-center justify-center text-muted font-bold text-lg bg-[var(--color-bg-page)]">
-                                    {user?.full_name?.charAt(0).toUpperCase() || <UserCircleIcon className="w-8 h-8" />}
-                                </div>
+                                {user?.image ? (
+                                    <img 
+                                        src={user.image} 
+                                        alt={user.full_name} 
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-muted font-bold text-lg bg-[var(--color-bg-page)]">
+                                        {user?.full_name?.charAt(0).toUpperCase() || <UserCircleIcon className="w-8 h-8" />}
+                                    </div>
+                                )}
                             </span>
 
                             <ChevronDownIcon className={`w-4 h-4 text-muted transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />

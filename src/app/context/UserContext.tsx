@@ -8,6 +8,7 @@ interface User {
     username: string;
     full_name: string;
     role: string;
+    image?: string;
 }
 
 interface UserContextProps {
@@ -29,6 +30,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
                 username: (session.user as any).username || session.user.email || "",
                 full_name: session.user.name || "",
                 role: (session.user as any).role || "user",
+                image: session.user.image || undefined,
             };
             setUser(nextUser);
             localStorage.setItem('user', JSON.stringify(nextUser));
