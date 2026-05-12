@@ -11,7 +11,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if ((session.user as any).role !== 'admin') {
+        if ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 

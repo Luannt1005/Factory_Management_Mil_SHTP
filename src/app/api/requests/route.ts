@@ -35,6 +35,7 @@ export async function POST(request: Request) {
         const {
             visitorName, visitorTitle, currentCompany, startDate, endDate,
             purposeOfVisit, visitorCategory, details, roomIds,
+            visitingSite, purposeDetail
         } = body;
 
         visitorPool = await getVisitorDbConnection();
@@ -69,10 +70,10 @@ export async function POST(request: Request) {
 
         const { rows: visitorRequests } = await visitorPool.query(
             `INSERT INTO "VisitorRequest" 
-             (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt")
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'IN PROCESS', NOW())
+             (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt", "visitingSite", "purposeDetail")
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'IN PROCESS', NOW(), $11, $12)
              RETURNING id`,
-            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate), purposeOfVisit, visitorCategory, JSON.stringify(details)]
+            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate), purposeOfVisit, visitorCategory, JSON.stringify(details), visitingSite, purposeDetail]
         );
 
         const visitorRequestId = visitorRequests[0].id;
@@ -177,6 +178,8 @@ export async function GET(request: Request) {
                 r."endDate" as end_date,
                 r."purposeOfVisit" as purpose_of_visit,
                 r."visitorCategory" as visitor_category,
+                r."visitingSite" as visiting_site,
+                r."purposeDetail" as purpose_detail,
                 r.details,
                 r."createdAt" as created_at,
                 (

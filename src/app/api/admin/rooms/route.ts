@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || (session.user as any).role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        if (!session || ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const body = await request.json();
         const { category, name, approver_email } = body;
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || (session.user as any).role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        if (!session || ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const body = await request.json();
         const { id, category, name, approver_email, is_active } = body;

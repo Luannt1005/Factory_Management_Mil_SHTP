@@ -19,6 +19,8 @@ export default function NewRequestPage() {
         endDate: '',
         purposeOfVisit: 'Business / Meeting',
         visitorCategory: 'Vendor',
+        visitingSite: 'SHTP',
+        purposeDetail: '',
         details: {
             factoryTour: 'No',
             mealRegistration: 'No',
@@ -94,6 +96,28 @@ export default function NewRequestPage() {
         return acc;
     }, {});
 
+    const toggleSite = (site: string) => {
+        setFormData(prev => {
+            const isSHTP = prev.visitingSite === 'SHTP' || prev.visitingSite === 'Both';
+            const isDDK = prev.visitingSite === 'DDK' || prev.visitingSite === 'Both';
+            
+            let nextSHTP = isSHTP;
+            let nextDDK = isDDK;
+            
+            if (site === 'SHTP') nextSHTP = !isSHTP;
+            else nextDDK = !isDDK;
+            
+            // Ensure at least one is selected
+            if (!nextSHTP && !nextDDK) return prev;
+            
+            let nextVal = 'SHTP';
+            if (nextSHTP && nextDDK) nextVal = 'Both';
+            else if (nextDDK) nextVal = 'DDK';
+            
+            return { ...prev, visitingSite: nextVal };
+        });
+    };
+
     const isExpatCategory = formData.visitorCategory === 'MIL/TTI Expat / SHTP Business trip';
 
     const StepIndicator = () => (
@@ -156,20 +180,8 @@ export default function NewRequestPage() {
                                     <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
                                     <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Basic Information</h2>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-                                    <div className="flex flex-col gap-2">
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>Visitor Name *</label>
-                                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.visitorName} onChange={e => setFormData({ ...formData, visitorName: e.target.value })} placeholder="Enter full name" />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>Title / Position *</label>
-                                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.visitorTitle} onChange={e => setFormData({ ...formData, visitorTitle: e.target.value })} placeholder="e.g. Sales Manager" />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>Current Company *</label>
-                                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.currentCompany} onChange={e => setFormData({ ...formData, currentCompany: e.target.value })} placeholder="Your company name" />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
+                                <div className="flex flex-col gap-6">
+                                    <div className="flex flex-col gap-2" style={{ maxWidth: '400px' }}>
                                         <label style={{ color: '#475569', fontWeight: 700 }}>Visitor Category *</label>
                                         <select className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" value={formData.visitorCategory} onChange={e => setFormData({ ...formData, visitorCategory: e.target.value })}>
                                             <option>Vendor</option>
@@ -177,6 +189,71 @@ export default function NewRequestPage() {
                                             <option>Contractor</option>
                                             <option>Interviewee</option>
                                         </select>
+                                    </div>
+                                    
+                                    <div className="flex flex-col gap-4">
+                                        <label style={{ color: '#475569', fontWeight: 700 }}>Visiting Site *</label>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                                            <div 
+                                                onClick={() => toggleSite('SHTP')}
+                                                style={{
+                                                    cursor: 'pointer',
+                                                    borderRadius: '24px',
+                                                    overflow: 'hidden',
+                                                    border: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '5px solid #db011c' : '2px solid #e2e8f0',
+                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                    position: 'relative',
+                                                    transform: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'scale(1.02)' : 'scale(1)',
+                                                    boxShadow: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '0 20px 40px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
+                                                }}
+                                            >
+                                                <img src="/shtp.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="SHTP Site" />
+                                                <div style={{ 
+                                                    padding: '1.2rem', 
+                                                    textAlign: 'center', 
+                                                    fontWeight: 900, 
+                                                    fontSize: '1.4rem', 
+                                                    background: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '#db011c' : 'white', 
+                                                    color: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
+                                                    letterSpacing: '0.05em'
+                                                }}>
+                                                    SHTP SITE
+                                                </div>
+                                                {(formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') && (
+                                                    <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
+                                                )}
+                                            </div>
+                                            
+                                            <div 
+                                                onClick={() => toggleSite('DDK')}
+                                                style={{
+                                                    cursor: 'pointer',
+                                                    borderRadius: '24px',
+                                                    overflow: 'hidden',
+                                                    border: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '5px solid #db011c' : '2px solid #e2e8f0',
+                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                    position: 'relative',
+                                                    transform: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'scale(1.02)' : 'scale(1)',
+                                                    boxShadow: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '0 20px 40px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
+                                                }}
+                                            >
+                                                <img src="/ddk.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="DDK Site" />
+                                                <div style={{ 
+                                                    padding: '1.2rem', 
+                                                    textAlign: 'center', 
+                                                    fontWeight: 900, 
+                                                    fontSize: '1.4rem', 
+                                                    background: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '#db011c' : 'white', 
+                                                    color: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
+                                                    letterSpacing: '0.05em'
+                                                }}>
+                                                    DDK SITE
+                                                </div>
+                                                {(formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') && (
+                                                    <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '3rem' }}>
@@ -195,6 +272,18 @@ export default function NewRequestPage() {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
                                     <div className="flex flex-col gap-2">
+                                        <label style={{ color: '#475569', fontWeight: 700 }}>Visitor Name *</label>
+                                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.visitorName} onChange={e => setFormData({ ...formData, visitorName: e.target.value })} placeholder="Enter full name" />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label style={{ color: '#475569', fontWeight: 700 }}>Title / Position *</label>
+                                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.visitorTitle} onChange={e => setFormData({ ...formData, visitorTitle: e.target.value })} placeholder="e.g. Sales Manager" />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label style={{ color: '#475569', fontWeight: 700 }}>Current Company *</label>
+                                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.currentCompany} onChange={e => setFormData({ ...formData, currentCompany: e.target.value })} placeholder="Your company name" />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
                                         <label style={{ color: '#475569', fontWeight: 700 }}>Purpose of Visit *</label>
                                         <select className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" value={formData.purposeOfVisit} onChange={e => setFormData({ ...formData, purposeOfVisit: e.target.value })}>
                                             <option>Business / Meeting</option>
@@ -203,16 +292,28 @@ export default function NewRequestPage() {
                                             <option>Audit / Inspection</option>
                                         </select>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '1.5rem' }}>
-                                        <div className="flex flex-col gap-2" style={{ flex: 1 }}>
-                                            <label style={{ color: '#475569', fontWeight: 700 }}>Start Date *</label>
-                                            <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} />
-                                        </div>
-                                        <div className="flex flex-col gap-2" style={{ flex: 1 }}>
-                                            <label style={{ color: '#475569', fontWeight: 700 }}>End Date *</label>
-                                            <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} />
-                                        </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label style={{ color: '#475569', fontWeight: 700 }}>Start Date *</label>
+                                        <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} />
                                     </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label style={{ color: '#475569', fontWeight: 700 }}>End Date *</label>
+                                        <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} />
+                                    </div>
+                                    
+                                    {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
+                                        <div className="flex flex-col gap-2" style={{ gridColumn: '1 / -1' }}>
+                                            <label style={{ color: '#475569', fontWeight: 700 }}>Detail of purpose *</label>
+                                            <textarea 
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" 
+                                                rows={3}
+                                                required 
+                                                value={formData.purposeDetail} 
+                                                onChange={e => setFormData({ ...formData, purposeDetail: e.target.value })}
+                                                placeholder="Please provide details of the visit purpose..."
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {isExpatCategory && (
@@ -221,33 +322,33 @@ export default function NewRequestPage() {
                                         {Object.entries(groupedRooms).map(([cat, items]: any) => (
                                             <div key={cat} style={{ marginBottom: '1.5rem' }}>
                                                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.8rem' }}>{cat}</div>
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
                                                     {items.map((r: any) => (
                                                         <div key={r.id} onClick={() => toggleRoom(r.id)} style={{
-                                                            borderRadius: '16px',
+                                                            borderRadius: '12px',
                                                             overflow: 'hidden',
                                                             cursor: 'pointer',
                                                             background: 'white',
-                                                            border: formData.roomIds.includes(r.id) ? '3px solid #db011c' : '1px solid #e2e8f0',
-                                                            boxShadow: formData.roomIds.includes(r.id) ? '0 15px 30px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0, 0, 0, 0.05)',
-                                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                            transform: formData.roomIds.includes(r.id) ? 'translateY(-5px) scale(1.02)' : 'none',
+                                                            border: formData.roomIds.includes(r.id) ? '2px solid #db011c' : '1px solid #e2e8f0',
+                                                            boxShadow: formData.roomIds.includes(r.id) ? '0 10px 20px rgba(219, 1, 28, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.05)',
+                                                            transition: 'all 0.2s ease',
+                                                            transform: formData.roomIds.includes(r.id) ? 'translateY(-2px)' : 'none',
                                                             display: 'flex',
                                                             flexDirection: 'column'
                                                         }}>
-                                                            <div style={{ height: '80px', position: 'relative', overflow: 'hidden' }}>
+                                                            <div style={{ height: '60px', position: 'relative', overflow: 'hidden' }}>
                                                                 <img 
                                                                     src={r.image_url || '/visitor_header.png'} 
                                                                     style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: formData.roomIds.includes(r.id) ? 1 : 0.8 }} 
                                                                     alt={r.name} 
                                                                 />
                                                                 {formData.roomIds.includes(r.id) && (
-                                                                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#db011c', color: 'white', width: '30px', height: '30px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>✓</div>
+                                                                    <div style={{ position: 'absolute', top: '5px', right: '5px', background: '#db011c', color: 'white', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold' }}>✓</div>
                                                                 )}
                                                             </div>
-                                                            <div style={{ padding: '1.2rem', flex: 1 }}>
-                                                                <div style={{ fontSize: '1rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.3rem' }}>{r.name}</div>
-                                                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Approver: {r.approver_email || 'Not assigned'}</div>
+                                                            <div style={{ padding: '0.8rem', flex: 1 }}>
+                                                                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', lineHeight: '1.2', marginBottom: '0.2rem' }}>{r.name}</div>
+                                                                <div style={{ fontSize: '0.65rem', color: '#64748b' }}>Approver: {r.approver_email?.split('@')[0] || 'N/A'}</div>
                                                             </div>
                                                         </div>
                                                     ))}

@@ -264,9 +264,19 @@ export default function Dashboard() {
                                             <p className="font-bold text-[#0f172a]">{selectedRequest.visitor_category}</p>
                                         </div>
                                         <div>
+                                            <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Visiting Site</label>
+                                            <p className="font-bold text-[#0f172a]">{selectedRequest.visiting_site || 'N/A'}</p>
+                                        </div>
+                                        <div>
                                             <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Cost Center</label>
                                             <p className="font-bold text-[#0f172a]">{details.costCenter || 'N/A'}</p>
                                         </div>
+                                        {selectedRequest.purpose_detail && (
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Detail of Purpose</label>
+                                                <p className="font-bold text-[#0f172a] whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100">{selectedRequest.purpose_detail}</p>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="mb-10">

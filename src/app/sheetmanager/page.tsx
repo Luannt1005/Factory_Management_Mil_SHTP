@@ -10,12 +10,12 @@ export default function SheetManagerPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (user && user.role === 'viewer') {
+    if (user && (user.role === 'viewer' || user.orgchart_role === 'viewer')) {
       router.push('/');
     }
   }, [user, router]);
 
-  if (user?.role === 'viewer') return null;
+  if (user?.role === 'viewer' || user?.orgchart_role === 'viewer') return null;
 
   return (
     <SheetManagerTable

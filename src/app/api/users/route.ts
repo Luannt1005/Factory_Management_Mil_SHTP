@@ -12,7 +12,7 @@ export async function GET() {
     }
     try {
         const pool = await getDbConnection();
-        const result = await pool.query("SELECT id, username, full_name, role, created_at FROM users ORDER BY full_name ASC");
+        const result = await pool.query("SELECT id, username, full_name, role, orgchart_role, visitor_role, created_at FROM users ORDER BY full_name ASC");
 
         return NextResponse.json({
             success: true,
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     }
     try {
         const body = await req.json();
-        const { username, full_name, password, role } = body;
+        const { username, full_name, password, role, orgchart_role, visitor_role } = body;
 
         if (!username || !full_name || !password) {
             return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
@@ -52,8 +52,8 @@ export async function POST(req: Request) {
         }
 
         const result = await pool.query(
-            "INSERT INTO users (username, full_name, password, role) VALUES ($1, $2, $3, $4) RETURNING id, username, full_name, role, created_at",
-            [username, full_name, password, role || 'user']
+            "INSERT INTO users (username, full_name, password, role, orgchart_role, visitor_role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, full_name, role, orgchart_role, visitor_role, created_at",
+            [username, full_name, password, role || 'user', orgchart_role || 'user', visitor_role || 'user']
         );
 
         return NextResponse.json({
@@ -80,7 +80,7 @@ export async function PUT(req: Request) {
     }
     try {
         const body = await req.json();
-        const { id, full_name, role, password } = body;
+        const { id, full_name, role, orgchart_role, visitor_role, password } = body;
 
         if (!id) {
             return NextResponse.json({ success: false, message: "User ID is required" }, { status: 400 });
@@ -88,14 +88,14 @@ export async function PUT(req: Request) {
 
         const pool = await getDbConnection();
 
-        let query = "UPDATE users SET full_name = $1, role = $2";
-        const values: any[] = [full_name, role];
+        let query = "UPDATE users SET full_name = $1, role = $2, orgchart_role = $3, visitor_role = $4";
+        const values: any[] = [full_name, role, orgchart_role, visitor_role];
 
         if (password && password.trim() !== "") {
-            query += ", password = $3 WHERE id = $4";
+            query += ", password = $5 WHERE id = $6";
             values.push(password, id);
         } else {
-            query += " WHERE id = $3";
+            query += " WHERE id = $5";
             values.push(id);
         }
 

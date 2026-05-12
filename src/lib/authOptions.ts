@@ -44,6 +44,8 @@ export const authOptions: NextAuthOptions = {
           name: user.full_name || user.username,
           email: user.username,
           role: user.role || "user",
+          orgchart_role: user.orgchart_role || "user",
+          visitor_role: user.visitor_role || "user",
         };
       },
     }),
@@ -90,6 +92,24 @@ export const authOptions: NextAuthOptions = {
             return false;
           }
 
+          // Call Graph API to get extra details
+          let jobTitle = null, department = null, location = null;
+          if (account?.access_token) {
+            try {
+              const detailsRes = await fetch("https://graph.microsoft.com/v1.0/me?$select=jobTitle,department,officeLocation", {
+                headers: { Authorization: `Bearer ${account.access_token}` }
+              });
+              if (detailsRes.ok) {
+                const details = await detailsRes.json();
+                jobTitle = details.jobTitle || null;
+                department = details.department || null;
+                location = details.officeLocation || null;
+              }
+            } catch (err) {
+              console.error("[SSO Details Fetch Error]", err);
+            }
+          }
+
           if (result.rows.length === 0) {
             console.log("[SSO DB Lookup] User not found, creating new account for:", fullEmail);
             
@@ -100,16 +120,29 @@ export const authOptions: NextAuthOptions = {
 
             const dummyPassword = "sso_user_no_password_" + Math.random().toString(36).substring(7);
             const insertResult = await pool.query(
-              "INSERT INTO users (username, password, full_name, role) VALUES ($1, $2, $3, $4) RETURNING *",
-              [fullEmail, dummyPassword, name, "user"]
+              "INSERT INTO users (username, password, full_name, role, orgchart_role, visitor_role, job_title, department, location) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+              [fullEmail, dummyPassword, name, "user", "user", "user", jobTitle, department, location]
             );
             const newUser = insertResult.rows[0];
             user.id = newUser.id.toString();
             (user as any).role = newUser.role;
+            (user as any).orgchart_role = newUser.orgchart_role;
+            (user as any).visitor_role = newUser.visitor_role;
           } else {
             const existingUser = result.rows[0];
+            
+            // Update the existing user with new details if they are available from Graph API
+            if (jobTitle || department || location) {
+              await pool.query(
+                "UPDATE users SET job_title = COALESCE($1, job_title), department = COALESCE($2, department), location = COALESCE($3, location) WHERE id = $4",
+                [jobTitle, department, location, existingUser.id]
+              );
+            }
+
             user.id = existingUser.id.toString();
             (user as any).role = existingUser.role || "user";
+            (user as any).orgchart_role = existingUser.orgchart_role || "user";
+            (user as any).visitor_role = existingUser.visitor_role || "user";
             user.email = existingUser.username;
           }
         }
@@ -131,7 +164,7 @@ export const authOptions: NextAuthOptions = {
           if (email) {
             // Truy vấn lại DB để lấy thông tin chính xác nhất (bao gồm Role)
             const result = await pool.query(
-              "SELECT id, username, role FROM users WHERE LOWER(TRIM(username)) = LOWER($1) OR LOWER(TRIM(username)) = LOWER($2)", 
+              "SELECT id, username, role, orgchart_role, visitor_role, job_title, department, location FROM users WHERE LOWER(TRIM(username)) = LOWER($1) OR LOWER(TRIM(username)) = LOWER($2)", 
               [email, email.split('@')[0]]
             );
 
@@ -139,11 +172,18 @@ export const authOptions: NextAuthOptions = {
               const dbUser = result.rows[0];
               token.id = dbUser.id.toString();
               token.role = dbUser.role || "user";
+              token.orgchart_role = dbUser.orgchart_role || "user";
+              token.visitor_role = dbUser.visitor_role || "user";
               token.email = dbUser.username;
+              token.jobTitle = dbUser.job_title;
+              token.department = dbUser.department;
+              token.location = dbUser.location;
             } else {
               // Trường hợp hy hữu: User vừa đăng nhập thành công ở signIn nhưng DB chưa kịp cập nhật hoặc lỗi
               token.id = user.id;
               token.role = (user as any).role || "user";
+              token.orgchart_role = (user as any).orgchart_role || "user";
+              token.visitor_role = (user as any).visitor_role || "user";
               token.email = email;
             }
           }
@@ -182,14 +222,22 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
+        (session.user as any).orgchart_role = token.orgchart_role;
+        (session.user as any).visitor_role = token.visitor_role;
         (session.user as any).username = token.email;
         session.user.image = token.picture as string;
         // Đảm bảo session.user.email cũng khớp với email trong DB
         session.user.email = token.email as string;
+        
+        (session.user as any).jobTitle = token.jobTitle;
+        (session.user as any).department = token.department;
+        (session.user as any).location = token.location;
       }
       console.log("[NextAuth Session]", { 
         user: session.user?.email, 
-        role: (session.user as any).role 
+        role: (session.user as any).role,
+        orgchart_role: (session.user as any).orgchart_role,
+        visitor_role: (session.user as any).visitor_role
       });
       return session;
     },

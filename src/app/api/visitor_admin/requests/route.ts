@@ -11,7 +11,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if ((session.user as any).role !== 'admin') {
+        if ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
@@ -21,17 +21,30 @@ export async function GET(request: Request) {
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
         const offset = (page - 1) * limit;
+        const category = searchParams.get('category');
+        const isExport = limit > 1000; // if limit is very high, it's likely an export
 
         const visitorPool = await getVisitorDbConnection();
 
         let whereClause = '';
+        const conditions: string[] = [];
         const queryParams: any[] = [];
         let paramCount = 1;
 
         if (startDate && endDate) {
-            whereClause = `WHERE (r."startDate" <= $${paramCount+1} AND r."endDate" >= $${paramCount})`;
+            conditions.push(`(r."startDate" <= $${paramCount+1} AND r."endDate" >= $${paramCount})`);
             queryParams.push(startDate, endDate);
             paramCount += 2;
+        }
+
+        if (category) {
+            conditions.push(`r."visitorCategory" = $${paramCount}`);
+            queryParams.push(category);
+            paramCount += 1;
+        }
+
+        if (conditions.length > 0) {
+            whereClause = `WHERE ${conditions.join(' AND ')}`;
         }
 
         // Get total count for pagination
@@ -50,6 +63,8 @@ export async function GET(request: Request) {
                 r."endDate" as end_date,
                 r."purposeOfVisit" as purpose_of_visit,
                 r."visitorCategory" as visitor_category,
+                r."visitingSite" as visiting_site,
+                r."purposeDetail" as purpose_detail,
                 r.details,
                 r."createdAt" as created_at,
                 p.name as profile_name,
@@ -107,7 +122,7 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if ((session.user as any).role !== 'admin') {
+        if ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 

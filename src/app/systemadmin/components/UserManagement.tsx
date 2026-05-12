@@ -14,6 +14,8 @@ interface UserAccount {
     username: string;
     full_name: string;
     role: string;
+    orgchart_role: string;
+    visitor_role: string;
     created_at?: string;
 }
 
@@ -32,7 +34,9 @@ export default function UserManagement() {
         username: "",
         full_name: "",
         password: "",
-        role: "user"
+        role: "user",
+        orgchart_role: "user",
+        visitor_role: "user"
     });
     const [isSaving, setIsSaving] = useState(false);
 
@@ -75,7 +79,9 @@ export default function UserManagement() {
             username: "",
             full_name: "",
             password: "",
-            role: "user"
+            role: "user",
+            orgchart_role: "user",
+            visitor_role: "user"
         });
         setIsModalOpen(true);
     };
@@ -87,7 +93,9 @@ export default function UserManagement() {
             username: user.username,
             full_name: user.full_name,
             password: "",
-            role: user.role || "user"
+            role: user.role || "user",
+            orgchart_role: user.orgchart_role || "user",
+            visitor_role: user.visitor_role || "user"
         });
         setIsModalOpen(true);
     };
@@ -114,7 +122,9 @@ export default function UserManagement() {
                         username: formData.username,
                         full_name: formData.full_name,
                         password: hashedPassword,
-                        role: formData.role
+                        role: formData.role,
+                        orgchart_role: formData.orgchart_role,
+                        visitor_role: formData.visitor_role
                     })
                 });
 
@@ -128,7 +138,9 @@ export default function UserManagement() {
                     id: newUser.id,
                     username: newUser.username,
                     full_name: newUser.full_name,
-                    role: newUser.role
+                    role: newUser.role,
+                    orgchart_role: newUser.orgchart_role,
+                    visitor_role: newUser.visitor_role
                 };
                 setUsers(prev => [...prev, addedUser].sort((a, b) => a.full_name.localeCompare(b.full_name)));
 
@@ -136,7 +148,9 @@ export default function UserManagement() {
                 const updateData: any = {
                     id: currentUserId,
                     full_name: formData.full_name,
-                    role: formData.role
+                    role: formData.role,
+                    orgchart_role: formData.orgchart_role,
+                    visitor_role: formData.visitor_role
                 };
 
                 if (formData.password.trim() !== "") {
@@ -161,7 +175,7 @@ export default function UserManagement() {
 
                 setUsers(users.map(u =>
                     u.id === currentUserId
-                        ? { ...u, full_name: formData.full_name, role: formData.role }
+                        ? { ...u, full_name: formData.full_name, role: formData.role, orgchart_role: formData.orgchart_role, visitor_role: formData.visitor_role }
                         : u
                 ));
             }
@@ -238,7 +252,9 @@ export default function UserManagement() {
                                 <tr>
                                     <th className="py-3 px-4 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border-light)]">User</th>
                                     <th className="py-3 px-4 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border-light)]">Username</th>
-                                    <th className="py-3 px-4 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border-light)]">Role</th>
+                                    <th className="py-3 px-4 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border-light)]">Global Role</th>
+                                    <th className="py-3 px-4 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border-light)]">Orgchart Role</th>
+                                    <th className="py-3 px-4 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border-light)]">Visitor Role</th>
                                     <th className="py-3 px-4 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border-light)] text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -262,6 +278,26 @@ export default function UserManagement() {
                                                     : 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
                                                 }`}>
                                                 {user.role || 'user'}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium capitalize border ${user.orgchart_role === 'admin'
+                                                ? 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
+                                                : user.orgchart_role === 'viewer'
+                                                    ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
+                                                    : 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
+                                                }`}>
+                                                {user.orgchart_role || 'user'}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium capitalize border ${user.visitor_role === 'admin'
+                                                ? 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
+                                                : user.visitor_role === 'viewer'
+                                                    ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
+                                                    : 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
+                                                }`}>
+                                                {user.visitor_role || 'user'}
                                             </span>
                                         </td>
                                         <td className="py-3 px-4 text-right">
@@ -356,14 +392,38 @@ export default function UserManagement() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-[var(--color-text-body)]">Role</label>
+                                <label className="text-xs font-semibold text-[var(--color-text-body)]">Global App Role</label>
                                 <select
                                     className="w-full px-3 py-2 bg-[var(--color-bg-page)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-body)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                     value={formData.role}
                                     onChange={e => setFormData({ ...formData, role: e.target.value })}
                                 >
+                                    <option value="user">User</option>
+                                    <option value="admin">Global Admin</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-[var(--color-text-body)]">Orgchart App Role</label>
+                                <select
+                                    className="w-full px-3 py-2 bg-[var(--color-bg-page)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-body)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    value={formData.orgchart_role}
+                                    onChange={e => setFormData({ ...formData, orgchart_role: e.target.value })}
+                                >
                                     <option value="user">User - Read/Write</option>
-                                    <option value="viewer">Viewer - Read Only (Charts)</option>
+                                    <option value="viewer">Viewer - Read Only</option>
+                                    <option value="admin">Admin - Full Access</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-[var(--color-text-body)]">Visitor App Role</label>
+                                <select
+                                    className="w-full px-3 py-2 bg-[var(--color-bg-page)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-body)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    value={formData.visitor_role}
+                                    onChange={e => setFormData({ ...formData, visitor_role: e.target.value })}
+                                >
+                                    <option value="user">User</option>
                                     <option value="admin">Admin - Full Access</option>
                                 </select>
                             </div>

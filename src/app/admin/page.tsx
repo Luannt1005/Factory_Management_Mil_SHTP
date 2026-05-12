@@ -16,10 +16,10 @@ import {
 } from "@heroicons/react/24/outline";
 
 function AdminDashboardContent() {
-    type MainTab = 'users' | 'import' | 'approvals';
+    type MainTab = 'import' | 'approvals';
     type ApprovalSubTab = 'allData' | 'reviewChanges';
 
-    const [activeTab, setActiveTab] = useState<MainTab>('users');
+    const [activeTab, setActiveTab] = useState<MainTab>('import');
     const [approvalSubTab, setApprovalSubTab] = useState<ApprovalSubTab>('allData');
     const [pendingCount, setPendingCount] = useState<number>(0);
     const [isAuthorized, setIsAuthorized] = useState(false);
@@ -29,7 +29,7 @@ function AdminDashboardContent() {
     // Check query params for active tab
     useEffect(() => {
         const tab = searchParams.get('tab');
-        if (tab === 'import' || tab === 'users' || tab === 'approvals') {
+        if (tab === 'import' || tab === 'approvals') {
             setActiveTab(tab as MainTab);
         }
     }, [searchParams]);
@@ -43,7 +43,7 @@ function AdminDashboardContent() {
         }
         try {
             const user = JSON.parse(storedUser);
-            if (user.role !== 'admin') {
+            if (user.role !== 'admin' && user.orgchart_role !== 'admin') {
                 router.push('/');
             } else {
                 setIsAuthorized(true);
@@ -90,18 +90,6 @@ function AdminDashboardContent() {
                     <div className="flex items-center gap-6">
                         <nav className="flex space-x-1">
                             <button
-                                onClick={() => setActiveTab('users')}
-                                className={`
-                                    inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all
-                                    ${activeTab === 'users'
-                                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-title)] hover:bg-[var(--color-bg-page)]'}
-                                `}
-                            >
-                                <UsersIcon className="w-5 h-5 mr-2" />
-                                Users
-                            </button>
-                            <button
                                 onClick={() => setActiveTab('import')}
                                 className={`
                                     inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all
@@ -133,11 +121,7 @@ function AdminDashboardContent() {
             {/* Main Content */}
             <main className="flex-1 p-6 overflow-hidden">
                 <div className="h-full bg-[var(--color-bg-card)] rounded-xl shadow-sm border border-[var(--color-border-light)] overflow-hidden flex flex-col">
-                    {activeTab === 'users' && (
-                        <div className="h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <UserManagement />
-                        </div>
-                    )}
+
 
                     {activeTab === 'import' && (
                         <div className="h-full animate-in fade-in slide-in-from-bottom-2 duration-300">

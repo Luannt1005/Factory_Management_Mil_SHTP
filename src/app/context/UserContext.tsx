@@ -8,6 +8,8 @@ interface User {
     username: string;
     full_name: string;
     role: string;
+    orgchart_role: string;
+    visitor_role: string;
     image?: string;
 }
 
@@ -30,6 +32,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
                 username: (session.user as any).username || session.user.email || "",
                 full_name: session.user.name || "",
                 role: (session.user as any).role || "user",
+                orgchart_role: (session.user as any).orgchart_role || "user",
+                visitor_role: (session.user as any).visitor_role || "user",
                 image: session.user.image || undefined,
             };
             setUser(nextUser);

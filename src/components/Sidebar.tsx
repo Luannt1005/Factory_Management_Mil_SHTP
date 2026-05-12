@@ -75,7 +75,7 @@ export default function Sidebar() {
             items: [
                 { name: 'Registration', path: '/visitorrequest', icon: TicketIcon },
                 { name: 'My Request', path: '/visitordashboard', icon: ClipboardDocumentListIcon },
-                { name: 'Visitor Admin', path: '/visitoradmin', icon: Cog6ToothIcon, requiredRole: 'admin' },
+                { name: 'Visitor Admin', path: '/visitoradmin', icon: Cog6ToothIcon, requiredRole: 'admin' }, // Visitor Admin handled in visibleItems filter
                 { name: 'Manage Room', path: '/visitoradmin/rooms', icon: KeyIcon, requiredRole: 'admin' },
                 { name: 'Visitor Dashboard', path: '/visitoranalytics', icon: ChartBarSquareIcon, requiredRole: 'admin' },
             ]
@@ -102,7 +102,7 @@ export default function Sidebar() {
             {
                 title: 'Admin',
                 items: [
-                    { name: 'Admin Console', path: '/admin', icon: Cog6ToothIcon, requiredRole: 'admin' },
+                    { name: 'Orgchart Admin', path: '/admin', icon: Cog6ToothIcon, requiredRole: 'admin' },
                 ]
             }
         );
@@ -128,8 +128,8 @@ export default function Sidebar() {
         router.push('/login');
     };
 
-    // Hide sidebar on auth pages, landing page, and profile page
-    if (['/', '/login', '/signup', '/profile'].includes(pathname)) {
+    // Hide sidebar on auth pages, landing page, profile page, and system admin page
+    if (['/', '/login', '/signup', '/profile', '/systemadmin'].includes(pathname)) {
         return null;
     }
 
@@ -155,13 +155,29 @@ export default function Sidebar() {
                         // Filter items based on role
                         const visibleItems = group.items.filter(item => {
                             if (userRole === 'admin') return true;
-                            if (userRole === 'viewer') {
-                                // Viewer only sees specific paths in Chart and Profile groups
+                            
+                            // Specific app roles
+                            const orgchartRole = user?.orgchart_role;
+                            const visitorRole = user?.visitor_role;
+
+                            // Handle visitor admin paths
+                            if (item.path.startsWith('/visitoradmin') || item.path.startsWith('/visitoranalytics')) {
+                                return visitorRole === 'admin';
+                            }
+
+                            // Handle orgchart admin paths
+                            if (item.path === '/admin') {
+                                return orgchartRole === 'admin';
+                            }
+
+                            // Viewer logic for orgchart
+                            if (orgchartRole === 'viewer' && !item.path.startsWith('/visitor')) {
                                 const allowedPaths = ['/orgchart', '/dashboard', '/customize', '/profile'];
                                 return allowedPaths.some(path => item.path.startsWith(path));
                             }
-                            // Default (user) role
-                            return !item.requiredRole || item.requiredRole === userRole;
+
+                            // Default (user) role or no specific requiredRole
+                            return !item.requiredRole;
                         });
 
                         if (visibleItems.length === 0) return null;

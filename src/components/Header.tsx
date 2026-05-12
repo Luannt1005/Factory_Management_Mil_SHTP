@@ -224,15 +224,26 @@ export default function Header() {
                                         </Link>
                                     </li>
                                     {user?.role === 'admin' && (
-                                        <li>
-                                            <Link
-                                                href="/visitoradmin"
-                                                className="flex items-center gap-3.5 px-6 py-2 text-sm font-medium duration-300 ease-in-out text-red-500 hover:text-red-600 hover:bg-red-50 lg:text-base"
-                                            >
-                                                <span className="w-5 h-5 flex items-center justify-center text-lg">🛡️</span>
-                                                Visitor Admin
-                                            </Link>
-                                        </li>
+                                        <>
+                                            <li>
+                                                <Link
+                                                    href="/visitoradmin"
+                                                    className="flex items-center gap-3.5 px-6 py-2 text-sm font-medium duration-300 ease-in-out text-red-500 hover:text-red-600 hover:bg-red-50 lg:text-base"
+                                                >
+                                                    <span className="w-5 h-5 flex items-center justify-center text-lg">🛡️</span>
+                                                    Visitor Admin
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link
+                                                    href="/systemadmin"
+                                                    className="flex items-center gap-3.5 px-6 py-2 text-sm font-medium duration-300 ease-in-out text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 lg:text-base"
+                                                >
+                                                    <span className="w-5 h-5 flex items-center justify-center text-lg">🌐</span>
+                                                    Global Admin
+                                                </Link>
+                                            </li>
+                                        </>
                                     )}
                                 </ul>
                                 <button
