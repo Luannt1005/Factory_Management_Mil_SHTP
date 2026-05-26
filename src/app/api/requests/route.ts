@@ -33,10 +33,15 @@ export async function POST(request: Request) {
 
         const body = await request.json();
         const {
-            visitorName, visitorTitle, currentCompany, startDate, endDate,
+            visitors, startDate, endDate,
             purposeOfVisit, visitorCategory, details, roomIds,
             visitingSite, purposeDetail
         } = body;
+
+        const primaryVisitor = visitors && visitors.length > 0 ? visitors[0] : { name: '', title: '', company: '' };
+        const visitorName = primaryVisitor.name;
+        const visitorTitle = primaryVisitor.title;
+        const currentCompany = primaryVisitor.company;
 
         visitorPool = await getVisitorDbConnection();
 
@@ -70,21 +75,22 @@ export async function POST(request: Request) {
 
         const { rows: visitorRequests } = await visitorPool.query(
             `INSERT INTO "VisitorRequest" 
-             (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt", "visitingSite", "purposeDetail")
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'IN PROCESS', NOW(), $11, $12)
+             (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt", "visitingSite", "purposeDetail", visitors)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'IN PROCESS', NOW(), $11, $12, $13)
              RETURNING id`,
-            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate), purposeOfVisit, visitorCategory, JSON.stringify(details), visitingSite, purposeDetail]
+            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate), purposeOfVisit, visitorCategory, JSON.stringify(details), visitingSite, purposeDetail, JSON.stringify(visitors || [])]
         );
 
         const visitorRequestId = visitorRequests[0].id;
 
-        if (roomIds && roomIds.length > 0) {
+        const isExpat = visitorCategory === 'MIL/TTI Expat / SHTP Business trip';
+        const powerAutomateUrl = process.env.POWER_AUTOMATE_FOR_LEAVE_URL;
+
+        if (isExpat && roomIds && roomIds.length > 0) {
             const { rows: rooms } = await visitorPool.query(
                 'SELECT id, name, "approverEmail" FROM "RoomArea" WHERE id = ANY($1::text[])',
                 [roomIds]
             );
-
-            const powerAutomateUrl = process.env.POWER_AUTOMATE_FOR_LEAVE_URL;
 
             for (const room of rooms) {
                 const { rows: approvalRows } = await visitorPool.query(
@@ -108,13 +114,16 @@ export async function POST(request: Request) {
                                     id: visitorRequestId,
                                     approver_email: room.approverEmail,
                                     room_name: room.name,
-                                    visitor_name: visitorName,
+                                    visitor_name: visitorName + (visitors && visitors.length > 1 ? ` (+ ${visitors.length - 1} others)` : ''),
                                     visitorTitle: visitorTitle,
                                     currentCompany: currentCompany,
                                     startDate: startDate,
                                     endDate: endDate,
                                     purposeOfVisit: purposeOfVisit,
-                                    submitterName: (session.user as any).username
+                                    submitterName: (session.user as any).username,
+                                    visitorCategory: visitorCategory,
+                                    submitterEmail: (session.user as any).username || session.user.email,
+                                    visitors_list: visitors
                                 }
                             }),
                         });
@@ -122,6 +131,48 @@ export async function POST(request: Request) {
                     } catch (paError) {
                         console.error(`Failed to trigger Power Automate for room ${room.name}:`, paError);
                     }
+                }
+            }
+        } else if (!isExpat) {
+            // For Vendor, Contractor, etc., insert a single approval record for Supervisor Approval
+            const submitterEmail = (session.user as any).username || session.user.email || 'unknown@tti.com';
+            const { rows: approvalRows } = await visitorPool.query(
+                `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
+                 VALUES (gen_random_uuid(), $1, NULL, $2, 'PENDING', NOW())
+                 RETURNING id`,
+                [visitorRequestId, submitterEmail] // Initially set to submitter's email, will be routed to manager in Power Automate
+            );
+
+            const approvalId = approvalRows[0].id;
+
+            if (powerAutomateUrl) {
+                try {
+                    await fetch(powerAutomateUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            record: {
+                                approval_id: approvalId,
+                                id: visitorRequestId,
+                                record_type: 'approver_request',
+                                approver_email: submitterEmail, // Will be overridden in Power Automate by Supervisor's email
+                                room_name: `${visitorCategory} Approval (Supervisor)`,
+                                visitor_name: visitorName + (visitors && visitors.length > 1 ? ` (+ ${visitors.length - 1} others)` : ''),
+                                visitorTitle: visitorTitle,
+                                currentCompany: currentCompany,
+                                startDate: startDate,
+                                endDate: endDate,
+                                purposeOfVisit: purposeOfVisit,
+                                submitterName: (session.user as any).username,
+                                visitorCategory: visitorCategory,
+                                submitterEmail: submitterEmail,
+                                visitors_list: visitors
+                            }
+                        }),
+                    });
+                    console.log(`Power Automate triggered successfully for supervisor approval: ${submitterEmail}`);
+                } catch (paError) {
+                    console.error(`Failed to trigger Power Automate for supervisor approval:`, paError);
                 }
             }
         }
@@ -181,6 +232,7 @@ export async function GET(request: Request) {
                 r."visitingSite" as visiting_site,
                 r."purposeDetail" as purpose_detail,
                 r.details,
+                r.visitors,
                 r."createdAt" as created_at,
                 (
                     SELECT COALESCE(json_agg(

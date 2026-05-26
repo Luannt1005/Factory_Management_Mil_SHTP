@@ -124,7 +124,18 @@ export default function Dashboard() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <div className="font-extrabold text-[#0f172a] text-[14px]">{request.visitor_name}</div>
+                                        <div className="font-extrabold text-[#0f172a] text-[14px]">
+                                            {request.visitor_name}
+                                            {request.visitors && (() => {
+                                                try {
+                                                    const parsed = JSON.parse(request.visitors);
+                                                    if (parsed && parsed.length > 1) {
+                                                        return ` (+ ${parsed.length - 1})`;
+                                                    }
+                                                } catch (e) {}
+                                                return '';
+                                            })()}
+                                        </div>
                                         <div className="text-[11px] text-gray-500 mt-0.5 tracking-tight">{request.current_company} / {request.visitor_title}</div>
                                     </td>
                                     <td className="px-6 py-5 text-center text-gray-700 tabular-nums font-bold">
@@ -236,8 +247,25 @@ export default function Dashboard() {
                                 <div className="p-8">
                                     <div className="flex flex-wrap gap-4 justify-between items-start mb-10">
                                         <div>
-                                            <h3 className="text-3xl font-extrabold text-[#0f172a] mb-2">{selectedRequest.visitor_name}</h3>
-                                            <p className="text-gray-500 font-medium">{selectedRequest.visitor_title} @ {selectedRequest.current_company}</p>
+                                            {(() => {
+                                                try {
+                                                    const visitorsList = selectedRequest.visitors ? JSON.parse(selectedRequest.visitors) : [];
+                                                    if (visitorsList && visitorsList.length > 0) {
+                                                        return visitorsList.map((v: any, i: number) => (
+                                                            <div key={i} className="mb-4">
+                                                                <h3 className="text-3xl font-extrabold text-[#0f172a] mb-1">{v.name}</h3>
+                                                                <p className="text-gray-500 font-medium">{v.title} @ {v.company}</p>
+                                                            </div>
+                                                        ));
+                                                    }
+                                                } catch (e) {}
+                                                return (
+                                                    <div className="mb-4">
+                                                        <h3 className="text-3xl font-extrabold text-[#0f172a] mb-2">{selectedRequest.visitor_name}</h3>
+                                                        <p className="text-gray-500 font-medium">{selectedRequest.visitor_title} @ {selectedRequest.current_company}</p>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                         <div className="text-left">
                                             <span className="px-5 py-2 rounded-full text-sm font-extrabold inline-block" style={{

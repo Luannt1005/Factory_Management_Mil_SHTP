@@ -66,6 +66,7 @@ export async function GET(request: Request) {
                 r."visitingSite" as visiting_site,
                 r."purposeDetail" as purpose_detail,
                 r.details,
+                r.visitors,
                 r."createdAt" as created_at,
                 p.name as profile_name,
                 p.department as profile_department,

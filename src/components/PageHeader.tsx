@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 export default function PageHeader() {
     const pathname = usePathname();
 
+    if (pathname === "/introduction/about_vn") {
+        return null;
+    }
+
     const pageTitles: Record<string, { title: string; subtitle?: string }> = {
         '/dashboard': {
             title: 'HR Dashboard',

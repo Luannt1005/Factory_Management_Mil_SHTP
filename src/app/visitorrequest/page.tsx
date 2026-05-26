@@ -10,11 +10,10 @@ export default function NewRequestPage() {
     const [loading, setLoading] = useState(false);
     const [rooms, setRooms] = useState<any[]>([]);
     const [step, setStep] = useState(1);
-    
+    const [showAllVisitorsModal, setShowAllVisitorsModal] = useState(false);
+
     const [formData, setFormData] = useState({
-        visitorName: '',
-        visitorTitle: '',
-        currentCompany: '',
+        visitors: [{ name: '', title: '', company: '' }],
         startDate: '',
         endDate: '',
         purposeOfVisit: 'Business / Meeting',
@@ -100,25 +99,52 @@ export default function NewRequestPage() {
         setFormData(prev => {
             const isSHTP = prev.visitingSite === 'SHTP' || prev.visitingSite === 'Both';
             const isDDK = prev.visitingSite === 'DDK' || prev.visitingSite === 'Both';
-            
+
             let nextSHTP = isSHTP;
             let nextDDK = isDDK;
-            
+
             if (site === 'SHTP') nextSHTP = !isSHTP;
             else nextDDK = !isDDK;
-            
+
             // Ensure at least one is selected
             if (!nextSHTP && !nextDDK) return prev;
-            
+
             let nextVal = 'SHTP';
             if (nextSHTP && nextDDK) nextVal = 'Both';
             else if (nextDDK) nextVal = 'DDK';
-            
+
             return { ...prev, visitingSite: nextVal };
         });
     };
 
     const isExpatCategory = formData.visitorCategory === 'MIL/TTI Expat / SHTP Business trip';
+
+    const addVisitor = () => {
+        if (formData.visitors.length < 10) {
+            setFormData(prev => ({
+                ...prev,
+                visitors: [...prev.visitors, { name: '', title: '', company: '' }]
+            }));
+            setShowAllVisitorsModal(true);
+        }
+    };
+
+    const removeVisitor = (index: number) => {
+        if (formData.visitors.length > 1) {
+            setFormData(prev => ({
+                ...prev,
+                visitors: prev.visitors.filter((_, i) => i !== index)
+            }));
+        }
+    };
+
+    const updateVisitor = (index: number, field: string, value: string) => {
+        setFormData(prev => {
+            const newVisitors = [...prev.visitors];
+            newVisitors[index] = { ...newVisitors[index], [field]: value };
+            return { ...prev, visitors: newVisitors };
+        });
+    };
 
     const StepIndicator = () => (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '3rem', gap: '1rem' }}>
@@ -150,14 +176,14 @@ export default function NewRequestPage() {
     return (
         <div style={{ minHeight: '100vh', background: 'var(--background)', padding: '2rem 1rem' }}>
             <div className="container mx-auto" style={{ maxWidth: '1000px' }}>
-                
+
 
                 {/* Header Image Section */}
-                <div style={{ 
-                    width: '100%', 
-                    height: '280px', 
-                    borderRadius: '24px 24px 0 0', 
-                    overflow: 'hidden', 
+                <div style={{
+                    width: '100%',
+                    height: '280px',
+                    borderRadius: '24px 24px 0 0',
+                    overflow: 'hidden',
                     position: 'relative',
                     boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
                     marginBottom: '-40px',
@@ -190,11 +216,11 @@ export default function NewRequestPage() {
                                             <option>Interviewee</option>
                                         </select>
                                     </div>
-                                    
+
                                     <div className="flex flex-col gap-4">
                                         <label style={{ color: '#475569', fontWeight: 700 }}>Visiting Site *</label>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                                            <div 
+                                            <div
                                                 onClick={() => toggleSite('SHTP')}
                                                 style={{
                                                     cursor: 'pointer',
@@ -208,12 +234,12 @@ export default function NewRequestPage() {
                                                 }}
                                             >
                                                 <img src="/shtp.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="SHTP Site" />
-                                                <div style={{ 
-                                                    padding: '1.2rem', 
-                                                    textAlign: 'center', 
-                                                    fontWeight: 900, 
-                                                    fontSize: '1.4rem', 
-                                                    background: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '#db011c' : 'white', 
+                                                <div style={{
+                                                    padding: '1.2rem',
+                                                    textAlign: 'center',
+                                                    fontWeight: 900,
+                                                    fontSize: '1.4rem',
+                                                    background: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '#db011c' : 'white',
                                                     color: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
                                                     letterSpacing: '0.05em'
                                                 }}>
@@ -223,8 +249,8 @@ export default function NewRequestPage() {
                                                     <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
                                                 )}
                                             </div>
-                                            
-                                            <div 
+
+                                            <div
                                                 onClick={() => toggleSite('DDK')}
                                                 style={{
                                                     cursor: 'pointer',
@@ -238,12 +264,12 @@ export default function NewRequestPage() {
                                                 }}
                                             >
                                                 <img src="/ddk.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="DDK Site" />
-                                                <div style={{ 
-                                                    padding: '1.2rem', 
-                                                    textAlign: 'center', 
-                                                    fontWeight: 900, 
-                                                    fontSize: '1.4rem', 
-                                                    background: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '#db011c' : 'white', 
+                                                <div style={{
+                                                    padding: '1.2rem',
+                                                    textAlign: 'center',
+                                                    fontWeight: 900,
+                                                    fontSize: '1.4rem',
+                                                    background: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '#db011c' : 'white',
                                                     color: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
                                                     letterSpacing: '0.05em'
                                                 }}>
@@ -266,23 +292,67 @@ export default function NewRequestPage() {
 
                         {step === 2 && (
                             <section>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
+                                        <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Visitors Information</h2>
+                                    </div>
+                                    {formData.visitors.length < 10 && (
+                                        <button type="button" onClick={addVisitor} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#db011c', fontWeight: 700, padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                            Add Visitor
+                                        </button>
+                                    )}
+                                </div>
+
+                                {formData.visitors.slice(0, 1).map((visitor, idx) => (
+                                    <div key={idx} style={{ padding: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', marginBottom: '1.5rem', position: 'relative' }}>
+                                        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '1rem' }}>Visitor {idx + 1}</h3>
+                                        {formData.visitors.length > 1 && (
+                                            <button type="button" onClick={() => removeVisitor(idx)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem' }}>
+                                                Remove
+                                            </button>
+                                        )}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                                            <div className="flex flex-col gap-2">
+                                                <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Full Name *</label>
+                                                <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.name} onChange={e => updateVisitor(idx, 'name', e.target.value)} placeholder="Enter full name" />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Title / Position *</label>
+                                                <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.title} onChange={e => updateVisitor(idx, 'title', e.target.value)} placeholder="e.g. Sales Manager" />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Company *</label>
+                                                <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.company} onChange={e => updateVisitor(idx, 'company', e.target.value)} placeholder="Your company name" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {formData.visitors.length > 1 && (
+                                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-6 shadow-sm">
+                                        <div className="p-5 flex justify-between items-center hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setShowAllVisitorsModal(true)}>
+                                            <div>
+                                                <h3 className="font-bold text-[#0f172a] text-lg mb-1">
+                                                    ... and {formData.visitors.length - 1} more visitor(s)
+                                                </h3>
+                                                <p className="text-sm text-gray-500">
+                                                    Click to view or manage all visitors in a table.
+                                                </p>
+                                            </div>
+                                            <button type="button" className="text-sm font-bold text-[#db011c] bg-red-50 hover:bg-red-100 px-5 py-2.5 rounded-xl transition-colors">
+                                                Manage All Visitors
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', marginTop: '2rem' }}>
                                     <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
                                     <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Visit Details & Schedule</h2>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                                    <div className="flex flex-col gap-2">
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>Visitor Name *</label>
-                                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.visitorName} onChange={e => setFormData({ ...formData, visitorName: e.target.value })} placeholder="Enter full name" />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>Title / Position *</label>
-                                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.visitorTitle} onChange={e => setFormData({ ...formData, visitorTitle: e.target.value })} placeholder="e.g. Sales Manager" />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>Current Company *</label>
-                                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.currentCompany} onChange={e => setFormData({ ...formData, currentCompany: e.target.value })} placeholder="Your company name" />
-                                    </div>
                                     <div className="flex flex-col gap-2">
                                         <label style={{ color: '#475569', fontWeight: 700 }}>Purpose of Visit *</label>
                                         <select className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" value={formData.purposeOfVisit} onChange={e => setFormData({ ...formData, purposeOfVisit: e.target.value })}>
@@ -300,15 +370,15 @@ export default function NewRequestPage() {
                                         <label style={{ color: '#475569', fontWeight: 700 }}>End Date *</label>
                                         <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} />
                                     </div>
-                                    
+
                                     {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
                                         <div className="flex flex-col gap-2" style={{ gridColumn: '1 / -1' }}>
                                             <label style={{ color: '#475569', fontWeight: 700 }}>Detail of purpose *</label>
-                                            <textarea 
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" 
+                                            <textarea
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors"
                                                 rows={3}
-                                                required 
-                                                value={formData.purposeDetail} 
+                                                required
+                                                value={formData.purposeDetail}
                                                 onChange={e => setFormData({ ...formData, purposeDetail: e.target.value })}
                                                 placeholder="Please provide details of the visit purpose..."
                                             />
@@ -337,10 +407,10 @@ export default function NewRequestPage() {
                                                             flexDirection: 'column'
                                                         }}>
                                                             <div style={{ height: '60px', position: 'relative', overflow: 'hidden' }}>
-                                                                <img 
-                                                                    src={r.image_url || '/visitor_header.png'} 
-                                                                    style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: formData.roomIds.includes(r.id) ? 1 : 0.8 }} 
-                                                                    alt={r.name} 
+                                                                <img
+                                                                    src={r.image_url || '/visitor_header.png'}
+                                                                    style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: formData.roomIds.includes(r.id) ? 1 : 0.8 }}
+                                                                    alt={r.name}
                                                                 />
                                                                 {formData.roomIds.includes(r.id) && (
                                                                     <div style={{ position: 'absolute', top: '5px', right: '5px', background: '#db011c', color: 'white', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold' }}>✓</div>
@@ -371,7 +441,7 @@ export default function NewRequestPage() {
                                     <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
                                     <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Final Requirements</h2>
                                 </div>
-                                
+
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
                                     <div style={{ padding: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
                                         <p style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Factory Tour Requested?</p>
@@ -398,12 +468,12 @@ export default function NewRequestPage() {
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2rem 0', borderTop: '1px solid #e2e8f0' }}>
                                     <button onClick={prevStep} style={{ background: 'transparent', border: 'none', color: '#64748b', fontWeight: 700, cursor: 'pointer' }}>← Previous Step</button>
-                                    <button onClick={handleSubmit} disabled={loading} style={{ 
-                                        padding: '1.2rem 4rem', 
-                                        background: 'linear-gradient(135deg, #db011c 0%, #900112 100%)', 
-                                        color: 'white', 
-                                        borderRadius: '12px', 
-                                        fontSize: '1.1rem', 
+                                    <button onClick={handleSubmit} disabled={loading} style={{
+                                        padding: '1.2rem 4rem',
+                                        background: 'linear-gradient(135deg, #db011c 0%, #900112 100%)',
+                                        color: 'white',
+                                        borderRadius: '12px',
+                                        fontSize: '1.1rem',
                                         fontWeight: 800,
                                         boxShadow: '0 10px 30px rgba(219, 1, 28, 0.4)',
                                         border: 'none',
@@ -424,6 +494,75 @@ export default function NewRequestPage() {
                     to { opacity: 1; transform: translateX(0); }
                 }
             `}</style>
+
+            {/* MANAGE VISITORS MODAL */}
+            {showAllVisitorsModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+                    <div className="bg-white w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+                            <div>
+                                <h3 className="font-extrabold text-[#0f172a] text-xl">Manage Visitors</h3>
+                                <p className="text-sm text-gray-500 mt-1">Add, edit, or remove visitors for this request.</p>
+                            </div>
+                            <button onClick={() => setShowAllVisitorsModal(false)} className="text-gray-400 hover:text-gray-600 bg-gray-50 rounded-full w-10 h-10 flex items-center justify-center transition-colors">&times;</button>
+                        </div>
+                        <div className="px-6 py-4 bg-gray-50/50 flex-1 overflow-y-auto">
+                            <div className="flex justify-end mb-3">
+                                {formData.visitors.length < 10 && (
+                                    <button type="button" onClick={addVisitor} className="bg-[#db011c] text-white font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 hover:bg-[#900112] transition-colors shadow-md shadow-red-500/20">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                        Add New Visitor
+                                    </button>
+                                )}
+                            </div>
+                            
+                            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse min-w-[600px]">
+                                        <thead>
+                                            <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                                <th className="px-4 py-3 w-10 text-center">#</th>
+                                                <th className="px-4 py-3">Full Name *</th>
+                                                <th className="px-4 py-3">Title / Position *</th>
+                                                <th className="px-4 py-3">Company *</th>
+                                                <th className="px-4 py-3 w-20 text-center">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-sm font-medium">
+                                            {formData.visitors.map((visitor, idx) => (
+                                                <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                                                    <td className="px-4 py-2.5 text-center text-gray-400 font-bold">{idx + 1}</td>
+                                                    <td className="px-4 py-2.5">
+                                                        <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white" required value={visitor.name} onChange={e => updateVisitor(idx, 'name', e.target.value)} placeholder="Full name" />
+                                                    </td>
+                                                    <td className="px-4 py-2.5">
+                                                        <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white" required value={visitor.title} onChange={e => updateVisitor(idx, 'title', e.target.value)} placeholder="Title" />
+                                                    </td>
+                                                    <td className="px-4 py-2.5">
+                                                        <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white" required value={visitor.company} onChange={e => updateVisitor(idx, 'company', e.target.value)} placeholder="Company" />
+                                                    </td>
+                                                    <td className="px-4 py-2.5 text-center">
+                                                        {formData.visitors.length > 1 && (
+                                                            <button type="button" onClick={() => removeVisitor(idx)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Remove">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="px-6 py-4 border-t border-gray-100 bg-white flex justify-end">
+                            <button onClick={() => setShowAllVisitorsModal(false)} className="bg-[#db011c] text-white font-bold px-8 py-2.5 rounded-xl hover:bg-[#900112] shadow-md transition-all">
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

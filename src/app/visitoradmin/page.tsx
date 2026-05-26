@@ -64,8 +64,7 @@ export default function AdminDashboard() {
                     const details = parseDetails(r.details);
                     return {
                         'Code': '#' + r.id.split('-')[0].toUpperCase(),
-                        'Visitor Name': r.visitor_name,
-                        'Visitor Title': r.visitor_title,
+                        'Visitor Name': r.visitors ? (function(){try{return JSON.parse(r.visitors).map((v:any) => `${v.name} (${v.title})`).join(', ');}catch(e){return r.visitor_name;}}()) : r.visitor_name,
                         'Current Company': r.current_company,
                         'Submitter Name': r.profiles?.name,
                         'Submitter Department': r.profiles?.department,
@@ -214,7 +213,18 @@ export default function AdminDashboard() {
                                         </span>
                                     </td>
                                     <td className="px-3 py-2">
-                                        <div className="font-extrabold text-[#0f172a] truncate max-w-[120px]">{request.visitor_name}</div>
+                                        <div className="font-extrabold text-[#0f172a] truncate max-w-[120px]">
+                                            {request.visitor_name}
+                                            {request.visitors && (() => {
+                                                try {
+                                                    const parsed = JSON.parse(request.visitors);
+                                                    if (parsed && parsed.length > 1) {
+                                                        return ` (+ ${parsed.length - 1})`;
+                                                    }
+                                                } catch (e) {}
+                                                return '';
+                                            })()}
+                                        </div>
                                         <div className="text-[10px] text-gray-500 mt-0.5 tracking-tight truncate max-w-[120px]">{request.current_company} / {request.visitor_title}</div>
                                     </td>
                                     <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
@@ -356,8 +366,25 @@ export default function AdminDashboard() {
                             <div className="p-4">
                                 <div className="flex flex-wrap gap-4 justify-between items-start mb-4">
                                     <div>
-                                        <h3 className="text-xl font-extrabold text-[#0f172a] mb-1">{selectedRequest.visitor_name}</h3>
-                                        <p className="text-gray-500 font-medium text-xs">{selectedRequest.visitor_title} @ {selectedRequest.current_company}</p>
+                                        {(() => {
+                                            try {
+                                                const visitorsList = selectedRequest.visitors ? JSON.parse(selectedRequest.visitors) : [];
+                                                if (visitorsList && visitorsList.length > 0) {
+                                                    return visitorsList.map((v: any, i: number) => (
+                                                        <div key={i} className="mb-2">
+                                                            <h3 className="text-xl font-extrabold text-[#0f172a] leading-tight">{v.name}</h3>
+                                                            <p className="text-gray-500 font-medium text-xs">{v.title} @ {v.company}</p>
+                                                        </div>
+                                                    ));
+                                                }
+                                            } catch (e) {}
+                                            return (
+                                                <div className="mb-2">
+                                                    <h3 className="text-xl font-extrabold text-[#0f172a] leading-tight">{selectedRequest.visitor_name}</h3>
+                                                    <p className="text-gray-500 font-medium text-xs">{selectedRequest.visitor_title} @ {selectedRequest.current_company}</p>
+                                                </div>
+                                            );
+                                        })()}
                                         <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                             By: <span className="text-[#db011c]">{selectedRequest.profiles?.name}</span> ({selectedRequest.profiles?.department})
                                         </div>

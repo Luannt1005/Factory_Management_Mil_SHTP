@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import DepartmentSlider from '@/components/DepartmentSlider';
 import OrgChartView from '@/app/orgchart/OrgChartView';
+import HeroVideo from '@/components/HeroVideo';
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -21,32 +22,53 @@ export default async function Home() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-gradient-to-br from-[#db011c] to-[#900112] text-white font-sans overflow-y-auto">
       {/* Hero Section */}
-      <section className="w-full max-w-7xl mx-auto px-8 pt-24 pb-16 text-center">
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white to-red-200 uppercase">
-          Connect Your Facility<br />
-          Experience Secure Entry
-        </h1>
-        <p className="text-[#ffe5e5] text-xl md:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed">
-          Bridge the gap between safety and efficiency with our modern management systems. Fast access, seamless tracking, and total security across Milwaukee SHTP Staging.
-        </p>
+      {token ? (
+        <HeroVideo>
+          <div className="text-center py-6">
+            <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white to-red-200 uppercase">
+              Connect Your Facility<br />
+              Experience Secure Entry
+            </h1>
+            <p className="text-[#ffe5e5] text-xl md:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed">
+              Bridge the gap between safety and efficiency with our modern management systems. Fast access, seamless tracking, and total security across Milwaukee SHTP Staging.
+            </p>
 
-        <div className="flex flex-wrap gap-6 justify-center mb-16">
-          <Link
-            href={requestLink}
-            className="inline-flex items-center justify-center px-10 py-4 rounded-md text-lg font-bold text-[#db011c] bg-white border border-white hover:bg-white/95 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 shadow-lg"
-          >
-            Request Visitor
-          </Link>
-          {token && (
+            <div className="flex flex-wrap gap-6 justify-center">
+              <Link
+                href={requestLink}
+                className="inline-flex items-center justify-center px-10 py-4 rounded-md text-lg font-bold text-[#db011c] bg-white border border-white hover:bg-white/95 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 shadow-lg"
+              >
+                Request Visitor
+              </Link>
+              <Link
+                href="/visitordashboard"
+                className="inline-flex items-center justify-center px-10 py-4 rounded-md text-lg font-bold text-white border-2 border-white/50 hover:border-white hover:bg-white/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm"
+              >
+                My Dashboard
+              </Link>
+            </div>
+          </div>
+        </HeroVideo>
+      ) : (
+        <section className="w-full max-w-7xl mx-auto px-8 pt-24 pb-16 text-center">
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white to-red-200 uppercase">
+            Connect Your Facility<br />
+            Experience Secure Entry
+          </h1>
+          <p className="text-[#ffe5e5] text-xl md:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed">
+            Bridge the gap between safety and efficiency with our modern management systems. Fast access, seamless tracking, and total security across Milwaukee SHTP Staging.
+          </p>
+
+          <div className="flex flex-wrap gap-6 justify-center mb-16">
             <Link
-              href="/visitordashboard"
-              className="inline-flex items-center justify-center px-10 py-4 rounded-md text-lg font-bold text-white border-2 border-white/50 hover:border-white hover:bg-white/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm"
+              href={requestLink}
+              className="inline-flex items-center justify-center px-10 py-4 rounded-md text-lg font-bold text-[#db011c] bg-white border border-white hover:bg-white/95 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 shadow-lg"
             >
-              My Dashboard
+              Request Visitor
             </Link>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* Departments Section */}
       <section className="w-full mb-32">
