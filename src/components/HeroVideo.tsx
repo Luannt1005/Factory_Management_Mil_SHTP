@@ -80,6 +80,13 @@ export default function HeroVideo({ children }: HeroVideoProps) {
         {children}
       </div>
 
+      {/* Brand Slogan */}
+      <div className="absolute bottom-8 left-8 z-20 select-none pointer-events-none">
+        <p className="text-[10px] sm:text-xs md:text-sm font-black tracking-[0.25em] text-white/40 uppercase">
+          Nothing but <span className="text-[#db011c] font-black opacity-90">HEAVY DUTY™</span>
+        </p>
+      </div>
+
       {/* Glassmorphic Playback Controls */}
       <div className="absolute bottom-6 right-8 z-20 flex items-center gap-3">
         <button
