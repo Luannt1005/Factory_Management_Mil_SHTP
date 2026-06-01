@@ -1,222 +1,162 @@
 'use client';
-import { useState } from 'react';
-import Link from 'next/link';
+import ScrollReveal from '@/components/ScrollReveal';
 
 const departments = [
   {
-    id: 'hr',
-    title: 'Human Resources',
-    desc: 'Leading our talent acquisition and maintaining our core company values through people management.',
-    img: '/hr_department.png',
-    link: '/departments/hr'
+    id: 'management',
+    title: 'Management',
+    subtitle: 'Strategic Leadership',
+    desc: 'Oversees overall business strategy, organizational direction, and cross-departmental alignment to ensure company goals are met.',
+    img: '/landing_page/management.png'
   },
   {
-    id: 'it',
-    title: 'Information Technology',
-    desc: 'Powering our infrastructure with cutting-edge technology and securing our digital footprint.',
-    img: '/it_department.png',
-    link: '/departments/it'
+    id: 'scm',
+    title: 'Supply Chain Management',
+    subtitle: 'SCM',
+    desc: 'Manages procurement, logistics, and supplier relationships to ensure materials and components flow efficiently through the production process.',
+    img: '/landing_page/scm.png'
   },
   {
-    id: 'production',
-    title: 'Advanced Production',
-    desc: 'The heart of our operations, delivering world-class manufacturing solutions with precision.',
-    img: '/production_department.png',
-    link: '/departments/production'
+    id: 'opm',
+    title: 'Operations Project Management',
+    subtitle: 'OPM',
+    desc: 'Plans and coordinates operational projects, tracking timelines, resources, and deliverables to drive continuous improvement initiatives.',
+    img: '/landing_page/opm.png'
   },
   {
-    id: 'facilities',
-    title: 'Facilities & Safety',
-    desc: 'Ensuring a safe, secure, and world-class environment for all employees and visitors.',
-    img: '/home bg.png',
-    link: '/departments/facilities'
+    id: 'engineering',
+    title: 'Engineering',
+    subtitle: 'Product & Process Design',
+    desc: 'Develops and maintains product and process designs, providing technical solutions to support manufacturing efficiency and product quality.',
+    img: '/landing_page/engineering.png'
   },
   {
-      id: 'logistics',
-      title: 'Global Logistics',
-      desc: 'Optimizing our supply chain and distribution networks to deliver Milwaukee quality worldwide.',
-      img: '/production_department.png',
-      link: '/departments/logistics'
+    id: 'ee_mt',
+    title: 'EE / MT',
+    subtitle: 'Electrical & Motor Eng',
+    desc: 'Designs and develops electrical systems and motor technologies to ensure optimal performance, reliability, and efficiency of power tool products.',
+    img: '/landing_page/ee_mt.png'
+  },
+  {
+    id: 'ie_fmu_mif',
+    title: 'IE / FMU / MIF',
+    subtitle: 'Industrial & Facility Eng',
+    desc: 'Optimizes production workflows and facility infrastructure through industrial engineering methods, while investigating and mitigating operational risks and disruptions on the factory floor.',
+    img: '/landing_page/ie_fmu_mif.png'
+  },
+  {
+    id: 'ame_auto_opex',
+    title: 'AME / Auto / Opex',
+    subtitle: 'Advanced Manufacturing',
+    desc: 'Drives automation integration and operational excellence programs to enhance productivity and reduce waste on the factory floor.',
+    img: '/landing_page/ame_auto_opex.png'
+  },
+  {
+    id: 'manufacturing',
+    title: 'Manufacturing',
+    subtitle: 'Production Operations',
+    desc: 'Executes day-to-day production operations, ensuring output targets, efficiency, and safety standards are consistently achieved.',
+    img: '/landing_page/manufacturing.png'
+  },
+  {
+    id: 'quality',
+    title: 'Quality',
+    subtitle: 'Quality Assurance',
+    desc: 'Monitors and enforces product and process quality standards through inspection, testing, and corrective action to meet customer and compliance requirements.',
+    img: '/landing_page/quality.png'
+  },
+  {
+    id: 'ehs_esg',
+    title: 'EHS / ESG',
+    subtitle: 'Safety & Sustainability',
+    desc: 'Ensures a safe and compliant workplace while driving sustainability and corporate responsibility initiatives aligned with global ESG standards.',
+    img: '/landing_page/ehs_esg.png'
   }
 ];
 
 export default function DepartmentSlider() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev === departments.length - 1 ? 0 : prev + 1));
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev === 0 ? departments.length - 1 : prev - 1));
-  };
-
   return (
-    <div className="slider-wrapper" style={{ 
-        position: 'relative', 
-        width: '100%', 
-        padding: '3rem 0 5rem',
-        overflow: 'hidden'
-    }}>
-      <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          height: '600px',
-          position: 'relative',
-          maxWidth: '1200px',
-          margin: '0 auto'
-      }}>
-        {departments.map((dept, index) => {
-            let position = index - currentIndex;
-            
-            // Seamless infinite wrapping logic
-            if (position < -2) position += departments.length;
-            if (position > 2) position -= departments.length;
+    <div className="w-full pb-20">
+      {/* Styles for Staggered Parallax Scroll Entrance */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .dept-image {
+          transform: scale(0.9) rotate(-1deg);
+          opacity: 0;
+          transition: all 850ms cubic-bezier(0.16, 1, 0.3, 1) 50ms;
+        }
+        .reveal-active .dept-image {
+          transform: scale(1) rotate(0);
+          opacity: 1;
+        }
+        .dept-title {
+          transform: translateY(15px);
+          opacity: 0;
+          transition: all 700ms cubic-bezier(0.16, 1, 0.3, 1) 180ms;
+        }
+        .reveal-active .dept-title {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        .dept-desc {
+          transform: translateY(15px);
+          opacity: 0;
+          transition: all 700ms cubic-bezier(0.16, 1, 0.3, 1) 280ms;
+        }
+        .reveal-active .dept-desc {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      `}} />
 
-            const isActive = position === 0;
-            const isVisible = Math.abs(position) <= 1;
-            
-            // Stability values: removed "back" easing that caused shaking
-            const offsetX = position * 380; 
-            const scale = isActive ? 1 : 0.85; // Less dramatic scaling
-            const opacity = isVisible ? 1 : 0;
-            const zIndex = isActive ? 20 : 10;
-            const brightness = isActive ? '100%' : '70%';
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-12 lg:gap-y-16">
+        {departments.map((dept, idx) => {
+          // Stagger delays based on column index
+          const delay = (idx % 2) * 100;
+          // Row-by-row alternating checkerboard logic (alternates every 2 departments)
+          const isReversed = Math.floor(idx / 2) % 2 === 1;
 
-            return (
+          return (
+            <div key={dept.id} className="w-full">
+              <ScrollReveal delay={delay}>
                 <div 
-                    key={dept.id}
-                    style={{
-                        position: 'absolute',
-                        width: '400px',
-                        height: '550px',
-                        left: '50%',
-                        marginLeft: '-200px', 
-                        transform: `translateX(${offsetX}px) scale(${scale})`,
-                        opacity: opacity,
-                        zIndex: zIndex,
-                        filter: `brightness(${brightness})`,
-                        transition: 'all 0.5s ease-in-out', // Standard smooth easing to prevent "shaking"
-                        background: 'white',
-                        borderRadius: '24px',
-                        boxShadow: isActive ? '0 40px 80px rgba(0,0,0,0.3)' : '0 10px 20px rgba(0,0,0,0.1)',
-                        overflow: 'hidden',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        pointerEvents: isActive ? 'auto' : 'none',
-                        border: isActive ? 'none' : '1px solid rgba(0,0,0,0.05)'
-                    }}
+                  className={`group relative flex flex-col sm:flex-row ${
+                    isReversed ? 'sm:flex-row-reverse' : 'sm:flex-row'
+                  } items-center gap-6 py-4 transition-all duration-500 hover:-translate-y-1 cursor-pointer w-full overflow-hidden`}
                 >
-                    <div style={{ height: '280px', position: 'relative', overflow: 'hidden' }}>
-                        <img 
-                            src={dept.img} 
-                            alt={dept.title} 
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                        />
-                        {/* Shadow overlay for inactive cards */}
-                        {!isActive && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }}></div>}
-                    </div>
+                  {/* Image Block */}
+                  <div className="w-full sm:w-[46%] aspect-[4/3] overflow-hidden rounded-[1.8rem] border border-white/10 relative bg-black/20 shrink-0 dept-image shadow-xl">
+                    <img 
+                      src={dept.img} 
+                      alt={dept.title} 
+                      className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-[800ms] ease-out" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+                    
+                    {/* Badge */}
+                    {dept.subtitle && (
+                      <span className={`absolute top-4 ${isReversed ? 'left-4' : 'right-4'} bg-black/40 group-hover:bg-[#db011c] text-white text-[9px] font-bold uppercase px-3 py-1.5 rounded-full tracking-wider shadow-lg transition-colors duration-300 backdrop-blur-md border border-white/10`}>
+                        {dept.subtitle}
+                      </span>
+                    )}
+                  </div>
 
-                    <div style={{ padding: '2rem', flex: 1, display: 'flex', flexDirection: 'column', textAlign: 'center', background: 'white' }}>
-                        <h3 style={{ 
-                            fontSize: '1.8rem', 
-                            fontWeight: 800, 
-                            marginBottom: '1rem', 
-                            color: isActive ? '#db011c' : '#475569'
-                        }}>{dept.title}</h3>
-                        
-                        <p style={{ 
-                            fontSize: '1rem', 
-                            color: '#64748b', 
-                            marginBottom: '2rem', 
-                            lineHeight: '1.5',
-                            opacity: isActive ? 1 : 0.5,
-                            transition: 'opacity 0.4s'
-                        }}>{dept.desc}</p>
-                        
-                        <div style={{ marginTop: 'auto', opacity: isActive ? 1 : 0, transition: 'all 0.4s' }}>
-                            <Link href={dept.link} style={{ 
-                                padding: '0.8rem 2.5rem', 
-                                background: '#db011c', 
-                                color: 'white', 
-                                borderRadius: '4px',
-                                fontSize: '0.95rem',
-                                fontWeight: 700,
-                                textDecoration: 'none',
-                                display: 'inline-block'
-                            }}>
-                                EXPLORE DETAILS
-                            </Link>
-                        </div>
-                    </div>
+                  {/* Text Block */}
+                  <div className={`w-full flex flex-col justify-center text-left items-start ${
+                    isReversed ? 'sm:pl-6' : 'sm:pr-6'
+                  } transition-transform duration-500`}>
+                    <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-wider mb-3 group-hover:text-[#db011c] transition-colors duration-300 leading-tight dept-title">
+                      {dept.title}
+                    </h3>
+                    <p className="text-sm text-white/70 leading-relaxed font-light line-clamp-4 dept-desc">
+                      {dept.desc}
+                    </p>
+                  </div>
+
                 </div>
-            );
+              </ScrollReveal>
+            </div>
+          );
         })}
-      </div>
-
-      {/* Navigation Arrows */}
-      <button 
-        onClick={prevSlide}
-        style={{ 
-          position: 'absolute', 
-          left: '20px', 
-          top: '50%', 
-          transform: 'translateY(-50%)',
-          zIndex: 100, 
-          background: 'white', 
-          border: 'none', 
-          color: '#db011c', 
-          width: '56px', 
-          height: '56px', 
-          borderRadius: '50%', 
-          cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.25)', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center'
-        }}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      
-      <button 
-        onClick={nextSlide}
-        style={{ 
-          position: 'absolute', 
-          right: '20px', 
-          top: '50%', 
-          transform: 'translateY(-50%)',
-          zIndex: 100, 
-          background: 'white', 
-          border: 'none', 
-          color: '#db011c', 
-          width: '56px', 
-          height: '56px', 
-          borderRadius: '50%', 
-          cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.25)', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center'
-        }}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-      </button>
-
-      {/* Dots Indicator */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '1.5rem' }}>
-        {departments.map((_, idx) => (
-          <div 
-            key={idx}
-            onClick={() => setCurrentIndex(idx)}
-            style={{ 
-              width: currentIndex === idx ? '32px' : '8px', height: '8px', 
-              borderRadius: '4px', background: currentIndex === idx ? '#fff' : 'rgba(255,255,255,0.4)',
-              cursor: 'pointer', transition: 'all 0.3s'
-            }}
-          />
-        ))}
       </div>
     </div>
   );

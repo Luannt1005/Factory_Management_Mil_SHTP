@@ -15,7 +15,7 @@
   color: var(--footer-text);
   padding: 50px 0 0;
   border-top: 3px solid var(--footer-secondary);
-  margin-top: 60px;
+  margin-top: 0;
 }
 
 /* Footer Container */

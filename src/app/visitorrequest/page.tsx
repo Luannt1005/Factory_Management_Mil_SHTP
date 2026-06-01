@@ -313,7 +313,7 @@ export default function NewRequestPage() {
                                                 Remove
                                             </button>
                                         )}
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: formData.visitors.length > 1 ? '1.5rem' : '0' }}>
                                             <div className="flex flex-col gap-2">
                                                 <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Full Name *</label>
                                                 <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.name} onChange={e => updateVisitor(idx, 'name', e.target.value)} placeholder="Enter full name" />
@@ -327,26 +327,23 @@ export default function NewRequestPage() {
                                                 <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.company} onChange={e => updateVisitor(idx, 'company', e.target.value)} placeholder="Your company name" />
                                             </div>
                                         </div>
+
+                                        {formData.visitors.length > 1 && (
+                                            <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200/50 text-sm">
+                                                <span className="font-semibold text-gray-500">
+                                                    ... and {formData.visitors.length - 1} more visitor(s)
+                                                </span>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setShowAllVisitorsModal(true)} 
+                                                    className="font-black text-[#db011c] hover:text-[#900112] hover:underline bg-transparent border-none p-0 cursor-pointer"
+                                                >
+                                                    View All
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
-
-                                {formData.visitors.length > 1 && (
-                                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-6 shadow-sm">
-                                        <div className="p-5 flex justify-between items-center hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setShowAllVisitorsModal(true)}>
-                                            <div>
-                                                <h3 className="font-bold text-[#0f172a] text-lg mb-1">
-                                                    ... and {formData.visitors.length - 1} more visitor(s)
-                                                </h3>
-                                                <p className="text-sm text-gray-500">
-                                                    Click to view or manage all visitors in a table.
-                                                </p>
-                                            </div>
-                                            <button type="button" className="text-sm font-bold text-[#db011c] bg-red-50 hover:bg-red-100 px-5 py-2.5 rounded-xl transition-colors">
-                                                Manage All Visitors
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', marginTop: '2rem' }}>
                                     <div style={{ width: '4px', height: '30px', background: '#db011c' }} />

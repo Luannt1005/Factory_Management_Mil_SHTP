@@ -57,7 +57,7 @@ export default function HeroVideo({ children }: HeroVideoProps) {
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden min-h-[75vh] flex items-center justify-center py-20 bg-[#900112]">
+    <section className="relative w-full overflow-hidden min-h-[75vh] flex items-center justify-center py-20 bg-black">
       {/* Background Video */}
       <div className="absolute inset-0 z-0">
         <video
@@ -66,17 +66,17 @@ export default function HeroVideo({ children }: HeroVideoProps) {
           loop
           muted
           playsInline
-          className="w-full h-full object-cover opacity-35"
+          className="w-full h-full object-cover opacity-75"
         >
           <source src="/landing_page/landingpage_clip.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
         {/* Premium dark gradient overlay for visual excellence and text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#900112]/50 to-[#900112]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-[#db011c]" />
       </div>
 
       {/* Hero Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-8">
+      <div className="relative z-10 w-full px-8 md:px-16">
         {children}
       </div>
 

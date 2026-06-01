@@ -5,7 +5,11 @@ import { usePathname } from "next/navigation";
 export default function PageHeader() {
     const pathname = usePathname();
 
-    if (pathname === "/introduction/about_vn") {
+    if (
+        pathname === "/introduction/about_vn" ||
+        pathname === "/introduction/about_shtp" ||
+        pathname === "/introduction/contacts"
+    ) {
         return null;
     }
 
@@ -61,6 +65,10 @@ export default function PageHeader() {
         '/visitoradmin': {
             title: 'Visitor Management Admin',
             subtitle: 'Overall management of visitor requests and factory access'
+        },
+        '/visitoradmin/checkinout': {
+            title: 'Check-In / Check-Out Management',
+            subtitle: 'Manage visitor security logs and check-in status'
         },
         '/profile': {
             title: 'Account Settings',

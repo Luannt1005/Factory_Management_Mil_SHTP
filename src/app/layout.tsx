@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 
 import { NextAuthProvider } from "@/components/NextAuthProvider";
 import PageHeader from "@/components/PageHeader";
+import LayoutContentWrapper from "@/components/LayoutContentWrapper";
 
 export default function RootLayout({
   children,
@@ -38,12 +39,12 @@ export default function RootLayout({
               <div className="flex-1 flex overflow-hidden">
                 <Sidebar />
                 <main className="flex-1 overflow-auto bg-[var(--color-bg-page)] relative scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent transition-colors duration-300 flex flex-col">
-                  <div className="p-6 md:p-8 flex-1">
+                  <LayoutContentWrapper>
                     <PageHeader />
                     <PageTransition>
                       {children}
                     </PageTransition>
-                  </div>
+                  </LayoutContentWrapper>
                   <AppFooter />
                 </main>
               </div>

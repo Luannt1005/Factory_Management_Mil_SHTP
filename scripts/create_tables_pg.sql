@@ -60,3 +60,19 @@ CREATE TABLE IF NOT EXISTS custom_orgcharts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_custom_orgcharts_username ON custom_orgcharts(username);
+
+CREATE TABLE IF NOT EXISTS "VisitorCheckInOut" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "requestId" VARCHAR(50) NOT NULL,
+    "visitorIndex" INT NOT NULL,
+    "visitorName" VARCHAR(255) NOT NULL,
+    "visitorCode" VARCHAR(100) UNIQUE NOT NULL,
+    "checkInTime" TIMESTAMP,
+    "checkOutTime" TIMESTAMP,
+    status VARCHAR(50) DEFAULT 'PENDING',
+    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_checkinout_request_id ON "VisitorCheckInOut"("requestId");
+CREATE INDEX IF NOT EXISTS idx_checkinout_code ON "VisitorCheckInOut"("visitorCode");
+CREATE INDEX IF NOT EXISTS idx_checkinout_status ON "VisitorCheckInOut"(status);

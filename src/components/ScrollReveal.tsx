@@ -17,12 +17,13 @@ export default function ScrollReveal({ children, className = "", delay = 0 }: Sc
       ([entry]) => {
         if (entry.isIntersecting) {
           setTimeout(() => setIsVisible(true), delay);
-          observer.unobserve(entry.target);
+        } else {
+          setIsVisible(false);
         }
       },
       {
-        threshold: 0.05,
-        rootMargin: "0px 0px -10% 0px", // Trigger when element is 10% from bottom of viewport
+        threshold: 0.02,
+        rootMargin: "0px 0px -8% 0px", // Trigger when 8% inside the viewport
       }
     );
 
@@ -38,8 +39,8 @@ export default function ScrollReveal({ children, className = "", delay = 0 }: Sc
   return (
     <div
       ref={ref}
-      className={`transition-all duration-[1000ms] transform ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      className={`transition-all duration-[850ms] transform ${
+        isVisible ? "opacity-100 translate-y-0 scale-100 reveal-active" : "opacity-0 translate-y-12 scale-[0.97]"
       } ${className}`}
       style={{
         transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",

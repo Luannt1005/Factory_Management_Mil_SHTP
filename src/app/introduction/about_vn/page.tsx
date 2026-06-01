@@ -71,7 +71,7 @@ function AnimatedSection({
 
 export default function AboutVietnam() {
   return (
-    <div className="w-full min-h-screen bg-[var(--color-bg-page)] text-gray-900 font-sans pb-32 px-4 md:px-8 space-y-24 overflow-y-auto">
+    <div className="w-full min-h-screen bg-[var(--color-bg-page)] text-gray-900 font-sans pb-32 px-4 md:px-8 space-y-24">
       
       {/* 1. Header Banner */}
       <AnimatedSection direction="zoom" className="w-full">

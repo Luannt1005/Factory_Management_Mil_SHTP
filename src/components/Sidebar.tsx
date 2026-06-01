@@ -21,7 +21,8 @@ import {
     PhoneIcon,
     KeyIcon,
     ArrowLeftOnRectangleIcon,
-    GlobeAsiaAustraliaIcon
+    GlobeAsiaAustraliaIcon,
+    IdentificationIcon
 } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { preload } from 'swr';
@@ -77,6 +78,7 @@ export default function Sidebar() {
                 { name: 'My Request', path: '/visitordashboard', icon: ClipboardDocumentListIcon },
                 { name: 'Visitor Admin', path: '/visitoradmin', icon: Cog6ToothIcon, requiredRole: 'admin' }, // Visitor Admin handled in visibleItems filter
                 { name: 'Manage Room', path: '/visitoradmin/rooms', icon: KeyIcon, requiredRole: 'admin' },
+                { name: 'Check In/Out', path: '/visitoradmin/checkinout', icon: IdentificationIcon, requiredRole: 'admin' },
                 { name: 'Visitor Dashboard', path: '/visitoranalytics', icon: ChartBarSquareIcon, requiredRole: 'admin' },
             ]
         });

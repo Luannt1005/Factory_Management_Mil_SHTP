@@ -94,13 +94,13 @@ export default function Header() {
                         {[
                             { 
                                 name: 'Introduction', 
-                                path: '/introduction', 
+                                path: '/introduction/about_shtp', 
                                 matches: ['/introduction']
                             },
                             { 
                                 name: 'Visitor Management', 
                                 path: '/visitorrequest', 
-                                matches: ['/visitorrequest', '/visitordashboard', '/visitoradmin']
+                                matches: ['/visitorrequest', '/visitordashboard', '/visitoradmin', '/visitoradmin/checkinout']
                             },
                             { 
                                 name: 'Orgchart', 
