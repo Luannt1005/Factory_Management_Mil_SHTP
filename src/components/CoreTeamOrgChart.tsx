@@ -222,8 +222,6 @@ export default function CoreTeamOrgChart() {
     const reports = data.reports[cleanId] || [];
     const label = getCategoryHeader(emp, reports);
     const isJeff = cleanId === '610977';
-
-    // Filter to show only supervisors, managers or above
     const displayReports = reports.filter(rep => isSupervisorOrManager(rep.job_title));
 
     return (
@@ -232,7 +230,7 @@ export default function CoreTeamOrgChart() {
           isDotted ? (
             <div className="w-0.5 h-6 border-l border-dotted border-red-500 -mt-2 relative z-0"></div>
           ) : (
-            <div className="w-0.5 h-4 bg-red-600"></div>
+            <div className="w-0.5 h-8 bg-red-600 -mt-4 relative z-0"></div>
           )
         )}
         <div className={`flex flex-col items-center w-full max-w-[170px] mx-auto bg-white rounded shadow-sm overflow-hidden border ${isJeff ? 'border-2 border-red-600 shadow-md ring-2 ring-red-100' : 'border-gray-200'} hover:shadow-md transition-shadow duration-300`}>
@@ -365,9 +363,6 @@ export default function CoreTeamOrgChart() {
             {/* Jeff Searl Card */}
             <div className="flex flex-col items-center relative">
               {globalOps && renderLeaderCard(globalOps)}
-              
-              {/* Vertical connector going down from Jeff to Level 2 reports horizontal line */}
-              <div className="w-0.5 h-6 bg-red-600"></div>
             </div>
 
             {/* Level 2 Connector Row */}
@@ -375,7 +370,7 @@ export default function CoreTeamOrgChart() {
               {/* Horizontal line from Col 1 center (8.3%) to Col 6 center (91.6%) */}
               <div className="absolute left-[8.3%] right-[8.3%] bottom-0 h-0.5 bg-red-600"></div>
               {/* Vertical connector coming down from Jeff (which is centered, so at 50%) */}
-              <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-red-600"></div>
+              <div className="absolute left-1/2 -translate-x-1/2 -top-6 bottom-0 w-0.5 bg-red-600"></div>
             </div>
 
             {/* Level 2: Jeff's 6 Direct Reports Grid */}
