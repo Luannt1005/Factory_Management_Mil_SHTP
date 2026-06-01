@@ -193,15 +193,15 @@ export default async function Home() {
               <div className="flex flex-col items-center md:items-start group">
                 <h3 className="text-2xl font-black text-white tracking-widest uppercase mb-8 relative inline-block">
                   SHTP Reception Desk
-                  <span className="absolute -bottom-3 left-0 w-12 h-1 bg-white group-hover:w-full transition-all duration-500"></span>
+                  <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-12 h-1 bg-white group-hover:w-full transition-all duration-500"></span>
                 </h3>
-                <div className="space-y-6">
-                  <a href="tel:+8402873088869" className="flex items-center gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
-                    <span className="text-[#db011c] font-bold group-hover/link:scale-110 transition-transform">Tel:</span>
-                    <span className="font-light">(+84) 0287 3088 869 <span className="text-white/50 text-sm ml-1">(Ext: 66797)</span></span>
+                <div className="space-y-6 w-full max-w-md">
+                  <a href="tel:+8402873088869" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
+                    <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Tel:</span>
+                    <span className="font-light">(+84) 0287 3088 869 <span className="text-white/50 text-sm ml-1 block sm:inline">(Ext: 66797)</span></span>
                   </a>
-                  <a href="mailto:MILVNSHTPReception@ttigroup.com.vn" className="flex items-center gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
-                    <span className="text-[#db011c] font-bold group-hover/link:scale-110 transition-transform">Email:</span>
+                  <a href="mailto:MILVNSHTPReception@ttigroup.com.vn" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
+                    <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Email:</span>
                     <span className="font-light break-all">MILVNSHTPReception@ttigroup.com.vn</span>
                   </a>
                 </div>
@@ -211,15 +211,15 @@ export default async function Home() {
               <div className="flex flex-col items-center md:items-start group">
                 <h3 className="text-2xl font-black text-white tracking-widest uppercase mb-8 relative inline-block">
                   EHS Team
-                  <span className="absolute -bottom-3 left-0 w-12 h-1 bg-white group-hover:w-full transition-all duration-500"></span>
+                  <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-12 h-1 bg-white group-hover:w-full transition-all duration-500"></span>
                 </h3>
-                <div className="space-y-6">
-                  <a href="tel:0961958951" className="flex items-center gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
-                    <span className="text-[#db011c] font-bold group-hover/link:scale-110 transition-transform">Hotline:</span>
+                <div className="space-y-6 w-full max-w-md">
+                  <a href="tel:0961958951" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
+                    <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Hotline:</span>
                     <span className="font-light">0961 958 951</span>
                   </a>
-                  <a href="mailto:TTIVNMILPTEHS@ttigroup.com.vn" className="flex items-center gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
-                    <span className="text-[#db011c] font-bold group-hover/link:scale-110 transition-transform">Email:</span>
+                  <a href="mailto:TTIVNMILPTEHS@ttigroup.com.vn" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
+                    <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Email:</span>
                     <span className="font-light break-all">TTIVNMILPTEHS@ttigroup.com.vn</span>
                   </a>
                 </div>

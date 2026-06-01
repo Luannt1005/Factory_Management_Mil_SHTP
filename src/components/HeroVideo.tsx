@@ -72,7 +72,7 @@ export default function HeroVideo({ children }: HeroVideoProps) {
           Your browser does not support the video tag.
         </video>
         {/* Premium dark gradient overlay for visual excellence and text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-[#db011c]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent" />
       </div>
 
       {/* Hero Content */}
