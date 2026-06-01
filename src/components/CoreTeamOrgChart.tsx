@@ -100,20 +100,7 @@ const isSupervisorOrManager = (title: string | null): boolean => {
          t.includes("principal");
 };
 
-// Static mapping for global functional leaders above support function cards
-const getFunctionalLeader = (empId: string): string => {
-  const cleanId = empId.trim().replace(/^0+/, '');
-  switch (cleanId) {
-    case '614043': return 'Yau Chan You Shing'; // EE & MTR
-    case '500904': return 'Brandon Hoffman';      // AME/AUTO/OPEX
-    case '568007': return 'Brandon Hoffman';      // EHS & ESG (shared lead)
-    case '1238':   return 'Rudy Pantoja';         // Quality
-    case '616797': return 'Dennis Ma Wing Yuk';   // Engineering
-    case '578935': return 'Tran Thuy Linh An';    // HRBP
-    case '10':     return 'Hance Wong Hon Yan';   // OF
-    default: return '';
-  }
-};
+
 
 // Dynamically derive the category header for a card based on employee attributes and sub-reports
 const getCategoryHeader = (emp: Employee, reports: Employee[]): string => {
@@ -406,21 +393,10 @@ export default function CoreTeamOrgChart() {
         {/* Support Grid (Dynamic Flex wrap for the active support functions in exact order) */}
         <div className="flex flex-wrap justify-center gap-3 w-full max-w-5xl mx-auto items-start">
           {data.supportFunctions.map((emp) => {
-            const leaderName = getFunctionalLeader(emp.emp_id);
             return (
               <div key={emp.emp_id} className="flex flex-col items-center relative min-w-[130px] max-w-[160px] flex-1">
                 {/* Dotted vertical line going up to divider */}
-                <div className="w-0.5 h-3 border-l border-dotted border-red-500"></div>
-                
-                {/* Functional Leader Red Box */}
-                {leaderName && (
-                  <div className="bg-[#db011c] text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm mb-1.5 select-none truncate max-w-full uppercase">
-                    {leaderName}
-                  </div>
-                )}
-                
-                {/* Dotted vertical line down to card */}
-                <div className="w-0.5 h-2 border-l border-dotted border-red-500"></div>
+                <div className="w-0.5 h-4 border-l border-dotted border-red-500"></div>
                 
                 {/* Support Card */}
                 {renderLeaderCard(emp)}
