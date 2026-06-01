@@ -81,9 +81,9 @@ export default function HeroVideo({ children }: HeroVideoProps) {
       </div>
 
       {/* Brand Slogan */}
-      <div className="absolute bottom-8 left-8 z-20 select-none pointer-events-none">
-        <p className="text-[10px] sm:text-xs md:text-sm font-black tracking-[0.25em] text-white/40 uppercase">
-          Nothing but <span className="text-[#db011c] font-black opacity-90">HEAVY DUTY™</span>
+      <div className="absolute bottom-8 left-8 md:bottom-10 md:left-12 z-20 select-none pointer-events-none">
+        <p className="text-sm sm:text-lg md:text-xl lg:text-2xl font-black tracking-[0.25em] text-white/50 uppercase">
+          Nothing but <span className="text-[#db011c] font-black">HEAVY DUTY™</span>
         </p>
       </div>
 
