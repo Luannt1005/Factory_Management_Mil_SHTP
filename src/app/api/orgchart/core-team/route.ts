@@ -18,12 +18,12 @@ export async function GET(req: Request) {
     const pool = await getDbConnection();
     
     // Fetch all active employees
-    const queryStr = "SELECT emp_id, full_name, job_title, dept, line_manager FROM employees WHERE emp_id IS NOT NULL AND emp_id <> '' AND (status = 'Active' OR status IS NULL)";
+    const queryStr = "SELECT emp_id, full_name, job_title, dept, location, line_manager FROM employees WHERE emp_id IS NOT NULL AND emp_id <> '' AND (status = 'Active' OR status IS NULL)";
     const result = await pool.query(queryStr);
     const employees = result.rows;
 
     if (!employees || employees.length === 0) {
-      return NextResponse.json({ success: true, leaders: {}, reports: {} });
+      return NextResponse.json({ success: true, vp: null, globalOps: null, ie_fmu_mif: null, factoryMgmt: null, jeffReports: [], supportFunctions: [], reports: {} });
     }
 
     // Map of clean_id -> employee for quick lookup
@@ -35,82 +35,78 @@ export async function GET(req: Request) {
       }
     });
 
-    // Defining the key leader IDs (both clean and original)
-    const keyLeaders = {
-      vp: '500011',               // Lee Hon Kay (HK Lee)
-      globalOps: '610977',        // Jeff Searl
-      ie_fmu_mif: '001347',       // T.T.Tien
-      factoryMgmt: '000818',      // Anna N.N.Quyen
-      mu3: '512282',              // Brian N.K.Hieu
-      mu5: '612495',              // Nash N.T.Ngo
-      mu5bp: '509807',            // Danny L.T.Danh
-      sc: '000005',               // Jena H.T.Thuy
-      opm: '590118',              // Susan Jiang
-      ddk: '612259',              // Skovran Robert
-      ee_mtr: '614043',           // Bryan Wei
-      ame_auto_opex: '500904',    // N.L Hiep
-      ehs_esg: '568007',          // N.T Trung
-      quality: '001238',          // Nancy C.T. Nhan
-      engineering: '616797',      // Ng Peng Heng
-      hrbp: '578935',             // Active HRBP (Nguyễn Thị Ngọc Phượng)
-      of: '000010'                // Sunny L.T.K.Duong (Hồng Nguyễn Nhất Linh)
+    // Helper to get line manager ID cleanly
+    const getManagerId = (emp: any): string | null => {
+      if (!emp.line_manager) return null;
+      return trimLeadingZeros(emp.line_manager.split(':')[0]);
     };
 
-    // Clean leader ID list for easy mapping
-    const leaderCleanIds = Object.values(keyLeaders).map(id => trimLeadingZeros(id) || '');
+    // Find VP (Lee Hon Kay: 500011)
+    const vpId = '500011';
+    const vp = empMap[vpId] || employees.find(e => getManagerId(e) === null) || null;
 
-    // Reconstruct the leaders list from DB
-    const leadersData: Record<string, any> = {};
-    Object.entries(keyLeaders).forEach(([key, id]) => {
-      const cleanId = trimLeadingZeros(id);
-      const emp = cleanId ? empMap[cleanId] : null;
-      if (emp) {
-        leadersData[key] = {
-          emp_id: emp.emp_id,
-          full_name: emp.full_name,
-          job_title: emp.job_title,
-          dept: emp.dept,
-          line_manager: emp.line_manager
-        };
-      } else {
-        // Fallback placeholder data matching the image if missing in DB
-        leadersData[key] = {
-          emp_id: id,
-          full_name: null,
-          job_title: null,
-          dept: null,
-          line_manager: null
-        };
-      }
+    // Find Global Ops (Jeff Searl: 610977)
+    const globalOpsId = '610977';
+    const globalOps = empMap[globalOpsId] || null;
+
+    // Find IE & FMU & MIF (Trương Trọng Tiến: 001347)
+    const ie_fmu_mif = empMap['1347'] || null;
+
+    // Find Factory Management (Nguyễn Nhã Quyên: 000818)
+    const factoryMgmt = empMap['818'] || null;
+
+    // Find all direct reports of Jeff Searl (610977)
+    const jeffReports = employees.filter(emp => getManagerId(emp) === globalOpsId);
+
+    // Find support functions dynamically (active direct reports of HK Lee (500011) that are not Jeff, Tien, or Quyen)
+    const excludedIds = new Set([globalOpsId, '1347', '818']);
+    const supportFunctions = employees.filter(emp => {
+      const mgrId = getManagerId(emp);
+      const cleanEmpId = trimLeadingZeros(emp.emp_id);
+      return mgrId === vpId && cleanEmpId && !excludedIds.has(cleanEmpId);
     });
 
-    // Group direct reports under each leader
+    // Group direct reports for all employees
     const reportsData: Record<string, any[]> = {};
-    leaderCleanIds.forEach(cleanId => {
-      reportsData[cleanId] = [];
+    
+    // We want to group reports for all leaders and managers
+    const leaderIds = new Set<string>();
+    if (vp) leaderIds.add(trimLeadingZeros(vp.emp_id) || '');
+    if (globalOps) leaderIds.add(trimLeadingZeros(globalOps.emp_id) || '');
+    if (ie_fmu_mif) leaderIds.add(trimLeadingZeros(ie_fmu_mif.emp_id) || '');
+    if (factoryMgmt) leaderIds.add(trimLeadingZeros(factoryMgmt.emp_id) || '');
+    
+    jeffReports.forEach(emp => {
+      const id = trimLeadingZeros(emp.emp_id);
+      if (id) leaderIds.add(id);
+    });
+    supportFunctions.forEach(emp => {
+      const id = trimLeadingZeros(emp.emp_id);
+      if (id) leaderIds.add(id);
     });
 
+    // Initialize report arrays
+    leaderIds.forEach(id => {
+      reportsData[id] = [];
+    });
+
+    // Populate report arrays
     employees.forEach(emp => {
-      const lineManager = emp.line_manager;
-      if (!lineManager) return;
-      
-      const parts = lineManager.split(':');
-      const mgrId = trimLeadingZeros(parts[0]);
-      
+      const mgrId = getManagerId(emp);
       if (mgrId && reportsData[mgrId] !== undefined) {
-        // Do not add the leader themselves as their own report
         if (trimLeadingZeros(emp.emp_id) !== mgrId) {
           reportsData[mgrId].push({
             emp_id: emp.emp_id,
             full_name: emp.full_name,
             job_title: emp.job_title,
-            dept: emp.dept
+            dept: emp.dept,
+            location: emp.location
           });
         }
       }
     });
 
-    // Sort reports alphabetically by full name for clean UI
+    // Sort reports alphabetically by full name
     Object.keys(reportsData).forEach(mgrId => {
       reportsData[mgrId].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
     });
@@ -118,7 +114,12 @@ export async function GET(req: Request) {
     const response = NextResponse.json(
       {
         success: true,
-        leaders: leadersData,
+        vp,
+        globalOps,
+        ie_fmu_mif,
+        factoryMgmt,
+        jeffReports,
+        supportFunctions,
         reports: reportsData,
         timestamp: new Date().toISOString()
       },

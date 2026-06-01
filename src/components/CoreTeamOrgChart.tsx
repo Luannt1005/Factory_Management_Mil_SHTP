@@ -7,42 +7,25 @@ interface Employee {
   full_name: string | null;
   job_title: string | null;
   dept: string | null;
+  location?: string | null;
   line_manager?: string | null;
 }
 
 interface OrgChartData {
-  leaders: Record<string, Employee>;
+  vp: Employee | null;
+  globalOps: Employee | null;
+  ie_fmu_mif: Employee | null;
+  factoryMgmt: Employee | null;
+  jeffReports: Employee[];
+  supportFunctions: Employee[];
   reports: Record<string, Employee[]>;
 }
 
 // Format database names dynamically (e.g. swap comma formats like "Jiang, Baiping" -> "Baiping Jiang")
-const mapNameToChart = (key: string, emp: Employee): string => {
+const mapNameToChart = (emp: Employee): string => {
   const name = emp.full_name;
-  if (!name) {
-    // Fallback labels matching the reference image if record is empty
-    switch (key) {
-      case 'vp': return 'HK Lee';
-      case 'globalOps': return 'Jeff Searl';
-      case 'ie_fmu_mif': return 'T.T.Tien';
-      case 'factoryMgmt': return 'Anna N.N.Quyen';
-      case 'mu3': return 'Brian N.K.Hieu';
-      case 'mu5': return 'Nash N.T.Ngo';
-      case 'mu5bp': return 'Danny L.T. Danh';
-      case 'sc': return 'Jena H.T.Thuy';
-      case 'opm': return 'Susan Jiang';
-      case 'ddk': return 'Skovran Robert';
-      case 'ee_mtr': return 'Bryan Wei';
-      case 'ame_auto_opex': return 'N.L Hiep';
-      case 'ehs_esg': return 'N.T Trung';
-      case 'quality': return 'Nancy C.T. Nhan';
-      case 'engineering': return 'Ng Peng Heng';
-      case 'hrbp': return 'H.T.P.Nha';
-      case 'of': return 'Sunny L.T.K.Duong';
-      default: return '';
-    }
-  }
+  if (!name) return "";
 
-  // Format comma names dynamically (e.g. "Jiang, Baiping" -> "Baiping Jiang")
   if (name.includes(",")) {
     const parts = name.split(",");
     return `${parts[1].trim()} ${parts[0].trim()}`;
@@ -51,30 +34,9 @@ const mapNameToChart = (key: string, emp: Employee): string => {
 };
 
 // Use database job titles directly, with fallback defaults if missing
-const mapTitleToChart = (key: string, emp: Employee): string => {
+const mapTitleToChart = (emp: Employee): string => {
   const title = emp.job_title;
-  if (!title) {
-    switch (key) {
-      case 'vp': return 'Operations VP';
-      case 'globalOps': return 'VP Global Operations';
-      case 'ie_fmu_mif': return 'Sr. Manager';
-      case 'factoryMgmt': return 'Manager';
-      case 'mu3': return 'Sr. Manager';
-      case 'mu5': return 'Sr. Manager';
-      case 'mu5bp': return 'Sr. Manager';
-      case 'sc': return 'Director';
-      case 'opm': return 'Director';
-      case 'ddk': return 'Sr. Manager';
-      case 'ee_mtr': return 'Sr. Manager';
-      case 'ame_auto_opex': return 'Director';
-      case 'ehs_esg': return 'Sr. Manager';
-      case 'quality': return 'Director';
-      case 'engineering': return 'Director';
-      case 'hrbp': return 'HRBP Manager';
-      case 'of': return 'Sr. Manager';
-      default: return '';
-    }
-  }
+  if (!title) return "";
 
   // Abbreviate extremely long titles slightly to fit nicely on cards
   if (title === 'Senior Factory Management Manager') return 'Sr. Manager';
@@ -121,6 +83,49 @@ const shortenReportTitle = (title: string | null): string => {
   if (title.includes("Production Training Supervisor")) return "Training Supervisor";
   
   return title;
+};
+
+// Dynamically derive the category header for a card based on employee attributes and sub-reports
+const getCategoryHeader = (emp: Employee, reports: Employee[]): string => {
+  const cleanId = emp.emp_id.trim().replace(/^0+/, '');
+  
+  // Specific top division leads
+  if (cleanId === '1347') return 'IE & FMU & MIF';
+  if (cleanId === '818') return 'Factory Management';
+  if (cleanId === '610977') return 'Operations';
+
+  // For other managers, inspect their direct reports' department names
+  if (reports && reports.length > 0) {
+    const depts = Array.from(new Set(reports.map(r => r.dept).filter(Boolean))) as string[];
+    const cleanDepts = depts.map(d => {
+      if (d === 'Mitigation & Investigation Force') return 'MIF';
+      if (d === 'Factory Maintenance Unit') return 'FMU';
+      if (d === 'Warehouse - PT') return 'Warehouse';
+      if (d === 'Manufacturing Excellence, Training & Development') return 'ME & Training';
+      if (d === 'PM - PT') return 'PM';
+      if (d === 'Production - PT') return 'Production';
+      if (d === 'PM - Motor') return 'PM (Motor)';
+      if (d === 'Production - Motor') return 'Production (Motor)';
+      if (d.includes(" - ")) return d.split(" - ")[1];
+      return d;
+    });
+
+    if (cleanDepts.length > 0) {
+      // Abbreviate and combine up to 2 unique departments
+      return cleanDepts.slice(0, 2).join(" & ");
+    }
+  }
+
+  // Fallback to location or department/title
+  if (emp.location && emp.location === 'DDK') {
+    return 'DDK Operations';
+  }
+  
+  if (emp.dept && emp.dept !== 'Management' && emp.dept !== 'MFG Management') {
+    return emp.dept.includes(" - ") ? emp.dept.split(" - ")[1] : emp.dept;
+  }
+  
+  return emp.job_title || 'Operations';
 };
 
 export default function CoreTeamOrgChart() {
@@ -187,18 +192,17 @@ export default function CoreTeamOrgChart() {
     );
   };
 
-  // Render a standard leader card
-  const renderLeaderCard = (key: string, label: string) => {
+  // Render an employee card dynamically
+  const renderLeaderCard = (emp: Employee) => {
     if (!data) return null;
-    const emp = data.leaders[key];
-    if (!emp) return null;
 
-    const name = mapNameToChart(key, emp);
-    const title = mapTitleToChart(key, emp);
+    const name = mapNameToChart(emp);
+    const title = mapTitleToChart(emp);
     const cleanId = emp.emp_id.trim().replace(/^0+/, '');
     const reports = data.reports[cleanId] || [];
+    const label = getCategoryHeader(emp, reports);
 
-    // Filter to show only key sub-reports (max 4 for visual spacing, similar to image)
+    // Filter to show only key sub-reports (max 4 for visual spacing)
     const displayReports = reports.slice(0, 4);
 
     return (
@@ -219,18 +223,18 @@ export default function CoreTeamOrgChart() {
 
         {/* Sub-Reports Box */}
         {displayReports.length > 0 && (
-          <div className="w-full bg-white p-2 flex flex-col gap-1.5">
-            {displayReports.map((rep) => {
-              const repName = shortenReportName(rep.full_name || '');
-              const repTitle = shortenReportTitle(rep.job_title);
-              return (
-                <div key={rep.emp_id} className="w-full border border-gray-100 hover:border-red-200 bg-zinc-50/20 rounded p-1.5 text-left flex flex-col hover:bg-red-50/10 transition-colors duration-200">
-                  <span className="text-[11px] font-bold text-zinc-800 tracking-tight leading-snug truncate">{repName}</span>
-                  <span className="text-[9px] text-zinc-400 font-semibold tracking-tight leading-none mt-0.5 truncate">{repTitle}</span>
-                </div>
-              );
-            })}
-          </div>
+           <div className="w-full bg-white p-2 flex flex-col gap-1.5">
+             {displayReports.map((rep) => {
+               const repName = shortenReportName(rep.full_name || '');
+               const repTitle = shortenReportTitle(rep.job_title);
+               return (
+                 <div key={rep.emp_id} className="w-full border border-gray-100 hover:border-red-200 bg-zinc-50/20 rounded p-1.5 text-left flex flex-col hover:bg-red-50/10 transition-colors duration-200">
+                   <span className="text-[11px] font-bold text-zinc-800 tracking-tight leading-snug truncate">{repName}</span>
+                   <span className="text-[9px] text-zinc-400 font-semibold tracking-tight leading-none mt-0.5 truncate">{repTitle}</span>
+                 </div>
+               );
+             })}
+           </div>
         )}
       </div>
     );
@@ -255,8 +259,7 @@ export default function CoreTeamOrgChart() {
     );
   }
 
-  const vp = data.leaders.vp;
-  const globalOps = data.leaders.globalOps;
+  const { vp, globalOps, ie_fmu_mif, factoryMgmt } = data;
 
   return (
     <div className="w-full bg-slate-50 border border-slate-200 rounded-3xl shadow-sm p-6 sm:p-10 text-zinc-800 font-sans mt-12 overflow-x-auto select-none">
@@ -277,11 +280,11 @@ export default function CoreTeamOrgChart() {
           {vp && (
             <div className="flex flex-col items-center bg-[#db011c] text-white p-3 rounded-lg shadow-md border border-red-700 max-w-[280px]">
               <div className="flex gap-4 items-center">
-                {renderPhoto(vp.emp_id, mapNameToChart('vp', vp), "w-16 h-20 border border-white/20")}
+                {renderPhoto(vp.emp_id, mapNameToChart(vp), "w-16 h-20 border border-white/20")}
                 <div className="text-left">
                   <span className="text-[10px] font-bold tracking-widest text-red-200 uppercase">Operations VP</span>
-                  <h3 className="text-base font-black tracking-tight mt-0.5">{mapNameToChart('vp', vp)}</h3>
-                  <p className="text-xs text-red-100 font-semibold mt-0.5">Asia Vice President</p>
+                  <h3 className="text-base font-black tracking-tight mt-0.5">{mapNameToChart(vp)}</h3>
+                  <p className="text-xs text-red-100 font-semibold mt-0.5">{mapTitleToChart(vp)}</p>
                 </div>
               </div>
             </div>
@@ -290,93 +293,66 @@ export default function CoreTeamOrgChart() {
           <div className="w-0.5 h-10 bg-red-600 mt-0"></div>
         </div>
 
-        {/* Level 1: Operations Director (Jeff Searl) */}
-        <div className="relative flex flex-col items-center mb-12">
-          {globalOps && (
-            <div className="flex flex-col items-center bg-white border-2 border-red-600 p-3 rounded-lg shadow-md max-w-[280px]">
-              <div className="flex gap-4 items-center">
-                {renderPhoto(globalOps.emp_id, mapNameToChart('globalOps', globalOps), "w-16 h-20 border border-gray-200")}
-                <div className="text-left">
-                  <span className="text-[10px] font-bold tracking-widest text-red-600 uppercase">OPERATIONS</span>
-                  <h3 className="text-base font-black tracking-tight mt-0.5 text-zinc-900">{mapNameToChart('globalOps', globalOps)}</h3>
-                  <p className="text-xs text-zinc-500 font-semibold mt-0.5">VP Global Operations</p>
-                </div>
-              </div>
+        {/* Level 1: Direct reports to Operations VP (3 Columns) */}
+        <div className="relative w-full mb-10 max-w-6xl mx-auto">
+          {/* Horizontal connecting line from Col 1 center (16.6%) to Col 3 center (83.3%) */}
+          <div className="absolute left-[16.6%] right-[16.6%] top-0 h-0.5 bg-red-600"></div>
+
+          <div className="grid grid-cols-3 gap-6 w-full items-start pt-5 relative">
+            
+            {/* Column 1: Trương Trọng Tiến (IE & FMU & MIF) */}
+            <div className="flex flex-col items-center relative">
+              {/* Vertical line from horizontal bar to card */}
+              <div className="absolute top-[-20px] h-5 w-0.5 bg-red-600"></div>
+              {ie_fmu_mif && renderLeaderCard(ie_fmu_mif)}
             </div>
-          )}
-          {/* Horizontal line stretching from Left to Right */}
-          <div className="absolute left-[8%] right-[8%] bottom-0 h-0.5 bg-red-600"></div>
-          {/* Central Connector Down */}
-          <div className="w-0.5 h-10 bg-red-600"></div>
+
+            {/* Column 2: Nguyễn Nhã Quyên (Factory Management) */}
+            <div className="flex flex-col items-center relative">
+              {/* Vertical line from horizontal bar to card */}
+              <div className="absolute top-[-20px] h-5 w-0.5 bg-red-600"></div>
+              {factoryMgmt && renderLeaderCard(factoryMgmt)}
+            </div>
+
+            {/* Column 3: Jeff Searl (VP Global Operations) */}
+            <div className="flex flex-col items-center relative">
+              {/* Vertical line from horizontal bar to card */}
+              <div className="absolute top-[-20px] h-5 w-0.5 bg-red-600"></div>
+              
+              {/* Jeff Searl Card */}
+              {globalOps && (
+                <div className="flex flex-col items-center w-full max-w-[260px] bg-white border-2 border-red-600 p-3 rounded-lg shadow-md relative z-10">
+                  <div className="flex gap-4 items-center">
+                    {renderPhoto(globalOps.emp_id, mapNameToChart(globalOps), "w-16 h-20 border border-gray-200")}
+                    <div className="text-left">
+                      <span className="text-[10px] font-bold tracking-widest text-red-600 uppercase">OPERATIONS</span>
+                      <h3 className="text-base font-black tracking-tight mt-0.5 text-zinc-900">{mapNameToChart(globalOps)}</h3>
+                      <p className="text-xs text-zinc-500 font-semibold mt-0.5">{mapTitleToChart(globalOps)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
         </div>
 
-        {/* Level 2: Divisions Grid */}
-        <div className="grid grid-cols-8 gap-4 w-full items-start mb-16 relative">
-          
-          {/* IE & FMU & MIF (Col 1) */}
-          <div className="col-span-1 flex flex-col items-center relative">
-            <div className="absolute top-[-20px] bottom-0 left-1/2 w-0.5 bg-red-600 z-0"></div>
-            <div className="relative z-10 w-full mt-5">
-              {renderLeaderCard('ie_fmu_mif', 'IE & FMU & MIF')}
-            </div>
-          </div>
+        {/* Level 2 Connector (Direct reports of Jeff Searl) */}
+        <div className="w-full max-w-6xl mx-auto relative h-10">
+          {/* Vertical line going down from Jeff Searl (at 83.3% center of right-most column of Level 1) */}
+          <div className="absolute left-[83.3%] top-0 h-full w-0.5 bg-red-600"></div>
+          {/* Horizontal line connecting all 6 columns of Level 2 (from Col 1 center 8.3% to Col 6 center 91.6%) */}
+          <div className="absolute left-[8.3%] right-[8.3%] bottom-0 h-0.5 bg-red-600"></div>
+        </div>
 
-          {/* Factory Management (Col 2) */}
-          <div className="col-span-1 flex flex-col items-center relative">
-            <div className="absolute top-[-20px] bottom-0 left-1/2 w-0.5 bg-red-600 z-0"></div>
-            <div className="relative z-10 w-full mt-5">
-              {renderLeaderCard('factoryMgmt', 'Factory Management')}
+        {/* Level 2: Jeff Searl's reports (6 Columns Grid) */}
+        <div className="grid grid-cols-6 gap-4 w-full max-w-6xl mx-auto items-start mb-16 pt-5 relative">
+          {data.jeffReports.map((emp) => (
+            <div key={emp.emp_id} className="flex flex-col items-center relative">
+              <div className="absolute top-[-20px] h-5 w-0.5 bg-red-600"></div>
+              {renderLeaderCard(emp)}
             </div>
-          </div>
-
-          {/* MU L3 Console (Col 3) */}
-          <div className="col-span-1 flex flex-col items-center relative">
-            <div className="absolute top-[-20px] bottom-0 left-1/2 w-0.5 bg-red-600 z-0"></div>
-            <div className="relative z-10 w-full mt-5">
-              {renderLeaderCard('mu3', 'MU L3 Console')}
-            </div>
-          </div>
-
-          {/* MU L5 Console (Col 4) */}
-          <div className="col-span-1 flex flex-col items-center relative">
-            <div className="absolute top-[-20px] bottom-0 left-1/2 w-0.5 bg-red-600 z-0"></div>
-            <div className="relative z-10 w-full mt-5">
-              {renderLeaderCard('mu5', 'MU L5 Console')}
-            </div>
-          </div>
-
-          {/* MU L5 MT & BP (Col 5) */}
-          <div className="col-span-1 flex flex-col items-center relative">
-            <div className="absolute top-[-20px] bottom-0 left-1/2 w-0.5 bg-red-600 z-0"></div>
-            <div className="relative z-10 w-full mt-5">
-              {renderLeaderCard('mu5bp', 'MU L5 MT & BP')}
-            </div>
-          </div>
-
-          {/* Supply Chain (Col 6) */}
-          <div className="col-span-1 flex flex-col items-center relative">
-            <div className="absolute top-[-20px] bottom-0 left-1/2 w-0.5 bg-red-600 z-0"></div>
-            <div className="relative z-10 w-full mt-5">
-              {renderLeaderCard('sc', 'Supply Chain')}
-            </div>
-          </div>
-
-          {/* OPM (Col 7) */}
-          <div className="col-span-1 flex flex-col items-center relative">
-            <div className="absolute top-[-20px] bottom-0 left-1/2 w-0.5 bg-red-600 z-0"></div>
-            <div className="relative z-10 w-full mt-5">
-              {renderLeaderCard('opm', 'OPM')}
-            </div>
-          </div>
-
-          {/* DDK Factory (Col 8) */}
-          <div className="col-span-1 flex flex-col items-center relative">
-            <div className="absolute top-[-20px] bottom-0 left-1/2 w-0.5 bg-red-600 z-0"></div>
-            <div className="relative z-10 w-full mt-5">
-              {renderLeaderCard('ddk', 'DDK Factory')}
-            </div>
-          </div>
-
+          ))}
         </div>
 
         {/* Level 3: Support Functions (Bottom Row) */}
@@ -388,44 +364,13 @@ export default function CoreTeamOrgChart() {
           </div>
         </div>
 
-        {/* Support Grid (7 Columns) */}
-        <div className="grid grid-cols-7 gap-4 w-full items-start">
-          
-          {/* EE & MTR */}
-          <div className="flex flex-col items-center">
-            {renderLeaderCard('ee_mtr', 'EE & MTR')}
-          </div>
-
-          {/* AME/AUTO/OPEX */}
-          <div className="flex flex-col items-center">
-            {renderLeaderCard('ame_auto_opex', 'AME/AUTO/OPEX')}
-          </div>
-
-          {/* EHS & ESG */}
-          <div className="flex flex-col items-center">
-            {renderLeaderCard('ehs_esg', 'EHS & ESG')}
-          </div>
-
-          {/* Quality */}
-          <div className="flex flex-col items-center">
-            {renderLeaderCard('quality', 'Quality')}
-          </div>
-
-          {/* Engineering */}
-          <div className="flex flex-col items-center">
-            {renderLeaderCard('engineering', 'Engineering')}
-          </div>
-
-          {/* HRBP */}
-          <div className="flex flex-col items-center">
-            {renderLeaderCard('hrbp', 'HRBP')}
-          </div>
-
-          {/* OF */}
-          <div className="flex flex-col items-center">
-            {renderLeaderCard('of', 'OF')}
-          </div>
-
+        {/* Support Grid (Dynamic layout based on size of active items) */}
+        <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mx-auto items-start">
+          {data.supportFunctions.map((emp) => (
+            <div key={emp.emp_id} className="flex flex-col items-center min-w-[150px] max-w-[220px]">
+              {renderLeaderCard(emp)}
+            </div>
+          ))}
         </div>
 
       </div>
