@@ -190,12 +190,12 @@ export default async function Home() {
             <div className="grid md:grid-cols-2 gap-16 max-w-5xl mx-auto">
 
               {/* SHTP Reception Card - text only, out of box */}
-              <div className="flex flex-col items-center md:items-start group">
+              <div className="flex flex-col items-center md:items-start md:mr-auto w-full max-w-md group">
                 <h3 className="text-2xl font-black text-white tracking-widest uppercase mb-8 relative inline-block">
                   SHTP Reception Desk
                   <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-12 h-1 bg-white group-hover:w-full transition-all duration-500"></span>
                 </h3>
-                <div className="space-y-6 w-full max-w-md">
+                <div className="space-y-6 w-full">
                   <a href="tel:+8402873088869" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
                     <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Tel:</span>
                     <span className="font-light">(+84) 0287 3088 869 <span className="text-white/50 text-sm ml-1 block sm:inline">(Ext: 66797)</span></span>
@@ -208,12 +208,12 @@ export default async function Home() {
               </div>
 
               {/* EHS Team Card */}
-              <div className="flex flex-col items-center md:items-start group">
+              <div className="flex flex-col items-center md:items-start md:ml-auto w-full max-w-md group">
                 <h3 className="text-2xl font-black text-white tracking-widest uppercase mb-8 relative inline-block">
                   EHS Team
                   <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-12 h-1 bg-white group-hover:w-full transition-all duration-500"></span>
                 </h3>
-                <div className="space-y-6 w-full max-w-md">
+                <div className="space-y-6 w-full">
                   <a href="tel:0961958951" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
                     <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Hotline:</span>
                     <span className="font-light">0961 958 951</span>
