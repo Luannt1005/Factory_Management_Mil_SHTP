@@ -253,7 +253,7 @@ export default function CoreTeamOrgChart() {
         </div>
 
         {/* Sub-Reports Box */}
-        {displayReports.length > 0 && (
+        {displayReports.length > 0 && !isJeff && (
            <div className={`w-full grid ${displayReports.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-[1px] bg-gray-200 border-t border-gray-200`}>
              {displayReports.map((rep, idx) => {
                const repName = shortenReportName(rep.full_name || '');

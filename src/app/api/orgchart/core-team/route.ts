@@ -56,7 +56,7 @@ export async function GET(req: Request) {
     const factoryMgmt = empMap['818'] || null;
 
     // Find all active direct reports of Jeff Searl (610977)
-    const jeffReports = employees.filter(emp => getManagerId(emp) === globalOpsId && (emp.status === 'Active' || emp.status === null || emp.emp_id === '000010'));
+    const jeffReports = employees.filter(emp => getManagerId(emp) === globalOpsId && (emp.status === 'Active' || emp.status === null));
     // Sort jeffReports alphabetically by name
     jeffReports.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
 
