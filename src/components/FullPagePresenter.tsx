@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import CoreTeamOrgChart from "./CoreTeamOrgChart";
 
 interface SlideData {
   id: number;
@@ -101,12 +102,14 @@ const slides: SlideData[] = [
 export default function FullPagePresenter() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeTab, setActiveTab] = useState(0);
+  const [viewDynamicChart, setViewDynamicChart] = useState(false);
   const isLocked = useRef(false);
   const touchStartY = useRef(0);
 
-  // Reset active tab when slide changes
+  // Reset active tab and dynamic chart view when slide changes
   useEffect(() => {
     setActiveTab(0);
+    setViewDynamicChart(false);
   }, [activeIndex]);
 
   const handleScroll = (direction: "up" | "down") => {
@@ -264,6 +267,19 @@ export default function FullPagePresenter() {
                   {slide.description}
                 </p>
 
+                {/* Toggle Button for SHTP Core Team Dynamic Org Chart (Slide 3) */}
+                {slide.id === 3 && (
+                  <button
+                    onClick={() => setViewDynamicChart(!viewDynamicChart)}
+                    className={`w-full mt-4 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-xl active:scale-95 transition-all shadow-md cursor-pointer border border-red-700 select-none text-center ${
+                      isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                    }`}
+                    style={{ transitionDelay: "600ms" }}
+                  >
+                    {viewDynamicChart ? "Show Official Image" : "Show Dynamic Org Chart"}
+                  </button>
+                )}
+
                 {/* Sub-tabs Selector for type "tabs" */}
                 {slide.type === "tabs" && (
                   <div
@@ -297,11 +313,17 @@ export default function FullPagePresenter() {
                 {/* Image Slide */}
                 {slide.type === "image" && (
                   <div className="relative w-full h-full max-h-[96%] bg-white border border-gray-100 rounded-3xl p-6 shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] transition-shadow duration-500 flex items-center justify-center group overflow-hidden">
-                    <img
-                      src={slide.content as string}
-                      alt={slide.title}
-                      className="max-w-full max-h-full object-contain rounded-xl transition-transform duration-700 group-hover:scale-[1.01]"
-                    />
+                    {slide.id === 3 && viewDynamicChart ? (
+                      <div className="w-full h-full overflow-auto">
+                        <CoreTeamOrgChart />
+                      </div>
+                    ) : (
+                      <img
+                        src={slide.content as string}
+                        alt={slide.title}
+                        className="max-w-full max-h-full object-contain rounded-xl transition-transform duration-700 group-hover:scale-[1.01]"
+                      />
+                    )}
                   </div>
                 )}
 
