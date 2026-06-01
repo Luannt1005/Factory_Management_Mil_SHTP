@@ -210,8 +210,11 @@ export default function CoreTeamOrgChart() {
   };
 
   // Render an employee card dynamically (ultra compact)
-  const renderLeaderCard = (emp: Employee) => {
+  const renderLeaderCard = (emp: Employee, options?: { showTopLine?: boolean; isDotted?: boolean }) => {
     if (!data) return null;
+
+    const showTopLine = options?.showTopLine || false;
+    const isDotted = options?.isDotted || false;
 
     const name = mapNameToChart(emp);
     const title = mapTitleToChart(emp);
@@ -224,40 +227,49 @@ export default function CoreTeamOrgChart() {
     const displayReports = reports.filter(rep => isSupervisorOrManager(rep.job_title));
 
     return (
-      <div className={`flex flex-col items-center w-full max-w-[170px] mx-auto bg-white rounded shadow-sm overflow-hidden border ${isJeff ? 'border-2 border-red-600 shadow-md ring-2 ring-red-100' : 'border-gray-200'} hover:shadow-md transition-shadow duration-300`}>
-        {/* Category Header */}
-        <div className="w-full bg-[#db011c] text-white text-center py-0.5 px-1 font-black tracking-wider text-[9px] sm:text-[10px] uppercase truncate">
-          {label}
-        </div>
-        
-        {/* Profile Card Body */}
-        <div className="w-full p-1.5 flex gap-1.5 items-center border-b border-gray-100 bg-zinc-50/50">
-          {renderPhoto(emp.emp_id, name)}
-          <div className="flex flex-col justify-center min-w-0 text-left">
-            <h4 className="text-[11px] font-black text-zinc-900 tracking-tight truncate">{name}</h4>
-            <p className="text-[8px] text-zinc-500 font-semibold tracking-tight mt-0.5 truncate">{title}</p>
-          </div>
-        </div>
-
-        {/* Sub-Reports Box */}
-        {displayReports.length > 0 && !isJeff && (
-           <div className={`w-full grid ${displayReports.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-[1px] bg-gray-200 border-t border-gray-200`}>
-             {displayReports.map((rep, idx) => {
-               const repName = shortenReportName(rep.full_name || '');
-               const repTitle = shortenReportTitle(rep.job_title);
-               const isLastOdd = displayReports.length % 2 !== 0 && idx === displayReports.length - 1;
-               return (
-                 <div 
-                   key={rep.emp_id} 
-                   className={`bg-white p-1 flex flex-col justify-center text-center hover:bg-red-50/20 transition-colors duration-100 min-w-0 ${isLastOdd ? 'col-span-2' : ''}`}
-                 >
-                   <span className="text-[8.5px] font-bold text-zinc-800 tracking-tight leading-tight truncate">{repName}</span>
-                   <span className="text-[7.5px] text-zinc-400 font-semibold tracking-tight leading-none mt-0.5 truncate">{repTitle}</span>
-                 </div>
-               );
-             })}
-           </div>
+      <div className="flex flex-col items-center w-full relative">
+        {showTopLine && (
+          isDotted ? (
+            <div className="w-0.5 h-6 border-l border-dotted border-red-500 -mt-2 relative z-0"></div>
+          ) : (
+            <div className="w-0.5 h-4 bg-red-600"></div>
+          )
         )}
+        <div className={`flex flex-col items-center w-full max-w-[170px] mx-auto bg-white rounded shadow-sm overflow-hidden border ${isJeff ? 'border-2 border-red-600 shadow-md ring-2 ring-red-100' : 'border-gray-200'} hover:shadow-md transition-shadow duration-300`}>
+          {/* Category Header */}
+          <div className="w-full bg-[#db011c] text-white text-center py-0.5 px-1 font-black tracking-wider text-[9px] sm:text-[10px] uppercase truncate">
+            {label}
+          </div>
+          
+          {/* Profile Card Body */}
+          <div className="w-full p-1.5 flex gap-1.5 items-center border-b border-gray-100 bg-zinc-50/50">
+            {renderPhoto(emp.emp_id, name)}
+            <div className="flex flex-col justify-center min-w-0 text-left">
+              <h4 className="text-[11px] font-black text-zinc-900 tracking-tight truncate">{name}</h4>
+              <p className="text-[8px] text-zinc-500 font-semibold tracking-tight mt-0.5 truncate">{title}</p>
+            </div>
+          </div>
+
+          {/* Sub-Reports Box */}
+          {displayReports.length > 0 && !isJeff && (
+             <div className={`w-full grid ${displayReports.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-[1px] bg-gray-200 border-t border-gray-200`}>
+               {displayReports.map((rep, idx) => {
+                 const repName = shortenReportName(rep.full_name || '');
+                 const repTitle = shortenReportTitle(rep.job_title);
+                 const isLastOdd = displayReports.length % 2 !== 0 && idx === displayReports.length - 1;
+                 return (
+                   <div 
+                     key={rep.emp_id} 
+                     className={`bg-white p-1 flex flex-col justify-center text-center hover:bg-red-50/20 transition-colors duration-100 min-w-0 ${isLastOdd ? 'col-span-2' : ''}`}
+                   >
+                     <span className="text-[8.5px] font-bold text-zinc-800 tracking-tight leading-tight truncate">{repName}</span>
+                     <span className="text-[7.5px] text-zinc-400 font-semibold tracking-tight leading-none mt-0.5 truncate">{repTitle}</span>
+                   </div>
+                 );
+               })}
+             </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -298,8 +310,8 @@ export default function CoreTeamOrgChart() {
         </div>
 
         {/* Level 0: Operations VP (HK Lee) */}
-        {/* Placed centered at 34% from left to align exactly with the split connector */}
-        <div className="w-full flex justify-start relative mb-2" style={{ paddingLeft: 'calc(34% - 85px)' }}>
+        {/* Placed centered at 34.8% from left to align exactly with the split connector */}
+        <div className="w-full flex justify-start relative mb-2" style={{ paddingLeft: 'calc(34.8% - 85px)' }}>
           {vp && (
             <div className="flex flex-col items-center bg-[#db011c] text-white p-1.5 sm:p-2 rounded-lg shadow-md border border-red-700 max-w-[170px]">
               <div className="flex gap-2 items-center">
@@ -316,12 +328,12 @@ export default function CoreTeamOrgChart() {
 
         {/* Level 1 Horizontal Connecting Line */}
         <div className="w-full relative h-6">
-          {/* Horizontal Line connector from Left Stack center (9%) to Jeff center (59%) */}
-          <div className="absolute left-[9%] w-[50%] bottom-0 h-0.5 bg-red-600"></div>
+          {/* Horizontal Line connector from Left Stack center (9%) to Jeff center (60.6%) */}
+          <div className="absolute left-[9%] w-[51.6%] bottom-0 h-0.5 bg-red-600"></div>
           {/* Vertical Line going down from VP to the horizontal line */}
-          <div className="absolute left-[34%] top-0 bottom-0 w-0.5 bg-red-600"></div>
+          <div className="absolute left-[34.8%] top-0 bottom-0 w-0.5 bg-red-600"></div>
           {/* Vertical Line going down to Jeff Searl */}
-          <div className="absolute left-[59%] bottom-0 h-6 w-0.5 bg-red-600"></div>
+          <div className="absolute left-[60.6%] bottom-0 h-6 w-0.5 bg-red-600"></div>
           {/* Vertical Line going down to Left Stack */}
           <div className="absolute left-[9%] bottom-0 h-6 w-0.5 bg-red-600"></div>
         </div>
@@ -370,9 +382,7 @@ export default function CoreTeamOrgChart() {
             <div className="grid grid-cols-6 gap-2 w-full pt-4">
               {data.jeffReports.map((emp) => (
                 <div key={emp.emp_id} className="col-span-1 flex flex-col items-center relative w-full mb-4">
-                  {/* Vertical connector above card */}
-                  <div className="w-0.5 h-4 bg-red-600"></div>
-                  {renderLeaderCard(emp)}
+                  {renderLeaderCard(emp, { showTopLine: true, isDotted: false })}
                 </div>
               ))}
             </div>
@@ -385,21 +395,14 @@ export default function CoreTeamOrgChart() {
         <div className="w-full relative py-2 mt-2">
           {/* Main top horizontal dotted line */}
           <div className="absolute inset-x-[4%] top-1/2 border-t border-dotted border-red-500"></div>
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-50 px-4 text-red-600 font-black tracking-[0.2em] text-[9px] uppercase select-none">
-            Support Functions
-          </div>
         </div>
 
         {/* Support Grid (Dynamic Flex wrap for the active support functions in exact order) */}
         <div className="flex flex-wrap justify-center gap-3 w-full max-w-5xl mx-auto items-start">
           {data.supportFunctions.map((emp) => {
             return (
-              <div key={emp.emp_id} className="flex flex-col items-center relative min-w-[130px] max-w-[160px] flex-1">
-                {/* Dotted vertical line going up to divider */}
-                <div className="w-0.5 h-6 border-l border-dotted border-red-500 -mt-2 relative z-0"></div>
-                
-                {/* Support Card */}
-                {renderLeaderCard(emp)}
+              <div key={emp.emp_id} className="flex flex-col items-center relative min-w-[130px] max-w-[170px] flex-1">
+                {renderLeaderCard(emp, { showTopLine: true, isDotted: true })}
               </div>
             );
           })}
