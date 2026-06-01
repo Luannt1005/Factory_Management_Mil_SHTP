@@ -85,6 +85,36 @@ const shortenReportTitle = (title: string | null): string => {
   return title;
 };
 
+// Filter to keep only reports with job level of Supervisor, Manager or above
+const isSupervisorOrManager = (title: string | null): boolean => {
+  if (!title) return false;
+  const t = title.toLowerCase();
+  return t.includes("manager") || 
+         t.includes("supervisor") || 
+         t.includes("director") || 
+         t.includes("leader") || 
+         t.includes("vp") || 
+         t.includes("head") || 
+         t.includes("chief") ||
+         t.includes("lead") ||
+         t.includes("principal");
+};
+
+// Static mapping for global functional leaders above support function cards
+const getFunctionalLeader = (empId: string): string => {
+  const cleanId = empId.trim().replace(/^0+/, '');
+  switch (cleanId) {
+    case '614043': return 'Yau Chan You Shing'; // EE & MTR
+    case '500904': return 'Brandon Hoffman';      // AME/AUTO/OPEX
+    case '568007': return 'Brandon Hoffman';      // EHS & ESG (shared lead)
+    case '1238':   return 'Rudy Pantoja';         // Quality
+    case '616797': return 'Dennis Ma Wing Yuk';   // Engineering
+    case '578935': return 'Tran Thuy Linh An';    // HRBP
+    case '10':     return 'Hance Wong Hon Yan';   // OF
+    default: return '';
+  }
+};
+
 // Dynamically derive the category header for a card based on employee attributes and sub-reports
 const getCategoryHeader = (emp: Employee, reports: Employee[]): string => {
   const cleanId = emp.emp_id.trim().replace(/^0+/, '');
@@ -160,7 +190,7 @@ export default function CoreTeamOrgChart() {
     setImgErrors(prev => ({ ...prev, [id]: true }));
   };
 
-  const renderPhoto = (id: string, name: string, className: string = "w-10 h-12 sm:w-12 sm:h-14") => {
+  const renderPhoto = (id: string, name: string, className: string = "w-9 h-11 sm:w-11 sm:h-13") => {
     const cleanId = id.trim().replace(/^0+/, '');
     const isError = imgErrors[cleanId];
     const photoUrl = `/api/uploads/${cleanId}.webp`;
@@ -185,14 +215,14 @@ export default function CoreTeamOrgChart() {
       .toUpperCase() || name.slice(0, 2).toUpperCase();
 
     return (
-      <div className={`${className} bg-gradient-to-br from-[#db011c] to-[#900112] text-white flex flex-col items-center justify-center font-black text-xs sm:text-sm rounded border border-red-700 select-none shadow-md shrink-0`}>
-        <span className="text-[8px] opacity-70 tracking-widest leading-none mb-0.5">MIL</span>
+      <div className={`${className} bg-gradient-to-br from-[#db011c] to-[#900112] text-white flex flex-col items-center justify-center font-black text-xs rounded border border-red-700 select-none shadow-md shrink-0`}>
+        <span className="text-[7px] opacity-70 tracking-widest leading-none mb-0.5">MIL</span>
         <span>{initials}</span>
       </div>
     );
   };
 
-  // Render an employee card dynamically (compact version)
+  // Render an employee card dynamically (ultra compact)
   const renderLeaderCard = (emp: Employee) => {
     if (!data) return null;
 
@@ -203,35 +233,39 @@ export default function CoreTeamOrgChart() {
     const label = getCategoryHeader(emp, reports);
     const isJeff = cleanId === '610977';
 
-    // Filter to show only key sub-reports (max 4 for visual spacing)
-    const displayReports = reports.slice(0, 4);
+    // Filter to show only supervisors, managers or above
+    const displayReports = reports.filter(rep => isSupervisorOrManager(rep.job_title));
 
     return (
-      <div className={`flex flex-col items-center w-full max-w-[200px] mx-auto bg-white rounded-lg shadow-sm overflow-hidden border ${isJeff ? 'border-2 border-red-600 shadow-md ring-2 ring-red-100' : 'border-gray-200'} hover:shadow-md transition-shadow duration-300`}>
+      <div className={`flex flex-col items-center w-full max-w-[170px] mx-auto bg-white rounded shadow-sm overflow-hidden border ${isJeff ? 'border-2 border-red-600 shadow-md ring-2 ring-red-100' : 'border-gray-200'} hover:shadow-md transition-shadow duration-300`}>
         {/* Category Header */}
-        <div className="w-full bg-[#db011c] text-white text-center py-1 px-1.5 font-black tracking-wider text-[10px] sm:text-[11px] uppercase truncate">
+        <div className="w-full bg-[#db011c] text-white text-center py-0.5 px-1 font-black tracking-wider text-[9px] sm:text-[10px] uppercase truncate">
           {label}
         </div>
         
         {/* Profile Card Body */}
-        <div className="w-full p-2 flex gap-2 items-center border-b border-gray-100 bg-zinc-50/50">
+        <div className="w-full p-1.5 flex gap-1.5 items-center border-b border-gray-100 bg-zinc-50/50">
           {renderPhoto(emp.emp_id, name)}
           <div className="flex flex-col justify-center min-w-0 text-left">
-            <h4 className="text-xs font-black text-zinc-900 tracking-tight truncate">{name}</h4>
-            <p className="text-[9px] text-zinc-500 font-semibold tracking-tight mt-0.5 truncate">{title}</p>
+            <h4 className="text-[11px] font-black text-zinc-900 tracking-tight truncate">{name}</h4>
+            <p className="text-[8px] text-zinc-500 font-semibold tracking-tight mt-0.5 truncate">{title}</p>
           </div>
         </div>
 
         {/* Sub-Reports Box */}
         {displayReports.length > 0 && (
-           <div className="w-full bg-white p-1.5 flex flex-col gap-1">
-             {displayReports.map((rep) => {
+           <div className={`w-full grid ${displayReports.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-[1px] bg-gray-200 border-t border-gray-200`}>
+             {displayReports.map((rep, idx) => {
                const repName = shortenReportName(rep.full_name || '');
                const repTitle = shortenReportTitle(rep.job_title);
+               const isLastOdd = displayReports.length % 2 !== 0 && idx === displayReports.length - 1;
                return (
-                 <div key={rep.emp_id} className="w-full border border-gray-50 hover:border-red-100 bg-zinc-50/10 rounded p-1 text-left flex flex-col hover:bg-red-50/5 transition-colors duration-150">
-                   <span className="text-[10px] font-bold text-zinc-800 tracking-tight leading-snug truncate">{repName}</span>
-                   <span className="text-[8px] text-zinc-400 font-semibold tracking-tight leading-none mt-0.5 truncate">{repTitle}</span>
+                 <div 
+                   key={rep.emp_id} 
+                   className={`bg-white p-1 flex flex-col justify-center text-center hover:bg-red-50/20 transition-colors duration-100 min-w-0 ${isLastOdd ? 'col-span-2' : ''}`}
+                 >
+                   <span className="text-[8.5px] font-bold text-zinc-800 tracking-tight leading-tight truncate">{repName}</span>
+                   <span className="text-[7.5px] text-zinc-400 font-semibold tracking-tight leading-none mt-0.5 truncate">{repTitle}</span>
                  </div>
                );
              })}
@@ -263,94 +297,136 @@ export default function CoreTeamOrgChart() {
   const { vp, globalOps, ie_fmu_mif, factoryMgmt } = data;
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 p-2 overflow-hidden select-none">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 p-1 overflow-hidden select-none">
       
       {/* Zoom / Scaling Container to fit perfectly in viewport without scrolling */}
-      <div className="w-full max-w-5xl mx-auto transform scale-[0.62] sm:scale-[0.72] md:scale-[0.78] lg:scale-[0.84] xl:scale-[0.9] origin-top transition-transform duration-300 flex flex-col items-center">
+      <div className="w-full max-w-5xl mx-auto transform scale-[0.66] sm:scale-[0.74] md:scale-[0.8] lg:scale-[0.86] xl:scale-[0.92] origin-top transition-transform duration-300 flex flex-col items-center">
         
         {/* Title Block */}
-        <div className="flex items-center justify-center gap-3 mb-6 w-full max-w-2xl border-b border-red-600 pb-2">
-          <img src="/logo.png" alt="Milwaukee Logo" className="h-7 w-auto" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          <h2 className="text-lg sm:text-xl font-black tracking-tight text-zinc-900">
+        <div className="flex items-center justify-center gap-2 mb-4 w-full max-w-2xl border-b border-red-600 pb-1.5">
+          <img src="/logo.png" alt="Milwaukee Logo" className="h-6 w-auto" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          <h2 className="text-base sm:text-lg font-black tracking-tight text-zinc-900">
             Milwaukee PT VN Core Team - <span className="italic text-red-600">Dynamic Org Chart</span>
           </h2>
         </div>
 
-        {/* Unified Responsive Grid containing Level 0, Level 1, Level 2 and connecting lines */}
-        <div className="grid grid-cols-6 gap-x-3 gap-y-0 w-full items-start">
-          
-          {/* Level 0: Operations VP (HK Lee) */}
-          <div className="col-span-6 flex flex-col items-center mb-4">
-            {vp && (
-              <div className="flex flex-col items-center bg-[#db011c] text-white p-2 sm:p-2.5 rounded-lg shadow-md border border-red-700 max-w-[220px]">
-                <div className="flex gap-3 items-center">
-                  {renderPhoto(vp.emp_id, mapNameToChart(vp), "w-12 h-14 border border-white/20")}
-                  <div className="text-left">
-                    <span className="text-[8px] font-bold tracking-widest text-red-200 uppercase">Operations VP</span>
-                    <h3 className="text-xs font-black tracking-tight mt-0.5">{mapNameToChart(vp)}</h3>
-                    <p className="text-[9px] text-red-100 font-semibold mt-0.5">{mapTitleToChart(vp)}</p>
-                  </div>
+        {/* Level 0: Operations VP (HK Lee) */}
+        {/* Placed centered at 34% from left to align exactly with the split connector */}
+        <div className="w-full flex justify-start relative mb-2" style={{ paddingLeft: 'calc(34% - 85px)' }}>
+          {vp && (
+            <div className="flex flex-col items-center bg-[#db011c] text-white p-1.5 sm:p-2 rounded-lg shadow-md border border-red-700 max-w-[170px]">
+              <div className="flex gap-2 items-center">
+                {renderPhoto(vp.emp_id, mapNameToChart(vp), "w-9 h-11 border border-white/20")}
+                <div className="text-left">
+                  <span className="text-[7.5px] font-bold tracking-widest text-red-200 uppercase">Operations VP</span>
+                  <h3 className="text-[11px] font-black tracking-tight mt-0.5">{mapNameToChart(vp)}</h3>
+                  <p className="text-[8px] text-red-100 font-semibold mt-0.5">{mapTitleToChart(vp)}</p>
                 </div>
               </div>
-            )}
-            {/* Connector Down */}
-            <div className="w-0.5 h-6 bg-red-600"></div>
-          </div>
-
-          {/* Level 1 Horizontal Connecting Line */}
-          <div className="col-span-6 relative h-6">
-            {/* Horizontal Line connector from Col 1-2 center (16.6%) to Col 5-6 center (83.3%) */}
-            <div className="absolute left-[16.6%] right-[16.6%] bottom-0 h-0.5 bg-red-600"></div>
-            {/* Vertical Line going down from VP to the horizontal line */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-red-600"></div>
-          </div>
-
-          {/* Level 1: Tien, Quyen, Jeff */}
-          {[ie_fmu_mif, factoryMgmt, globalOps].map((emp, idx) => {
-            if (!emp) return null;
-            return (
-              <div key={emp.emp_id} className="col-span-2 flex flex-col items-center relative w-full mb-4">
-                {/* Vertical connector line above card */}
-                <div className="w-0.5 h-6 bg-red-600"></div>
-                {renderLeaderCard(emp)}
-              </div>
-            );
-          })}
-
-          {/* Level 2 Connector Row (connects Jeff to Level 2 reports) */}
-          <div className="col-span-6 relative h-6 mb-2">
-            {/* Horizontal line from Col 1 center (8.3%) to Col 6 center (91.6%) */}
-            <div className="absolute left-[8.3%] right-[8.3%] bottom-0 h-0.5 bg-red-600"></div>
-            {/* Vertical connector coming down from Jeff (which is Col 5-6 center, i.e., 91.6% / right-[8.3%]) */}
-            <div className="absolute right-[8.3%] top-0 bottom-0 w-0.5 bg-red-600"></div>
-          </div>
-
-          {/* Level 2: Jeff's 6 Direct Reports */}
-          {data.jeffReports.map((emp) => (
-            <div key={emp.emp_id} className="col-span-1 flex flex-col items-center relative w-full mb-6">
-              {/* Vertical connector above card */}
-              <div className="w-0.5 h-4 bg-red-600"></div>
-              {renderLeaderCard(emp)}
             </div>
-          ))}
+          )}
+        </div>
+
+        {/* Level 1 Horizontal Connecting Line */}
+        <div className="w-full relative h-6">
+          {/* Horizontal Line connector from Left Stack center (9%) to Jeff center (59%) */}
+          <div className="absolute left-[9%] w-[50%] bottom-0 h-0.5 bg-red-600"></div>
+          {/* Vertical Line going down from VP to the horizontal line */}
+          <div className="absolute left-[34%] top-0 bottom-0 w-0.5 bg-red-600"></div>
+          {/* Vertical Line going down to Jeff Searl */}
+          <div className="absolute left-[59%] bottom-0 h-6 w-0.5 bg-red-600"></div>
+          {/* Vertical Line going down to Left Stack */}
+          <div className="absolute left-[9%] bottom-0 h-6 w-0.5 bg-red-600"></div>
+        </div>
+
+        {/* main horizontal splits: Left Column (Tien & Quyen) and Right Column (Jeff & 6 reports) */}
+        <div className="flex w-full gap-4 items-start relative mt-0">
+          
+          {/* Left Column Stack (Tien and Quyen) */}
+          <div className="w-[18%] flex flex-col items-center relative">
+            {/* Natural layout vertical connector line between Tien and Quyen */}
+            
+            {/* Tien Card */}
+            <div className="w-full mt-0">
+              {ie_fmu_mif && renderLeaderCard(ie_fmu_mif)}
+            </div>
+            
+            {/* Vertical connector line between cards */}
+            <div className="w-0.5 h-6 bg-red-600"></div>
+            
+            {/* Quyen Card */}
+            <div className="w-full">
+              {factoryMgmt && renderLeaderCard(factoryMgmt)}
+            </div>
+          </div>
+
+          {/* Right Column Section (Jeff Searl and his 6 direct reports) */}
+          <div className="w-[82%] flex flex-col items-center">
+            
+            {/* Jeff Searl Card */}
+            <div className="flex flex-col items-center relative">
+              {globalOps && renderLeaderCard(globalOps)}
+              
+              {/* Vertical connector going down from Jeff to Level 2 reports horizontal line */}
+              <div className="w-0.5 h-6 bg-red-600"></div>
+            </div>
+
+            {/* Level 2 Connector Row */}
+            <div className="w-full relative h-6">
+              {/* Horizontal line from Col 1 center (8.3%) to Col 6 center (91.6%) */}
+              <div className="absolute left-[8.3%] right-[8.3%] bottom-0 h-0.5 bg-red-600"></div>
+              {/* Vertical connector coming down from Jeff (which is centered, so at 50%) */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-red-600"></div>
+            </div>
+
+            {/* Level 2: Jeff's 6 Direct Reports Grid */}
+            <div className="grid grid-cols-6 gap-2 w-full pt-4">
+              {data.jeffReports.map((emp) => (
+                <div key={emp.emp_id} className="col-span-1 flex flex-col items-center relative w-full mb-4">
+                  {/* Vertical connector above card */}
+                  <div className="w-0.5 h-4 bg-red-600"></div>
+                  {renderLeaderCard(emp)}
+                </div>
+              ))}
+            </div>
+
+          </div>
 
         </div>
 
         {/* Level 3: Support Functions (Dotted Divider) */}
-        <div className="w-full relative py-3 mb-2 mt-2">
+        <div className="w-full relative py-2.5 mb-1.5 mt-2">
+          {/* Main top horizontal dotted line */}
           <div className="absolute inset-x-[4%] top-1/2 border-t border-dotted border-red-500"></div>
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-50 px-4 text-red-600 font-black tracking-[0.2em] text-[10px] uppercase select-none">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-50 px-4 text-red-600 font-black tracking-[0.2em] text-[9px] uppercase select-none">
             Support Functions
           </div>
         </div>
 
-        {/* Support Grid (Dynamic Flex wrap for the active support functions) */}
-        <div className="flex flex-wrap justify-center gap-4 w-full max-w-5xl mx-auto items-start">
-          {data.supportFunctions.map((emp) => (
-            <div key={emp.emp_id} className="flex flex-col items-center min-w-[140px] max-w-[180px]">
-              {renderLeaderCard(emp)}
-            </div>
-          ))}
+        {/* Support Grid (Dynamic Flex wrap for the active support functions in exact order) */}
+        <div className="flex flex-wrap justify-center gap-3 w-full max-w-5xl mx-auto items-start">
+          {data.supportFunctions.map((emp) => {
+            const leaderName = getFunctionalLeader(emp.emp_id);
+            return (
+              <div key={emp.emp_id} className="flex flex-col items-center relative min-w-[130px] max-w-[160px] flex-1">
+                {/* Dotted vertical line going up to divider */}
+                <div className="w-0.5 h-3 border-l border-dotted border-red-500"></div>
+                
+                {/* Functional Leader Red Box */}
+                {leaderName && (
+                  <div className="bg-[#db011c] text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm mb-1.5 select-none truncate max-w-full uppercase">
+                    {leaderName}
+                  </div>
+                )}
+                
+                {/* Dotted vertical line down to card */}
+                <div className="w-0.5 h-2 border-l border-dotted border-red-500"></div>
+                
+                {/* Support Card */}
+                {renderLeaderCard(emp)}
+              </div>
+            );
+          })}
         </div>
 
       </div>

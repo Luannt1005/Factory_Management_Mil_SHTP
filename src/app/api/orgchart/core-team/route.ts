@@ -17,8 +17,8 @@ export async function GET(req: Request) {
   try {
     const pool = await getDbConnection();
     
-    // Fetch all active employees
-    const queryStr = "SELECT emp_id, full_name, job_title, dept, location, line_manager FROM employees WHERE emp_id IS NOT NULL AND emp_id <> '' AND (status = 'Active' OR status IS NULL)";
+    // Fetch all employees (including resigned to keep key leaders like HRBP and OF)
+    const queryStr = "SELECT emp_id, full_name, job_title, dept, location, line_manager, status FROM employees WHERE emp_id IS NOT NULL AND emp_id <> ''";
     const result = await pool.query(queryStr);
     const employees = result.rows;
 
@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 
     // Find VP (Lee Hon Kay: 500011)
     const vpId = '500011';
-    const vp = empMap[vpId] || employees.find(e => getManagerId(e) === null) || null;
+    const vp = empMap[vpId] || null;
 
     // Find Global Ops (Jeff Searl: 610977)
     const globalOpsId = '610977';
@@ -55,16 +55,14 @@ export async function GET(req: Request) {
     // Find Factory Management (Nguyễn Nhã Quyên: 000818)
     const factoryMgmt = empMap['818'] || null;
 
-    // Find all direct reports of Jeff Searl (610977)
-    const jeffReports = employees.filter(emp => getManagerId(emp) === globalOpsId);
+    // Find all active direct reports of Jeff Searl (610977)
+    const jeffReports = employees.filter(emp => getManagerId(emp) === globalOpsId && (emp.status === 'Active' || emp.status === null || emp.emp_id === '000010'));
+    // Sort jeffReports alphabetically by name
+    jeffReports.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
 
-    // Find support functions dynamically (active direct reports of HK Lee (500011) that are not Jeff, Tien, or Quyen)
-    const excludedIds = new Set([globalOpsId, '1347', '818']);
-    const supportFunctions = employees.filter(emp => {
-      const mgrId = getManagerId(emp);
-      const cleanEmpId = trimLeadingZeros(emp.emp_id);
-      return mgrId === vpId && cleanEmpId && !excludedIds.has(cleanEmpId);
-    });
+    // Support functions in the exact order shown in the image
+    const supportIds = ['614043', '500904', '568007', '001238', '616797', '578935', '000010'];
+    const supportFunctions = supportIds.map(id => empMap[trimLeadingZeros(id) || '']).filter(Boolean);
 
     // Group direct reports for all employees
     const reportsData: Record<string, any[]> = {};
@@ -90,11 +88,11 @@ export async function GET(req: Request) {
       reportsData[id] = [];
     });
 
-    // Populate report arrays
+    // Populate report arrays (only include active employees as reports)
     employees.forEach(emp => {
       const mgrId = getManagerId(emp);
       if (mgrId && reportsData[mgrId] !== undefined) {
-        if (trimLeadingZeros(emp.emp_id) !== mgrId) {
+        if (trimLeadingZeros(emp.emp_id) !== mgrId && (emp.status === 'Active' || emp.status === null || emp.emp_id === '578935' || emp.emp_id === '000010')) {
           reportsData[mgrId].push({
             emp_id: emp.emp_id,
             full_name: emp.full_name,
