@@ -15,9 +15,10 @@ interface OrgChartData {
   reports: Record<string, Employee[]>;
 }
 
-// Map database names to shorter chart names
+// Format database names dynamically (e.g. swap comma formats like "Jiang, Baiping" -> "Baiping Jiang")
 const mapNameToChart = (key: string, emp: Employee): string => {
-  if (!emp.full_name) {
+  const name = emp.full_name;
+  if (!name) {
     // Fallback labels matching the reference image if record is empty
     switch (key) {
       case 'vp': return 'HK Lee';
@@ -41,32 +42,18 @@ const mapNameToChart = (key: string, emp: Employee): string => {
     }
   }
 
-  const cleanId = emp.emp_id.trim().replace(/^0+/, '');
-  switch (cleanId) {
-    case '500011': return 'HK Lee';
-    case '610977': return 'Jeff Searl';
-    case '1347': return 'T.T.Tien';
-    case '818': return 'Anna N.N.Quyen';
-    case '512282': return 'Brian N.K.Hieu';
-    case '612495': return 'Nash N.T.Ngo';
-    case '509807': return 'Danny L.T. Danh';
-    case '5': return 'Jena H.T.Thuy';
-    case '590118': return 'Susan Jiang';
-    case '612259': return 'Skovran Robert';
-    case '614043': return 'Bryan Wei';
-    case '500904': return 'N.L Hiep';
-    case '568007': return 'N.T Trung';
-    case '1238': return 'Nancy C.T. Nhan';
-    case '616797': return 'Ng Peng Heng';
-    case '578935': return 'H.T.P.Nha';
-    case '10': return 'Sunny L.T.K.Duong';
-    default: return emp.full_name;
+  // Format comma names dynamically (e.g. "Jiang, Baiping" -> "Baiping Jiang")
+  if (name.includes(",")) {
+    const parts = name.split(",");
+    return `${parts[1].trim()} ${parts[0].trim()}`;
   }
+  return name;
 };
 
-// Map database job titles to chart job titles
+// Use database job titles directly, with fallback defaults if missing
 const mapTitleToChart = (key: string, emp: Employee): string => {
-  if (!emp.job_title) {
+  const title = emp.job_title;
+  if (!title) {
     switch (key) {
       case 'vp': return 'Operations VP';
       case 'globalOps': return 'VP Global Operations';
@@ -89,8 +76,7 @@ const mapTitleToChart = (key: string, emp: Employee): string => {
     }
   }
 
-  // Abbreviate long titles slightly if necessary to fit nicely
-  const title = emp.job_title;
+  // Abbreviate extremely long titles slightly to fit nicely on cards
   if (title === 'Senior Factory Management Manager') return 'Sr. Manager';
   if (title === 'Factory Management Manager') return 'Manager';
   if (title === 'Director, Operation Quality') return 'Director';
@@ -100,60 +86,29 @@ const mapTitleToChart = (key: string, emp: Employee): string => {
   return title;
 };
 
-// Shorten direct report names to initials for text-only cards
+// Dynamically shorten names to initials format (e.g. "Nguyễn Đức Việt" -> "N.D.Việt")
 const shortenReportName = (name: string): string => {
   if (!name) return "";
   
-  const cleanName = name.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
-  const lowerName = cleanName.toLowerCase();
-  
-  if (lowerName.includes("nguyen duc viet")) return "N.D.Viet";
-  if (lowerName.includes("huynh tran bao anh")) return "H.T.B.Anh";
-  if (lowerName.includes("le thi huong")) return "Cindy L.T.Huong";
-  if (lowerName.includes("vu hong thai")) return "V.H.Thai";
-  if (lowerName.includes("ly kim phat")) return "L.K.Phat";
-  if (lowerName.includes("vo hoang giang")) return "Patrick V.H.Giang";
-  if (lowerName.includes("pham minh quan")) return "P.M.Quan";
-  if (lowerName.includes("phan thanh giang")) return "P.T.Giang";
-  if (lowerName.includes("nguyen minh toan")) return "N.M.Toan";
-  if (lowerName.includes("le duy hiep")) return "L.D.Hiep";
-  if (lowerName.includes("huynh thuy dong")) return "H.T.Dong";
-  if (lowerName.includes("le xuan lam")) return "L.X.Lam";
-  if (lowerName.includes("tran van quoc")) return "T.V.Quoc";
-  if (lowerName.includes("vo ngoc bich")) return "V.N.Bich";
-  if (lowerName.includes("nguyen van lam")) return "Justin N.V.Lam";
-  if (lowerName.includes("dang le cam nhung")) return "D.L.C.Nhung";
-  if (lowerName.includes("do tuan cuong")) return "D.T.Cuong";
-  if (lowerName.includes("nguyen duy nam")) return "N.D.Nam";
-  if (lowerName.includes("le thi dieu hien")) return "Lee N.T.D.Hien";
-  if (lowerName.includes("pham hoang son")) return "P.H.Son";
-  if (lowerName.includes("nguyen thi luyen")) return "Emily N.T.Luyen";
-  if (lowerName.includes("nguyen duy that")) return "N.D.That";
-  if (lowerName.includes("nguyen van quang")) return "N.V.Quang";
-  if (lowerName.includes("tran ho bac")) return "T.H.Bac";
-  if (lowerName.includes("nguyen thien truong")) return "Troy N.T.Truong";
-  if (lowerName.includes("laven anthony james")) return "Anthony Laven";
-  if (lowerName.includes("liu, jinyuan") || lowerName.includes("liu jinyuan")) return "Kelvin Liu";
-  if (lowerName.includes("fan, yu") || lowerName.includes("fan yu")) return "Fan Yu";
-  if (lowerName.includes("le thanh nhan")) return "Nelly V. Nhan";
-  if (lowerName.includes("tran anh loc")) return "T.A.Loc";
-
-  const parts = cleanName.split(/[\s,]+/);
-  if (parts.length <= 1) return cleanName;
-
-  if (name.includes(",")) {
-    const parts = name.split(",");
-    return `${parts[1].trim()} ${parts[0].trim()}`;
+  let cleanName = name.trim();
+  if (cleanName.includes(",")) {
+    const parts = cleanName.split(",");
+    cleanName = `${parts[1].trim()} ${parts[0].trim()}`;
   }
+
+  const parts = cleanName.split(/\s+/);
+  if (parts.length <= 1) return cleanName;
 
   const last = parts[parts.length - 1];
   const initials = parts.slice(0, parts.length - 1).map(p => p[0].toUpperCase()).join(".");
   return `${initials}.${last}`;
 };
 
-// Shorten direct report job titles
+// Use direct report titles from database directly
 const shortenReportTitle = (title: string | null): string => {
   if (!title) return "";
+  
+  // Clean up extremely long strings for visual neatness
   if (title.includes("Mitigation")) return "MIF Manager";
   if (title.includes("Maintenance")) return "FMU Manager";
   if (title.includes("Assistant IE Manager")) return "IE Asst. Manager";
@@ -164,20 +119,6 @@ const shortenReportTitle = (title: string | null): string => {
   if (title.includes("Assistant Production Manager")) return "PROD Asst. Manager";
   if (title.includes("PM Manager")) return "PM Manager";
   if (title.includes("Production Training Supervisor")) return "Training Supervisor";
-  if (title.includes("Assistant Warehouse Manager")) return "WH Asst. Manager";
-  if (title.includes("Senior Warehouse Manager")) return "WH Manager";
-  if (title.includes("Senior PMC Manager")) return "PMC Manager";
-  if (title.includes("PMC Manager")) return "PMC Manager";
-  if (title.includes("Assistant PMC Manager")) return "PMC Asst. Manager";
-  if (title.includes("OPM Manager")) return "OPM Manager";
-  if (title.includes("Assistant OPM Manager")) return "OPM Asst. Manager";
-  if (title.includes("PM Supervisor")) return "PM Supervisor";
-  if (title.includes("Senior Operations Quality Manager")) return "Ops Quality Manager";
-  if (title.includes("Reliability Manager")) return "Reliability Manager";
-  if (title.includes("Quality Manager")) return "Quality Manager";
-  if (title.includes("Senior PSE Manager")) return "PSE Manager";
-  if (title.includes("Senior NPD Manager")) return "NPD Manager";
-  if (title.includes("Senior VE Manager")) return "VE Manager";
   
   return title;
 };
