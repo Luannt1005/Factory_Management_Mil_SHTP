@@ -382,7 +382,7 @@ export default function CoreTeamOrgChart() {
         </div>
 
         {/* Level 3: Support Functions (Dotted Divider) */}
-        <div className="w-full relative py-2.5 mb-1.5 mt-2">
+        <div className="w-full relative py-2 mt-2">
           {/* Main top horizontal dotted line */}
           <div className="absolute inset-x-[4%] top-1/2 border-t border-dotted border-red-500"></div>
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-50 px-4 text-red-600 font-black tracking-[0.2em] text-[9px] uppercase select-none">
@@ -396,7 +396,7 @@ export default function CoreTeamOrgChart() {
             return (
               <div key={emp.emp_id} className="flex flex-col items-center relative min-w-[130px] max-w-[160px] flex-1">
                 {/* Dotted vertical line going up to divider */}
-                <div className="w-0.5 h-4 border-l border-dotted border-red-500"></div>
+                <div className="w-0.5 h-6 border-l border-dotted border-red-500 -mt-2 relative z-0"></div>
                 
                 {/* Support Card */}
                 {renderLeaderCard(emp)}
