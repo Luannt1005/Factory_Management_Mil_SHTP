@@ -244,87 +244,95 @@ export default function FullPagePresenter() {
               className="w-full h-full flex flex-col md:flex-row items-center gap-8 md:gap-12 px-8 md:px-12 lg:px-16 py-8 relative overflow-hidden bg-[var(--color-bg-page)]"
             >
               {/* Left Side: Info */}
-              <div className="w-full md:w-[22%] lg:w-[18%] flex flex-col justify-center h-full space-y-6 z-10 text-left">
-                <div
-                  className={`transition-all duration-700 delay-300 transform ${
-                    isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                  }`}
-                >
-                  <span className="text-5xl md:text-7xl font-black text-[#db011c] tracking-tighter block mb-2">
-                    {slide.number}
-                  </span>
-                  <div className="w-12 h-1 bg-[#db011c] mb-4"></div>
-                  <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
-                    {slide.title}
-                  </h2>
-                </div>
-
-                <p
-                  className={`text-gray-500 font-light leading-relaxed text-sm md:text-base transition-all duration-700 delay-500 transform ${
-                    isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                  }`}
-                >
-                  {slide.description}
-                </p>
-
-                {/* Toggle Button for SHTP Core Team Dynamic Org Chart (Slide 3) */}
-                {slide.id === 3 && (
-                  <button
-                    onClick={() => setViewDynamicChart(!viewDynamicChart)}
-                    className={`w-full mt-4 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-xl active:scale-95 transition-all shadow-md cursor-pointer border border-red-700 select-none text-center ${
-                      isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                    }`}
-                    style={{ transitionDelay: "600ms" }}
-                  >
-                    {viewDynamicChart ? "Show Official Image" : "Show Dynamic Org Chart"}
-                  </button>
-                )}
-
-                {/* Sub-tabs Selector for type "tabs" */}
-                {slide.type === "tabs" && (
+              {!(slide.id === 3 && viewDynamicChart) && (
+                <div className="w-full md:w-[22%] lg:w-[18%] flex flex-col justify-center h-full space-y-6 z-10 text-left">
                   <div
-                    className={`flex flex-wrap gap-2 pt-2 transition-all duration-700 delay-700 transform ${
+                    className={`transition-all duration-700 delay-300 transform ${
                       isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
                     }`}
                   >
-                    {(slide.content as any[]).map((tab, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setActiveTab(idx)}
-                        className={`px-4 py-2 text-xs font-bold uppercase rounded-lg border transition-all cursor-pointer ${
-                          idx === activeTab
-                            ? "bg-gray-900 border-gray-900 text-white shadow-sm"
-                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        {tab.title.split(" ")[0]} {tab.title.split(" ")[1]}
-                      </button>
-                    ))}
+                    <span className="text-5xl md:text-7xl font-black text-[#db011c] tracking-tighter block mb-2">
+                      {slide.number}
+                    </span>
+                    <div className="w-12 h-1 bg-[#db011c] mb-4"></div>
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
+                      {slide.title}
+                    </h2>
                   </div>
-                )}
-              </div>
+
+                  <p
+                    className={`text-gray-500 font-light leading-relaxed text-sm md:text-base transition-all duration-700 delay-500 transform ${
+                      isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                    }`}
+                  >
+                    {slide.description}
+                  </p>
+
+                  {/* Toggle Button for SHTP Core Team Dynamic Org Chart (Slide 3) */}
+                  {slide.id === 3 && (
+                    <button
+                      onClick={() => setViewDynamicChart(!viewDynamicChart)}
+                      className={`w-full mt-4 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-xl active:scale-95 transition-all shadow-md cursor-pointer border border-red-700 select-none text-center ${
+                        isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                      }`}
+                      style={{ transitionDelay: "600ms" }}
+                    >
+                      Show Dynamic Org Chart
+                    </button>
+                  )}
+
+                  {/* Sub-tabs Selector for type "tabs" */}
+                  {slide.type === "tabs" && (
+                    <div
+                      className={`flex flex-wrap gap-2 pt-2 transition-all duration-700 delay-700 transform ${
+                        isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                      }`}
+                    >
+                      {(slide.content as any[]).map((tab, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setActiveTab(idx)}
+                          className={`px-4 py-2 text-xs font-bold uppercase rounded-lg border transition-all cursor-pointer ${
+                            idx === activeTab
+                              ? "bg-gray-900 border-gray-900 text-white shadow-sm"
+                              : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          {tab.title.split(" ")[0]} {tab.title.split(" ")[1]}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Right Side: Media Container */}
               <div
-                className={`w-full md:w-[78%] lg:w-[82%] h-[60%] md:h-full flex items-center justify-center relative transition-all duration-1000 delay-400 transform ${
+                className={`h-[60%] md:h-full flex items-center justify-center relative transition-all duration-1000 delay-400 transform ${
                   isActive ? "opacity-100 scale-100" : "opacity-0 scale-95"
-                }`}
+                } ${slide.id === 3 && viewDynamicChart ? "w-full md:w-full lg:w-full" : "w-full md:w-[78%] lg:w-[82%]"}`}
               >
                 {/* Image Slide */}
                 {slide.type === "image" && (
-                  <div className="relative w-full h-full max-h-[96%] bg-white border border-gray-100 rounded-3xl p-6 shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] transition-shadow duration-500 flex items-center justify-center group overflow-hidden">
-                    {slide.id === 3 && viewDynamicChart ? (
-                      <div className="w-full h-full overflow-auto">
-                        <CoreTeamOrgChart />
-                      </div>
-                    ) : (
+                  slide.id === 3 && viewDynamicChart ? (
+                    <div className="relative w-full h-full bg-slate-50 flex items-center justify-center overflow-hidden">
+                      <CoreTeamOrgChart />
+                      <button
+                        onClick={() => setViewDynamicChart(false)}
+                        className="absolute top-4 right-4 z-50 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all select-none cursor-pointer border border-red-700 hover:scale-105 active:scale-95"
+                      >
+                        Show Slide Image
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative w-full h-full max-h-[96%] bg-white border border-gray-100 rounded-3xl p-6 shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] transition-shadow duration-500 flex items-center justify-center group overflow-hidden">
                       <img
                         src={slide.content as string}
                         alt={slide.title}
                         className="max-w-full max-h-full object-contain rounded-xl transition-transform duration-700 group-hover:scale-[1.01]"
                       />
-                    )}
-                  </div>
+                    </div>
+                  )
                 )}
 
                 {/* Video Slide */}

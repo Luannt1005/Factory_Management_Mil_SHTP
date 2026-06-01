@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
+import { promises as fs, existsSync } from "fs";
 import * as path from "path";
+import * as os from "os";
+
+const getUploadDir = (): string => {
+    if (existsSync("D:\\Images emp\\uploads")) {
+        return "D:\\Images emp\\uploads";
+    }
+    const desktopPath = path.join(os.homedir(), "Desktop", "uploads");
+    if (existsSync(desktopPath)) {
+        return desktopPath;
+    }
+    return path.join(process.cwd(), "uploads");
+};
 
 export async function GET(req: Request, props: { params: Promise<{ filename: string }> }) {
     const params = await props.params;
     const { filename } = params;
 
     try {
-        const uploadDir = "D:\\Images emp\\uploads";
+        const uploadDir = getUploadDir();
         const filePath = path.join(uploadDir, filename);
 
         // Basic security check: ensure no path traversal

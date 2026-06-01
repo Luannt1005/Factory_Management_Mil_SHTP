@@ -1,7 +1,18 @@
-
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
+import { promises as fs, existsSync } from "fs";
 import * as path from "path";
+import * as os from "os";
+
+const getUploadDir = (): string => {
+    if (existsSync("D:\\Images emp\\uploads")) {
+        return "D:\\Images emp\\uploads";
+    }
+    const desktopPath = path.join(os.homedir(), "Desktop", "uploads");
+    if (existsSync(desktopPath)) {
+        return desktopPath;
+    }
+    return path.join(process.cwd(), "uploads");
+};
 
 export async function POST(req: Request) {
     try {
@@ -21,14 +32,14 @@ export async function POST(req: Request) {
         const buffer = new Uint8Array(arrayBuffer);
 
         // Ensure the directory exists
-        const uploadDir = "D:\\Images emp\\uploads";
+        const uploadDir = getUploadDir();
         try {
             await fs.access(uploadDir);
         } catch {
             await fs.mkdir(uploadDir, { recursive: true });
         }
 
-        // Save file locally to external D:\Images emp\uploads
+        // Save file locally to external uploads directory
         const filePath = path.join(uploadDir, filename);
         await fs.writeFile(filePath, buffer);
 
