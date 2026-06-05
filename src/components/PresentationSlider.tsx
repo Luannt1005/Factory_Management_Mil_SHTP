@@ -20,8 +20,12 @@ const slides: Slide[] = [
   {
     id: 2,
     title: "Construction Journey",
-    type: "video",
-    content: "/about_shtp/2.Construction Journey.mp4",
+    type: "grid",
+    content: [
+      "/about_shtp/2.Construction Journey.mp4",
+      "/about_shtp/2.1 Construction Journey.PNG",
+      "/about_shtp/2.2 Construction Journey.PNG",
+    ],
   },
   {
     id: 3,
@@ -57,21 +61,18 @@ const slides: Slide[] = [
   },
   {
     id: 7,
-    title: "Meeting Room Layouts",
+    title: "Meeting Room Layout",
     type: "grid",
     content: [
-      "/about_shtp/7.1 Meeting Room Manufacturing Layout Level 3.png",
-      "/about_shtp/7.2 Meeting Room Manufacturing Layout Level 5.png",
+      "/about_shtp/7.1 Meeting room L2.PNG",
+      "/about_shtp/7.2 Meeting room L3.PNG",
+      "/about_shtp/7.3 Meeting room L4.PNG",
+      "/about_shtp/7.4 Meeting room L5.PNG",
+      "/about_shtp/7.5 Meeting room L6.PNG",
     ],
   },
   {
     id: 8,
-    title: "Working & Meeting Room Layout",
-    type: "image",
-    content: "/about_shtp/8. Working Room and Meeting Room Layout.png",
-  },
-  {
-    id: 9,
     title: "Visitor Registration Process",
     type: "image",
     content: "/about_shtp/9. Visitor Registration Process.png",
@@ -183,15 +184,26 @@ export default function PresentationSlider() {
               <div className={`grid gap-4 w-full h-full ${
                 (currentSlide.content as string[]).length === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-3"
               }`}>
-                {(currentSlide.content as string[]).map((src, i) => (
-                  <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-2 flex items-center justify-center backdrop-blur-sm group overflow-hidden shadow-2xl">
-                    <img
-                      src={src}
-                      alt={`${currentSlide.title} Part ${i + 1}`}
-                      className="max-w-full max-h-full object-contain drop-shadow-xl transition-transform duration-700 group-hover:scale-110"
-                    />
-                  </div>
-                ))}
+                {(currentSlide.content as string[]).map((src, i) => {
+                  const isVideo = src.endsWith(".mp4") || src.endsWith(".webm");
+                  return (
+                    <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-2 flex items-center justify-center backdrop-blur-sm group overflow-hidden shadow-2xl">
+                      {isVideo ? (
+                        <video
+                          src={src}
+                          controls
+                          className="max-w-full max-h-full object-contain rounded-xl"
+                        />
+                      ) : (
+                        <img
+                          src={src}
+                          alt={`${currentSlide.title} Part ${i + 1}`}
+                          className="max-w-full max-h-full object-contain drop-shadow-xl transition-transform duration-700 group-hover:scale-110"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

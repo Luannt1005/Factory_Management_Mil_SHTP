@@ -29,18 +29,8 @@ export default function ContactsPage() {
     return (
         <div className="w-full min-h-screen bg-[var(--color-bg-page)] text-[var(--color-text-body)] font-sans pb-32 px-4 md:px-8 space-y-12">
             
-            {/* 1. Header Banner */}
-            <div className="border-b border-[var(--color-border)] pb-8 mt-6">
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[var(--color-text-title)] uppercase">
-                    Contact <span className="text-[#db011c]">Directory</span>
-                </h1>
-                <p className="text-[var(--color-text-muted)] text-sm md:text-base mt-2 max-w-2xl font-light">
-                    Reach out to reception desks, EHS teams, and operations support leads across TTI Vietnam sites.
-                </p>
-            </div>
- 
             {/* 2. Hotlines & Reception (SHTP Reception & EHS Team) */}
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-8 mt-6">
                 {/* Reception Card */}
                 <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-6 hover:shadow-md transition-all duration-300 group">
                     <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-page)] flex items-center justify-center flex-shrink-0 group-hover:bg-[#db011c]/10 transition-colors">
@@ -49,8 +39,8 @@ export default function ContactsPage() {
                     <div className="flex-1 space-y-4">
                         <div>
                             <span className="text-[10px] text-[#db011c] font-bold uppercase tracking-wider bg-red-50 dark:bg-red-500/10 px-2.5 py-1 rounded">Front Office</span>
-                            <h2 className="text-xl font-bold text-[var(--color-text-title)] mt-2">SHTP Reception Desk</h2>
-                            <p className="text-xs text-[var(--color-text-muted)] mt-1 font-light">Assistance for visitors, access badging, and general inquiries at SHTP.</p>
+                            <h2 className="text-xl font-bold text-[var(--color-text-title)] mt-2">Reception Desk</h2>
+                            <p className="text-xs text-[var(--color-text-muted)] mt-1 font-light">Assistance for visitors, access badging, and general inquiries.</p>
                         </div>
                         <div className="space-y-2 border-t border-[var(--color-border-light)] pt-4">
                             <a href="tel:+8402873088869" className="flex items-center gap-3 text-sm text-[var(--color-text-body)] hover:text-[#db011c] transition-colors">
@@ -85,9 +75,9 @@ export default function ContactsPage() {
                             <p className="text-xs text-[var(--color-text-muted)] mt-1 font-light">Environment, health, safety reporting, workplace hazard concerns, and compliance.</p>
                         </div>
                         <div className="space-y-2 border-t border-[var(--color-border-light)] pt-4">
-                            <a href="tel:0961958951" className="flex items-center gap-3 text-sm text-[var(--color-text-body)] hover:text-[#db011c] transition-colors">
+                            <a href="tel:+84961958951" className="flex items-center gap-3 text-sm text-[var(--color-text-body)] hover:text-[#db011c] transition-colors">
                                 <PhoneIcon className="w-4 h-4 text-[var(--color-text-light)] flex-shrink-0" />
-                                <span className="font-medium">0961 958 951</span>
+                                <span className="font-medium">(+84) 961 958 951</span>
                             </a>
                             <a href="mailto:TTIVNMILPTEHS@ttigroup.com.vn" className="flex items-center gap-3 text-sm text-[var(--color-text-body)] hover:text-[#db011c] transition-colors">
                                 <EnvelopeIcon className="w-4 h-4 text-[var(--color-text-light)] flex-shrink-0" />
@@ -182,21 +172,7 @@ export default function ContactsPage() {
                 </div>
             </div>
  
-            {/* 4. Footer Help Section */}
-            <section className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-2xl p-8 md:p-10 relative overflow-hidden shadow-sm">
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div className="text-center md:text-left space-y-2">
-                        <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight text-[var(--color-text-title)]">Need further assistance?</h2>
-                        <p className="text-[var(--color-text-muted)] text-xs md:text-sm max-w-xl font-light">
-                            If you are unsure which support lead to contact, please get in touch with our main SHTP Reception desk. We will route your inquiry to the correct department.
-                        </p>
-                    </div>
-                    <a href="tel:+8402873088869" className="inline-flex items-center gap-3 bg-[var(--color-bg-page)] border border-[var(--color-border)] text-[var(--color-text-title)] px-6 py-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all font-bold text-sm shadow-md hover:scale-105 active:scale-100 shrink-0">
-                        <PhoneIcon className="w-4 h-4 text-[#db011c]" />
-                        Call SHTP Reception
-                    </a>
-                </div>
-            </section>
+
  
         </div>
     );

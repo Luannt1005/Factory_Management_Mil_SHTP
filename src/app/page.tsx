@@ -72,9 +72,17 @@ export default async function Home() {
     <div className="flex flex-col w-full min-h-screen bg-gradient-to-br from-[#db011c] to-[#900112] text-white font-sans">
       {/* Hero Section */}
       {token ? (
-        <HeroVideo>
-          <div className="py-6" />
-        </HeroVideo>
+        <>
+          <HeroVideo>
+            <div className="py-6" />
+          </HeroVideo>
+          {/* Brand Slogan */}
+          <div className="w-full text-center py-8 select-none">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-black tracking-[0.25em] text-white uppercase">
+              Nothing but HEAVY DUTY™
+            </p>
+          </div>
+        </>
       ) : (
         <section className="w-full px-8 md:px-16 py-6 text-center" />
       )}
@@ -82,7 +90,8 @@ export default async function Home() {
       {/* Milwaukee Culture Section */}
       <section className="w-full bg-transparent py-24">
         {/* Style block for staggered children reveal and logo spin */}
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           .reveal-active .expect-logo {
             opacity: 1 !important;
             transform: translateY(0) !important;
@@ -104,7 +113,7 @@ export default async function Home() {
           }
         `}} />
         <div className="w-full px-8 md:px-16 max-w-7xl mx-auto">
-          
+
           <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-20 mb-20">
             <ScrollReveal delay={150} className="text-center md:text-left">
               <h2 className="text-4xl md:text-[3.25rem] font-black text-white leading-none tracking-tight">MILWAUKEE CULTURE</h2>
@@ -113,9 +122,9 @@ export default async function Home() {
               </p>
             </ScrollReveal>
             <ScrollReveal delay={50}>
-              <img 
-                src="/landing_page/Milwaukee Culture Logo.png" 
-                alt="Milwaukee Culture Logo" 
+              <img
+                src="/landing_page/Milwaukee Culture Logo.png"
+                alt="Milwaukee Culture Logo"
                 className="h-36 md:h-48 w-auto drop-shadow-[0_10px_30px_rgba(219,1,28,0.35)] hover:scale-105 transition-transform duration-300 culture-logo-reveal"
               />
             </ScrollReveal>
@@ -126,20 +135,20 @@ export default async function Home() {
               const isLast = idx === cultureExpectations.length - 1;
               const delay = (idx % 3) * 100;
               return (
-                <div 
+                <div
                   key={item.id}
                   className={`${isLast ? 'md:col-span-2 lg:col-span-3 lg:max-w-4xl lg:mx-auto w-full' : ''} flex flex-col`}
                 >
                   <ScrollReveal delay={delay} className="h-full flex-1 flex flex-col">
                     <div className="group relative w-full flex-1 flex flex-col bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#db011c]/30 rounded-3xl p-8 hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 overflow-hidden">
-                      
+
                       {/* Logo and Number placed together in a flex row to prevent any clipping/cutoff */}
                       <div className="flex justify-between items-center mb-6 opacity-0 translate-y-4 expect-logo">
                         <div className="h-12 flex items-center">
-                          <img 
-                            src={item.logo} 
-                            alt={item.title} 
-                            className="h-full w-auto object-contain" 
+                          <img
+                            src={item.logo}
+                            alt={item.title}
+                            className="h-full w-auto object-contain"
                           />
                         </div>
                         <div className="text-4xl font-black text-white/20 group-hover:text-[#db011c]/60 transition-colors duration-500 font-sans select-none pointer-events-none">
@@ -147,11 +156,11 @@ export default async function Home() {
                         </div>
                       </div>
 
-                      <p 
-                        className="text-sm md:text-base text-white/90 leading-relaxed font-normal opacity-0 translate-y-4 expect-desc" 
-                        dangerouslySetInnerHTML={{ 
-                          __html: item.desc.replace(/<strong>/g, '<strong class="text-white/90 font-medium">').replace(/<\/strong>/g, '</strong>') 
-                        }} 
+                      <p
+                        className="text-sm md:text-base text-white/90 leading-relaxed font-normal opacity-0 translate-y-4 expect-desc"
+                        dangerouslySetInnerHTML={{
+                          __html: item.desc.replace(/<strong>/g, '<strong class="text-white/90 font-medium">').replace(/<\/strong>/g, '</strong>')
+                        }}
                       />
                     </div>
                   </ScrollReveal>
@@ -182,17 +191,17 @@ export default async function Home() {
         <section className="w-full bg-transparent py-24">
           <div className="w-full px-8 md:px-16">
 
-            <div className="text-center mb-20">
+            <div className="max-w-6xl mx-auto mb-20 text-center" style={{ transform: 'translateX(-3%)' }}>
               <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-6">Contact</h2>
               <div className="w-24 h-1 bg-[#db011c] mx-auto rounded-full"></div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-16 max-w-5xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-16 max-w-6xl mx-auto">
 
-              {/* SHTP Reception Card - text only, out of box */}
+              {/* Reception Card - text only, out of box */}
               <div className="flex flex-col items-center md:items-start md:mr-auto w-full max-w-md group">
                 <h3 className="text-2xl font-black text-white tracking-widest uppercase mb-8 relative inline-block">
-                  SHTP Reception Desk
+                  Reception Desk
                   <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-12 h-1 bg-white group-hover:w-full transition-all duration-500"></span>
                 </h3>
                 <div className="space-y-6 w-full">
@@ -214,9 +223,9 @@ export default async function Home() {
                   <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-12 h-1 bg-white group-hover:w-full transition-all duration-500"></span>
                 </h3>
                 <div className="space-y-6 w-full">
-                  <a href="tel:0961958951" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
+                  <a href="tel:+84961958951" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
                     <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Hotline:</span>
-                    <span className="font-light">0961 958 951</span>
+                    <span className="font-light">(+84) 961 958 951</span>
                   </a>
                   <a href="mailto:TTIVNMILPTEHS@ttigroup.com.vn" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
                     <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Email:</span>

@@ -109,6 +109,70 @@ export async function GET(req: Request) {
       reportsData[mgrId].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
     });
 
+    // COMPUTE FULL SPAN OF CONTROL (Deep tree)
+    const childrenMap: Record<string, any[]> = {};
+    employees.forEach(emp => {
+      const mgrId = getManagerId(emp);
+      if (mgrId) {
+        if (!childrenMap[mgrId]) childrenMap[mgrId] = [];
+        if (emp.status === 'Active' || emp.status === null || emp.emp_id === '578935' || emp.emp_id === '000010') {
+           if (trimLeadingZeros(emp.emp_id) !== mgrId) {
+             childrenMap[mgrId].push(emp);
+           }
+        }
+      }
+    });
+
+    const categorizeJobTitle = (title: string | null): string => {
+      if (!title) return 'IDL';
+      const t = title.toLowerCase();
+      if (t.includes('director')) return 'Director';
+      if (t.includes('manager')) return 'Manager';
+      if (t.includes('supervisor')) return 'Supervisor';
+      if (t.includes('specialist')) return 'Specialist';
+      if (t.includes('engineer')) return 'Engineer';
+      return 'IDL';
+    };
+
+    const spanOfControlStats: Record<string, { total: number; breakdown: Record<string, number> }> = {};
+
+    const computeSpanOfControl = (empId: string): { total: number; breakdown: Record<string, number> } => {
+      if (spanOfControlStats[empId]) return spanOfControlStats[empId];
+      let total = 0;
+      const breakdown: Record<string, number> = {
+        Director: 0,
+        Manager: 0,
+        Supervisor: 0,
+        Specialist: 0,
+        Engineer: 0,
+        IDL: 0
+      };
+
+      // Set initially to prevent infinite loops in cyclic data (though unlikely in org chart)
+      spanOfControlStats[empId] = { total: 0, breakdown: { ...breakdown } };
+
+      const children = childrenMap[empId] || [];
+      children.forEach(child => {
+        const childId = trimLeadingZeros(child.emp_id);
+        if (!childId) return;
+
+        total += 1;
+        const cat = categorizeJobTitle(child.job_title);
+        breakdown[cat] += 1;
+
+        const childSoc = computeSpanOfControl(childId);
+        total += childSoc.total;
+        for (const [k, v] of Object.entries(childSoc.breakdown)) {
+          if (breakdown[k] !== undefined) breakdown[k] += v;
+        }
+      });
+
+      spanOfControlStats[empId] = { total, breakdown };
+      return spanOfControlStats[empId];
+    };
+
+    leaderIds.forEach(id => computeSpanOfControl(id));
+
     const response = NextResponse.json(
       {
         success: true,
@@ -119,6 +183,7 @@ export async function GET(req: Request) {
         jeffReports,
         supportFunctions,
         reports: reportsData,
+        spanOfControl: spanOfControlStats,
         timestamp: new Date().toISOString()
       },
       { status: 200 }

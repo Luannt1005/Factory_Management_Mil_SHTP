@@ -19,34 +19,8 @@ interface OrgChartData {
   jeffReports: Employee[];
   supportFunctions: Employee[];
   reports: Record<string, Employee[]>;
+  spanOfControl?: Record<string, { total: number; breakdown: Record<string, number> }>;
 }
-
-// Format database names dynamically (e.g. swap comma formats like "Jiang, Baiping" -> "Baiping Jiang")
-const mapNameToChart = (emp: Employee): string => {
-  const name = emp.full_name;
-  if (!name) return "";
-
-  if (name.includes(",")) {
-    const parts = name.split(",");
-    return `${parts[1].trim()} ${parts[0].trim()}`;
-  }
-  return name;
-};
-
-// Use database job titles directly, with fallback defaults if missing
-const mapTitleToChart = (emp: Employee): string => {
-  const title = emp.job_title;
-  if (!title) return "";
-
-  // Abbreviate extremely long titles slightly to fit nicely on cards
-  if (title === 'Senior Factory Management Manager') return 'Sr. Manager';
-  if (title === 'Factory Management Manager') return 'Manager';
-  if (title === 'Director, Operation Quality') return 'Director';
-  if (title === 'Senior EHS & ESG Manager') return 'Sr. Manager';
-  if (title === 'Senior Manager of EE & Motor Engineering') return 'Sr. Manager';
-  if (title === 'Director (AME & Automation)') return 'Director';
-  return title;
-};
 
 // Dynamically shorten names to initials format (e.g. "Nguyễn Đức Việt" -> "N.D.Việt")
 const shortenReportName = (name: string): string => {
@@ -64,6 +38,26 @@ const shortenReportName = (name: string): string => {
   const last = parts[parts.length - 1];
   const initials = parts.slice(0, parts.length - 1).map(p => p[0].toUpperCase()).join(".");
   return `${initials}.${last}`;
+};
+
+// Format database names dynamically and shorten to initials (e.g. "Jiang, Baiping" -> "B.Jiang")
+const mapNameToChart = (emp: Employee): string => {
+  return shortenReportName(emp.full_name || "");
+};
+
+// Use database job titles directly, with fallback defaults if missing
+const mapTitleToChart = (emp: Employee): string => {
+  const title = emp.job_title;
+  if (!title) return "";
+
+  // Abbreviate extremely long titles slightly to fit nicely on cards
+  if (title === 'Senior Factory Management Manager') return 'Sr. Manager';
+  if (title === 'Factory Management Manager') return 'Manager';
+  if (title === 'Director, Operation Quality') return 'Director';
+  if (title === 'Senior EHS & ESG Manager') return 'Sr. Manager';
+  if (title === 'Senior Manager of EE & Motor Engineering') return 'Sr. Manager';
+  if (title === 'Director (AME & Automation)') return 'Director';
+  return title;
 };
 
 // Use direct report titles from database directly
@@ -102,47 +96,8 @@ const isSupervisorOrManager = (title: string | null): boolean => {
 
 
 
-// Dynamically derive the category header for a card based on employee attributes and sub-reports
 const getCategoryHeader = (emp: Employee, reports: Employee[]): string => {
-  const cleanId = emp.emp_id.trim().replace(/^0+/, '');
-  
-  // Specific top division leads
-  if (cleanId === '1347') return 'IE & FMU & MIF';
-  if (cleanId === '818') return 'Factory Management';
-  if (cleanId === '610977') return 'Operations';
-
-  // For other managers, inspect their direct reports' department names
-  if (reports && reports.length > 0) {
-    const depts = Array.from(new Set(reports.map(r => r.dept).filter(Boolean))) as string[];
-    const cleanDepts = depts.map(d => {
-      if (d === 'Mitigation & Investigation Force') return 'MIF';
-      if (d === 'Factory Maintenance Unit') return 'FMU';
-      if (d === 'Warehouse - PT') return 'Warehouse';
-      if (d === 'Manufacturing Excellence, Training & Development') return 'ME & Training';
-      if (d === 'PM - PT') return 'PM';
-      if (d === 'Production - PT') return 'Production';
-      if (d === 'PM - Motor') return 'PM (Motor)';
-      if (d === 'Production - Motor') return 'Production (Motor)';
-      if (d.includes(" - ")) return d.split(" - ")[1];
-      return d;
-    });
-
-    if (cleanDepts.length > 0) {
-      // Abbreviate and combine up to 2 unique departments
-      return cleanDepts.slice(0, 2).join(" & ");
-    }
-  }
-
-  // Fallback to location or department/title
-  if (emp.location && emp.location === 'DDK') {
-    return 'DDK Operations';
-  }
-  
-  if (emp.dept && emp.dept !== 'Management' && emp.dept !== 'MFG Management') {
-    return emp.dept.includes(" - ") ? emp.dept.split(" - ")[1] : emp.dept;
-  }
-  
-  return emp.job_title || 'Operations';
+  return emp.dept || emp.job_title || 'Operations';
 };
 
 export default function CoreTeamOrgChart() {
@@ -150,6 +105,7 @@ export default function CoreTeamOrgChart() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
+  const [selectedEmp, setSelectedEmp] = useState<Employee | null>(null);
 
   useEffect(() => {
     fetch("/api/orgchart/core-team")
@@ -228,12 +184,15 @@ export default function CoreTeamOrgChart() {
       <div className="flex flex-col items-center w-full relative">
         {showTopLine && (
           isDotted ? (
-            <div className="w-0.5 h-6 border-l border-dotted border-red-500 -mt-2 relative z-0"></div>
+            <div className="w-[2px] border-l-[2px] border-dotted border-red-500 relative z-0" style={{ height: "20px" }}></div>
           ) : (
-            <div className="w-0.5 h-8 bg-red-600 -mt-4 relative z-0"></div>
+            <div className="w-[2px] bg-red-600 relative z-0" style={{ height: "20px" }}></div>
           )
         )}
-        <div className={`flex flex-col items-center w-full max-w-[170px] mx-auto bg-white rounded shadow-sm overflow-hidden border ${isJeff ? 'border-2 border-red-600 shadow-md ring-2 ring-red-100' : 'border-gray-200'} hover:shadow-md transition-shadow duration-300`}>
+        <div 
+          className={`flex flex-col items-center w-full max-w-[170px] mx-auto bg-white rounded shadow-sm overflow-hidden border ${isJeff ? 'border-2 border-red-600 shadow-md ring-2 ring-red-100' : 'border-gray-200'} hover:shadow-md transition-shadow duration-300 relative cursor-pointer hover:bg-slate-50`}
+          onClick={(e) => { e.stopPropagation(); setSelectedEmp(emp); }}
+        >
           {/* Category Header */}
           <div className="w-full bg-[#db011c] text-white text-center py-0.5 px-1 font-black tracking-wider text-[9px] sm:text-[10px] uppercase truncate">
             {label}
@@ -258,7 +217,8 @@ export default function CoreTeamOrgChart() {
                  return (
                    <div 
                      key={rep.emp_id} 
-                     className={`bg-white p-1 flex flex-col justify-center text-center hover:bg-red-50/20 transition-colors duration-100 min-w-0 ${isLastOdd ? 'col-span-2' : ''}`}
+                     className={`bg-white p-1 flex flex-col justify-center text-center hover:bg-red-50/20 transition-colors duration-100 min-w-0 cursor-pointer ${isLastOdd ? 'col-span-2' : ''}`}
+                     onClick={(e) => { e.stopPropagation(); setSelectedEmp(rep); }}
                    >
                      <span className="text-[8.5px] font-bold text-zinc-800 tracking-tight leading-tight truncate">{repName}</span>
                      <span className="text-[7.5px] text-zinc-400 font-semibold tracking-tight leading-none mt-0.5 truncate">{repTitle}</span>
@@ -267,6 +227,121 @@ export default function CoreTeamOrgChart() {
                })}
              </div>
           )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDetailsModal = () => {
+    if (!selectedEmp) return null;
+    const cleanId = selectedEmp.emp_id.trim().replace(/^0+/, '');
+    const isError = imgErrors[cleanId];
+    const photoUrl = `/api/uploads/${cleanId}.webp`;
+    
+    const name = selectedEmp.full_name || '';
+    const initials = name.split('.').pop()?.trim().slice(0, 2).toUpperCase() || name.slice(0, 2).toUpperCase();
+    
+    const reportsForEmp = data?.reports[cleanId] || [];
+    const category = getCategoryHeader(selectedEmp, reportsForEmp);
+    const socData = data?.spanOfControl?.[cleanId];
+
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-200 p-4"
+        onClick={() => setSelectedEmp(null)}
+      >
+        <div 
+          className="bg-white rounded-xl shadow-2xl w-full max-w-[480px] overflow-hidden flex flex-col border border-slate-200 transform scale-[1.02] animate-[fadeIn_0.15s_ease-out]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header Banner */}
+          <div className="h-16 bg-[#db011c] relative flex items-center justify-center overflow-hidden shrink-0">
+             <div className="absolute inset-0 opacity-10 bg-[url('/grid-pattern.svg')] bg-center"></div>
+             <img src="/logo.png" alt="Milwaukee" className="h-5 opacity-90 drop-shadow-md z-10" onError={(e) => e.currentTarget.style.display = 'none'} />
+             <button 
+               className="absolute top-3 right-3 text-white hover:text-red-200 opacity-80 transition-colors z-20"
+               onClick={() => setSelectedEmp(null)}
+             >
+               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+               </svg>
+             </button>
+          </div>
+          
+          {/* Profile & Info Content */}
+          <div className="p-6 relative flex flex-col items-center">
+            {/* Profile Avatar */}
+            <div className="w-20 h-20 rounded-full border-[3px] border-white bg-slate-100 shadow-md -mt-14 overflow-hidden flex items-center justify-center relative z-20 shrink-0">
+              {!isError ? (
+                <img src={photoUrl} alt={name} className="w-full h-full object-cover" onError={() => handleImgError(cleanId)} />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#db011c] to-[#900112] text-white flex flex-col items-center justify-center font-black text-xl">
+                  <span className="text-[9px] opacity-70 tracking-widest leading-none mb-1">MIL</span>
+                  <span>{initials}</span>
+                </div>
+              )}
+            </div>
+            
+            <h3 className="mt-3 text-lg font-black text-slate-800 uppercase tracking-tight leading-tight text-center">{name}</h3>
+            
+            <div className="w-full h-px bg-slate-100 my-6"></div>
+            
+            {/* Details Grid */}
+            <div className="w-full grid grid-cols-2 gap-y-6 gap-x-6 text-left pl-2">
+               <div>
+                 <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Employee ID</p>
+                 <p className="text-[13px] font-bold text-slate-700">{selectedEmp.emp_id}</p>
+               </div>
+               <div>
+                 <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Business Unit</p>
+                 <p className="text-[13px] font-bold text-slate-700">-</p>
+               </div>
+               <div>
+                 <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Category</p>
+                 <p className="text-[13px] font-bold text-slate-700">{selectedEmp.job_title || category}</p>
+               </div>
+               <div>
+                 <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Location</p>
+                 <p className="text-[13px] font-bold text-slate-700">{selectedEmp.location || 'SHTP'}</p>
+               </div>
+               <div>
+                 <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Line Manager</p>
+                 <p className="text-[13px] font-bold text-slate-700 truncate">{selectedEmp.line_manager || '-'}</p>
+               </div>
+               <div>
+                 <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Joining Date</p>
+                 <p className="text-[13px] font-bold text-slate-700">N/A</p>
+               </div>
+            </div>
+
+            {/* Span of Control */}
+            {socData && socData.total > 0 && (
+              <div className="w-full mt-7 flex flex-col items-center">
+                <div className="w-full h-px bg-slate-100 mb-6"></div>
+                <p className="text-[12px] font-black text-slate-500 uppercase tracking-widest mb-4">Span of Control ({socData.total})</p>
+                <div className="flex flex-wrap gap-2.5 justify-center max-w-sm">
+                   {socData.breakdown.Director > 0 && (
+                     <span className="px-3 py-1.5 bg-[#d4c3ea] border border-[#a686d1] text-[#4d2d76] rounded-full text-xs font-bold shadow-sm">Director: {socData.breakdown.Director}</span>
+                   )}
+                   {socData.breakdown.Manager > 0 && (
+                     <span className="px-3 py-1.5 bg-[#bec3ed] border border-[#7d89d6] text-[#2c3674] rounded-full text-xs font-bold shadow-sm">Manager: {socData.breakdown.Manager}</span>
+                   )}
+                   {socData.breakdown.Supervisor > 0 && (
+                     <span className="px-3 py-1.5 bg-[#a4cbb4] border border-[#559b72] text-[#1c452e] rounded-full text-xs font-bold shadow-sm">Supervisor: {socData.breakdown.Supervisor}</span>
+                   )}
+                   {socData.breakdown.Specialist > 0 && (
+                     <span className="px-3 py-1.5 bg-[#deb5a2] border border-[#c47b59] text-[#6b3117] rounded-full text-xs font-bold shadow-sm">Specialist: {socData.breakdown.Specialist}</span>
+                   )}
+                   {socData.breakdown.Engineer > 0 && (
+                     <span className="px-3 py-1.5 bg-[#a2c5c5] border border-[#609999] text-[#234848] rounded-full text-xs font-bold shadow-sm">Engineer: {socData.breakdown.Engineer}</span>
+                   )}
+                   {socData.breakdown.IDL > 0 && (
+                     <span className="px-3 py-1.5 bg-[#e2e8f0] border border-[#cbd5e1] text-[#475569] rounded-full text-xs font-bold shadow-sm">IDL: {socData.breakdown.IDL}</span>
+                   )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -294,24 +369,20 @@ export default function CoreTeamOrgChart() {
   const { vp, globalOps, ie_fmu_mif, factoryMgmt } = data;
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 p-1 overflow-hidden select-none">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 p-1 overflow-hidden select-none relative">
       
-      {/* Zoom / Scaling Container to fit perfectly in viewport without scrolling */}
-      <div className="w-full max-w-5xl mx-auto transform scale-[0.66] sm:scale-[0.74] md:scale-[0.8] lg:scale-[0.86] xl:scale-[0.92] origin-top transition-transform duration-300 flex flex-col items-center">
+      {/* Zoom / Scaling Container with fixed width of 1200px to guarantee mathematical alignment of lines across all screens */}
+      <div 
+        className="w-[1200px] mx-auto transform scale-[0.32] sm:scale-[0.52] md:scale-[0.62] lg:scale-[0.82] xl:scale-[0.96] origin-top transition-transform duration-300 flex flex-col items-center"
+      >
         
-        {/* Title Block */}
-        <div className="flex items-center justify-center gap-2 mb-4 w-full max-w-2xl border-b border-red-600 pb-1.5">
-          <img src="/logo.png" alt="Milwaukee Logo" className="h-6 w-auto" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          <h2 className="text-base sm:text-lg font-black tracking-tight text-zinc-900">
-            Milwaukee PT VN Core Team - <span className="italic text-red-600">Dynamic Org Chart</span>
-          </h2>
-        </div>
+
 
         {/* Level 0: Operations VP (HK Lee) */}
-        {/* Placed centered at 34.8% from left to align exactly with the split connector */}
-        <div className="w-full flex justify-start relative mb-2" style={{ paddingLeft: 'calc(34.8% - 85px)' }}>
+        {/* Placed exactly at the center (50%) */}
+        <div className="w-full flex justify-center relative mb-0">
           {vp && (
-            <div className="flex flex-col items-center bg-[#db011c] text-white p-1.5 sm:p-2 rounded-lg shadow-md border border-red-700 max-w-[170px]">
+            <div className="flex flex-col items-center bg-[#db011c] text-white p-1.5 sm:p-2 rounded-lg shadow-md border border-red-700 w-full max-w-[170px]">
               <div className="flex gap-2 items-center">
                 {renderPhoto(vp.emp_id, mapNameToChart(vp), "w-9 h-11 border border-white/20")}
                 <div className="text-left">
@@ -326,55 +397,61 @@ export default function CoreTeamOrgChart() {
 
         {/* Level 1 Horizontal Connecting Line */}
         <div className="w-full relative h-6">
-          {/* Horizontal Line connector from Left Stack center (9%) to Jeff center (60.6%) */}
-          <div className="absolute left-[9%] w-[51.6%] bottom-0 h-0.5 bg-red-600"></div>
-          {/* Vertical Line going down from VP to the horizontal line */}
-          <div className="absolute left-[34.8%] top-0 bottom-0 w-0.5 bg-red-600"></div>
-          {/* Vertical Line going down to Jeff Searl */}
-          <div className="absolute left-[60.6%] bottom-0 h-6 w-0.5 bg-red-600"></div>
-          {/* Vertical Line going down to Left Stack */}
-          <div className="absolute left-[9%] bottom-0 h-6 w-0.5 bg-red-600"></div>
+          {/* Single Horizontal Line connecting Left Trunk (-20px), Left Column (9%), VP (50%), and Right Column (61%) */}
+          <div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "-20px", right: "39%" }}></div>
+          {/* Vertical drop from VP down to this horizontal line exactly at 50% */}
+          <div className="absolute w-[2px] bg-red-600" style={{ left: "50%", top: "0", bottom: "0" }}></div>
         </div>
 
         {/* main horizontal splits: Left Column (Tien & Quyen) and Right Column (Jeff & 6 reports) */}
-        <div className="flex w-full gap-4 items-start relative mt-0">
+        <div className="flex w-full justify-between items-start relative mt-0">
           
+          {/* The long vertical line routing around the outside left edge down to Level 3 */}
+          <div className="absolute w-[2px] bg-red-600" style={{ left: "-20px", top: "0", bottom: "-56px" }}></div>
+
           {/* Left Column Stack (Tien and Quyen) */}
-          <div className="w-[18%] flex flex-col items-center relative">
-            {/* Natural layout vertical connector line between Tien and Quyen */}
-            
-            {/* Tien Card */}
+          <div style={{ width: "18%" }} className="flex flex-col items-center relative">
+            <div className="w-[2px] bg-red-600" style={{ height: "20px" }}></div>
             <div className="w-full mt-0">
               {ie_fmu_mif && renderLeaderCard(ie_fmu_mif)}
             </div>
             
-            {/* Vertical connector line between cards */}
-            <div className="w-0.5 h-6 bg-red-600"></div>
-            
-            {/* Quyen Card */}
-            <div className="w-full">
-              {factoryMgmt && renderLeaderCard(factoryMgmt)}
+            <div className="w-full relative mt-6">
+              {/* Horizontal line entering from the left trunk into Quyen's left side */}
+              <div 
+                className="absolute bg-red-600" 
+                style={{ 
+                  left: "-20px", 
+                  width: "calc(50% - 65px)", 
+                  top: "40px",
+                  height: "2px" 
+                }}
+              ></div>
+              {factoryMgmt && renderLeaderCard(factoryMgmt, { showTopLine: false })}
             </div>
           </div>
 
           {/* Right Column Section (Jeff Searl and his 6 direct reports) */}
-          <div className="w-[82%] flex flex-col items-center">
+          <div style={{ width: "78%" }} className="flex flex-col items-center">
             
-            {/* Jeff Searl Card */}
-            <div className="flex flex-col items-center relative">
+            <div className="w-[2px] bg-red-600" style={{ height: "20px" }}></div>
+            <div className="flex flex-col items-center relative w-full">
               {globalOps && renderLeaderCard(globalOps)}
             </div>
 
             {/* Level 2 Connector Row */}
-            <div className="w-full relative h-6">
-              {/* Horizontal line from Col 1 center (8.3%) to Col 6 center (91.6%) */}
-              <div className="absolute left-[8.3%] right-[8.3%] bottom-0 h-0.5 bg-red-600"></div>
-              {/* Vertical connector coming down from Jeff (which is centered, so at 50%) */}
-              <div className="absolute left-1/2 -translate-x-1/2 -top-6 bottom-0 w-0.5 bg-red-600"></div>
+            <div className="grid grid-cols-6 gap-2 w-full h-8 relative z-10">
+              <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "50%", right: "-8px" }}></div></div>
+              {[2,3,4,5].map(i => (
+                 <div className="relative" key={i}><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "-8px" }}></div></div>
+              ))}
+              <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "50%" }}></div></div>
+              {/* Vertical connector coming down from Jeff */}
+              <div className="absolute left-1/2 -translate-x-1/2 w-[2px] bg-red-600" style={{ top: "0", bottom: "0" }}></div>
             </div>
 
             {/* Level 2: Jeff's 6 Direct Reports Grid */}
-            <div className="grid grid-cols-6 gap-2 w-full pt-4">
+            <div className="grid grid-cols-6 gap-2 w-full">
               {data.jeffReports.map((emp) => (
                 <div key={emp.emp_id} className="col-span-1 flex flex-col items-center relative w-full mb-4">
                   {renderLeaderCard(emp, { showTopLine: true, isDotted: false })}
@@ -386,24 +463,38 @@ export default function CoreTeamOrgChart() {
 
         </div>
 
-        {/* Level 3: Support Functions (Dotted Divider) */}
-        <div className="w-full relative py-2 mt-2">
-          {/* Main top horizontal dotted line */}
-          <div className="absolute inset-x-[4%] top-1/2 border-t border-dotted border-red-500"></div>
+        {/* Level 3: Support Functions Divider */}
+        <div className="grid grid-cols-7 gap-3 w-full max-w-[1200px] mx-auto h-8 relative z-10 mt-6">
+          {/* Col 1 horizontal line extended to the far left to catch the outside drop line */}
+          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "-20px", right: "-12px" }}></div></div>
+          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "-12px" }}></div></div>
+          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "-12px" }}></div></div>
+          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "-12px" }}></div></div>
+          
+          <div className="relative">
+             <div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "50%" }}></div>
+             <div className="absolute bottom-0 border-t-[2px] border-dotted border-red-500" style={{ left: "50%", right: "-12px" }}></div>
+          </div>
+          
+          <div className="relative"><div className="absolute bottom-0 border-t-[2px] border-dotted border-red-500" style={{ left: 0, right: "-12px" }}></div></div>
+          <div className="relative"><div className="absolute bottom-0 border-t-[2px] border-dotted border-red-500" style={{ left: 0, right: "50%" }}></div></div>
         </div>
 
-        {/* Support Grid (Dynamic Flex wrap for the active support functions in exact order) */}
-        <div className="flex flex-wrap justify-center gap-3 w-full max-w-5xl mx-auto items-start">
-          {data.supportFunctions.map((emp) => {
+        {/* Support Grid */}
+        <div className="grid grid-cols-7 gap-3 w-full max-w-[1200px] mx-auto items-start">
+          {data.supportFunctions.map((emp, index) => {
+            const isDirect = index < 5;
             return (
-              <div key={emp.emp_id} className="flex flex-col items-center relative min-w-[130px] max-w-[170px] flex-1">
-                {renderLeaderCard(emp, { showTopLine: true, isDotted: true })}
+              <div key={emp.emp_id} className="col-span-1 flex flex-col items-center relative w-full">
+                {renderLeaderCard(emp, { showTopLine: true, isDotted: !isDirect })}
               </div>
             );
           })}
         </div>
 
       </div>
+
+      {renderDetailsModal()}
     </div>
   );
 }

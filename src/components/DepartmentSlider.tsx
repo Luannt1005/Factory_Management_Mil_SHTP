@@ -132,12 +132,7 @@ export default function DepartmentSlider() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
                     
-                    {/* Badge */}
-                    {dept.subtitle && (
-                      <span className={`absolute top-4 ${isReversed ? 'left-4' : 'right-4'} bg-black/40 group-hover:bg-[#db011c] text-white text-[9px] font-bold uppercase px-3 py-1.5 rounded-full tracking-wider shadow-lg transition-colors duration-300 backdrop-blur-md border border-white/10`}>
-                        {dept.subtitle}
-                      </span>
-                    )}
+                    {/* Badge removed as per user request */}
                   </div>
 
                   {/* Text Block */}

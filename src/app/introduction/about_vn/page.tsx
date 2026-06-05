@@ -78,7 +78,7 @@ export default function AboutVietnam() {
         <div className="relative w-full h-[380px] rounded-3xl overflow-hidden flex items-center justify-center shadow-sm">
           <div className="absolute inset-0 z-0 bg-black">
             <img
-              src="https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=1600&auto=format&fit=crop"
+              src="/about_vn/header_banner.jpg"
               alt="Vietnam Landscape"
               className="w-full h-full object-cover opacity-50 transition-transform duration-[12s] hover:scale-105"
             />
@@ -129,7 +129,7 @@ export default function AboutVietnam() {
           <AnimatedSection direction="right" className="w-full">
             <div className="relative w-full h-[320px] lg:h-[400px] overflow-hidden rounded-3xl group shadow-sm">
               <img
-                src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=1200&auto=format&fit=crop"
+                src="/about_vn/vietnam_overview.jpg"
                 alt="Vietnam Overview"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
@@ -154,17 +154,17 @@ export default function AboutVietnam() {
           {[
             {
               title: "The North",
-              img: "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=800&auto=format&fit=crop",
+              img: "/about_vn/north_region.jpg",
               desc: "Home to the capital city, Hanoi, mountainous regions like Sa Pa and the spectacular limestone karsts of UNESCO-listed Halong Bay.",
             },
             {
               title: "The Central Region",
-              img: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?q=80&w=800&auto=format&fit=crop",
+              img: "/about_vn/central_region.jpg",
               desc: "Famous for its historical heritage, including the ancient capital of Hue and the charming lantern-lit streets of Hoi An.",
             },
             {
               title: "The South",
-              img: "https://images.unsplash.com/photo-1540914134928-c557702260a5?q=80&w=800&auto=format&fit=crop",
+              img: "/about_vn/south_region.jpg",
               desc: "Driven by the bustling economic hub of Ho Chi Minh City, the region is dominated by the fertile Mekong River Delta, known for its floating markets and dense fruit orchards.",
             },
           ].map((region, idx) => {
@@ -272,7 +272,7 @@ export default function AboutVietnam() {
               <AnimatedSection direction="left" className="w-full">
                 <div className="overflow-hidden rounded-3xl shadow-sm aspect-video">
                   <img
-                    src="https://images.unsplash.com/photo-1555921015-5532091f6026?q=80&w=800&auto=format&fit=crop"
+                    src="/about_vn/lifestyle.jpg"
                     alt="Traditional Dress"
                     className="w-full h-full object-cover"
                   />
@@ -299,30 +299,30 @@ export default function AboutVietnam() {
                 region: "The Northern Lifestyle & Cuisine",
                 tagline: "Refined flavors, rich in traditional taste",
                 dishes: [
-                  { name: "Phở", img: "https://images.unsplash.com/photo-1582878826629-29b7ad1cb438?q=80&w=300&auto=format&fit=crop" },
-                  { name: "Bún Chả", img: "https://images.unsplash.com/photo-1569562211093-4ed0d0758f12?q=80&w=300&auto=format&fit=crop" },
-                  { name: "Bánh Cuốn Thanh Trì", img: "https://images.unsplash.com/photo-1626804475297-41609ea0ebb4?q=80&w=300&auto=format&fit=crop" },
-                  { name: "Chả Cá Lã Vọng", img: "https://images.unsplash.com/photo-1625398407796-82650a8c135f?q=80&w=300&auto=format&fit=crop" }
+                  { name: "Phở", img: "/about_vn/north_pho.jpg" },
+                  { name: "Bún Chả", img: "/about_vn/north_buncha.jpg" },
+                  { name: "Bánh Cuốn Thanh Trì", img: "/about_vn/north_banhcuon.jpg" },
+                  { name: "Chả Cá Lã Vọng", img: "/about_vn/north_chaca.jpg" }
                 ],
               },
               {
                 region: "The Central Lifestyle & Cuisine",
                 tagline: "Rich, spicy, and diverse in flavor",
                 dishes: [
-                  { name: "Bún Bò Huế", img: "https://images.unsplash.com/photo-1582878826629-29b7ad1cb438?q=80&w=300&auto=format&fit=crop" },
-                  { name: "Mì Quảng", img: "https://images.unsplash.com/photo-1569562211093-4ed0d0758f12?q=80&w=300&auto=format&fit=crop" },
-                  { name: "Cao Lầu Hội An", img: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?q=80&w=300&auto=format&fit=crop" },
-                  { name: "Bánh Xèo Miền Trung", img: "https://images.unsplash.com/photo-1626804475297-41609ea0ebb4?q=80&w=300&auto=format&fit=crop" }
+                  { name: "Bún Bò Huế", img: "/about_vn/central_bunbo.jpg" },
+                  { name: "Mì Quảng", img: "/about_vn/central_miquang.jpg" },
+                  { name: "Cao Lầu Hội An", img: "/about_vn/central_caolau.jpg" },
+                  { name: "Bánh Xèo Miền Trung", img: "/about_vn/central_banhxeo.jpg" }
                 ],
               },
               {
                 region: "The Southern Lifestyle & Cuisine",
                 tagline: "Rustic, diverse, with a naturally sweet flavor",
                 dishes: [
-                  { name: "Cơm Tấm", img: "https://images.unsplash.com/photo-1540914134928-c557702260a5?q=80&w=300&auto=format&fit=crop" },
-                  { name: "Lẩu Mắm", img: "https://images.unsplash.com/photo-1601642289622-446700c0f822?q=80&w=300&auto=format&fit=crop" },
-                  { name: "Hủ Tiếu Nam Vang", img: "https://images.unsplash.com/photo-1582878826629-29b7ad1cb438?q=80&w=300&auto=format&fit=crop" },
-                  { name: "Bánh Xèo Miền Nam", img: "https://images.unsplash.com/photo-1626804475297-41609ea0ebb4?q=80&w=300&auto=format&fit=crop" }
+                  { name: "Cơm Tấm", img: "/about_vn/south_comtam.jpg" },
+                  { name: "Lẩu Mắm", img: "/about_vn/south_laumam.jpg" },
+                  { name: "Hủ Tiếu Nam Vang", img: "/about_vn/south_hutieu.jpg" },
+                  { name: "Bánh Xèo Miền Nam", img: "/about_vn/south_banhxeo.jpg" }
                 ],
               },
             ].map((section, idx) => {
@@ -386,17 +386,17 @@ export default function AboutVietnam() {
               {[
                 {
                   name: "Phở",
-                  img: "https://images.unsplash.com/photo-1582878826629-29b7ad1cb438?q=80&w=600&auto=format&fit=crop",
+                  img: "/about_vn/iconic_pho.jpg",
                   desc: "A savory noodle soup brewed for hours with spices, beef bone broth, and served hot with fresh herbs.",
                 },
                 {
                   name: "Bánh Mì",
-                  img: "https://images.unsplash.com/photo-1600454021970-351feb4a5554?q=80&w=600&auto=format&fit=crop",
+                  img: "/about_vn/iconic_banhmi.jpg",
                   desc: "A crispy baguette stuffed with pate, cold cuts, pickled daikon, cucumber, cilantro, and chili.",
                 },
                 {
                   name: "Gỏi Cuốn",
-                  img: "https://images.unsplash.com/photo-1626804475297-41609ea0ebb4?q=80&w=600&auto=format&fit=crop",
+                  img: "/about_vn/iconic_goicuon.jpg",
                   desc: "Fresh, healthy spring rolls wrapping shrimp, pork slices, herbs, and vermicelli in translucent rice paper.",
                 },
               ].map((food, idx) => (
@@ -430,17 +430,17 @@ export default function AboutVietnam() {
               {[
                 {
                   title: "National Flower (Lotus)",
-                  img: "https://images.unsplash.com/photo-1522045612268-b8d8ff7e30a0?q=80&w=800&auto=format&fit=crop",
+                  img: "/about_vn/symbol_lotus.jpg",
                   desc: "The Lotus (Hoa Sen) represents purity, serenity, and strength, symbolizing the spirit of the Vietnamese people rising above mud and hardships to bloom.",
                 },
                 {
                   title: "Emblems & Flag",
-                  img: "https://images.unsplash.com/photo-1555921015-5532091f6026?q=80&w=800&auto=format&fit=crop",
+                  img: "/about_vn/symbol_flag.jpg",
                   desc: "The National Flag features a bright yellow star on a crimson background. The red represents revolutionary struggle, while the five points of the golden star represent class unity.",
                 },
                 {
                   title: "Natural Elements",
-                  img: "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=800&auto=format&fit=crop",
+                  img: "/about_vn/symbol_nature.jpg",
                   desc: "Limestone peaks, coastlines, and major river deltas define the geography, reflecting the natural adaptability and resilience of the local community.",
                 },
               ].map((symbol, idx) => (
@@ -472,22 +472,22 @@ export default function AboutVietnam() {
               {[
                 {
                   name: "Long (Dragon)",
-                  img: "https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?q=80&w=400&auto=format&fit=crop",
+                  img: "/about_vn/creature_dragon.jpg",
                   meaning: "Symbol of imperial power, noble birth, and agricultural abundance. Vietnamese people proudly identify as descendants of the Dragon (Con Rồng Cháu Tiên).",
                 },
                 {
                   name: "Lân (Qilin / Lion)",
-                  img: "https://images.unsplash.com/photo-1608992813636-fdf9580a56f5?q=80&w=400&auto=format&fit=crop",
+                  img: "/about_vn/creature_qilin.jpg",
                   meaning: "Symbol of benevolence, peace, prosperity, and authority. Statues of Lân are commonly placed at gates of pagodas and houses to ward off negative energy.",
                 },
                 {
                   name: "Quy (Tortoise)",
-                  img: "https://images.unsplash.com/photo-1548783309-7837ae7c3d14?q=80&w=400&auto=format&fit=crop",
+                  img: "/about_vn/creature_tortoise.jpg",
                   meaning: "Symbol of longevity, health, and academic wisdom. Famously depicted carrying stone steles of doctoral laureates at Hanoi's Temple of Literature.",
                 },
                 {
                   name: "Phụng (Phoenix)",
-                  img: "https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?q=80&w=400&auto=format&fit=crop",
+                  img: "/about_vn/creature_phoenix.jpg",
                   meaning: "Symbol of nobility, grace, peace, and rebirth. Commonly paired alongside the dragon to represent harmony and royal elegance.",
                 },
               ].map((creature, idx) => (
