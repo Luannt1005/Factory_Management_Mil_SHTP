@@ -389,36 +389,56 @@ export default function NewRequestPage() {
                                         {Object.entries(groupedRooms).map(([cat, items]: any) => (
                                             <div key={cat} style={{ marginBottom: '1.5rem' }}>
                                                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.8rem' }}>{cat}</div>
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
-                                                    {items.map((r: any) => (
-                                                        <div key={r.id} onClick={() => toggleRoom(r.id)} style={{
-                                                            borderRadius: '12px',
-                                                            overflow: 'hidden',
-                                                            cursor: 'pointer',
-                                                            background: 'white',
-                                                            border: formData.roomIds.includes(r.id) ? '2px solid #db011c' : '1px solid #e2e8f0',
-                                                            boxShadow: formData.roomIds.includes(r.id) ? '0 10px 20px rgba(219, 1, 28, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.05)',
-                                                            transition: 'all 0.2s ease',
-                                                            transform: formData.roomIds.includes(r.id) ? 'translateY(-2px)' : 'none',
-                                                            display: 'flex',
-                                                            flexDirection: 'column'
-                                                        }}>
-                                                            <div style={{ height: '60px', position: 'relative', overflow: 'hidden' }}>
-                                                                <img
-                                                                    src={r.image_url || '/visitor_header.png'}
-                                                                    style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: formData.roomIds.includes(r.id) ? 1 : 0.8 }}
-                                                                    alt={r.name}
-                                                                />
-                                                                {formData.roomIds.includes(r.id) && (
-                                                                    <div style={{ position: 'absolute', top: '5px', right: '5px', background: '#db011c', color: 'white', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold' }}>✓</div>
-                                                                )}
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.8rem' }}>
+                                                    {items.map((r: any) => {
+                                                        const isSelected = formData.roomIds.includes(r.id);
+                                                        return (
+                                                            <div 
+                                                                key={r.id} 
+                                                                onClick={() => toggleRoom(r.id)} 
+                                                                style={{
+                                                                    borderRadius: '12px',
+                                                                    cursor: 'pointer',
+                                                                    background: 'white',
+                                                                    border: isSelected ? '2px solid #db011c' : '1px solid #e2e8f0',
+                                                                    boxShadow: isSelected ? '0 4px 12px rgba(219, 1, 28, 0.1)' : '0 2px 6px rgba(0, 0, 0, 0.02)',
+                                                                    transition: 'all 0.2s ease',
+                                                                    transform: isSelected ? 'translateY(-1px)' : 'none',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    padding: '1rem',
+                                                                    gap: '0.8rem',
+                                                                    position: 'relative'
+                                                                }}
+                                                            >
+                                                                <div style={{
+                                                                    width: '20px',
+                                                                    height: '20px',
+                                                                    borderRadius: '6px',
+                                                                    border: isSelected ? '2px solid #db011c' : '2px solid #cbd5e1',
+                                                                    background: isSelected ? '#db011c' : 'transparent',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    color: 'white',
+                                                                    fontSize: '0.75rem',
+                                                                    fontWeight: 'bold',
+                                                                    transition: 'all 0.2s ease',
+                                                                    flexShrink: 0
+                                                                }}>
+                                                                    {isSelected && '✓'}
+                                                                </div>
+                                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', lineHeight: '1.2', marginBottom: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                        {r.name}
+                                                                    </div>
+                                                                    <div style={{ fontSize: '0.65rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                        Approver: {r.approver_email?.split('@')[0] || 'N/A'}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            <div style={{ padding: '0.8rem', flex: 1 }}>
-                                                                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', lineHeight: '1.2', marginBottom: '0.2rem' }}>{r.name}</div>
-                                                                <div style={{ fontSize: '0.65rem', color: '#64748b' }}>Approver: {r.approver_email?.split('@')[0] || 'N/A'}</div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         ))}
