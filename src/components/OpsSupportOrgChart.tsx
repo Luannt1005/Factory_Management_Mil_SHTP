@@ -390,10 +390,9 @@ export default function OpsSupportOrgChart() {
           )}
         </div>
 
-        {/* Level 1 Horizontal Connecting Line (from Root to Trunk) */}
+        {/* Vertical Drop from Root */}
         {directReports && directReports.length > 0 && (
           <div className="w-full relative h-8">
-            <div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "5%", right: "50%" }}></div>
             <div className="absolute w-[2px] bg-red-600" style={{ left: "50%", top: "0", bottom: "0" }}></div>
           </div>
         )}
@@ -413,7 +412,7 @@ export default function OpsSupportOrgChart() {
                     className="absolute bg-red-600 z-0" 
                     style={{ 
                       left: "5%", 
-                      top: "0", 
+                      top: rowIndex === 0 ? "24px" : "0", 
                       bottom: isLastRow ? "calc(100% - 24px)" : "-32px",
                       width: "2px" 
                     }}
