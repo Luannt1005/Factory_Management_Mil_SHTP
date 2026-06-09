@@ -390,30 +390,53 @@ export default function OpsSupportOrgChart() {
           )}
         </div>
 
-        {/* Level 1 Horizontal Connecting Line */}
+        {/* Level 1 Horizontal Connecting Line (from Root to Trunk) */}
         {directReports && directReports.length > 0 && (
-          <div className="w-full relative h-6">
-            <div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "10%", right: "10%" }}></div>
+          <div className="w-full relative h-8">
+            <div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "5%", right: "50%" }}></div>
             <div className="absolute w-[2px] bg-red-600" style={{ left: "50%", top: "0", bottom: "0" }}></div>
           </div>
         )}
 
-        {/* Level 1 Grid Layout for all direct reports */}
+        {/* Rows of direct reports with side trunk line */}
         {directReports && directReports.length > 0 && (
-          <div className="w-full relative mt-0 px-[10%]">
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-y-6 gap-x-2 w-full mx-auto relative z-10 pt-4">
-              {/* Connector lines coming down to each card */}
-              <div className="absolute top-0 left-0 right-0 h-4 flex justify-between px-[5%]">
-                 {/* Instead of complex manual lines, we rely on the horizontal line above and draw vertical drop lines per item */}
-              </div>
-              {directReports.map((emp) => (
-                <div key={emp.emp_id} className="col-span-1 flex flex-col items-center relative w-full mb-2">
-                  {/* Drop line from horizontal bar */}
-                  <div className="absolute -top-4 w-[2px] bg-red-600 h-4"></div>
-                  {renderLeaderCard(emp, { showTopLine: true, isDotted: false })}
+          <div className="w-full relative mt-0 flex flex-col items-center">
+            {Array.from({ length: Math.ceil(directReports.length / 5) }).map((_, rowIndex) => {
+              const rowItems = directReports.slice(rowIndex * 5, (rowIndex + 1) * 5);
+              const isLastRow = rowIndex === Math.ceil(directReports.length / 5) - 1;
+              const lastItemCenter = 18 + 16 * (rowItems.length - 1);
+
+              return (
+                <div key={rowIndex} className="w-full relative flex flex-col items-center mb-8 z-0">
+                  {/* Trunk line segment for this row */}
+                  <div 
+                    className="absolute bg-red-600 z-0" 
+                    style={{ 
+                      left: "5%", 
+                      top: "0", 
+                      bottom: isLastRow ? "calc(100% - 24px)" : "-32px",
+                      width: "2px" 
+                    }}
+                  ></div>
+
+                  {/* Horizontal line from trunk to last item */}
+                  <div className="w-full relative h-6 z-0">
+                    <div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "5%", width: `calc(${lastItemCenter}% - 5%)` }}></div>
+                  </div>
+
+                  {/* Grid for cards in this row */}
+                  <div className="grid grid-cols-5 gap-y-0 gap-x-2 w-full mx-auto relative z-10 px-[10%]">
+                    {rowItems.map((emp) => (
+                      <div key={emp.emp_id} className="col-span-1 flex flex-col items-center relative w-full">
+                        {/* Drop line from horizontal bar */}
+                        <div className="w-[2px] bg-red-600 h-6"></div>
+                        {renderLeaderCard(emp, { showTopLine: false, isDotted: false })}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         )}
 
