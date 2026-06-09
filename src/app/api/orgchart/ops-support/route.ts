@@ -49,8 +49,13 @@ export async function GET(req: Request) {
     const leaderIds = new Set<string>();
     if (root) leaderIds.add(trimLeadingZeros(root.emp_id) || '');
 
-    // Get direct reports of 818
-    const directReports = employees.filter(emp => getManagerId(emp) === rootId && (emp.status === 'Active' || emp.status === null));
+    // Get direct reports of 818 (excluding LDP - Trainee)
+    const directReports = employees.filter(emp => {
+      if (getManagerId(emp) !== rootId) return false;
+      if (emp.status !== 'Active' && emp.status !== null) return false;
+      if (emp.job_title && emp.job_title.includes('LDP - Trainee')) return false;
+      return true;
+    });
     directReports.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
 
     directReports.forEach(emp => {
@@ -94,6 +99,7 @@ export async function GET(req: Request) {
       if (mgrId) {
         if (!childrenMap[mgrId]) childrenMap[mgrId] = [];
         if (emp.status === 'Active' || emp.status === null) {
+           if (emp.job_title && emp.job_title.includes('LDP - Trainee')) return; // Exclude from tree
            if (trimLeadingZeros(emp.emp_id) !== mgrId) {
              childrenMap[mgrId].push(emp);
            }
