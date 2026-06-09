@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import CoreTeamOrgChart from "./CoreTeamOrgChart";
+import OpsSupportOrgChart from "./OpsSupportOrgChart";
 
 interface SlideData {
   id: number;
@@ -299,6 +300,10 @@ export default function FullPagePresenter() {
                   slide.id === 3 ? (
                     <div className="relative w-full h-full bg-slate-50 flex items-center justify-center overflow-hidden">
                       <CoreTeamOrgChart />
+                    </div>
+                  ) : slide.id === 4 ? (
+                    <div className="relative w-full h-full bg-slate-50 flex items-center justify-center overflow-hidden">
+                      <OpsSupportOrgChart />
                     </div>
                   ) : (
                     <div className="relative w-full h-full max-h-[96%] bg-white border border-gray-100 rounded-3xl p-6 shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] transition-shadow duration-500 flex items-center justify-center group overflow-hidden">
