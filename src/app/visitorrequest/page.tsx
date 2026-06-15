@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import Dashboard from '../visitordashboard/page';
 
 export default function NewRequestPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<'request' | 'dashboard'>('request');
     const [rooms, setRooms] = useState<any[]>([]);
     const [step, setStep] = useState(1);
     const [showAllVisitorsModal, setShowAllVisitorsModal] = useState(false);
@@ -60,8 +62,19 @@ export default function NewRequestPage() {
 
             if (res.ok) {
                 alert('Registration successful!');
-                router.push('/visitordashboard');
-                router.refresh();
+                setStep(1);
+                setFormData({
+                    visitors: [{ name: '', title: '', company: '' }],
+                    startDate: '',
+                    endDate: '',
+                    purposeOfVisit: 'Business / Meeting',
+                    visitorCategory: 'Vendor',
+                    visitingSite: 'SHTP',
+                    purposeDetail: '',
+                    details: { factoryTour: 'No', mealRegistration: 'No', costCenter: '' },
+                    roomIds: []
+                });
+                setActiveTab('dashboard');
             } else {
                 const error = await res.json();
                 alert(`Lỗi: ${error.error}`);
@@ -191,15 +204,40 @@ export default function NewRequestPage() {
                 }}>
                     <img src="/visitor_header.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Milwaukee Welcome" />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '2.5rem' }}>
-                        <h1 style={{ color: 'white', fontSize: '2.8rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>VISITOR REGISTRATION</h1>
-                        <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem' }}>Milwaukee Tool SHTP Facility Access</p>
+                        <h1 style={{ color: 'white', fontSize: '2.8rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+                            {activeTab === 'request' ? 'VISITOR REGISTRATION' : 'MY REQUESTS'}
+                        </h1>
+                        <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem' }}>
+                            {activeTab === 'request' ? 'Milwaukee Tool SHTP Facility Access' : 'Track and manage your visitor requests'}
+                        </p>
                     </div>
                 </div>
 
                 <div className="bg-white" style={{ padding: '4rem 3rem 3rem', borderRadius: '24px', position: 'relative', zIndex: 0, border: '1px solid #e2e8f0' }}>
-                    <StepIndicator />
+                    
+                    {/* Tabs Navigation */}
+                    <div className="flex justify-center mb-10">
+                        <div className="bg-gray-100 p-1.5 rounded-xl inline-flex space-x-1 shadow-inner">
+                            <button 
+                                onClick={() => setActiveTab('request')}
+                                className={`px-8 py-3 rounded-lg text-sm font-bold transition-all duration-200 ${activeTab === 'request' ? 'bg-white text-red-600 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+                            >
+                                Registration
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('dashboard')}
+                                className={`px-8 py-3 rounded-lg text-sm font-bold transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-white text-red-600 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+                            >
+                                My Dashboard
+                            </button>
+                        </div>
+                    </div>
 
-                    <div style={{ animation: 'slideFade 0.5s ease-out' }}>
+                    {activeTab === 'request' ? (
+                        <div className="animate-in fade-in duration-500">
+                            <StepIndicator />
+
+                            <div style={{ animation: 'slideFade 0.5s ease-out' }}>
                         {step === 1 && (
                             <section>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
@@ -501,7 +539,13 @@ export default function NewRequestPage() {
                                 </div>
                             </section>
                         )}
-                    </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="animate-in fade-in duration-500">
+                            <Dashboard />
+                        </div>
+                    )}
                 </div>
             </div>
 

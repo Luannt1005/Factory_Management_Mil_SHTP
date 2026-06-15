@@ -9,11 +9,11 @@ export async function GET(request: Request) {
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const visitorPool = await getVisitorDbConnection();
-        const { rows: rooms } = await visitorPool.query(
-            'SELECT r.id, r.category, r.name, r."approverEmail" as approver_email, r."isActive" as is_active, c.site_location FROM "RoomArea" r LEFT JOIN "RoomCategory" c ON r.category = c.name WHERE r."isActive" = true ORDER BY r.category ASC'
+        const { rows: categories } = await visitorPool.query(
+            'SELECT id, name, site_location, bu, "createdAt", "updatedAt" FROM "RoomCategory" ORDER BY name ASC'
         );
 
-        return NextResponse.json({ rooms }, { status: 200 });
+        return NextResponse.json({ categories }, { status: 200 });
     } catch (error) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -25,15 +25,15 @@ export async function POST(request: Request) {
         if (!session || ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const body = await request.json();
-        const { category, name, approver_email } = body;
+        const { name, site_location, bu } = body;
         
         const visitorPool = await getVisitorDbConnection();
         const { rows } = await visitorPool.query(
-            'INSERT INTO "RoomArea" (id, category, name, "approverEmail", "isActive", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, true, NOW()) RETURNING id, category, name, "approverEmail" as approver_email, "isActive" as is_active',
-            [category, name, approver_email]
+            'INSERT INTO "RoomCategory" (id, name, site_location, bu, "createdAt", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, NOW(), NOW()) RETURNING *',
+            [name, site_location, bu]
         );
 
-        return NextResponse.json({ message: 'Room created successfully', data: rows[0] }, { status: 201 });
+        return NextResponse.json({ message: 'Category created successfully', data: rows[0] }, { status: 201 });
     } catch (err: any) {
         return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
     }
@@ -45,15 +45,15 @@ export async function PATCH(request: Request) {
         if (!session || ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const body = await request.json();
-        const { id, category, name, approver_email, is_active } = body;
+        const { id, name, site_location, bu } = body;
         
         const visitorPool = await getVisitorDbConnection();
         const { rows } = await visitorPool.query(
-            'UPDATE "RoomArea" SET category=COALESCE($1, category), name=COALESCE($2, name), "approverEmail"=$3, "isActive"=COALESCE($4, "isActive"), "updatedAt"=NOW() WHERE id=$5 RETURNING id, category, name, "approverEmail" as approver_email, "isActive" as is_active',
-            [category, name, approver_email, is_active, id]
+            'UPDATE "RoomCategory" SET name=COALESCE($1, name), site_location=COALESCE($2, site_location), bu=COALESCE($3, bu), "updatedAt"=NOW() WHERE id=$4 RETURNING *',
+            [name, site_location, bu, id]
         );
 
-        return NextResponse.json({ message: 'Room updated successfully', data: rows[0] }, { status: 200 });
+        return NextResponse.json({ message: 'Category updated successfully', data: rows[0] }, { status: 200 });
     } catch (err: any) {
         return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
     }
@@ -70,9 +70,9 @@ export async function DELETE(request: Request) {
         if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
         const visitorPool = await getVisitorDbConnection();
-        await visitorPool.query('DELETE FROM "RoomArea" WHERE id = $1', [id]);
+        await visitorPool.query('DELETE FROM "RoomCategory" WHERE id = $1', [id]);
 
-        return NextResponse.json({ message: 'Room deleted successfully' }, { status: 200 });
+        return NextResponse.json({ message: 'Category deleted successfully' }, { status: 200 });
     } catch (err: any) {
         return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
     }

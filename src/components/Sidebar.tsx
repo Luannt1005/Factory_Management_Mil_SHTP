@@ -77,7 +77,6 @@ export default function Sidebar() {
             title: 'WORKSPACE',
             items: [
                 { name: 'Registration', path: '/visitorrequest', icon: TicketIcon },
-                { name: 'My Request', path: '/visitordashboard', icon: ClipboardDocumentListIcon },
                 {
                     name: 'Visitor Control',
                     path: '#visitor_admin',
@@ -171,7 +170,7 @@ export default function Sidebar() {
 
     const checkRole = (itemPath: string, requiredRole?: string) => {
         if (userRole === 'admin') return true;
-        
+
         const orgchartRole = user?.orgchart_role;
         const visitorRole = user?.visitor_role;
 
@@ -299,11 +298,11 @@ export default function Sidebar() {
                                                             <item.icon className="w-5 h-5 shrink-0 transition-transform duration-300 group-hover:scale-110" />
                                                             <span className="ml-3 text-[14px] tracking-wide">{item.name}</span>
                                                         </div>
-                                                        <ChevronDownIcon 
-                                                            className={`w-4 h-4 text-white/40 group-hover:text-white transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                                                        <ChevronDownIcon
+                                                            className={`w-4 h-4 text-white/40 group-hover:text-white transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                                                         />
                                                     </button>
-                                                    
+
                                                     {isExpanded && (
                                                         <div className="ml-6 pl-4 border-l border-white/10 space-y-1 mt-1">
                                                             {item.children.map((child) => {

@@ -92,19 +92,19 @@ export default function Header() {
                     {/* Main Navigation (Simplified - No Icons) */}
                     <nav className="hidden md:flex items-center gap-1 relative">
                         {[
-                            { 
-                                name: 'Introduction', 
-                                path: '/introduction/about_shtp', 
+                            {
+                                name: 'Introduction',
+                                path: '/introduction/about_shtp',
                                 matches: ['/introduction']
                             },
-                            { 
-                                name: 'Visitor Management', 
-                                path: '/visitorrequest', 
+                            {
+                                name: 'Visitor Management',
+                                path: '/visitorrequest',
                                 matches: ['/visitorrequest', '/visitordashboard', '/visitoradmin', '/visitoradmin/checkinout']
                             },
-                            { 
-                                name: 'Orgchart', 
-                                path: '/orgchart', 
+                            {
+                                name: 'Orgchart',
+                                path: '/orgchart',
                                 matches: ['/orgchart', '/dashboard', '/customize', '/sheetmanager', '/headcount_open', '/import_hr_data', '/admin', '/viewdata_org']
                             },
                         ].map((item) => {
@@ -115,8 +115,8 @@ export default function Header() {
                                     href={item.path}
                                     className={`
                                         group relative flex flex-col items-center px-6 py-2 transition-all duration-300
-                                        ${isActive 
-                                            ? 'text-[#db011c]' 
+                                        ${isActive
+                                            ? 'text-[#db011c]'
                                             : 'text-muted hover:text-title'}
                                     `}
                                 >
@@ -124,7 +124,7 @@ export default function Header() {
                                         {item.name}
                                     </span>
                                     <div className={`h-[3px] mt-1.5 bg-[#db011c] rounded-full transition-all duration-500 ease-out ${isActive ? 'w-full opacity-100' : 'w-0 opacity-0 group-hover:w-1/2 group-hover:opacity-100'}`} />
-                                    
+
                                     {/* Subtle active glow */}
                                     {isActive && (
                                         <div className="absolute inset-0 bg-[#db011c]/[0.02] dark:bg-white/[0.02] rounded-lg -z-10" />
@@ -186,9 +186,9 @@ export default function Header() {
 
                             <span className="h-10 w-10 rounded-full overflow-hidden bg-[var(--color-bg-page)] border border-[var(--color-border)]">
                                 {user?.image ? (
-                                    <img 
-                                        src={user.image} 
-                                        alt={user.full_name} 
+                                    <img
+                                        src={user.image}
+                                        alt={user.full_name}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
