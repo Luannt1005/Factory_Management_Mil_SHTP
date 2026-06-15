@@ -188,53 +188,51 @@ export default function NewRequestPage() {
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--background)', padding: '2rem 1rem' }}>
-            <div className="container mx-auto" style={{ maxWidth: '1000px' }}>
+            <div className="container mx-auto" style={{ maxWidth: activeTab === 'request' ? '1000px' : '1280px', transition: 'max-width 0.3s ease' }}>
 
-
-                {/* Header Image Section */}
-                <div style={{
-                    width: '100%',
-                    height: '280px',
-                    borderRadius: '24px 24px 0 0',
-                    overflow: 'hidden',
-                    position: 'relative',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                    marginBottom: '-40px',
-                    zIndex: 1
-                }}>
-                    <img src="/visitor_header.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Milwaukee Welcome" />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '2.5rem' }}>
-                        <h1 style={{ color: 'white', fontSize: '2.8rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
-                            {activeTab === 'request' ? 'VISITOR REGISTRATION' : 'MY REQUESTS'}
-                        </h1>
-                        <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem' }}>
-                            {activeTab === 'request' ? 'Milwaukee Tool SHTP Facility Access' : 'Track and manage your visitor requests'}
-                        </p>
+                {/* Tabs Navigation At Top */}
+                <div className="flex justify-center mb-8">
+                    <div className="bg-white p-1 rounded-full inline-flex space-x-1 shadow-sm border border-gray-200">
+                        <button 
+                            onClick={() => setActiveTab('request')}
+                            className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-200 ${activeTab === 'request' ? 'bg-[#db011c] text-white shadow-md' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                        >
+                            Registration
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('dashboard')}
+                            className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-[#db011c] text-white shadow-md' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                        >
+                            My Dashboard
+                        </button>
                     </div>
                 </div>
 
-                <div className="bg-white" style={{ padding: '4rem 3rem 3rem', borderRadius: '24px', position: 'relative', zIndex: 0, border: '1px solid #e2e8f0' }}>
-                    
-                    {/* Tabs Navigation */}
-                    <div className="flex justify-center mb-10">
-                        <div className="bg-gray-100 p-1.5 rounded-xl inline-flex space-x-1 shadow-inner">
-                            <button 
-                                onClick={() => setActiveTab('request')}
-                                className={`px-8 py-3 rounded-lg text-sm font-bold transition-all duration-200 ${activeTab === 'request' ? 'bg-white text-red-600 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
-                            >
-                                Registration
-                            </button>
-                            <button 
-                                onClick={() => setActiveTab('dashboard')}
-                                className={`px-8 py-3 rounded-lg text-sm font-bold transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-white text-red-600 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
-                            >
-                                My Dashboard
-                            </button>
+                {activeTab === 'request' ? (
+                    <div className="animate-in fade-in duration-500">
+                        {/* Header Image Section */}
+                        <div style={{
+                            width: '100%',
+                            height: '280px',
+                            borderRadius: '24px 24px 0 0',
+                            overflow: 'hidden',
+                            position: 'relative',
+                            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+                            marginBottom: '-40px',
+                            zIndex: 1
+                        }}>
+                            <img src="/visitor_header.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Milwaukee Welcome" />
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '2.5rem' }}>
+                                <h1 style={{ color: 'white', fontSize: '2.8rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+                                    VISITOR REGISTRATION
+                                </h1>
+                                <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem' }}>
+                                    Milwaukee Tool SHTP Facility Access
+                                </p>
+                            </div>
                         </div>
-                    </div>
 
-                    {activeTab === 'request' ? (
-                        <div className="animate-in fade-in duration-500">
+                        <div className="bg-white" style={{ padding: '4rem 3rem 3rem', borderRadius: '24px', position: 'relative', zIndex: 0, border: '1px solid #e2e8f0' }}>
                             <StepIndicator />
 
                             <div style={{ animation: 'slideFade 0.5s ease-out' }}>
@@ -541,12 +539,12 @@ export default function NewRequestPage() {
                         )}
                             </div>
                         </div>
-                    ) : (
-                        <div className="animate-in fade-in duration-500">
-                            <Dashboard />
-                        </div>
-                    )}
-                </div>
+                    </div>
+                ) : (
+                    <div className="animate-in fade-in duration-500 mt-4">
+                        <Dashboard />
+                    </div>
+                )}
             </div>
 
             <style jsx>{`
