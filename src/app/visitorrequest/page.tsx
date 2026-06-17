@@ -19,7 +19,7 @@ export default function NewRequestPage() {
         startDate: '',
         endDate: '',
         purposeOfVisit: 'Business / Meeting',
-        visitorCategory: 'Vendor',
+        visitorCategory: '',
         visitingSite: 'SHTP',
         purposeDetail: '',
         details: {
@@ -51,6 +51,23 @@ export default function NewRequestPage() {
         }
     }, [formData.visitorCategory]);
 
+    useEffect(() => {
+        if (rooms.length > 0 && formData.roomIds.length > 0) {
+            setFormData(prev => {
+                const validRoomIds = prev.roomIds.filter(id => {
+                    const room = rooms.find(r => r.id === id);
+                    if (!room) return false;
+                    if (prev.visitingSite === 'Both') return true;
+                    return room.site_location === prev.visitingSite;
+                });
+                if (validRoomIds.length !== prev.roomIds.length) {
+                    return { ...prev, roomIds: validRoomIds };
+                }
+                return prev;
+            });
+        }
+    }, [formData.visitingSite, rooms]);
+
     const handleSubmit = async () => {
         setLoading(true);
         try {
@@ -68,7 +85,7 @@ export default function NewRequestPage() {
                     startDate: '',
                     endDate: '',
                     purposeOfVisit: 'Business / Meeting',
-                    visitorCategory: 'Vendor',
+                    visitorCategory: '',
                     visitingSite: 'SHTP',
                     purposeDetail: '',
                     details: { factoryTour: 'No', mealRegistration: 'No', costCenter: '' },
@@ -86,7 +103,13 @@ export default function NewRequestPage() {
         }
     };
 
-    const nextStep = () => setStep(s => s + 1);
+    const nextStep = () => {
+        if (step === 1 && formData.visitorCategory === 'Vendor/Contractor') {
+            alert('Please select whether you are a Vendor or Contractor.');
+            return;
+        }
+        setStep(s => s + 1);
+    };
     const prevStep = () => setStep(s => s - 1);
 
     const updateDetails = (key: string, value: any) => {
@@ -102,7 +125,12 @@ export default function NewRequestPage() {
         }));
     };
 
-    const groupedRooms = rooms.reduce((acc: any, room: any) => {
+    const filteredRooms = rooms.filter((room: any) => {
+        if (formData.visitingSite === 'Both') return true;
+        return room.site_location === formData.visitingSite;
+    });
+
+    const groupedRooms = filteredRooms.reduce((acc: any, room: any) => {
         if (!acc[room.category]) acc[room.category] = [];
         acc[room.category].push(room);
         return acc;
@@ -159,34 +187,40 @@ export default function NewRequestPage() {
         });
     };
 
-    const StepIndicator = () => (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '3rem', gap: '1rem' }}>
-            {[1, 2, 3].map((i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
-                    <div style={{
-                        width: '45px',
-                        height: '45px',
-                        borderRadius: '50%',
-                        background: step >= i ? '#db011c' : '#e2e8f0',
-                        color: step >= i ? 'white' : '#64748b',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        fontSize: '1.1rem',
-                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: step === i ? '0 0 0 5px rgba(219, 1, 28, 0.2)' : 'none',
-                        border: '2px solid white'
-                    }}>
-                        {i}
+    const totalSteps = (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') ? 2 : 3;
+
+    const StepIndicator = () => {
+        const stepsArray = Array.from({ length: totalSteps }, (_, i) => i + 1);
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '3rem', gap: '1rem' }}>
+                {stepsArray.map((i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '50%',
+                            background: step >= i ? '#db011c' : '#e2e8f0',
+                            color: step >= i ? 'white' : '#64748b',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: '1.1rem',
+                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                            boxShadow: step === i ? '0 0 0 5px rgba(219, 1, 28, 0.2)' : 'none',
+                            border: '2px solid white'
+                        }}>
+                            {i}
+                        </div>
+                        {i < totalSteps && <div style={{ width: '60px', height: '3px', background: step > i ? '#db011c' : '#e2e8f0', margin: '0 8px', borderRadius: '3px', transition: 'background 0.4s' }} />}
                     </div>
-                    {i < 3 && <div style={{ width: '60px', height: '3px', background: step > i ? '#db011c' : '#e2e8f0', margin: '0 8px', borderRadius: '3px', transition: 'background 0.4s' }} />}
-                </div>
-            ))}
-        </div>
-    );
+                ))}
+            </div>
+        );
+    };
 
     return (
+<<<<<<< Updated upstream
         <div style={{ minHeight: '100vh', background: 'var(--background)', padding: '2rem 1rem' }}>
             <div className="container mx-auto" style={{ maxWidth: activeTab === 'request' ? '1000px' : '1280px', transition: 'max-width 0.3s ease' }}>
 
@@ -206,8 +240,30 @@ export default function NewRequestPage() {
                             My Dashboard
                         </button>
                     </div>
+=======
+        <div style={{ minHeight: '100vh', background: 'var(--background)', padding: '2rem 1.5rem' }}>
+            {/* Tabs Navigation - Far left corner */}
+            <div className="flex justify-start mb-6">
+                <div className="bg-gray-100 p-1.5 rounded-xl inline-flex space-x-1 shadow-inner">
+                    <button 
+                        onClick={() => setActiveTab('request')}
+                        className={`px-8 py-3 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer ${activeTab === 'request' ? 'bg-white text-red-600 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+                        style={{ color: activeTab === 'request' ? '#db011c' : '#64748b' }}
+                    >
+                        Registration
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('dashboard')}
+                        className={`px-8 py-3 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer ${activeTab === 'dashboard' ? 'bg-white text-red-600 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+                        style={{ color: activeTab === 'dashboard' ? '#db011c' : '#64748b' }}
+                    >
+                        My Dashboard
+                    </button>
+>>>>>>> Stashed changes
                 </div>
+            </div>
 
+<<<<<<< Updated upstream
                 {activeTab === 'request' ? (
                     <div className="animate-in fade-in duration-500">
                         {/* Header Image Section */}
@@ -241,307 +297,474 @@ export default function NewRequestPage() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
                                     <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
                                     <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Basic Information</h2>
+=======
+            <div className="container mx-auto" style={{ maxWidth: activeTab === 'request' ? '1000px' : '1200px', margin: '0 auto' }}>
+
+                {activeTab === 'request' ? (
+                    <div className="w-full">
+                        {!formData.visitorCategory ? (
+                            <div className="animate-in fade-in duration-500" style={{ maxWidth: '900px', margin: '2rem auto 4rem' }}>
+                                <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                                    <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '1rem', letterSpacing: '-0.03em' }}>Welcome to Milwaukee Tool SHTP</h1>
+                                    <p style={{ fontSize: '1.1rem', color: '#64748b' }}>Please select your visitor category to begin registration.</p>
+>>>>>>> Stashed changes
                                 </div>
-                                <div className="flex flex-col gap-6">
-                                    <div className="flex flex-col gap-2" style={{ maxWidth: '400px' }}>
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>Visitor Category *</label>
-                                        <select className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" value={formData.visitorCategory} onChange={e => setFormData({ ...formData, visitorCategory: e.target.value })}>
-                                            <option>Vendor</option>
-                                            <option>MIL/TTI Expat / SHTP Business trip</option>
-                                            <option>Contractor</option>
-                                            <option>Interviewee</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="flex flex-col gap-4">
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>Visiting Site *</label>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                                            <div
-                                                onClick={() => toggleSite('SHTP')}
-                                                style={{
-                                                    cursor: 'pointer',
-                                                    borderRadius: '24px',
-                                                    overflow: 'hidden',
-                                                    border: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '5px solid #db011c' : '2px solid #e2e8f0',
-                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                    position: 'relative',
-                                                    transform: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'scale(1.02)' : 'scale(1)',
-                                                    boxShadow: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '0 20px 40px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
-                                                }}
-                                            >
-                                                <img src="/shtp.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="SHTP Site" />
-                                                <div style={{
-                                                    padding: '1.2rem',
-                                                    textAlign: 'center',
-                                                    fontWeight: 900,
-                                                    fontSize: '1.4rem',
-                                                    background: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '#db011c' : 'white',
-                                                    color: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
-                                                    letterSpacing: '0.05em'
-                                                }}>
-                                                    SHTP SITE
-                                                </div>
-                                                {(formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') && (
-                                                    <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
-                                                )}
-                                            </div>
-
-                                            <div
-                                                onClick={() => toggleSite('DDK')}
-                                                style={{
-                                                    cursor: 'pointer',
-                                                    borderRadius: '24px',
-                                                    overflow: 'hidden',
-                                                    border: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '5px solid #db011c' : '2px solid #e2e8f0',
-                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                    position: 'relative',
-                                                    transform: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'scale(1.02)' : 'scale(1)',
-                                                    boxShadow: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '0 20px 40px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
-                                                }}
-                                            >
-                                                <img src="/ddk.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="DDK Site" />
-                                                <div style={{
-                                                    padding: '1.2rem',
-                                                    textAlign: 'center',
-                                                    fontWeight: 900,
-                                                    fontSize: '1.4rem',
-                                                    background: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '#db011c' : 'white',
-                                                    color: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
-                                                    letterSpacing: '0.05em'
-                                                }}>
-                                                    DDK SITE
-                                                </div>
-                                                {(formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') && (
-                                                    <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
-                                                )}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', maxWidth: '850px', margin: '0 auto' }}>
+                                    {[
+                                        { id: 'Vendor/Contractor', label: 'Vendor / Contractor', icon: '🏢/👷', desc: 'Suppliers, vendors, or contractors visiting or working on-site' },
+                                        { id: 'MIL/TTI Expat / SHTP Business trip', label: 'MIL/TTI Expat / Business trip', icon: '✈️', desc: 'Internal employees on business trip' },
+                                        { id: 'Interviewee', icon: '🤝', desc: 'Candidates visiting for job interviews' }
+                                    ].map((cat) => (
+                                        <div
+                                            key={cat.id}
+                                            onClick={() => {
+                                                setFormData({ ...formData, visitorCategory: cat.id });
+                                                setStep(1);
+                                            }}
+                                            style={{
+                                                padding: '2.5rem 1.5rem',
+                                                borderRadius: '24px',
+                                                border: '2px solid #e2e8f0',
+                                                background: 'white',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                gap: '1rem',
+                                                textAlign: 'center',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.borderColor = '#db011c';
+                                                e.currentTarget.style.transform = 'translateY(-5px)';
+                                                e.currentTarget.style.boxShadow = '0 12px 24px rgba(219, 1, 28, 0.15)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.borderColor = '#e2e8f0';
+                                                e.currentTarget.style.transform = 'none';
+                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.02)';
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>{cat.icon}</span>
+                                            <div>
+                                                <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1e293b', marginBottom: '0.5rem' }}>{cat.label || cat.id}</h3>
+                                                <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.4' }}>{cat.desc}</p>
                                             </div>
                                         </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="animate-in fade-in duration-500">
+                                {/* Header Image Section */}
+                                <div style={{
+                                    width: '100%',
+                                    height: '280px',
+                                    borderRadius: '24px 24px 0 0',
+                                    overflow: 'hidden',
+                                    position: 'relative',
+                                    boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+                                    marginBottom: '-40px',
+                                    zIndex: 1
+                                }}>
+                                    <img src="/visitor_header.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Milwaukee Welcome" />
+                                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '2.5rem' }}>
+                                        <h1 style={{ color: 'white', fontSize: '2.8rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+                                            VISITOR REGISTRATION
+                                        </h1>
+                                        <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem' }}>
+                                            Milwaukee Tool SHTP Facility Access
+                                        </p>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '3rem' }}>
-                                    <button onClick={nextStep} style={{ padding: '1rem 3rem', background: '#db011c', color: 'white', fontWeight: 700, borderRadius: '8px' }}>
-                                        Continue to Next Step →
-                                    </button>
-                                </div>
-                            </section>
-                        )}
 
-                        {step === 2 && (
-                            <section>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', justifyContent: 'space-between' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                        <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
-                                        <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Visitors Information</h2>
-                                    </div>
-                                    {formData.visitors.length < 10 && (
-                                        <button type="button" onClick={addVisitor} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#db011c', fontWeight: 700, padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                                            Add Visitor
-                                        </button>
-                                    )}
-                                </div>
-
-                                {formData.visitors.slice(0, 1).map((visitor, idx) => (
-                                    <div key={idx} style={{ padding: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', marginBottom: '1.5rem', position: 'relative' }}>
-                                        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '1rem' }}>Visitor {idx + 1}</h3>
-                                        {formData.visitors.length > 1 && (
-                                            <button type="button" onClick={() => removeVisitor(idx)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem' }}>
-                                                Remove
+                                {/* Registration Form Box */}
+                                <div className="bg-white" style={{ padding: '4rem 3rem 3rem', borderRadius: '24px', position: 'relative', zIndex: 0, border: '1px solid #e2e8f0' }}>
+                                    <div className="animate-in fade-in duration-500">
+                                        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '2rem' }}>
+                                            <button 
+                                                onClick={() => setFormData({ ...formData, visitorCategory: '' })}
+                                                style={{ background: 'transparent', border: '1px solid #e2e8f0', padding: '0.5rem 1rem', borderRadius: '8px', color: '#64748b', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', transition: 'all 0.2s' }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#1e293b'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
+                                            >
+                                                ← Change Category ({
+                                                    formData.visitorCategory === 'MIL/TTI Expat / SHTP Business trip' 
+                                                        ? 'Expat/Business trip' 
+                                                        : (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor')
+                                                            ? 'Vendor/Contractor'
+                                                            : formData.visitorCategory
+                                                })
                                             </button>
-                                        )}
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: formData.visitors.length > 1 ? '1.5rem' : '0' }}>
-                                            <div className="flex flex-col gap-2">
-                                                <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Full Name *</label>
-                                                <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.name} onChange={e => updateVisitor(idx, 'name', e.target.value)} placeholder="Enter full name" />
-                                            </div>
-                                            <div className="flex flex-col gap-2">
-                                                <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Title / Position *</label>
-                                                <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.title} onChange={e => updateVisitor(idx, 'title', e.target.value)} placeholder="e.g. Sales Manager" />
-                                            </div>
-                                            <div className="flex flex-col gap-2">
-                                                <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Company *</label>
-                                                <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.company} onChange={e => updateVisitor(idx, 'company', e.target.value)} placeholder="Your company name" />
-                                            </div>
                                         </div>
 
-                                        {formData.visitors.length > 1 && (
-                                            <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200/50 text-sm">
-                                                <span className="font-semibold text-gray-500">
-                                                    ... and {formData.visitors.length - 1} more visitor(s)
-                                                </span>
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => setShowAllVisitorsModal(true)} 
-                                                    className="font-black text-[#db011c] hover:text-[#900112] hover:underline bg-transparent border-none p-0 cursor-pointer"
-                                                >
-                                                    View All
-                                                </button>
+                                        <StepIndicator />
+
+                                        <div style={{ animation: 'slideFade 0.5s ease-out' }}>
+                                    {step === 1 && (
+                                        <section>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                                                <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
+                                                <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Basic Information</h2>
                                             </div>
-                                        )}
-                                    </div>
-                                ))}
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', marginTop: '2rem' }}>
-                                    <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
-                                    <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Visit Details & Schedule</h2>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                                    <div className="flex flex-col gap-2">
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>Purpose of Visit *</label>
-                                        <select className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" value={formData.purposeOfVisit} onChange={e => setFormData({ ...formData, purposeOfVisit: e.target.value })}>
-                                            <option>Business / Meeting</option>
-                                            <option>Installation & Maintenance</option>
-                                            <option>Technical Support</option>
-                                            <option>Audit / Inspection</option>
-                                        </select>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>Start Date *</label>
-                                        <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label style={{ color: '#475569', fontWeight: 700 }}>End Date *</label>
-                                        <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} />
-                                    </div>
-
-                                    {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
-                                        <div className="flex flex-col gap-2" style={{ gridColumn: '1 / -1' }}>
-                                            <label style={{ color: '#475569', fontWeight: 700 }}>Detail of purpose *</label>
-                                            <textarea
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors"
-                                                rows={3}
-                                                required
-                                                value={formData.purposeDetail}
-                                                onChange={e => setFormData({ ...formData, purposeDetail: e.target.value })}
-                                                placeholder="Please provide details of the visit purpose..."
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {isExpatCategory && (
-                                    <div style={{ background: '#f8fafc', padding: '2rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem', color: '#1e293b' }}>Select Rooms for Access</h3>
-                                        {Object.entries(groupedRooms).map(([cat, items]: any) => (
-                                            <div key={cat} style={{ marginBottom: '1.5rem' }}>
-                                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.8rem' }}>{cat}</div>
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.8rem' }}>
-                                                    {items.map((r: any) => {
-                                                        const isSelected = formData.roomIds.includes(r.id);
-                                                        return (
-                                                            <div 
-                                                                key={r.id} 
-                                                                onClick={() => toggleRoom(r.id)} 
+                                            <div className="flex flex-col gap-6">
+                                                {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') && (
+                                                    <div className="flex flex-col gap-4 mb-4 animate-in fade-in duration-300">
+                                                        <label style={{ color: '#475569', fontWeight: 700 }}>Specific Visitor Category *</label>
+                                                        <div className="grid grid-cols-2 gap-4" style={{ maxWidth: '500px' }}>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setFormData({ ...formData, visitorCategory: 'Vendor' })}
                                                                 style={{
-                                                                    borderRadius: '12px',
+                                                                    padding: '1.2rem 1.5rem',
+                                                                    borderRadius: '16px',
+                                                                    border: formData.visitorCategory === 'Vendor' ? '3px solid #db011c' : '2px solid #e2e8f0',
+                                                                    background: formData.visitorCategory === 'Vendor' ? 'rgba(219, 1, 28, 0.05)' : 'white',
+                                                                    color: formData.visitorCategory === 'Vendor' ? '#db011c' : '#475569',
+                                                                    fontWeight: 800,
                                                                     cursor: 'pointer',
-                                                                    background: 'white',
-                                                                    border: isSelected ? '2px solid #db011c' : '1px solid #e2e8f0',
-                                                                    boxShadow: isSelected ? '0 4px 12px rgba(219, 1, 28, 0.1)' : '0 2px 6px rgba(0, 0, 0, 0.02)',
                                                                     transition: 'all 0.2s ease',
-                                                                    transform: isSelected ? 'translateY(-1px)' : 'none',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    padding: '1rem',
-                                                                    gap: '0.8rem',
-                                                                    position: 'relative'
-                                                                }}
-                                                            >
-                                                                <div style={{
-                                                                    width: '20px',
-                                                                    height: '20px',
-                                                                    borderRadius: '6px',
-                                                                    border: isSelected ? '2px solid #db011c' : '2px solid #cbd5e1',
-                                                                    background: isSelected ? '#db011c' : 'transparent',
                                                                     display: 'flex',
                                                                     alignItems: 'center',
                                                                     justifyContent: 'center',
-                                                                    color: 'white',
-                                                                    fontSize: '0.75rem',
-                                                                    fontWeight: 'bold',
+                                                                    gap: '0.8rem',
+                                                                    boxShadow: formData.visitorCategory === 'Vendor' ? '0 8px 20px rgba(219, 1, 28, 0.15)' : '0 2px 6px rgba(0,0,0,0.02)'
+                                                                }}
+                                                            >
+                                                                <span style={{ fontSize: '1.5rem' }}>🏢</span> Vendor
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setFormData({ ...formData, visitorCategory: 'Contractor' })}
+                                                                style={{
+                                                                    padding: '1.2rem 1.5rem',
+                                                                    borderRadius: '16px',
+                                                                    border: formData.visitorCategory === 'Contractor' ? '3px solid #db011c' : '2px solid #e2e8f0',
+                                                                    background: formData.visitorCategory === 'Contractor' ? 'rgba(219, 1, 28, 0.05)' : 'white',
+                                                                    color: formData.visitorCategory === 'Contractor' ? '#db011c' : '#475569',
+                                                                    fontWeight: 800,
+                                                                    cursor: 'pointer',
                                                                     transition: 'all 0.2s ease',
-                                                                    flexShrink: 0
-                                                                }}>
-                                                                    {isSelected && '✓'}
-                                                                </div>
-                                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', lineHeight: '1.2', marginBottom: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                        {r.name}
-                                                                    </div>
-                                                                    <div style={{ fontSize: '0.65rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                        Approver: {r.approver_email?.split('@')[0] || 'N/A'}
-                                                                    </div>
-                                                                </div>
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    gap: '0.8rem',
+                                                                    boxShadow: formData.visitorCategory === 'Contractor' ? '0 8px 20px rgba(219, 1, 28, 0.15)' : '0 2px 6px rgba(0,0,0,0.02)'
+                                                                }}
+                                                            >
+                                                                <span style={{ fontSize: '1.5rem' }}>👷</span> Contractor
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col gap-4">
+                                                    <label style={{ color: '#475569', fontWeight: 700 }}>Visiting Site *</label>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                                                        <div
+                                                            onClick={() => toggleSite('SHTP')}
+                                                            style={{
+                                                                cursor: 'pointer',
+                                                                borderRadius: '24px',
+                                                                overflow: 'hidden',
+                                                                border: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '5px solid #db011c' : '2px solid #e2e8f0',
+                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                position: 'relative',
+                                                                transform: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'scale(1.02)' : 'scale(1)',
+                                                                boxShadow: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '0 20px 40px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
+                                                            }}
+                                                        >
+                                                            <img src="/shtp.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="SHTP Site" />
+                                                            <div style={{
+                                                                padding: '1.2rem',
+                                                                textAlign: 'center',
+                                                                fontWeight: 900,
+                                                                fontSize: '1.4rem',
+                                                                background: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '#db011c' : 'white',
+                                                                color: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
+                                                                letterSpacing: '0.05em'
+                                                            }}>
+                                                                SHTP SITE
                                                             </div>
-                                                        );
-                                                    })}
+                                                            {(formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') && (
+                                                                <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
+                                                            )}
+                                                        </div>
+
+                                                        <div
+                                                            onClick={() => toggleSite('DDK')}
+                                                            style={{
+                                                                cursor: 'pointer',
+                                                                borderRadius: '24px',
+                                                                overflow: 'hidden',
+                                                                border: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '5px solid #db011c' : '2px solid #e2e8f0',
+                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                position: 'relative',
+                                                                transform: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'scale(1.02)' : 'scale(1)',
+                                                                boxShadow: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '0 20px 40px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
+                                                            }}
+                                                        >
+                                                            <img src="/ddk.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="DDK Site" />
+                                                            <div style={{
+                                                                padding: '1.2rem',
+                                                                textAlign: 'center',
+                                                                fontWeight: 900,
+                                                                fontSize: '1.4rem',
+                                                                background: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '#db011c' : 'white',
+                                                                color: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
+                                                                letterSpacing: '0.05em'
+                                                            }}>
+                                                                DDK SITE
+                                                            </div>
+                                                            {(formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') && (
+                                                                <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '3rem' }}>
+                                                <button onClick={nextStep} style={{ padding: '1rem 3rem', background: '#db011c', color: 'white', fontWeight: 700, borderRadius: '8px' }}>
+                                                    Continue to Next Step →
+                                                </button>
+                                            </div>
+                                        </section>
+                                    )}
 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem' }}>
-                                    <button onClick={prevStep} style={{ background: 'transparent', border: '1px solid #cbd5e1', padding: '0.8rem 2rem', borderRadius: '8px', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}>Back</button>
-                                    <button onClick={nextStep} style={{ background: '#1e293b', color: 'white', padding: '0.8rem 2.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>Next Step →</button>
+                                    {step === 2 && (
+                                        <section>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                    <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
+                                                    <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Visitors Information</h2>
+                                                </div>
+                                                {formData.visitors.length < 10 && (
+                                                    <button type="button" onClick={addVisitor} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#db011c', fontWeight: 700, padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                                        Add Visitor
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {formData.visitors.slice(0, 1).map((visitor, idx) => (
+                                                <div key={idx} style={{ padding: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', marginBottom: '1.5rem', position: 'relative' }}>
+                                                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '1rem' }}>Visitor {idx + 1}</h3>
+                                                    {formData.visitors.length > 1 && (
+                                                        <button type="button" onClick={() => removeVisitor(idx)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem' }}>
+                                                            Remove
+                                                        </button>
+                                                    )}
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: formData.visitors.length > 1 ? '1.5rem' : '0' }}>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Full Name *</label>
+                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.name} onChange={e => updateVisitor(idx, 'name', e.target.value)} placeholder="Enter full name" />
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Title / Position *</label>
+                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.title} onChange={e => updateVisitor(idx, 'title', e.target.value)} placeholder="e.g. Sales Manager" />
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Company *</label>
+                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.company} onChange={e => updateVisitor(idx, 'company', e.target.value)} placeholder="Your company name" />
+                                                        </div>
+                                                    </div>
+
+                                                    {formData.visitors.length > 1 && (
+                                                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200/50 text-sm">
+                                                            <span className="font-semibold text-gray-500">
+                                                                ... and {formData.visitors.length - 1} more visitor(s)
+                                                            </span>
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => setShowAllVisitorsModal(true)} 
+                                                                className="font-black text-[#db011c] hover:text-[#900112] hover:underline bg-transparent border-none p-0 cursor-pointer"
+                                                            >
+                                                                View All
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', marginTop: '2rem' }}>
+                                                <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
+                                                <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Visit Details & Schedule</h2>
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+                                                <div className="flex flex-col gap-2">
+                                                    <label style={{ color: '#475569', fontWeight: 700 }}>Purpose of Visit *</label>
+                                                    <select className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" value={formData.purposeOfVisit} onChange={e => setFormData({ ...formData, purposeOfVisit: e.target.value })}>
+                                                        <option>Business / Meeting</option>
+                                                        <option>Installation & Maintenance</option>
+                                                        <option>Technical Support</option>
+                                                        <option>Audit / Inspection</option>
+                                                    </select>
+                                                </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <label style={{ color: '#475569', fontWeight: 700 }}>Start Date *</label>
+                                                    <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} />
+                                                </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <label style={{ color: '#475569', fontWeight: 700 }}>End Date *</label>
+                                                    <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} />
+                                                </div>
+
+                                                {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
+                                                    <div className="flex flex-col gap-2" style={{ gridColumn: '1 / -1' }}>
+                                                        <label style={{ color: '#475569', fontWeight: 700 }}>Detail of purpose *</label>
+                                                        <textarea
+                                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors"
+                                                            rows={3}
+                                                            required
+                                                            value={formData.purposeDetail}
+                                                            onChange={e => setFormData({ ...formData, purposeDetail: e.target.value })}
+                                                            placeholder="Please provide details of the visit purpose..."
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {isExpatCategory && (
+                                                <div style={{ background: '#f8fafc', padding: '2rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem', color: '#1e293b' }}>Select Rooms for Access</h3>
+                                                    {Object.entries(groupedRooms).map(([cat, items]: any) => (
+                                                        <div key={cat} style={{ marginBottom: '1.5rem' }}>
+                                                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.8rem' }}>{cat}</div>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.8rem' }}>
+                                                                {items.map((r: any) => {
+                                                                    const isSelected = formData.roomIds.includes(r.id);
+                                                                    return (
+                                                                        <div 
+                                                                            key={r.id} 
+                                                                            onClick={() => toggleRoom(r.id)} 
+                                                                            style={{
+                                                                                borderRadius: '12px',
+                                                                                cursor: 'pointer',
+                                                                                background: 'white',
+                                                                                border: isSelected ? '2px solid #db011c' : '1px solid #e2e8f0',
+                                                                                boxShadow: isSelected ? '0 4px 12px rgba(219, 1, 28, 0.1)' : '0 2px 6px rgba(0, 0, 0, 0.02)',
+                                                                                transition: 'all 0.2s ease',
+                                                                                transform: isSelected ? 'translateY(-1px)' : 'none',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                padding: '1rem',
+                                                                                gap: '0.8rem',
+                                                                                position: 'relative'
+                                                                            }}
+                                                                        >
+                                                                            <div style={{
+                                                                                width: '20px',
+                                                                                height: '20px',
+                                                                                borderRadius: '6px',
+                                                                                border: isSelected ? '2px solid #db011c' : '2px solid #cbd5e1',
+                                                                                background: isSelected ? '#db011c' : 'transparent',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                color: 'white',
+                                                                                fontSize: '0.75rem',
+                                                                                fontWeight: 'bold',
+                                                                                transition: 'all 0.2s ease',
+                                                                                flexShrink: 0
+                                                                            }}>
+                                                                                {isSelected && '✓'}
+                                                                            </div>
+                                                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                                                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', lineHeight: '1.2', marginBottom: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                    {r.name}
+                                                                                </div>
+                                                                                <div style={{ fontSize: '0.65rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                    Approver: {r.approver_email?.split('@')[0] || 'N/A'}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem' }}>
+                                                <button onClick={prevStep} style={{ background: 'transparent', border: '1px solid #cbd5e1', padding: '0.8rem 2rem', borderRadius: '8px', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}>Back</button>
+                                                {totalSteps === 2 ? (
+                                                    <button onClick={handleSubmit} disabled={loading} style={{
+                                                        padding: '0.8rem 2.5rem',
+                                                        background: 'linear-gradient(135deg, #db011c 0%, #900112 100%)',
+                                                        color: 'white',
+                                                        borderRadius: '8px',
+                                                        fontWeight: 700,
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        boxShadow: '0 4px 15px rgba(219, 1, 28, 0.3)'
+                                                    }}>
+                                                        {loading ? 'Processing...' : 'SUBMIT REGISTRATION'}
+                                                    </button>
+                                                ) : (
+                                                    <button onClick={nextStep} style={{ background: '#1e293b', color: 'white', padding: '0.8rem 2.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>Next Step →</button>
+                                                )}
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {step === 3 && (
+                                        <section>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                                                <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
+                                                <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Final Requirements</h2>
+                                            </div>
+
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+                                                <div style={{ padding: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
+                                                    <p style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Factory Tour Requested?</p>
+                                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                                        <button onClick={() => updateDetails('factoryTour', 'Yes')} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: formData.details.factoryTour === 'Yes' ? '#db011c' : 'white', color: formData.details.factoryTour === 'Yes' ? 'white' : '#475569', cursor: 'pointer', fontWeight: 700 }}>YES</button>
+                                                        <button onClick={() => updateDetails('factoryTour', 'No')} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: formData.details.factoryTour === 'No' ? '#db011c' : 'white', color: formData.details.factoryTour === 'No' ? 'white' : '#475569', cursor: 'pointer', fontWeight: 700 }}>NO</button>
+                                                    </div>
+                                                </div>
+                                                <div style={{ padding: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
+                                                    <p style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Meal Registration?</p>
+                                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                                        <button onClick={() => updateDetails('mealRegistration', 'Yes')} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: formData.details.mealRegistration === 'Yes' ? '#db011c' : 'white', color: formData.details.mealRegistration === 'Yes' ? 'white' : '#475569', cursor: 'pointer', fontWeight: 700 }}>YES</button>
+                                                        <button onClick={() => updateDetails('mealRegistration', 'No')} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: formData.details.mealRegistration === 'No' ? '#db011c' : 'white', color: formData.details.mealRegistration === 'No' ? 'white' : '#475569', cursor: 'pointer', fontWeight: 700 }}>NO</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {formData.details.mealRegistration === 'Yes' && (
+                                                <div style={{ marginBottom: '3rem', animation: 'fadeIn 0.3s' }}>
+                                                    <label style={{ display: 'block', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>Charged Cost Center *</label>
+                                                    <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" style={{ maxWidth: '300px' }} value={formData.details.costCenter} onChange={e => updateDetails('costCenter', e.target.value)} placeholder="000-00-0000" />
+                                                </div>
+                                            )}
+
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2rem 0', borderTop: '1px solid #e2e8f0' }}>
+                                                <button onClick={prevStep} style={{ background: 'transparent', border: 'none', color: '#64748b', fontWeight: 700, cursor: 'pointer' }}>← Previous Step</button>
+                                                <button onClick={handleSubmit} disabled={loading} style={{
+                                                    padding: '1.2rem 4rem',
+                                                    background: 'linear-gradient(135deg, #db011c 0%, #900112 100%)',
+                                                    color: 'white',
+                                                    borderRadius: '12px',
+                                                    fontSize: '1.1rem',
+                                                    fontWeight: 800,
+                                                    boxShadow: '0 10px 30px rgba(219, 1, 28, 0.4)',
+                                                    border: 'none',
+                                                    cursor: 'pointer'
+                                                }}>
+                                                    {loading ? 'Processing...' : 'SUBMIT REGISTRATION'}
+                                                </button>
+                                            </div>
+                                        </section>
+                                    )}
                                 </div>
-                            </section>
-                        )}
-
-                        {step === 3 && (
-                            <section>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                                    <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
-                                    <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Final Requirements</h2>
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
-                                    <div style={{ padding: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
-                                        <p style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Factory Tour Requested?</p>
-                                        <div style={{ display: 'flex', gap: '1rem' }}>
-                                            <button onClick={() => updateDetails('factoryTour', 'Yes')} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: formData.details.factoryTour === 'Yes' ? '#db011c' : 'white', color: formData.details.factoryTour === 'Yes' ? 'white' : '#475569', cursor: 'pointer', fontWeight: 700 }}>YES</button>
-                                            <button onClick={() => updateDetails('factoryTour', 'No')} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: formData.details.factoryTour === 'No' ? '#db011c' : 'white', color: formData.details.factoryTour === 'No' ? 'white' : '#475569', cursor: 'pointer', fontWeight: 700 }}>NO</button>
-                                        </div>
-                                    </div>
-                                    <div style={{ padding: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
-                                        <p style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Meal Registration?</p>
-                                        <div style={{ display: 'flex', gap: '1rem' }}>
-                                            <button onClick={() => updateDetails('mealRegistration', 'Yes')} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: formData.details.mealRegistration === 'Yes' ? '#db011c' : 'white', color: formData.details.mealRegistration === 'Yes' ? 'white' : '#475569', cursor: 'pointer', fontWeight: 700 }}>YES</button>
-                                            <button onClick={() => updateDetails('mealRegistration', 'No')} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: formData.details.mealRegistration === 'No' ? '#db011c' : 'white', color: formData.details.mealRegistration === 'No' ? 'white' : '#475569', cursor: 'pointer', fontWeight: 700 }}>NO</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {formData.details.mealRegistration === 'Yes' && (
-                                    <div style={{ marginBottom: '3rem', animation: 'fadeIn 0.3s' }}>
-                                        <label style={{ display: 'block', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>Charged Cost Center *</label>
-                                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" style={{ maxWidth: '300px' }} value={formData.details.costCenter} onChange={e => updateDetails('costCenter', e.target.value)} placeholder="000-00-0000" />
-                                    </div>
-                                )}
-
-                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2rem 0', borderTop: '1px solid #e2e8f0' }}>
-                                    <button onClick={prevStep} style={{ background: 'transparent', border: 'none', color: '#64748b', fontWeight: 700, cursor: 'pointer' }}>← Previous Step</button>
-                                    <button onClick={handleSubmit} disabled={loading} style={{
-                                        padding: '1.2rem 4rem',
-                                        background: 'linear-gradient(135deg, #db011c 0%, #900112 100%)',
-                                        color: 'white',
-                                        borderRadius: '12px',
-                                        fontSize: '1.1rem',
-                                        fontWeight: 800,
-                                        boxShadow: '0 10px 30px rgba(219, 1, 28, 0.4)',
-                                        border: 'none',
-                                        cursor: 'pointer'
-                                    }}>
-                                        {loading ? 'Processing...' : 'SUBMIT REGISTRATION'}
-                                    </button>
-                                </div>
-                            </section>
-                        )}
                             </div>
                         </div>
+                            </div>
+                        )}
                     </div>
                 ) : (
-                    <div className="animate-in fade-in duration-500 mt-4">
+                    <div className="w-full animate-in fade-in duration-500 mt-4">
                         <Dashboard />
                     </div>
                 )}
