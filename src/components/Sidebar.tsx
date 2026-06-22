@@ -131,7 +131,16 @@ export default function Sidebar() {
 
     // Helper functions for checking active status
     const isItemActive = (item: NavItem) => {
-        return pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path.split('?')[0]));
+        const itemBase = item.path.split('?')[0];
+        if (pathname === itemBase) return true;
+        if (itemBase === '/' || itemBase.startsWith('#')) return false;
+        
+        // Prevent 'Admin Settings' (/visitoradmin) from highlighting when on other /visitoradmin/* pages
+        if (itemBase === '/visitoradmin') {
+            return pathname === itemBase;
+        }
+
+        return pathname.startsWith(itemBase + '/');
     };
 
     const isParentActive = (item: NavItem) => {

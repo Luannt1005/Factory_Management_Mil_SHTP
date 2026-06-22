@@ -22,6 +22,7 @@ export async function GET(request: Request) {
         const limit = parseInt(searchParams.get('limit') || '20');
         const offset = (page - 1) * limit;
         const category = searchParams.get('category');
+        const code = searchParams.get('code');
         const isExport = limit > 1000; // if limit is very high, it's likely an export
 
         const visitorPool = await getVisitorDbConnection();
@@ -40,6 +41,12 @@ export async function GET(request: Request) {
         if (category) {
             conditions.push(`r."visitorCategory" = $${paramCount}`);
             queryParams.push(category);
+            paramCount += 1;
+        }
+
+        if (code) {
+            conditions.push(`CAST(r.id AS TEXT) ILIKE $${paramCount}`);
+            queryParams.push(`${code}%`);
             paramCount += 1;
         }
 

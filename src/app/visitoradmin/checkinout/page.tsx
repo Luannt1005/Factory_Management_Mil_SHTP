@@ -16,7 +16,9 @@ import {
     ArrowRightOnRectangleIcon,
     ArrowPathRoundedSquareIcon,
     ShieldCheckIcon,
-    UserGroupIcon
+    UserGroupIcon,
+    PlusIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 
 export default function CheckInOutManagement() {
@@ -31,14 +33,20 @@ export default function CheckInOutManagement() {
     
     // Filters values
     const [date, setDate] = useState<string>(() => {
-        // Default to today
         return new Date().toISOString().split('T')[0];
     });
     const [category, setCategory] = useState('');
-    const [status, setStatus] = useState('');
+    const [status, setStatus] = useState('HISTORY'); // Default to History
     const [requestCode, setRequestCode] = useState('');
     const [search, setSearch] = useState('');
     const [searchInputValue, setSearchInputValue] = useState('');
+
+    // Modal States
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalReqCode, setModalReqCode] = useState('');
+    const [modalVisitors, setModalVisitors] = useState<any[]>([]);
+    const [modalLoading, setModalLoading] = useState(false);
+    const [modalError, setModalError] = useState('');
 
     // Fetch visitors data
     const fetchVisitors = useCallback(async (page: number) => {
@@ -81,8 +89,38 @@ export default function CheckInOutManagement() {
         setSearch(searchInputValue);
     };
 
+    // Modal Fetch Logic
+    const fetchModalVisitors = async () => {
+        if (!modalReqCode.trim()) return;
+        setModalLoading(true);
+        setModalError('');
+        try {
+            const res = await fetch(`/api/visitor_admin/checkinout?requestCode=${encodeURIComponent(modalReqCode.trim())}&limit=100`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.visitors && data.visitors.length > 0) {
+                    setModalVisitors(data.visitors);
+                } else {
+                    setModalError('No visitors found for this Request ID.');
+                    setModalVisitors([]);
+                }
+            } else {
+                setModalError('Error fetching request data.');
+            }
+        } catch (err) {
+            setModalError('An unexpected error occurred.');
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    const handleModalSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        fetchModalVisitors();
+    };
+
     // Perform check-in or check-out action
-    const handleAction = async (action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET', item: any) => {
+    const handleAction = async (action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET', item: any, isFromModal = false) => {
         const key = `${item.visitorCode}-${action}`;
         setActionLoading(key);
         try {
@@ -99,6 +137,9 @@ export default function CheckInOutManagement() {
             });
 
             if (res.ok) {
+                if (isFromModal) {
+                    await fetchModalVisitors();
+                }
                 await fetchVisitors(pagination.page);
             } else {
                 const errData = await res.json();
@@ -116,10 +157,17 @@ export default function CheckInOutManagement() {
     const handleClearFilters = () => {
         setDate(new Date().toISOString().split('T')[0]);
         setCategory('');
-        setStatus('');
+        setStatus('HISTORY');
         setRequestCode('');
         setSearch('');
         setSearchInputValue('');
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setModalReqCode('');
+        setModalVisitors([]);
+        setModalError('');
     };
 
     // Helper functions for formatters
@@ -181,10 +229,25 @@ export default function CheckInOutManagement() {
         }
     };
 
-    const isFiltersActive = date !== new Date().toISOString().split('T')[0] || category !== '' || status !== '' || requestCode !== '' || search !== '';
+    const isFiltersActive = date !== new Date().toISOString().split('T')[0] || category !== '' || status !== 'HISTORY' || requestCode !== '' || search !== '';
 
     return (
         <div className="flex flex-col gap-6 text-[#0f172a]">
+            {/* Header & New Check In Button */}
+            <div className="flex justify-between items-end">
+                <div>
+                    <h1 className="text-2xl font-black tracking-tight text-gray-900">Check-in / Check-out Logs</h1>
+                    <p className="text-sm text-gray-500 font-medium mt-1">Manage and view the history of visitors entering and exiting the factory.</p>
+                </div>
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="flex items-center gap-2 bg-[#db011c] hover:bg-[#b00116] text-white px-4 py-2.5 rounded-xl shadow-md shadow-red-500/20 transition-all font-bold text-sm"
+                >
+                    <PlusIcon className="w-5 h-5" />
+                    New Check-in
+                </button>
+            </div>
+
             {/* Filters Row */}
             <div className="flex flex-wrap items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex flex-wrap items-center gap-4">
@@ -223,16 +286,17 @@ export default function CheckInOutManagement() {
                             onChange={(e) => setStatus(e.target.value)}
                             className="text-sm border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-9 min-w-[140px]"
                         >
-                            <option value="">All Statuses</option>
-                            <option value="PENDING">Pending</option>
-                            <option value="CHECKED_IN">Checked In</option>
-                            <option value="CHECKED_OUT">Checked Out</option>
+                            <option value="HISTORY">Check-in History</option>
+                            <option value="">All Statuses (Inc. Pending)</option>
+                            <option value="PENDING">Pending Only</option>
+                            <option value="CHECKED_IN">Checked In Only</option>
+                            <option value="CHECKED_OUT">Checked Out Only</option>
                         </select>
                     </div>
 
                     {/* Request Code */}
                     <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Request Code</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Request ID</label>
                         <input 
                             type="text" 
                             placeholder="e.g. 300526_01"
@@ -244,11 +308,11 @@ export default function CheckInOutManagement() {
 
                     {/* Search Field */}
                     <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 min-w-[240px]">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Search</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Search Name</label>
                         <div className="relative flex-1">
                             <input 
                                 type="text" 
-                                placeholder="Name, company, code..."
+                                placeholder="Name, company..."
                                 value={searchInputValue}
                                 onChange={(e) => setSearchInputValue(e.target.value)}
                                 className="text-sm border border-gray-300 rounded-lg pl-3 pr-10 py-2 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all w-full"
@@ -264,7 +328,7 @@ export default function CheckInOutManagement() {
                 </div>
 
                 {/* Additional controls and reset */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 mt-2 lg:mt-0">
                     <button 
                         onClick={() => fetchVisitors(pagination.page)}
                         className="text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-md transition-all flex items-center gap-1 border border-gray-200"
@@ -281,7 +345,7 @@ export default function CheckInOutManagement() {
                         </button>
                     )}
                     <div className="text-sm font-medium text-gray-500">
-                        Found <span className="text-gray-900 font-bold">{pagination.total}</span> visitors
+                        Found <span className="text-gray-900 font-bold">{pagination.total}</span> logs
                     </div>
                 </div>
             </div>
@@ -294,14 +358,12 @@ export default function CheckInOutManagement() {
                             <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
                                 <th className="px-3 py-2 w-[120px]">Visitor Code</th>
                                 <th className="px-3 py-2">Visitor Name</th>
-                                <th className="px-3 py-2">Title / Company</th>
-                                <th className="px-3 py-2">Category</th>
-                                <th className="px-3 py-2 text-center">Visit Duration</th>
+                                <th className="px-3 py-2">Company</th>
                                 <th className="px-3 py-2 text-center">Req Status</th>
                                 <th className="px-3 py-2 text-center">Check-In Log</th>
                                 <th className="px-3 py-2 text-center">Check-Out Log</th>
-                                <th className="px-3 py-2 text-center">Security Status</th>
-                                <th className="px-3 py-2 text-right w-[180px]">Actions</th>
+                                <th className="px-3 py-2 text-center">Status</th>
+                                <th className="px-3 py-2 text-right w-[140px]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="text-[12px] font-medium bg-white">
@@ -309,24 +371,23 @@ export default function CheckInOutManagement() {
                                 // Table loading skeletons
                                 [...Array(5)].map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        {[...Array(10)].map((_, j) => (
+                                        {[...Array(8)].map((_, j) => (
                                             <td key={j} className="px-3 py-2"><div className="h-4 bg-gray-200 rounded"></div></td>
                                         ))}
                                     </tr>
                                 ))
                             ) : visitors.length === 0 ? (
                                 <tr>
-                                    <td colSpan={10} className="px-3 py-8 text-center text-gray-400">
+                                    <td colSpan={8} className="px-3 py-8 text-center text-gray-400">
                                         <div className="flex flex-col items-center gap-3">
-                                            <ExclamationTriangleIcon className="w-10 h-10 text-gray-300" />
-                                            <p className="font-extrabold text-sm text-[#0f172a]">No visitors found</p>
-                                            <p className="text-[11px] max-w-sm">No visitor requests match the specified search or filter criteria. Try clearing some filters.</p>
+                                            <ClockIcon className="w-10 h-10 text-gray-300" />
+                                            <p className="font-extrabold text-sm text-[#0f172a]">No logs found</p>
+                                            <p className="text-[11px] max-w-sm">No visitor check-in/out history matches the specified criteria.</p>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
                                 visitors.map((item) => {
-                                    const isApproved = item.requestStatus === 'APPROVED' || item.requestStatus === 'COMPLETE';
                                     const actionKey = (act: string) => `${item.visitorCode}-${act}`;
 
                                     return (
@@ -341,23 +402,12 @@ export default function CheckInOutManagement() {
                                             {/* Visitor Name */}
                                             <td className="px-3 py-2 font-bold text-gray-900">
                                                 {item.visitorName}
+                                                <div className="text-[10px] text-gray-400 font-semibold">{item.visitorCategory}</div>
                                             </td>
 
-                                            {/* Title / Company */}
+                                            {/* Company */}
                                             <td className="px-3 py-2">
-                                                <div className="font-extrabold text-gray-800">{item.visitorTitle || '—'}</div>
-                                                <div className="text-[10px] text-gray-400 font-semibold">{item.visitorCompany}</div>
-                                            </td>
-
-                                            {/* Category */}
-                                            <td className="px-3 py-2 text-gray-500">
-                                                {item.visitorCategory}
-                                            </td>
-
-                                            {/* Visit Duration */}
-                                            <td className="px-3 py-2 text-center">
-                                                <div className="font-bold text-gray-800">{formatDate(item.startDate)}</div>
-                                                <div className="text-[10px] text-gray-400 font-semibold">to {formatDate(item.endDate)}</div>
+                                                <div className="text-[11px] text-gray-700 font-semibold">{item.visitorCompany || '—'}</div>
                                             </td>
 
                                             {/* Request Status */}
@@ -368,7 +418,7 @@ export default function CheckInOutManagement() {
                                             </td>
 
                                             {/* Check-In Time */}
-                                            <td className="px-3 py-2 text-center font-semibold text-gray-600">
+                                            <td className="px-3 py-2 text-center font-semibold text-emerald-700">
                                                 {formatDateTime(item.checkInTime)}
                                             </td>
 
@@ -385,24 +435,6 @@ export default function CheckInOutManagement() {
                                             {/* Actions */}
                                             <td className="px-3 py-2 text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
-                                                    {/* Check In Action */}
-                                                    {item.checkInOutStatus === 'PENDING' && (
-                                                        <button
-                                                            disabled={!isApproved || actionLoading !== null}
-                                                            onClick={() => handleAction('CHECK_IN', item)}
-                                                            className={`
-                                                                flex items-center justify-center gap-1 px-2.5 py-1 rounded text-xs font-bold text-white transition-all
-                                                                ${isApproved 
-                                                                    ? 'bg-emerald-600 hover:bg-emerald-700 shadow-sm' 
-                                                                    : 'bg-gray-300 text-gray-400 cursor-not-allowed'}
-                                                            `}
-                                                            title={!isApproved ? 'Requires APPROVED/COMPLETE status to check in' : 'Check in visitor'}
-                                                        >
-                                                            <ArrowLeftOnRectangleIcon className="w-3.5 h-3.5 rotate-180" />
-                                                            {actionLoading === actionKey('CHECK_IN') ? '...' : 'Check In'}
-                                                        </button>
-                                                    )}
-
                                                     {/* Check Out Action */}
                                                     {item.checkInOutStatus === 'CHECKED_IN' && (
                                                         <button
@@ -422,17 +454,10 @@ export default function CheckInOutManagement() {
                                                             disabled={actionLoading !== null}
                                                             onClick={() => handleAction('RESET', item)}
                                                             className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-all"
-                                                            title="Reset back to Pending"
+                                                            title="Undo Check-in / Reset log"
                                                         >
                                                             <ArrowPathRoundedSquareIcon className="w-3.5 h-3.5" />
                                                         </button>
-                                                    )}
-
-                                                    {/* If request is not approved and status is pending */}
-                                                    {!isApproved && item.checkInOutStatus === 'PENDING' && (
-                                                        <span className="text-[10px] font-bold text-amber-500 flex items-center gap-1" title="Request must be Approved or Complete">
-                                                            <ExclamationTriangleIcon className="w-3 h-3" /> Locked
-                                                        </span>
                                                     )}
                                                 </div>
                                             </td>
@@ -467,6 +492,130 @@ export default function CheckInOutManagement() {
                     </div>
                 )}
             </div>
+
+            {/* Check-In Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[800px] flex flex-col overflow-hidden max-h-[90vh]">
+                        
+                        {/* Modal Header */}
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <div>
+                                <h2 className="text-lg font-black text-gray-900">Check-In Visitor</h2>
+                                <p className="text-xs text-gray-500 font-medium">Search for an approved Request ID to check-in people.</p>
+                            </div>
+                            <button onClick={handleCloseModal} className="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
+                                <XMarkIcon className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Modal Search Bar */}
+                        <div className="p-6 pb-2 border-b border-gray-100 flex gap-3">
+                            <form onSubmit={handleModalSearch} className="flex flex-1 items-center gap-3">
+                                <input
+                                    type="text"
+                                    placeholder="Enter Request ID (e.g. 190524_02)"
+                                    value={modalReqCode}
+                                    onChange={(e) => setModalReqCode(e.target.value)}
+                                    className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#db011c] focus:outline-none transition-all font-medium text-sm text-gray-900 placeholder:text-gray-400"
+                                    autoFocus
+                                />
+                                <button 
+                                    type="submit"
+                                    disabled={modalLoading || !modalReqCode.trim()}
+                                    className="bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-xl shadow-md transition-all font-bold text-sm disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    <MagnifyingGlassIcon className="w-5 h-5" />
+                                    {modalLoading ? 'Searching...' : 'Search'}
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Modal Body / Results */}
+                        <div className="p-6 overflow-y-auto bg-slate-50/50 flex-1 relative">
+                            {modalError && (
+                                <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl border border-red-200 text-sm font-semibold flex items-center gap-2 mb-4">
+                                    <ExclamationTriangleIcon className="w-5 h-5" />
+                                    {modalError}
+                                </div>
+                            )}
+
+                            {modalVisitors.length > 0 && (
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-end border-b border-gray-200 pb-2">
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 text-sm">Visitors in Request #{modalVisitors[0].requestId}</h3>
+                                            <p className="text-xs text-gray-500">Request Status: <span className={`font-bold ml-1 ${getRequestStatusColor(modalVisitors[0].requestStatus).split(' ')[1]}`}>{modalVisitors[0].requestStatus}</span></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {modalVisitors.map((v) => {
+                                            const isApproved = v.requestStatus === 'APPROVED' || v.requestStatus === 'COMPLETE';
+                                            const actionKey = (act: string) => `${v.visitorCode}-${act}`;
+                                            const isCheckingIn = actionLoading === actionKey('CHECK_IN');
+                                            
+                                            return (
+                                                <div key={v.visitorCode} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 bg-red-50 text-red-600 flex items-center justify-center rounded-full font-black text-xs shrink-0">
+                                                            {v.visitorName?.charAt(0) || 'V'}
+                                                        </div>
+                                                        <div>
+                                                            <div className="font-bold text-gray-900 text-sm">{v.visitorName}</div>
+                                                            <div className="text-xs text-gray-500 font-medium">{v.visitorCompany || v.visitorCategory}</div>
+                                                            <div className="text-[10px] text-gray-400 mt-1 font-bold">Code: #{v.visitorCode}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="text-right mr-2 hidden sm:block">
+                                                            {getSecurityStatusBadge(v.checkInOutStatus)}
+                                                        </div>
+                                                        
+                                                        {v.checkInOutStatus === 'PENDING' ? (
+                                                            <button
+                                                                disabled={!isApproved || actionLoading !== null}
+                                                                onClick={() => handleAction('CHECK_IN', v, true)}
+                                                                className={`
+                                                                    flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white transition-all min-w-[110px]
+                                                                    ${isApproved 
+                                                                        ? 'bg-emerald-600 hover:bg-emerald-700 shadow-sm' 
+                                                                        : 'bg-gray-300 text-gray-400 cursor-not-allowed'}
+                                                                `}
+                                                                title={!isApproved ? 'Requires APPROVED status' : 'Check In'}
+                                                            >
+                                                                <ArrowLeftOnRectangleIcon className="w-4 h-4 rotate-180" />
+                                                                {isCheckingIn ? '...' : 'Check In'}
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                disabled={true}
+                                                                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-gray-400 bg-gray-100 min-w-[110px] cursor-not-allowed"
+                                                            >
+                                                                <CheckCircleIcon className="w-4 h-4" />
+                                                                Checked In
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {modalVisitors.length === 0 && !modalLoading && !modalError && (
+                                <div className="text-center text-gray-400 py-12">
+                                    <MagnifyingGlassIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                                    <p className="font-bold text-gray-600">Enter a Request ID</p>
+                                    <p className="text-xs mt-1">To view visitors and check them in.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

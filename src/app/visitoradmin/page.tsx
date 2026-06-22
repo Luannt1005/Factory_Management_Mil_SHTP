@@ -11,13 +11,14 @@ export default function AdminDashboard() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [category, setCategory] = useState('');
+    const [code, setCode] = useState('');
     const [exporting, setExporting] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
     const router = useRouter();
 
     useEffect(() => {
         fetchRequests(1);
-    }, [startDate, endDate, category]);
+    }, [startDate, endDate, category, code]);
 
     const fetchRequests = async (page: number) => {
         setLoading(true);
@@ -28,6 +29,9 @@ export default function AdminDashboard() {
             }
             if (category) {
                 url += `&category=${encodeURIComponent(category)}`;
+            }
+            if (code) {
+                url += `&code=${encodeURIComponent(code)}`;
             }
             const res = await fetch(url);
             if (res.ok) {
@@ -53,6 +57,9 @@ export default function AdminDashboard() {
             }
             if (category) {
                 url += `&category=${encodeURIComponent(category)}`;
+            }
+            if (code) {
+                url += `&code=${encodeURIComponent(code)}`;
             }
             
             const res = await fetch(url);
@@ -166,9 +173,19 @@ export default function AdminDashboard() {
                             <option value="Other">Other</option>
                         </select>
                     </div>
-                    {(startDate || endDate || category) && (
+                    <div className="flex items-center gap-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Code</label>
+                        <input 
+                            type="text" 
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            placeholder="e.g. 2206"
+                            className="text-sm border border-gray-300 rounded-lg px-2 py-1 w-24 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                        />
+                    </div>
+                    {(startDate || endDate || category || code) && (
                         <button 
-                            onClick={() => { setStartDate(''); setEndDate(''); setCategory(''); }}
+                            onClick={() => { setStartDate(''); setEndDate(''); setCategory(''); setCode(''); }}
                             className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4"
                         >
                             Clear
@@ -199,6 +216,7 @@ export default function AdminDashboard() {
                                 <th className="px-3 py-2">Submitter</th>
                                 <th className="px-3 py-2 text-center">Start Date</th>
                                 <th className="px-3 py-2 text-center">End Date</th>
+                                <th className="px-3 py-2 text-center">Factory Tour</th>
                                 <th className="px-3 py-2">Approval Progress</th>
                                 <th className="px-3 py-2 text-center">Status</th>
                                 <th className="px-3 py-2 text-right">Actions</th>
@@ -239,6 +257,16 @@ export default function AdminDashboard() {
                                     </td>
                                     <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
                                         {new Date(request.end_date).toLocaleDateString('vi-VN')}
+                                    </td>
+                                    <td className="px-3 py-2 text-center font-bold text-[10px]">
+                                        {(() => {
+                                            try {
+                                                const d = JSON.parse(request.details);
+                                                return d.factoryTour === 'Yes' 
+                                                    ? <span className="text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">Yes</span> 
+                                                    : <span className="text-gray-400">No</span>;
+                                            } catch(e) { return <span className="text-gray-400">No</span>; }
+                                        })()}
                                     </td>
                                     <td className="px-3 py-2">
                                         {request.request_approvals?.length > 0 ? (
@@ -344,133 +372,170 @@ export default function AdminDashboard() {
             {/* MODAL OVERLAY */}
             {selectedRequest && (() => {
                 const details = parseDetails(selectedRequest.details);
+                const visitorsList = (() => {
+                    try {
+                        const parsed = selectedRequest.visitors ? JSON.parse(selectedRequest.visitors) : [];
+                        if (parsed && parsed.length > 0) return parsed;
+                    } catch (e) {}
+                    return [{ name: selectedRequest.visitor_name, title: selectedRequest.visitor_title, company: selectedRequest.current_company }];
+                })();
+
                 return (
                     <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-[100] p-4 pt-20"
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
                         onClick={() => setSelectedRequest(null)}
                     >
                         <div
-                            className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200"
+                            className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200 border-t-[8px] border-t-[#db011c] custom-scrollbar flex flex-col"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="p-4 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10">
-                                <h2 className="text-lg font-extrabold text-[#0f172a]">App Details</h2>
+                            <div className="p-6 pb-2 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10">
+                                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">VISITORS ({visitorsList.length})</h2>
                                 <button
                                     onClick={() => setSelectedRequest(null)}
-                                    className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+                                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
                                 >
-                                    &times;
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
                                 </button>
                             </div>
 
-                            <div className="p-4">
-                                <div className="flex flex-wrap gap-4 justify-between items-start mb-4">
-                                    <div>
-                                        {(() => {
-                                            try {
-                                                const visitorsList = selectedRequest.visitors ? JSON.parse(selectedRequest.visitors) : [];
-                                                if (visitorsList && visitorsList.length > 0) {
-                                                    return visitorsList.map((v: any, i: number) => (
-                                                        <div key={i} className="mb-2">
-                                                            <h3 className="text-xl font-extrabold text-[#0f172a] leading-tight">{v.name}</h3>
-                                                            <p className="text-gray-500 font-medium text-xs">{v.title} @ {v.company}</p>
-                                                        </div>
-                                                    ));
-                                                }
-                                            } catch (e) {}
-                                            return (
-                                                <div className="mb-2">
-                                                    <h3 className="text-xl font-extrabold text-[#0f172a] leading-tight">{selectedRequest.visitor_name}</h3>
-                                                    <p className="text-gray-500 font-medium text-xs">{selectedRequest.visitor_title} @ {selectedRequest.current_company}</p>
-                                                </div>
-                                            );
-                                        })()}
-                                        <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                            By: <span className="text-[#db011c]">{selectedRequest.profiles?.name}</span> ({selectedRequest.profiles?.department})
+                            <div className="px-6 py-2 flex-1">
+                                {/* Visitors List */}
+                                <div className="flex flex-col gap-3 mb-8">
+                                    {visitorsList.map((v: any, i: number) => (
+                                        <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50/50 px-5 py-4 rounded-xl border border-gray-100 transition-colors hover:bg-gray-50">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                                <h3 className="text-sm font-extrabold text-[#0f172a] truncate">{v.name || 'Unnamed'}</h3>
+                                            </div>
+                                            <p className="text-xs text-gray-500 font-medium truncate sm:text-right ml-5 sm:ml-0">
+                                                {v.title ? `${v.title} @ ` : ''}{v.company || 'N/A'}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Details List */}
+                                <div className="flex flex-col gap-1 border-t border-gray-100 pt-6">
+                                    {/* Request Ref */}
+                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                        <div className="flex items-center gap-3 text-gray-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" /></svg>
+                                            <span className="text-sm font-medium">Request Ref</span>
+                                        </div>
+                                        <div className="font-extrabold text-[#0f172a] text-sm tracking-tight">{selectedRequest.id.split('-')[0].toUpperCase()}</div>
+                                    </div>
+                                    
+                                    {/* Status */}
+                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                        <div className="flex items-center gap-3 text-gray-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" /></svg>
+                                            <span className="text-sm font-medium">Status</span>
+                                        </div>
+                                        <div>
+                                            <span className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5" style={{
+                                                background: getStatusColor(selectedRequest.status) + '15',
+                                                color: getStatusColor(selectedRequest.status),
+                                                border: `1px solid ${getStatusColor(selectedRequest.status)}30`
+                                            }}>
+                                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(selectedRequest.status) }}></span>
+                                                {selectedRequest.status}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="px-3 py-1 rounded-full text-xs font-extrabold inline-block" style={{
-                                            background: getStatusColor(selectedRequest.status) + '15',
-                                            color: getStatusColor(selectedRequest.status),
-                                        }}>
-                                            {selectedRequest.status}
-                                        </span>
-                                        <p className="text-[10px] text-gray-400 mt-1 font-medium">Ref: {selectedRequest.id.split('-')[0].toUpperCase()}</p>
-                                    </div>
-                                </div>
 
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                    <div>
-                                        <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Start Date</label>
-                                        <p className="font-bold text-[#0f172a] text-xs">{new Date(selectedRequest.start_date).toLocaleDateString()}</p>
+                                    {/* Visitor Category */}
+                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                        <div className="flex items-center gap-3 text-gray-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>
+                                            <span className="text-sm font-medium">Visitor Category</span>
+                                        </div>
+                                        <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.visitor_category}</div>
                                     </div>
-                                    <div>
-                                        <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">End Date</label>
-                                        <p className="font-bold text-[#0f172a] text-xs">{new Date(selectedRequest.end_date).toLocaleDateString()}</p>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Visit Purpose</label>
-                                        <p className="font-bold text-[#0f172a] text-xs truncate">{selectedRequest.purpose_of_visit}</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Category</label>
-                                        <p className="font-bold text-[#0f172a] text-xs truncate">{selectedRequest.visitor_category}</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Site</label>
-                                        <p className="font-bold text-[#0f172a] text-xs truncate">{selectedRequest.visiting_site || 'N/A'}</p>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Cost Center</label>
-                                        <p className="font-bold text-[#0f172a] text-xs">{details.costCenter || 'N/A'}</p>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex gap-4 mb-4">
-                                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 flex-1">
-                                        <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Factory Tour</label>
-                                        <p className="font-bold text-[#0f172a] text-xs">{details.factoryTour || 'No'}</p>
-                                    </div>
-                                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 flex-1">
-                                        <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Meal Reg.</label>
-                                        <p className="font-bold text-[#0f172a] text-xs">{details.mealRegistration || 'No'}</p>
-                                    </div>
-                                </div>
 
-                                {selectedRequest.purpose_detail && (
-                                    <div className="mb-4">
-                                        <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Detail of Purpose</label>
-                                        <p className="font-bold text-[#0f172a] text-xs whitespace-pre-wrap bg-gray-50 p-2 rounded-lg border border-gray-100 max-h-20 overflow-y-auto">{selectedRequest.purpose_detail}</p>
+                                    {/* Visit Dates */}
+                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                        <div className="flex items-center gap-3 text-gray-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                                            <span className="text-sm font-medium">Visit Dates</span>
+                                        </div>
+                                        <div className="font-extrabold text-[#0f172a] text-sm">{new Date(selectedRequest.start_date).toLocaleDateString()} — {new Date(selectedRequest.end_date).toLocaleDateString()}</div>
                                     </div>
-                                )}
 
-                                <div className="mb-2">
-                                    <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Area Approvals</label>
-                                    <div className="bg-gray-50 rounded-lg border border-gray-100 overflow-hidden max-h-32 overflow-y-auto">
-                                        {selectedRequest.request_approvals?.map((app: any, idx: number) => (
-                                            <div key={app.id} className={`p-2 px-3 flex justify-between items-center ${idx !== selectedRequest.request_approvals.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                                                <div>
-                                                    <div className="font-bold text-xs text-[#0f172a] mb-0.5">{app.room_areas?.name || 'Unknown'}</div>
-                                                    <div className="text-[10px] text-gray-500 font-medium">By: <span className="text-[#db011c] font-bold">{app.approver_email}</span></div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="text-[9px] font-extrabold uppercase flex items-center justify-end gap-1" style={{ color: getStatusColor(app.status) }}>
-                                                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }} />
-                                                        {app.status}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {(!selectedRequest.request_approvals || selectedRequest.request_approvals.length === 0) && (
-                                            <div className="p-4 text-center text-gray-400 text-xs font-medium">No areas mapped.</div>
-                                        )}
+                                    {/* Purpose */}
+                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                        <div className="flex items-center gap-3 text-gray-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                                            <span className="text-sm font-medium">Purpose</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.purpose_of_visit}</div>
+                                            {selectedRequest.purpose_detail && <div className="text-[10px] text-gray-400 font-medium mt-1">{selectedRequest.purpose_detail}</div>}
+                                        </div>
+                                    </div>
+
+                                    {/* Visiting Site */}
+                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                        <div className="flex items-center gap-3 text-gray-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" /></svg>
+                                            <span className="text-sm font-medium">Visiting Site</span>
+                                        </div>
+                                        <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.visiting_site || 'N/A'}</div>
+                                    </div>
+
+                                    {/* Cost Center */}
+                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                        <div className="flex items-center gap-3 text-gray-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                            <span className="text-sm font-medium">Cost Center</span>
+                                        </div>
+                                        <div className="font-extrabold text-[#0f172a] text-sm">{details.costCenter || 'N/A'}</div>
+                                    </div>
+
+                                    {/* Factory Tour */}
+                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                        <div className="flex items-center gap-3 text-gray-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                                            <span className="text-sm font-medium">Factory Tour</span>
+                                        </div>
+                                        <div className="font-extrabold text-[#0f172a] text-sm">{details.factoryTour || 'No'}</div>
+                                    </div>
+
+                                    {/* Area Approvals */}
+                                    <div className="flex items-start justify-between py-4 border-b border-gray-50">
+                                        <div className="flex items-center gap-3 text-gray-500 mt-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                            <span className="text-sm font-medium">Area Approvals</span>
+                                        </div>
+                                        <div className="flex flex-col gap-2 items-end">
+                                            {selectedRequest.request_approvals?.map((app: any) => (
+                                                <span key={app.id} className="px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-2" style={{
+                                                    background: getStatusColor(app.status) + '08',
+                                                    color: getStatusColor(app.status),
+                                                    border: `1px solid ${getStatusColor(app.status)}20`
+                                                }}>
+                                                    {app.room_areas?.name || 'Unknown'}
+                                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
+                                                </span>
+                                            ))}
+                                            {(!selectedRequest.request_approvals || selectedRequest.request_approvals.length === 0) && (
+                                                <span className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">None</span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-3 px-4 bg-gray-50 flex justify-end gap-2 rounded-b-3xl border-t border-gray-100">
-                                <button onClick={() => setSelectedRequest(null)} className="px-4 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors bg-white">Close</button>
+                            <div className="p-6 bg-gray-50/50 flex justify-end gap-3 rounded-b-2xl">
+                                <button 
+                                    onClick={() => setSelectedRequest(null)} 
+                                    className="px-6 py-2.5 text-sm font-bold rounded-xl text-white bg-[#db011c] hover:bg-[#b00116] shadow-md shadow-red-500/20 transition-all flex items-center gap-2"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
+                                    Close
+                                </button>
                             </div>
                         </div>
                     </div>

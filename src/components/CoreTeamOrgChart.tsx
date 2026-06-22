@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface Employee {
   emp_id: string;
@@ -106,6 +106,29 @@ export default function CoreTeamOrgChart() {
   const [error, setError] = useState<string | null>(null);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const [selectedEmp, setSelectedEmp] = useState<Employee | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current && contentRef.current) {
+        const containerW = containerRef.current.clientWidth;
+        const containerH = containerRef.current.clientHeight;
+        const contentW = 1200; // Fixed width of the chart
+        const contentH = contentRef.current.offsetHeight || 600;
+
+        // Calculate scale to fit both width and height with padding
+        const scaleW = (containerW - 40) / contentW;
+        const scaleH = (containerH - 40) / contentH;
+        setScale(Math.min(scaleW, scaleH, 1));
+      }
+    };
+    // Need a slight delay on initial load for DOM to fully render dimensions
+    setTimeout(updateScale, 100);
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, [data]);
 
   useEffect(() => {
     fetch("/api/orgchart/core-team")
@@ -369,11 +392,16 @@ export default function CoreTeamOrgChart() {
   const { vp, globalOps, ie_fmu_mif, factoryMgmt } = data;
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 p-1 overflow-hidden select-none relative">
+    <div 
+      ref={containerRef}
+      className="w-full h-full flex flex-col items-center justify-center bg-slate-50 p-1 overflow-hidden select-none relative"
+    >
       
       {/* Zoom / Scaling Container with fixed width of 1200px to guarantee mathematical alignment of lines across all screens */}
       <div 
-        className="w-[1200px] mx-auto transform scale-[0.32] sm:scale-[0.52] md:scale-[0.62] lg:scale-[0.82] xl:scale-[0.96] origin-top transition-transform duration-300 flex flex-col items-center"
+        ref={contentRef}
+        className="w-[1200px] mx-auto transform origin-center transition-transform duration-300 flex flex-col items-center"
+        style={{ transform: `scale(${scale})` }}
       >
         
 

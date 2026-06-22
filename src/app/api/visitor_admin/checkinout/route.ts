@@ -59,9 +59,13 @@ export async function GET(request: Request) {
         }
 
         if (checkInOutStatus) {
-            whereConditions.push(`COALESCE(c.status, 'PENDING') = $${paramCount}`);
-            queryParams.push(checkInOutStatus);
-            paramCount += 1;
+            if (checkInOutStatus === 'HISTORY') {
+                whereConditions.push(`c.status IN ('CHECKED_IN', 'CHECKED_OUT')`);
+            } else {
+                whereConditions.push(`COALESCE(c.status, 'PENDING') = $${paramCount}`);
+                queryParams.push(checkInOutStatus);
+                paramCount += 1;
+            }
         }
 
         if (search) {

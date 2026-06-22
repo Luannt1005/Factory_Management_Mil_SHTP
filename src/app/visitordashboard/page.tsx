@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'; // Add missing import if needed
+import { ArrowLeftIcon, CalendarDaysIcon, DocumentTextIcon, UserGroupIcon, MapPinIcon, CurrencyDollarIcon, BuildingOfficeIcon, IdentificationIcon, TagIcon, ClockIcon, CheckCircleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 export default function Dashboard() {
     const [requests, setRequests] = useState<any[]>([]);
@@ -12,9 +13,11 @@ export default function Dashboard() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
+    const [mounted, setMounted] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
+        setMounted(true);
         fetchMyRequests(1);
     }, [startDate, endDate]);
 
@@ -223,133 +226,121 @@ export default function Dashboard() {
             </div>
 
             {/* MODAL OVERLAY */}
-            {selectedRequest && (() => {
+            {selectedRequest && mounted && createPortal((() => {
                 const details = parseDetails(selectedRequest.details);
+                
+                let visitorsList: any[] = [];
+                try {
+                    visitorsList = selectedRequest.visitors ? JSON.parse(selectedRequest.visitors) : [];
+                } catch (e) { }
+
+                if (!visitorsList || visitorsList.length === 0) {
+                    visitorsList = [{
+                        name: selectedRequest.visitor_name || "Unknown",
+                        company: selectedRequest.current_company || "",
+                        title: selectedRequest.visitor_title || "",
+                        email: ""
+                    }];
+                }
+
+                const Row = ({ icon: Icon, label, value, children }: any) => (
+                    <div className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0">
+                        <div className="flex items-center gap-3 text-gray-500 w-1/3 min-w-[140px]">
+                            {Icon && <Icon className="w-5 h-5 text-gray-400" />}
+                            <span className="text-sm font-medium">{label}</span>
+                        </div>
+                        <div className="text-right flex-1 text-sm font-bold text-[#0f172a] flex justify-end">
+                            {children || value}
+                        </div>
+                    </div>
+                );
+
                 return (
                     <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-[100] p-4 pt-20"
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
                         onClick={() => setSelectedRequest(null)}
                     >
                         <div
-                            className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200"
+                            className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200 border-t-[6px] border-[#db011c]"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="p-6 px-8 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10">
-                                <h2 className="text-xl font-extrabold text-[#0f172a]">Application Details</h2>
-                                <button
-                                    onClick={() => setSelectedRequest(null)}
-                                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
-                                >
-                                    &times;
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => setSelectedRequest(null)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
 
-                            <div className="p-8">
-                                <div className="flex flex-wrap gap-4 justify-between items-start mb-10">
-                                    <div>
-                                        {(() => {
-                                            try {
-                                                const visitorsList = selectedRequest.visitors ? JSON.parse(selectedRequest.visitors) : [];
-                                                if (visitorsList && visitorsList.length > 0) {
-                                                    return visitorsList.map((v: any, i: number) => (
-                                                        <div key={i} className="mb-4">
-                                                            <h3 className="text-3xl font-extrabold text-[#0f172a] mb-1">{v.name}</h3>
-                                                            <p className="text-gray-500 font-medium">{v.title} @ {v.company}</p>
-                                                        </div>
-                                                    ));
-                                                }
-                                            } catch (e) { }
-                                            return (
-                                                <div className="mb-4">
-                                                    <h3 className="text-3xl font-extrabold text-[#0f172a] mb-2">{selectedRequest.visitor_name}</h3>
-                                                    <p className="text-gray-500 font-medium">{selectedRequest.visitor_title} @ {selectedRequest.current_company}</p>
-                                                </div>
-                                            );
-                                        })()}
-                                    </div>
-                                    <div className="text-left">
-                                        <span className="px-5 py-2 rounded-full text-sm font-extrabold inline-block" style={{
-                                            background: getStatusColor(selectedRequest.status) + '15',
-                                            color: getStatusColor(selectedRequest.status),
-                                        }}>
-                                            {selectedRequest.status}
-                                        </span>
-                                        <p className="text-xs text-gray-400 mt-3 font-medium">Ref: {selectedRequest.id.split('-')[0].toUpperCase()}</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-10">
-                                    <div>
-                                        <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Visit Dates</label>
-                                        <p className="font-bold text-[#0f172a]">{new Date(selectedRequest.start_date).toLocaleDateString()} &mdash; {new Date(selectedRequest.end_date).toLocaleDateString()}</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Visit Purpose</label>
-                                        <p className="font-bold text-[#0f172a]">{selectedRequest.purpose_of_visit}</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Visitor Category</label>
-                                        <p className="font-bold text-[#0f172a]">{selectedRequest.visitor_category}</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Visiting Site</label>
-                                        <p className="font-bold text-[#0f172a]">{selectedRequest.visiting_site || 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Cost Center</label>
-                                        <p className="font-bold text-[#0f172a]">{details.costCenter || 'N/A'}</p>
-                                    </div>
-                                    {selectedRequest.purpose_detail && (
-                                        <div className="sm:col-span-2">
-                                            <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Detail of Purpose</label>
-                                            <p className="font-bold text-[#0f172a] whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100">{selectedRequest.purpose_detail}</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="mb-10">
-                                    <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-4">Area Approvals</label>
-                                    <div className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
-                                        {selectedRequest.request_approvals?.map((app: any, idx: number) => (
-                                            <div key={app.id} className={`p-5 px-6 flex justify-between items-center ${idx !== selectedRequest.request_approvals.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                                                <div>
-                                                    <div className="font-bold text-sm text-[#0f172a] mb-1">{app.room_areas?.name || 'Unknown Area'}</div>
-                                                    <div className="text-xs text-gray-500 font-medium">Approver: <span className="text-[#db011c] font-bold">{app.approver_email}</span></div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="text-[0.7rem] font-extrabold uppercase flex items-center justify-end gap-2" style={{ color: getStatusColor(app.status) }}>
-                                                        <span className="w-2 h-2 rounded-full" style={{ background: getStatusColor(app.status) }} />
-                                                        {app.status}
-                                                    </span>
-                                                    {app.acted_at && <div className="text-[0.65rem] text-gray-400 mt-1 font-medium">Processed on {new Date(app.acted_at).toLocaleDateString()}</div>}
+                            <div className="p-6 md:p-8">
+                                <div className="flex flex-col gap-4 mb-6 pb-6 border-b border-gray-100">
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Visitors ({visitorsList.length})</h3>
+                                    <div className="flex flex-col gap-2 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
+                                        {visitorsList.map((v: any, idx: number) => (
+                                            <div key={idx} className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+                                                <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                                <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-1 overflow-hidden">
+                                                    <h2 className="text-sm font-bold text-[#0f172a] truncate">{v.name}</h2>
+                                                    <p className="text-xs text-gray-500 truncate font-medium">
+                                                        {v.title ? `${v.title} @ ` : ''}{v.company || 'N/A'}
+                                                    </p>
                                                 </div>
                                             </div>
                                         ))}
-                                        {(!selectedRequest.request_approvals || selectedRequest.request_approvals.length === 0) && (
-                                            <div className="p-8 text-center text-gray-400 text-sm font-medium">No specific areas were selected for this request.</div>
-                                        )}
                                     </div>
                                 </div>
 
-                                <div className="flex gap-8">
-                                    <div>
-                                        <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Factory Tour</label>
-                                        <p className="font-bold text-[#0f172a]">{details.factoryTour || 'No'}</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Meal Registration</label>
-                                        <p className="font-bold text-[#0f172a]">{details.mealRegistration || 'No'}</p>
-                                    </div>
+                                <div className="space-y-1">
+                                    <Row icon={IdentificationIcon} label="Request Ref" value={selectedRequest.id.split('-')[0].toUpperCase()} />
+                                    <Row icon={TagIcon} label="Status">
+                                        <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5" style={{
+                                            background: getStatusColor(selectedRequest.status) + '15',
+                                            color: getStatusColor(selectedRequest.status),
+                                        }}>
+                                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(selectedRequest.status) }}></span>
+                                            {selectedRequest.status}
+                                        </span>
+                                    </Row>
+                                    <Row icon={UserGroupIcon} label="Visitor Category" value={selectedRequest.visitor_category} />
+                                    <Row icon={CalendarDaysIcon} label="Visit Dates" value={`${new Date(selectedRequest.start_date).toLocaleDateString()} — ${new Date(selectedRequest.end_date).toLocaleDateString()}`} />
+                                    <Row icon={DocumentTextIcon} label="Purpose">
+                                        <div className="text-right">
+                                            <div>{selectedRequest.purpose_of_visit}</div>
+                                            {selectedRequest.purpose_detail && <div className="text-xs text-gray-400 font-normal mt-1">{selectedRequest.purpose_detail}</div>}
+                                        </div>
+                                    </Row>
+                                    <Row icon={BuildingOfficeIcon} label="Visiting Site" value={selectedRequest.visiting_site || 'N/A'} />
+                                    <Row icon={CurrencyDollarIcon} label="Cost Center" value={details.costCenter || 'N/A'} />
+                                    <Row icon={MapPinIcon} label="Factory Tour" value={details.factoryTour || 'No'} />
+                                    
+                                    {selectedRequest.request_approvals && selectedRequest.request_approvals.length > 0 && (
+                                        <Row icon={ShieldCheckIcon} label="Area Approvals">
+                                            <div className="flex flex-col gap-2 w-full items-end">
+                                                {selectedRequest.request_approvals.map((app: any) => (
+                                                    <span key={app.id} className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100" style={{ color: getStatusColor(app.status) }}>
+                                                        {app.room_areas?.name || 'Area'}
+                                                        <span className="w-1.5 h-1.5 rounded-full ml-1" style={{ background: getStatusColor(app.status) }}></span>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </Row>
+                                    )}
                                 </div>
                             </div>
-
-                            <div className="p-6 px-8 bg-gray-50 flex justify-end gap-4 rounded-b-3xl border-t border-gray-100">
-                                <button onClick={() => setSelectedRequest(null)} className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors bg-white">Close</button>
+                            
+                            <div className="p-4 px-8 bg-gray-50 rounded-b-xl border-t border-gray-100 flex justify-end">
+                                <button onClick={() => setSelectedRequest(null)} className="px-6 py-2 bg-[#db011c] hover:bg-[#b00116] text-white text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                                        <path d="M2.695 14.763l-1.262 3.155a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+                                    </svg>
+                                    Close
+                                </button>
                             </div>
                         </div>
                     </div>
                 );
-            })()}
+            })(), document.body)}
 
         </div>
     );

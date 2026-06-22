@@ -186,11 +186,10 @@ export default function FullPagePresenter() {
                 setActiveIndex(idx);
               }
             }}
-            className={`w-3 h-3 rounded-full transition-all duration-500 border ${
-              idx === activeIndex
+            className={`w-3 h-3 rounded-full transition-all duration-500 border ${idx === activeIndex
                 ? "bg-[#db011c] border-[#db011c] scale-125 shadow-md shadow-[#db011c]/30"
                 : "bg-gray-200 border-gray-300 hover:bg-gray-400"
-            }`}
+              }`}
             title={slide.title}
           />
         ))}
@@ -201,22 +200,20 @@ export default function FullPagePresenter() {
         <button
           onClick={() => handleScroll("up")}
           disabled={activeIndex === 0}
-          className={`p-2.5 rounded-full border transition-all ${
-            activeIndex === 0
+          className={`p-2.5 rounded-full border transition-all ${activeIndex === 0
               ? "text-gray-300 border-gray-100 bg-gray-50/50 cursor-not-allowed"
               : "text-gray-600 border-gray-200 bg-white shadow-sm hover:bg-gray-50 hover:scale-105 active:scale-95"
-          }`}
+            }`}
         >
           <ChevronUpIcon className="w-5 h-5" />
         </button>
         <button
           onClick={() => handleScroll("down")}
           disabled={activeIndex === slides.length - 1}
-          className={`p-2.5 rounded-full border transition-all ${
-            activeIndex === slides.length - 1
+          className={`p-2.5 rounded-full border transition-all ${activeIndex === slides.length - 1
               ? "text-gray-300 border-gray-100 bg-gray-50/50 cursor-not-allowed"
               : "text-gray-600 border-gray-200 bg-white shadow-sm hover:bg-gray-50 hover:scale-105 active:scale-95"
-          }`}
+            }`}
         >
           <ChevronDownIcon className="w-5 h-5" />
         </button>
@@ -239,61 +236,62 @@ export default function FullPagePresenter() {
           return (
             <div
               key={slide.id}
-              className="w-full h-full flex flex-col md:flex-row items-center gap-8 md:gap-12 px-8 md:px-12 lg:px-16 py-8 relative overflow-hidden bg-[var(--color-bg-page)]"
+              className="w-full h-full flex flex-col gap-6 px-8 md:px-12 lg:px-16 pt-8 pb-4 relative overflow-hidden bg-[var(--color-bg-page)]"
             >
-              {/* Left Side: Info */}
-              <div className="w-full md:w-[22%] lg:w-[18%] flex flex-col justify-center h-full space-y-6 z-10 text-left">
+              {/* Top Side: Info */}
+              <div className="w-full flex flex-col items-start gap-1 z-10 text-left mb-2">
                 <div
-                  className={`transition-all duration-700 delay-300 transform ${
+                  className={`flex flex-row items-end gap-3 transition-all duration-700 delay-300 transform ${
                     isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
                   }`}
                 >
-                  <span className="text-5xl md:text-7xl font-black text-[#db011c] tracking-tighter block mb-2">
+                  <span className="text-4xl md:text-5xl font-black text-[#db011c] tracking-tighter leading-none">
                     {slide.number}
                   </span>
-                  <div className="w-12 h-1 bg-[#db011c] mb-4"></div>
-                  <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
+                  <div className="w-1 h-8 md:h-10 bg-[#db011c] mb-0.5"></div>
+                  <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 leading-tight mb-0.5">
                     {slide.title}
                   </h2>
                 </div>
 
-                <p
-                  className={`text-gray-500 font-light leading-relaxed text-sm md:text-base transition-all duration-700 delay-500 transform ${
-                    isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                  }`}
-                >
-                  {slide.description}
-                </p>
-
-                {/* Sub-tabs Selector for type "tabs" */}
-                {slide.type === "tabs" && (
-                  <div
-                    className={`flex flex-wrap gap-2 pt-2 transition-all duration-700 delay-700 transform ${
+                <div className="w-full max-w-4xl mt-1">
+                  <p
+                    className={`text-gray-500 font-light leading-relaxed text-sm md:text-base text-left transition-all duration-700 delay-500 transform ${
                       isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
                     }`}
                   >
-                    {(slide.content as any[]).map((tab, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setActiveTab(idx)}
-                        className={`px-4 py-2 text-xs font-bold uppercase rounded-lg border transition-all cursor-pointer ${
-                          idx === activeTab
-                            ? "bg-gray-900 border-gray-900 text-white shadow-sm"
-                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        {tab.title}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                    {slide.description}
+                  </p>
+
+                  {/* Sub-tabs Selector for type "tabs" */}
+                  {slide.type === "tabs" && (
+                    <div
+                      className={`flex flex-wrap justify-start gap-2 pt-3 transition-all duration-700 delay-700 transform ${
+                        isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                      }`}
+                    >
+                      {(slide.content as any[]).map((tab, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setActiveTab(idx)}
+                          className={`px-4 py-1.5 text-xs font-bold uppercase rounded-lg border transition-all cursor-pointer ${
+                            idx === activeTab
+                              ? "bg-gray-900 border-gray-900 text-white shadow-sm"
+                              : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          {tab.title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Right Side: Media Container */}
+              {/* Bottom Side: Media Container */}
               <div
-                className={`h-[60%] md:h-full flex items-center justify-center relative transition-all duration-1000 delay-400 transform ${
-                  isActive ? "opacity-100 scale-100" : "opacity-0 scale-95"
-                } w-full md:w-[78%] lg:w-[82%]`}
+                className={`flex-1 flex items-center justify-center relative transition-all duration-1000 delay-400 transform ${isActive ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                  } w-full min-h-0`}
               >
                 {/* Image Slide */}
                 {slide.type === "image" && (
@@ -366,7 +364,8 @@ export default function FullPagePresenter() {
         })}
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes fadeIn {
           from { opacity: 0; transform: scale(0.98); }
           to { opacity: 1; transform: scale(1); }

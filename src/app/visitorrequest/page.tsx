@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, BuildingOffice2Icon, GlobeAsiaAustraliaIcon, UserGroupIcon, BuildingOfficeIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import Dashboard from '../visitordashboard/page';
 
@@ -13,6 +13,7 @@ export default function NewRequestPage() {
     const [rooms, setRooms] = useState<any[]>([]);
     const [step, setStep] = useState(1);
     const [showAllVisitorsModal, setShowAllVisitorsModal] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
 
     const [formData, setFormData] = useState({
         visitors: [{ name: '', title: '', company: '' }],
@@ -220,84 +221,25 @@ export default function NewRequestPage() {
     };
 
     return (
-<<<<<<< Updated upstream
-        <div style={{ minHeight: '100vh', background: 'var(--background)', padding: '2rem 1rem' }}>
-            <div className="container mx-auto" style={{ maxWidth: activeTab === 'request' ? '1000px' : '1280px', transition: 'max-width 0.3s ease' }}>
-
-                {/* Tabs Navigation At Top */}
-                <div className="flex justify-center mb-8">
-                    <div className="bg-white p-1 rounded-full inline-flex space-x-1 shadow-sm border border-gray-200">
-                        <button 
-                            onClick={() => setActiveTab('request')}
-                            className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-200 ${activeTab === 'request' ? 'bg-[#db011c] text-white shadow-md' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-                        >
-                            Registration
-                        </button>
-                        <button 
-                            onClick={() => setActiveTab('dashboard')}
-                            className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-[#db011c] text-white shadow-md' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-                        >
-                            My Dashboard
-                        </button>
-                    </div>
-=======
-        <div style={{ minHeight: '100vh', background: 'var(--background)', padding: '2rem 1.5rem' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--background)', padding: '0.5rem 1.5rem' }}>
             {/* Tabs Navigation - Far left corner */}
-            <div className="flex justify-start mb-6">
-                <div className="bg-gray-100 p-1.5 rounded-xl inline-flex space-x-1 shadow-inner">
+            <div className="flex justify-start mb-8 border-b border-gray-200 w-full">
+                <div className="flex space-x-8 px-2">
                     <button 
                         onClick={() => setActiveTab('request')}
-                        className={`px-8 py-3 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer ${activeTab === 'request' ? 'bg-white text-red-600 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
-                        style={{ color: activeTab === 'request' ? '#db011c' : '#64748b' }}
+                        className={`pb-3 pt-2 text-sm font-bold transition-all duration-200 cursor-pointer uppercase tracking-wide border-b-[3px] ${activeTab === 'request' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                     >
                         Registration
                     </button>
                     <button 
                         onClick={() => setActiveTab('dashboard')}
-                        className={`px-8 py-3 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer ${activeTab === 'dashboard' ? 'bg-white text-red-600 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
-                        style={{ color: activeTab === 'dashboard' ? '#db011c' : '#64748b' }}
+                        className={`pb-3 pt-2 text-sm font-bold transition-all duration-200 cursor-pointer uppercase tracking-wide border-b-[3px] ${activeTab === 'dashboard' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                     >
-                        My Dashboard
+                        My Request
                     </button>
->>>>>>> Stashed changes
                 </div>
             </div>
 
-<<<<<<< Updated upstream
-                {activeTab === 'request' ? (
-                    <div className="animate-in fade-in duration-500">
-                        {/* Header Image Section */}
-                        <div style={{
-                            width: '100%',
-                            height: '280px',
-                            borderRadius: '24px 24px 0 0',
-                            overflow: 'hidden',
-                            position: 'relative',
-                            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                            marginBottom: '-40px',
-                            zIndex: 1
-                        }}>
-                            <img src="/visitor_header.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Milwaukee Welcome" />
-                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '2.5rem' }}>
-                                <h1 style={{ color: 'white', fontSize: '2.8rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
-                                    VISITOR REGISTRATION
-                                </h1>
-                                <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem' }}>
-                                    Milwaukee Tool SHTP Facility Access
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white" style={{ padding: '4rem 3rem 3rem', borderRadius: '24px', position: 'relative', zIndex: 0, border: '1px solid #e2e8f0' }}>
-                            <StepIndicator />
-
-                            <div style={{ animation: 'slideFade 0.5s ease-out' }}>
-                        {step === 1 && (
-                            <section>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                                    <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
-                                    <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Basic Information</h2>
-=======
             <div className="container mx-auto" style={{ maxWidth: activeTab === 'request' ? '1000px' : '1200px', margin: '0 auto' }}>
 
                 {activeTab === 'request' ? (
@@ -305,16 +247,17 @@ export default function NewRequestPage() {
                         {!formData.visitorCategory ? (
                             <div className="animate-in fade-in duration-500" style={{ maxWidth: '900px', margin: '2rem auto 4rem' }}>
                                 <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                                    <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '1rem', letterSpacing: '-0.03em' }}>Welcome to Milwaukee Tool SHTP</h1>
-                                    <p style={{ fontSize: '1.1rem', color: '#64748b' }}>Please select your visitor category to begin registration.</p>
->>>>>>> Stashed changes
+                                    <h1 style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0f172a', marginBottom: '1rem', letterSpacing: '-0.02em' }}>Welcome to Milwaukee Tool SHTP</h1>
+                                    <p style={{ fontSize: '1.1rem', color: '#475569' }}>Please select your visitor category to begin registration.</p>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', maxWidth: '850px', margin: '0 auto' }}>
                                     {[
-                                        { id: 'Vendor/Contractor', label: 'Vendor / Contractor', icon: '🏢/👷', desc: 'Suppliers, vendors, or contractors visiting or working on-site' },
-                                        { id: 'MIL/TTI Expat / SHTP Business trip', label: 'MIL/TTI Expat / Business trip', icon: '✈️', desc: 'Internal employees on business trip' },
-                                        { id: 'Interviewee', icon: '🤝', desc: 'Candidates visiting for job interviews' }
-                                    ].map((cat) => (
+                                        { id: 'Vendor/Contractor', label: 'Vendor / Contractor', icon: BuildingOffice2Icon, desc: 'Suppliers, vendors, or contractors visiting or working on-site' },
+                                        { id: 'MIL/TTI Expat / SHTP Business trip', label: 'MIL/TTI Expat / Business trip', icon: GlobeAsiaAustraliaIcon, desc: 'Internal employees on business trip' },
+                                        { id: 'Interviewee', icon: UserGroupIcon, desc: 'Candidates visiting for job interviews' }
+                                    ].map((cat) => {
+                                        const IconComponent = cat.icon;
+                                        return (
                                         <div
                                             key={cat.id}
                                             onClick={() => {
@@ -323,8 +266,8 @@ export default function NewRequestPage() {
                                             }}
                                             style={{
                                                 padding: '2.5rem 1.5rem',
-                                                borderRadius: '24px',
-                                                border: '2px solid #e2e8f0',
+                                                borderRadius: '16px',
+                                                border: '1px solid #e2e8f0',
                                                 background: 'white',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -333,26 +276,49 @@ export default function NewRequestPage() {
                                                 alignItems: 'center',
                                                 gap: '1rem',
                                                 textAlign: 'center',
-                                                boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
                                             }}
                                             onMouseEnter={(e) => {
                                                 e.currentTarget.style.borderColor = '#db011c';
-                                                e.currentTarget.style.transform = 'translateY(-5px)';
-                                                e.currentTarget.style.boxShadow = '0 12px 24px rgba(219, 1, 28, 0.15)';
+                                                e.currentTarget.style.transform = 'translateY(-4px)';
+                                                e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(219, 1, 28, 0.1), 0 10px 10px -5px rgba(219, 1, 28, 0.04)';
+                                                const iconDiv = e.currentTarget.querySelector('.icon-container') as HTMLElement;
+                                                if (iconDiv) {
+                                                    iconDiv.style.backgroundColor = '#db011c';
+                                                    iconDiv.style.color = 'white';
+                                                }
                                             }}
                                             onMouseLeave={(e) => {
                                                 e.currentTarget.style.borderColor = '#e2e8f0';
                                                 e.currentTarget.style.transform = 'none';
-                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.02)';
+                                                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+                                                const iconDiv = e.currentTarget.querySelector('.icon-container') as HTMLElement;
+                                                if (iconDiv) {
+                                                    iconDiv.style.backgroundColor = '#f1f5f9';
+                                                    iconDiv.style.color = '#334155';
+                                                }
                                             }}
                                         >
-                                            <span style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>{cat.icon}</span>
+                                            <div className="icon-container" style={{
+                                                width: '80px',
+                                                height: '80px',
+                                                borderRadius: '50%',
+                                                backgroundColor: '#f1f5f9',
+                                                color: '#334155',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.3s ease',
+                                                marginBottom: '0.5rem'
+                                            }}>
+                                                <IconComponent className="w-10 h-10" />
+                                            </div>
                                             <div>
-                                                <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1e293b', marginBottom: '0.5rem' }}>{cat.label || cat.id}</h3>
-                                                <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.4' }}>{cat.desc}</p>
+                                                <h3 style={{ fontWeight: 700, fontSize: '1.25rem', color: '#0f172a', marginBottom: '0.5rem' }}>{cat.label || cat.id}</h3>
+                                                <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: '1.5' }}>{cat.desc}</p>
                                             </div>
                                         </div>
-                                    ))}
+                                    )})}
                                 </div>
                             </div>
                         ) : (
@@ -369,6 +335,22 @@ export default function NewRequestPage() {
                                     zIndex: 1
                                 }}>
                                     <img src="/visitor_header.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Milwaukee Welcome" />
+                                    
+                                    {/* Back/Change Category Button overlaid on image */}
+                                    <button 
+                                        onClick={() => setFormData({ ...formData, visitorCategory: '' })}
+                                        className="absolute top-6 left-6 z-10 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                    >
+                                        <ArrowLeftIcon className="w-4 h-4" />
+                                        Change Category ({
+                                            formData.visitorCategory === 'MIL/TTI Expat / SHTP Business trip' 
+                                                ? 'Expat/Business trip' 
+                                                : (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor')
+                                                    ? 'Vendor/Contractor'
+                                                    : formData.visitorCategory
+                                        })
+                                    </button>
+
                                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '2.5rem' }}>
                                         <h1 style={{ color: 'white', fontSize: '2.8rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
                                             VISITOR REGISTRATION
@@ -380,24 +362,8 @@ export default function NewRequestPage() {
                                 </div>
 
                                 {/* Registration Form Box */}
-                                <div className="bg-white" style={{ padding: '4rem 3rem 3rem', borderRadius: '24px', position: 'relative', zIndex: 0, border: '1px solid #e2e8f0' }}>
+                                <div className="bg-white" style={{ padding: '3rem', borderRadius: '24px', position: 'relative', zIndex: 0, border: '1px solid #e2e8f0' }}>
                                     <div className="animate-in fade-in duration-500">
-                                        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '2rem' }}>
-                                            <button 
-                                                onClick={() => setFormData({ ...formData, visitorCategory: '' })}
-                                                style={{ background: 'transparent', border: '1px solid #e2e8f0', padding: '0.5rem 1rem', borderRadius: '8px', color: '#64748b', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', transition: 'all 0.2s' }}
-                                                onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#1e293b'; }}
-                                                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
-                                            >
-                                                ← Change Category ({
-                                                    formData.visitorCategory === 'MIL/TTI Expat / SHTP Business trip' 
-                                                        ? 'Expat/Business trip' 
-                                                        : (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor')
-                                                            ? 'Vendor/Contractor'
-                                                            : formData.visitorCategory
-                                                })
-                                            </button>
-                                        </div>
 
                                         <StepIndicator />
 
@@ -416,44 +382,30 @@ export default function NewRequestPage() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setFormData({ ...formData, visitorCategory: 'Vendor' })}
-                                                                style={{
-                                                                    padding: '1.2rem 1.5rem',
-                                                                    borderRadius: '16px',
-                                                                    border: formData.visitorCategory === 'Vendor' ? '3px solid #db011c' : '2px solid #e2e8f0',
-                                                                    background: formData.visitorCategory === 'Vendor' ? 'rgba(219, 1, 28, 0.05)' : 'white',
-                                                                    color: formData.visitorCategory === 'Vendor' ? '#db011c' : '#475569',
-                                                                    fontWeight: 800,
-                                                                    cursor: 'pointer',
-                                                                    transition: 'all 0.2s ease',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    gap: '0.8rem',
-                                                                    boxShadow: formData.visitorCategory === 'Vendor' ? '0 8px 20px rgba(219, 1, 28, 0.15)' : '0 2px 6px rgba(0,0,0,0.02)'
-                                                                }}
+                                                                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 ${
+                                                                    formData.visitorCategory === 'Vendor' 
+                                                                    ? 'border-[#db011c] bg-[#db011c]/5 text-[#db011c]' 
+                                                                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                                                }`}
                                                             >
-                                                                <span style={{ fontSize: '1.5rem' }}>🏢</span> Vendor
+                                                                <div className={`p-2 rounded-lg ${formData.visitorCategory === 'Vendor' ? 'bg-[#db011c]/10' : 'bg-gray-100'}`}>
+                                                                    <BuildingOfficeIcon className="w-6 h-6" />
+                                                                </div>
+                                                                <span className="font-bold text-[15px]">Vendor</span>
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setFormData({ ...formData, visitorCategory: 'Contractor' })}
-                                                                style={{
-                                                                    padding: '1.2rem 1.5rem',
-                                                                    borderRadius: '16px',
-                                                                    border: formData.visitorCategory === 'Contractor' ? '3px solid #db011c' : '2px solid #e2e8f0',
-                                                                    background: formData.visitorCategory === 'Contractor' ? 'rgba(219, 1, 28, 0.05)' : 'white',
-                                                                    color: formData.visitorCategory === 'Contractor' ? '#db011c' : '#475569',
-                                                                    fontWeight: 800,
-                                                                    cursor: 'pointer',
-                                                                    transition: 'all 0.2s ease',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    gap: '0.8rem',
-                                                                    boxShadow: formData.visitorCategory === 'Contractor' ? '0 8px 20px rgba(219, 1, 28, 0.15)' : '0 2px 6px rgba(0,0,0,0.02)'
-                                                                }}
+                                                                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 ${
+                                                                    formData.visitorCategory === 'Contractor' 
+                                                                    ? 'border-[#db011c] bg-[#db011c]/5 text-[#db011c]' 
+                                                                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                                                }`}
                                                             >
-                                                                <span style={{ fontSize: '1.5rem' }}>👷</span> Contractor
+                                                                <div className={`p-2 rounded-lg ${formData.visitorCategory === 'Contractor' ? 'bg-[#db011c]/10' : 'bg-gray-100'}`}>
+                                                                    <WrenchScrewdriverIcon className="w-6 h-6" />
+                                                                </div>
+                                                                <span className="font-bold text-[15px]">Contractor</span>
                                                             </button>
                                                         </div>
                                                     </div>
@@ -689,7 +641,7 @@ export default function NewRequestPage() {
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem' }}>
                                                 <button onClick={prevStep} style={{ background: 'transparent', border: '1px solid #cbd5e1', padding: '0.8rem 2rem', borderRadius: '8px', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}>Back</button>
                                                 {totalSteps === 2 ? (
-                                                    <button onClick={handleSubmit} disabled={loading} style={{
+                                                    <button type="button" onClick={() => setShowReviewModal(true)} disabled={loading} style={{
                                                         padding: '0.8rem 2.5rem',
                                                         background: 'linear-gradient(135deg, #db011c 0%, #900112 100%)',
                                                         color: 'white',
@@ -699,7 +651,7 @@ export default function NewRequestPage() {
                                                         cursor: 'pointer',
                                                         boxShadow: '0 4px 15px rgba(219, 1, 28, 0.3)'
                                                     }}>
-                                                        {loading ? 'Processing...' : 'SUBMIT REGISTRATION'}
+                                                        {loading ? 'Processing...' : 'REVIEW REGISTRATION'}
                                                     </button>
                                                 ) : (
                                                     <button onClick={nextStep} style={{ background: '#1e293b', color: 'white', padding: '0.8rem 2.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>Next Step →</button>
@@ -741,7 +693,7 @@ export default function NewRequestPage() {
 
                                             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2rem 0', borderTop: '1px solid #e2e8f0' }}>
                                                 <button onClick={prevStep} style={{ background: 'transparent', border: 'none', color: '#64748b', fontWeight: 700, cursor: 'pointer' }}>← Previous Step</button>
-                                                <button onClick={handleSubmit} disabled={loading} style={{
+                                                <button type="button" onClick={() => setShowReviewModal(true)} disabled={loading} style={{
                                                     padding: '1.2rem 4rem',
                                                     background: 'linear-gradient(135deg, #db011c 0%, #900112 100%)',
                                                     color: 'white',
@@ -752,7 +704,7 @@ export default function NewRequestPage() {
                                                     border: 'none',
                                                     cursor: 'pointer'
                                                 }}>
-                                                    {loading ? 'Processing...' : 'SUBMIT REGISTRATION'}
+                                                    {loading ? 'Processing...' : 'REVIEW REGISTRATION'}
                                                 </button>
                                             </div>
                                         </section>
@@ -764,7 +716,7 @@ export default function NewRequestPage() {
                         )}
                     </div>
                 ) : (
-                    <div className="w-full animate-in fade-in duration-500 mt-4">
+                    <div className="w-full mt-4">
                         <Dashboard />
                     </div>
                 )}
@@ -840,6 +792,113 @@ export default function NewRequestPage() {
                         <div className="px-6 py-4 border-t border-gray-100 bg-white flex justify-end">
                             <button onClick={() => setShowAllVisitorsModal(false)} className="bg-[#db011c] text-white font-bold px-8 py-2.5 rounded-xl hover:bg-[#900112] shadow-md transition-all">
                                 Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* REVIEW BEFORE SUBMIT MODAL */}
+            {showReviewModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+                    <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col overflow-hidden">
+                        <div className="px-8 py-6 border-b border-gray-100 bg-white">
+                            <h3 className="font-extrabold text-[#0f172a] text-2xl">Review Your Request</h3>
+                            <p className="text-sm text-gray-500 mt-1">Please double-check your information before submitting.</p>
+                        </div>
+                        <div className="px-8 py-6 bg-gray-50 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6">
+                            
+                            {/* Visitor Info */}
+                            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Category & Location</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <div className="text-xs text-gray-500 font-medium">Category</div>
+                                        <div className="font-bold text-gray-900">{formData.visitorCategory}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500 font-medium">Visiting Site</div>
+                                        <div className="font-bold text-gray-900">{formData.visitingSite}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Visitor List */}
+                            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Visitors ({formData.visitors.length})</h4>
+                                <div className="flex flex-col gap-3">
+                                    {formData.visitors.map((v, i) => (
+                                        <div key={i} className="flex flex-col">
+                                            <div className="font-bold text-sm text-gray-900">{v.name || 'Unnamed'}</div>
+                                            <div className="text-xs text-gray-500">{v.title} {v.title && v.company ? '@' : ''} {v.company}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Visit Details */}
+                            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Visit Details</h4>
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <div className="text-xs text-gray-500 font-medium">From Date</div>
+                                        <div className="font-bold text-gray-900">{formData.startDate || 'N/A'}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500 font-medium">To Date</div>
+                                        <div className="font-bold text-gray-900">{formData.endDate || 'N/A'}</div>
+                                    </div>
+                                </div>
+                                <div className="mb-4">
+                                    <div className="text-xs text-gray-500 font-medium">Purpose</div>
+                                    <div className="font-bold text-gray-900">{formData.purposeOfVisit}</div>
+                                    {formData.purposeDetail && <div className="text-sm text-gray-700 mt-1">{formData.purposeDetail}</div>}
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <div className="text-xs text-gray-500 font-medium">Factory Tour</div>
+                                        <div className="font-bold text-gray-900">{formData.details.factoryTour}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500 font-medium">Meal Registration</div>
+                                        <div className="font-bold text-gray-900">{formData.details.mealRegistration}</div>
+                                    </div>
+                                    {formData.details.costCenter && (
+                                        <div className="col-span-2">
+                                            <div className="text-xs text-gray-500 font-medium">Cost Center</div>
+                                            <div className="font-bold text-gray-900">{formData.details.costCenter}</div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Selected Areas */}
+                            {formData.roomIds.length > 0 && (
+                                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Selected Areas</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {formData.roomIds.map(id => {
+                                            const r = rooms.find((x:any) => x.id === id);
+                                            return r ? (
+                                                <span key={id} className="bg-red-50 text-red-700 font-bold px-3 py-1 rounded-lg text-xs border border-red-100">
+                                                    {r.name}
+                                                </span>
+                                            ) : null;
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                        <div className="px-8 py-5 border-t border-gray-100 bg-white flex justify-between items-center">
+                            <button onClick={() => setShowReviewModal(false)} className="text-gray-500 font-bold px-6 py-2.5 rounded-xl hover:bg-gray-100 transition-all">
+                                Edit Details
+                            </button>
+                            <button onClick={() => {
+                                setShowReviewModal(false);
+                                handleSubmit();
+                            }} disabled={loading} className="bg-[#db011c] text-white font-bold px-8 py-2.5 rounded-xl hover:bg-[#b00116] shadow-md shadow-red-500/30 transition-all flex items-center gap-2">
+                                {loading ? 'Processing...' : 'Confirm & Submit'}
                             </button>
                         </div>
                     </div>
