@@ -492,7 +492,7 @@ export default function CoreTeamOrgChart() {
         </div>
 
         {/* Level 3: Support Functions Divider */}
-        <div className="grid grid-cols-7 gap-3 w-full max-w-[1200px] mx-auto h-8 relative z-10 mt-6">
+        <div className="grid grid-cols-5 gap-3 w-full max-w-[1200px] mx-auto h-8 relative z-10 mt-6">
           {/* Col 1 horizontal line extended to the far left to catch the outside drop line */}
           <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "-20px", right: "-12px" }}></div></div>
           <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "-12px" }}></div></div>
@@ -501,20 +501,15 @@ export default function CoreTeamOrgChart() {
           
           <div className="relative">
              <div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "50%" }}></div>
-             <div className="absolute bottom-0 border-t-[2px] border-dotted border-red-500" style={{ left: "50%", right: "-12px" }}></div>
           </div>
-          
-          <div className="relative"><div className="absolute bottom-0 border-t-[2px] border-dotted border-red-500" style={{ left: 0, right: "-12px" }}></div></div>
-          <div className="relative"><div className="absolute bottom-0 border-t-[2px] border-dotted border-red-500" style={{ left: 0, right: "50%" }}></div></div>
         </div>
 
         {/* Support Grid */}
-        <div className="grid grid-cols-7 gap-3 w-full max-w-[1200px] mx-auto items-start">
-          {data.supportFunctions.map((emp, index) => {
-            const isDirect = index < 5;
+        <div className="grid grid-cols-5 gap-3 w-full max-w-[1200px] mx-auto items-start">
+          {data.supportFunctions.map((emp) => {
             return (
               <div key={emp.emp_id} className="col-span-1 flex flex-col items-center relative w-full">
-                {renderLeaderCard(emp, { showTopLine: true, isDotted: !isDirect })}
+                {renderLeaderCard(emp, { showTopLine: true, isDotted: false })}
               </div>
             );
           })}

@@ -61,7 +61,7 @@ export async function GET(req: Request) {
     jeffReports.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
 
     // Support functions in the exact order shown in the image
-    const supportIds = ['614043', '500904', '568007', '001238', '616797', '578935', '000010'];
+    const supportIds = ['614043', '500904', '568007', '001238', '616797'];
     const supportFunctions = supportIds.map(id => empMap[trimLeadingZeros(id) || '']).filter(Boolean);
 
     // Group direct reports for all employees
@@ -92,7 +92,7 @@ export async function GET(req: Request) {
     employees.forEach(emp => {
       const mgrId = getManagerId(emp);
       if (mgrId && reportsData[mgrId] !== undefined) {
-        if (trimLeadingZeros(emp.emp_id) !== mgrId && (emp.status === 'Active' || emp.status === null || emp.emp_id === '578935' || emp.emp_id === '000010')) {
+        if (trimLeadingZeros(emp.emp_id) !== mgrId && (emp.status === 'Active' || emp.status === null)) {
           reportsData[mgrId].push({
             emp_id: emp.emp_id,
             full_name: emp.full_name,
@@ -115,7 +115,7 @@ export async function GET(req: Request) {
       const mgrId = getManagerId(emp);
       if (mgrId) {
         if (!childrenMap[mgrId]) childrenMap[mgrId] = [];
-        if (emp.status === 'Active' || emp.status === null || emp.emp_id === '578935' || emp.emp_id === '000010') {
+        if (emp.status === 'Active' || emp.status === null) {
            if (trimLeadingZeros(emp.emp_id) !== mgrId) {
              childrenMap[mgrId].push(emp);
            }

@@ -9,7 +9,8 @@ export default function PageHeader() {
         pathname === "/introduction/about_vn" ||
         pathname === "/introduction/about_shtp" ||
         pathname === "/introduction/contacts" ||
-        pathname === "/visitorrequest"
+        pathname === "/visitorrequest" ||
+        pathname === "/visitoradmin/checkinout"
     ) {
         return null;
     }
@@ -68,13 +69,9 @@ export default function PageHeader() {
             subtitle: 'Overall management of visitor requests'
         },
         '/visitoradmin/rooms': {
-            title: 'Manage Rooms',
-            subtitle: 'Factory access control and room configuration'
+            title: 'Manage Rooms'
         },
-        '/visitoradmin/checkinout': {
-            title: 'Check-In / Check-Out Management',
-            subtitle: 'Manage visitor security logs and check-in status'
-        },
+
         '/profile': {
             title: 'Account Settings',
             subtitle: 'Manage your profile and preferences'

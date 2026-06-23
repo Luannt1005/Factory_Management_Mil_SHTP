@@ -13,18 +13,25 @@ export default function Dashboard() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
+    const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
     const [mounted, setMounted] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
         setMounted(true);
         fetchMyRequests(1);
-    }, [startDate, endDate]);
+    }, [startDate, endDate, activeTab]);
+
+    const setPageToOneAndFetch = () => {
+        setPagination(prev => ({ ...prev, page: 1 }));
+        fetchMyRequests(1);
+    };
 
     const fetchMyRequests = async (page: number) => {
         setLoading(true);
         try {
-            let url = `/api/requests?page=${page}&limit=${pagination.limit}`;
+            const apiEndpoint = activeTab === 'general' ? '/api/requests' : '/api/interviewee_requests/my';
+            let url = `${apiEndpoint}?page=${page}&limit=${pagination.limit}`;
             if (startDate && endDate) {
                 url += `&startDate=${startDate}&endDate=${endDate}`;
             }
@@ -65,6 +72,28 @@ export default function Dashboard() {
 
     return (
         <div className="flex flex-col gap-6">
+            {/* TABS */}
+            <div className="flex bg-white/50 backdrop-blur-sm p-1 rounded-xl border border-gray-200 shadow-sm w-fit">
+                <button
+                    onClick={() => { setActiveTab('general'); setPageToOneAndFetch(); }}
+                    className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'general'
+                        ? 'bg-white text-[#db011c] shadow-sm ring-1 ring-gray-200/50'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
+                        }`}
+                >
+                    General Visitors
+                </button>
+                <button
+                    onClick={() => { setActiveTab('interviewee'); setPageToOneAndFetch(); }}
+                    className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'interviewee'
+                        ? 'bg-white text-[#db011c] shadow-sm ring-1 ring-gray-200/50'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
+                        }`}
+                >
+                    Interviewee
+                </button>
+            </div>
+
             {/* Filters Row */}
             <div className="flex flex-wrap items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-4">
@@ -105,17 +134,30 @@ export default function Dashboard() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                                <th className="px-6 py-4">Code</th>
-                                <th className="px-6 py-4">Visitor / Company</th>
-                                <th className="px-6 py-4 text-center">Visit Period</th>
-                                <th className="px-6 py-4 text-center">Workflows</th>
-                                <th className="px-6 py-4 text-center">Overall Status</th>
-                                <th className="px-6 py-4 text-right pr-10">Details</th>
-                            </tr>
+                            {activeTab === 'general' ? (
+                                <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                    <th className="px-6 py-4">Code</th>
+                                    <th className="px-6 py-4">Visitor / Company</th>
+                                    <th className="px-6 py-4 text-center">Visit Period</th>
+                                    <th className="px-6 py-4 text-center">Workflows</th>
+                                    <th className="px-6 py-4 text-center">Overall Status</th>
+                                    <th className="px-6 py-4 text-right pr-10">Details</th>
+                                </tr>
+                            ) : (
+                                <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                    <th className="px-6 py-4">Code</th>
+                                    <th className="px-6 py-4">Interviewee</th>
+                                    <th className="px-6 py-4">Department / Interviewer</th>
+                                    <th className="px-6 py-4 text-center">Schedule Date</th>
+                                    <th className="px-6 py-4 text-center">Schedule Time</th>
+                                    <th className="px-6 py-4 text-center">Area</th>
+                                    <th className="px-6 py-4 text-center">Overall Status</th>
+                                    <th className="px-6 py-4 text-right pr-10">Details</th>
+                                </tr>
+                            )}
                         </thead>
                         <tbody className="text-[13px] font-medium bg-white">
-                            {requests.map((request) => (
+                            {requests.map((request) => activeTab === 'general' ? (
                                 <tr
                                     key={request.id}
                                     className="border-b border-gray-100 hover:bg-gray-50/50 cursor-pointer transition-colors"
@@ -161,6 +203,55 @@ export default function Dashboard() {
                                                 <span className="text-[10px] text-gray-400 italic">No areas</span>
                                             )}
                                         </div>
+                                    </td>
+                                    <td className="px-6 py-5 text-center">
+                                        <span className="inline-block px-3 py-1 rounded-md text-[10px] font-black tracking-tighter uppercase" style={{
+                                            background: getStatusColor(request.status) + '15',
+                                            color: getStatusColor(request.status),
+                                            border: `1px solid ${getStatusColor(request.status)}30`
+                                        }}>
+                                            {request.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-5 text-right pr-8">
+                                        <button className="text-[11px] font-black text-[#db011c] uppercase tracking-tighter hover:underline">
+                                            View Details &rarr;
+                                        </button>
+                                    </td>
+                                </tr>
+                            ) : (
+                                <tr
+                                    key={request.id}
+                                    className="border-b border-gray-100 hover:bg-gray-50/50 cursor-pointer transition-colors"
+                                    onClick={() => setSelectedRequest(request)}
+                                >
+                                    <td className="px-6 py-5">
+                                        <span className="text-[11px] font-black text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                                            #{request.id.split('-')[0].toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-5">
+                                        <div className="font-extrabold text-[#0f172a] text-[14px]">
+                                            {request.interviewee_name}
+                                        </div>
+                                        <div className="text-[11px] text-gray-500 mt-0.5 tracking-tight">{request.job_title}</div>
+                                    </td>
+                                    <td className="px-6 py-5">
+                                        <div className="font-bold text-[#0f172a] text-[12px]">
+                                            Dept: {request.interview_department}
+                                        </div>
+                                        <div className="text-[11px] text-gray-500 mt-0.5 tracking-tight">
+                                            By: {request.interviewer_name}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-5 text-center text-gray-700 tabular-nums font-bold">
+                                        {new Date(request.start_date).toLocaleDateString('vi-VN')}
+                                    </td>
+                                    <td className="px-6 py-5 text-center text-gray-700 tabular-nums font-bold">
+                                        {request.start_time}
+                                    </td>
+                                    <td className="px-6 py-5 text-center text-[11px] text-gray-600">
+                                        {request.interview_area}
                                     </td>
                                     <td className="px-6 py-5 text-center">
                                         <span className="inline-block px-3 py-1 rounded-md text-[10px] font-black tracking-tighter uppercase" style={{
@@ -274,59 +365,96 @@ export default function Dashboard() {
                             </button>
 
                             <div className="p-6 md:p-8">
-                                <div className="flex flex-col gap-4 mb-6 pb-6 border-b border-gray-100">
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Visitors ({visitorsList.length})</h3>
-                                    <div className="flex flex-col gap-2 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
-                                        {visitorsList.map((v: any, idx: number) => (
-                                            <div key={idx} className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-                                                <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
-                                                <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-1 overflow-hidden">
-                                                    <h2 className="text-sm font-bold text-[#0f172a] truncate">{v.name}</h2>
-                                                    <p className="text-xs text-gray-500 truncate font-medium">
-                                                        {v.title ? `${v.title} @ ` : ''}{v.company || 'N/A'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1">
-                                    <Row icon={IdentificationIcon} label="Request Ref" value={selectedRequest.id.split('-')[0].toUpperCase()} />
-                                    <Row icon={TagIcon} label="Status">
-                                        <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5" style={{
-                                            background: getStatusColor(selectedRequest.status) + '15',
-                                            color: getStatusColor(selectedRequest.status),
-                                        }}>
-                                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(selectedRequest.status) }}></span>
-                                            {selectedRequest.status}
-                                        </span>
-                                    </Row>
-                                    <Row icon={UserGroupIcon} label="Visitor Category" value={selectedRequest.visitor_category} />
-                                    <Row icon={CalendarDaysIcon} label="Visit Dates" value={`${new Date(selectedRequest.start_date).toLocaleDateString()} — ${new Date(selectedRequest.end_date).toLocaleDateString()}`} />
-                                    <Row icon={DocumentTextIcon} label="Purpose">
-                                        <div className="text-right">
-                                            <div>{selectedRequest.purpose_of_visit}</div>
-                                            {selectedRequest.purpose_detail && <div className="text-xs text-gray-400 font-normal mt-1">{selectedRequest.purpose_detail}</div>}
-                                        </div>
-                                    </Row>
-                                    <Row icon={BuildingOfficeIcon} label="Visiting Site" value={selectedRequest.visiting_site || 'N/A'} />
-                                    <Row icon={CurrencyDollarIcon} label="Cost Center" value={details.costCenter || 'N/A'} />
-                                    <Row icon={MapPinIcon} label="Factory Tour" value={details.factoryTour || 'No'} />
-                                    
-                                    {selectedRequest.request_approvals && selectedRequest.request_approvals.length > 0 && (
-                                        <Row icon={ShieldCheckIcon} label="Area Approvals">
-                                            <div className="flex flex-col gap-2 w-full items-end">
-                                                {selectedRequest.request_approvals.map((app: any) => (
-                                                    <span key={app.id} className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100" style={{ color: getStatusColor(app.status) }}>
-                                                        {app.room_areas?.name || 'Area'}
-                                                        <span className="w-1.5 h-1.5 rounded-full ml-1" style={{ background: getStatusColor(app.status) }}></span>
-                                                    </span>
+                                {activeTab === 'general' ? (
+                                    <>
+                                        <div className="flex flex-col gap-4 mb-6 pb-6 border-b border-gray-100">
+                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Visitors ({visitorsList.length})</h3>
+                                            <div className="flex flex-col gap-2 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
+                                                {visitorsList.map((v: any, idx: number) => (
+                                                    <div key={idx} className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+                                                        <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                                        <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-1 overflow-hidden">
+                                                            <h2 className="text-sm font-bold text-[#0f172a] truncate">{v.name}</h2>
+                                                            <p className="text-xs text-gray-500 truncate font-medium">
+                                                                {v.title ? `${v.title} @ ` : ''}{v.company || 'N/A'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 ))}
                                             </div>
-                                        </Row>
-                                    )}
-                                </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Row icon={IdentificationIcon} label="Request Ref" value={selectedRequest.id.split('-')[0].toUpperCase()} />
+                                            <Row icon={TagIcon} label="Status">
+                                                <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5" style={{
+                                                    background: getStatusColor(selectedRequest.status) + '15',
+                                                    color: getStatusColor(selectedRequest.status),
+                                                }}>
+                                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(selectedRequest.status) }}></span>
+                                                    {selectedRequest.status}
+                                                </span>
+                                            </Row>
+                                            <Row icon={UserGroupIcon} label="Visitor Category" value={selectedRequest.visitor_category} />
+                                            <Row icon={CalendarDaysIcon} label="Visit Dates" value={`${new Date(selectedRequest.start_date).toLocaleDateString()} — ${new Date(selectedRequest.end_date).toLocaleDateString()}`} />
+                                            <Row icon={DocumentTextIcon} label="Purpose">
+                                                <div className="text-right">
+                                                    <div>{selectedRequest.purpose_of_visit}</div>
+                                                    {selectedRequest.purpose_detail && <div className="text-xs text-gray-400 font-normal mt-1">{selectedRequest.purpose_detail}</div>}
+                                                </div>
+                                            </Row>
+                                            <Row icon={BuildingOfficeIcon} label="Visiting Site" value={selectedRequest.visiting_site || 'N/A'} />
+                                            <Row icon={CurrencyDollarIcon} label="Cost Center" value={details.costCenter || 'N/A'} />
+                                            <Row icon={MapPinIcon} label="Factory Tour" value={details.factoryTour || 'No'} />
+                                            
+                                            {selectedRequest.request_approvals && selectedRequest.request_approvals.length > 0 && (
+                                                <Row icon={ShieldCheckIcon} label="Area Approvals">
+                                                    <div className="flex flex-col gap-2 w-full items-end">
+                                                        {selectedRequest.request_approvals.map((app: any) => (
+                                                            <span key={app.id} className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100" style={{ color: getStatusColor(app.status) }}>
+                                                                {app.room_areas?.name || 'Area'}
+                                                                <span className="w-1.5 h-1.5 rounded-full ml-1" style={{ background: getStatusColor(app.status) }}></span>
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </Row>
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex flex-col gap-4 mb-6 pb-6 border-b border-gray-100">
+                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Interviewee Details</h3>
+                                            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl shrink-0">
+                                                    {selectedRequest.interviewee_name?.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-lg font-bold text-[#0f172a]">{selectedRequest.interviewee_name}</h2>
+                                                    <p className="text-sm text-gray-500 font-medium">{selectedRequest.job_title}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Row icon={IdentificationIcon} label="Visitor Code" value={selectedRequest.visitor_code} />
+                                            <Row icon={TagIcon} label="Status">
+                                                <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5" style={{
+                                                    background: getStatusColor(selectedRequest.status) + '15',
+                                                    color: getStatusColor(selectedRequest.status),
+                                                }}>
+                                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(selectedRequest.status) }}></span>
+                                                    {selectedRequest.status}
+                                                </span>
+                                            </Row>
+                                            <Row icon={BuildingOfficeIcon} label="Department" value={selectedRequest.interview_department} />
+                                            <Row icon={UserGroupIcon} label="Interviewer" value={selectedRequest.interviewer_name} />
+                                            <Row icon={CalendarDaysIcon} label="Schedule Date" value={new Date(selectedRequest.start_date).toLocaleDateString('vi-VN')} />
+                                            <Row icon={ClockIcon} label="Schedule Time" value={selectedRequest.start_time} />
+                                            <Row icon={MapPinIcon} label="Interview Area" value={selectedRequest.interview_area} />
+                                        </div>
+                                    </>
+                                )}
                             </div>
                             
                             <div className="p-4 px-8 bg-gray-50 rounded-b-xl border-t border-gray-100 flex justify-end">

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
+    const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 0 });
@@ -18,12 +19,12 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchRequests(1);
-    }, [startDate, endDate, category, code]);
+    }, [startDate, endDate, category, code, activeTab]);
 
     const fetchRequests = async (page: number) => {
         setLoading(true);
         try {
-            let url = `/api/visitor_admin/requests?page=${page}&limit=${pagination.limit}`;
+            let url = activeTab === 'general' ? `/api/visitor_admin/requests?page=${page}&limit=${pagination.limit}` : `/api/visitor_admin/interviewee_requests?page=${page}&limit=${pagination.limit}`;
             if (startDate && endDate) {
                 url += `&startDate=${startDate}&endDate=${endDate}`;
             }
@@ -51,7 +52,7 @@ export default function AdminDashboard() {
     const handleExportExcel = async () => {
         setExporting(true);
         try {
-            let url = `/api/visitor_admin/requests?page=1&limit=999999`;
+            let url = activeTab === 'general' ? `/api/visitor_admin/requests?page=1&limit=999999` : `/api/visitor_admin/interviewee_requests?page=1&limit=999999`;
             if (startDate && endDate) {
                 url += `&startDate=${startDate}&endDate=${endDate}`;
             }
@@ -68,22 +69,38 @@ export default function AdminDashboard() {
                 const XLSX = await import('xlsx');
                 
                 const exportData = data.requests.map((r: any) => {
-                    const details = parseDetails(r.details);
-                    return {
-                        'Code': '#' + r.id.split('-')[0].toUpperCase(),
-                        'Visitor Name': r.visitors ? (function(){try{return JSON.parse(r.visitors).map((v:any) => `${v.name} (${v.title})`).join(', ');}catch(e){return r.visitor_name;}}()) : r.visitor_name,
-                        'Current Company': r.current_company,
-                        'Submitter Name': r.profiles?.name,
-                        'Submitter Department': r.profiles?.department,
-                        'Start Date': new Date(r.start_date).toLocaleDateString('vi-VN'),
-                        'End Date': new Date(r.end_date).toLocaleDateString('vi-VN'),
-                        'Visitor Category': r.visitor_category,
-                        'Purpose Of Visit': r.purpose_of_visit,
-                        'Visiting Site': r.visiting_site,
-                        'Cost Center': details.costCenter || '',
-                        'Status': r.status,
-                        'Created At': new Date(r.created_at).toLocaleString('vi-VN')
-                    };
+                    if (activeTab === 'general') {
+                        const details = parseDetails(r.details);
+                        return {
+                            'Code': '#' + r.id.split('-')[0].toUpperCase(),
+                            'Visitor Name': r.visitors ? (function(){try{return JSON.parse(r.visitors).map((v:any) => `${v.name} (${v.title})`).join(', ');}catch(e){return r.visitor_name;}}()) : r.visitor_name,
+                            'Current Company': r.current_company,
+                            'Submitter Name': r.profiles?.name,
+                            'Submitter Department': r.profiles?.department,
+                            'Start Date': new Date(r.start_date).toLocaleDateString('vi-VN'),
+                            'End Date': new Date(r.end_date).toLocaleDateString('vi-VN'),
+                            'Visitor Category': r.visitor_category,
+                            'Purpose Of Visit': r.purpose_of_visit,
+                            'Visiting Site': r.visiting_site,
+                            'Cost Center': details.costCenter || '',
+                            'Status': r.status,
+                            'Created At': new Date(r.created_at).toLocaleString('vi-VN')
+                        };
+                    } else {
+                        return {
+                            'Code': '#' + r.id.split('-')[0].toUpperCase(),
+                            'Interviewee Name': r.interviewee_name,
+                            'Job Title': r.job_title,
+                            'Interview Department': r.interview_department,
+                            'Interviewer Name': r.interviewer_name,
+                            'Start Date': new Date(r.start_date).toLocaleDateString('vi-VN'),
+                            'Start Time': r.start_time,
+                            'Interview Area': r.interview_area,
+                            'Submitter Name': r.profiles?.name,
+                            'Status': r.status,
+                            'Created At': new Date(r.created_at).toLocaleString('vi-VN')
+                        };
+                    }
                 });
 
                 const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -100,7 +117,8 @@ export default function AdminDashboard() {
 
     const handleUpdateStatus = async (id: string, status: string) => {
         try {
-            const res = await fetch('/api/visitor_admin/requests', {
+            const endpoint = activeTab === 'general' ? '/api/visitor_admin/requests' : '/api/visitor_admin/interviewee_requests';
+            const res = await fetch(endpoint, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, status }),
@@ -136,6 +154,21 @@ export default function AdminDashboard() {
 
     return (
         <div className="flex flex-col gap-6">
+            <div className="flex gap-4 border-b border-gray-200">
+                <button
+                    onClick={() => setActiveTab('general')}
+                    className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'general' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    General Visitors
+                </button>
+                <button
+                    onClick={() => setActiveTab('interviewee')}
+                    className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'interviewee' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    Interviewee
+                </button>
+            </div>
+
             {/* Filters Row */}
             <div className="flex flex-wrap items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-4">
@@ -209,91 +242,105 @@ export default function AdminDashboard() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                                <th className="px-3 py-2">Code</th>
-                                <th className="px-3 py-2">Visitor Info</th>
-                                <th className="px-3 py-2">Category</th>
-                                <th className="px-3 py-2">Submitter</th>
-                                <th className="px-3 py-2 text-center">Start Date</th>
-                                <th className="px-3 py-2 text-center">End Date</th>
-                                <th className="px-3 py-2 text-center">Factory Tour</th>
-                                <th className="px-3 py-2">Approval Progress</th>
-                                <th className="px-3 py-2 text-center">Status</th>
-                                <th className="px-3 py-2 text-right">Actions</th>
-                            </tr>
+                            {activeTab === 'general' ? (
+                                <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                    <th className="px-3 py-2">Code</th>
+                                    <th className="px-3 py-2">Visitor Info</th>
+                                    <th className="px-3 py-2">Category</th>
+                                    <th className="px-3 py-2">Submitter</th>
+                                    <th className="px-3 py-2 text-center">Start Date</th>
+                                    <th className="px-3 py-2 text-center">End Date</th>
+                                    <th className="px-3 py-2 text-center">Factory Tour</th>
+                                    <th className="px-3 py-2">Approval Progress</th>
+                                    <th className="px-3 py-2 text-center">Status</th>
+                                    <th className="px-3 py-2 text-right">Actions</th>
+                                </tr>
+                            ) : (
+                                <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                    <th className="px-3 py-2">Code</th>
+                                    <th className="px-3 py-2">Interviewee Info</th>
+                                    <th className="px-3 py-2">Interview Details</th>
+                                    <th className="px-3 py-2 text-center">Start Date</th>
+                                    <th className="px-3 py-2 text-center">Start Time</th>
+                                    <th className="px-3 py-2 text-center">Area</th>
+                                    <th className="px-3 py-2 text-center">Status</th>
+                                    <th className="px-3 py-2 text-right">Actions</th>
+                                </tr>
+                            )}
                         </thead>
                         <tbody className="text-[12px] font-medium bg-white">
                             {requests.map((request) => (
-                                <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                                    <td className="px-3 py-2">
-                                        <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                                            #{request.id.split('-')[0].toUpperCase()}
-                                        </span>
-                                    </td>
-                                    <td className="px-3 py-2">
-                                        <div className="font-extrabold text-[#0f172a] truncate max-w-[120px]">
-                                            {request.visitor_name}
-                                            {request.visitors && (() => {
-                                                try {
-                                                    const parsed = JSON.parse(request.visitors);
-                                                    if (parsed && parsed.length > 1) {
-                                                        return ` (+ ${parsed.length - 1})`;
-                                                    }
-                                                } catch (e) {}
-                                                return '';
-                                            })()}
-                                        </div>
-                                        <div className="text-[10px] text-gray-500 mt-0.5 tracking-tight truncate max-w-[120px]">{request.current_company} / {request.visitor_title}</div>
-                                    </td>
-                                    <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
-                                        {request.visitor_category}
-                                    </td>
-                                    <td className="px-3 py-2">
-                                        <div className="font-bold text-[#0f172a] truncate max-w-[120px]">{request.profiles?.name}</div>
-                                        <div className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[120px]">{request.profiles?.department}</div>
-                                    </td>
-                                    <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
-                                        {new Date(request.start_date).toLocaleDateString('vi-VN')}
-                                    </td>
-                                    <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
-                                        {new Date(request.end_date).toLocaleDateString('vi-VN')}
-                                    </td>
-                                    <td className="px-3 py-2 text-center font-bold text-[10px]">
-                                        {(() => {
-                                            try {
-                                                const d = JSON.parse(request.details);
-                                                return d.factoryTour === 'Yes' 
-                                                    ? <span className="text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">Yes</span> 
-                                                    : <span className="text-gray-400">No</span>;
-                                            } catch(e) { return <span className="text-gray-400">No</span>; }
-                                        })()}
-                                    </td>
-                                    <td className="px-3 py-2">
-                                        {request.request_approvals?.length > 0 ? (
-                                            <div className="flex flex-col gap-1">
-                                                {request.request_approvals.map((app: any) => (
-                                                    <div key={app.id} className="text-[9px] flex items-center justify-between gap-2 text-gray-600 border border-gray-100 p-1 rounded bg-gray-50/50">
-                                                        <span className="font-bold flex items-center gap-1">
-                                                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
-                                                            <span className="truncate max-w-[80px]">{app.room_areas?.name || 'Area'}</span>
-                                                        </span>
-                                                    </div>
-                                                ))}
+                                activeTab === 'general' ? (
+                                    <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-3 py-2">
+                                            <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                                                #{request.id.split('-')[0].toUpperCase()}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            <div className="font-extrabold text-[#0f172a] truncate max-w-[120px]">
+                                                {request.visitor_name}
+                                                {request.visitors && (() => {
+                                                    try {
+                                                        const parsed = JSON.parse(request.visitors);
+                                                        if (parsed && parsed.length > 1) {
+                                                            return ` (+ ${parsed.length - 1})`;
+                                                        }
+                                                    } catch (e) {}
+                                                    return '';
+                                                })()}
                                             </div>
-                                        ) : (
-                                            <span className="text-gray-400 italic text-[10px]">No zones</span>
-                                        )}
-                                    </td>
-                                    <td className="px-3 py-2 text-center">
-                                        <span className="inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase" style={{
-                                            background: getStatusColor(request.status) + '15',
-                                            color: getStatusColor(request.status),
-                                            border: `1px solid ${getStatusColor(request.status)}30`
-                                        }}>
-                                            {request.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-3 py-2 text-right">
+                                            <div className="text-[10px] text-gray-500 mt-0.5 tracking-tight truncate max-w-[120px]">{request.current_company} / {request.visitor_title}</div>
+                                        </td>
+                                        <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
+                                            {request.visitor_category}
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            <div className="font-bold text-[#0f172a] truncate max-w-[120px]">{request.profiles?.name}</div>
+                                            <div className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[120px]">{request.profiles?.department}</div>
+                                        </td>
+                                        <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
+                                            {new Date(request.start_date).toLocaleDateString('vi-VN')}
+                                        </td>
+                                        <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
+                                            {new Date(request.end_date).toLocaleDateString('vi-VN')}
+                                        </td>
+                                        <td className="px-3 py-2 text-center font-bold text-[10px]">
+                                            {(() => {
+                                                try {
+                                                    const d = JSON.parse(request.details);
+                                                    return d.factoryTour === 'Yes' 
+                                                        ? <span className="text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">Yes</span> 
+                                                        : <span className="text-gray-400">No</span>;
+                                                } catch(e) { return <span className="text-gray-400">No</span>; }
+                                            })()}
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            {request.request_approvals?.length > 0 ? (
+                                                <div className="flex flex-col gap-1">
+                                                    {request.request_approvals.map((app: any) => (
+                                                        <div key={app.id} className="text-[9px] flex items-center justify-between gap-2 text-gray-600 border border-gray-100 p-1 rounded bg-gray-50/50">
+                                                            <span className="font-bold flex items-center gap-1">
+                                                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
+                                                                <span className="truncate max-w-[80px]">{app.room_areas?.name || 'Area'}</span>
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-400 italic text-[10px]">No zones</span>
+                                            )}
+                                        </td>
+                                        <td className="px-3 py-2 text-center">
+                                            <span className="inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase" style={{
+                                                background: getStatusColor(request.status) + '15',
+                                                color: getStatusColor(request.status),
+                                                border: `1px solid ${getStatusColor(request.status)}30`
+                                            }}>
+                                                {request.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-2 text-right">
                                         <div className="flex justify-end gap-2">
                                             <button 
                                                 onClick={() => setSelectedRequest(request)}
@@ -326,6 +373,81 @@ export default function AdminDashboard() {
                                         </div>
                                     </td>
                                 </tr>
+                                ) : (
+                                    <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-3 py-2">
+                                            <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                                                #{request.id.split('-')[0].toUpperCase()}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            <div className="font-extrabold text-[#0f172a] truncate max-w-[150px]">
+                                                {request.interviewee_name}
+                                            </div>
+                                            <div className="text-[10px] text-gray-500 mt-0.5 tracking-tight truncate max-w-[150px]">
+                                                {request.job_title}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            <div className="font-bold text-[#0f172a] text-[11px] truncate max-w-[120px]">
+                                                Dept: {request.interview_department}
+                                            </div>
+                                            <div className="text-[10px] text-gray-500 mt-0.5 tracking-tight truncate max-w-[120px]">
+                                                By: {request.interviewer_name}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
+                                            {new Date(request.start_date).toLocaleDateString('vi-VN')}
+                                        </td>
+                                        <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
+                                            {request.start_time}
+                                        </td>
+                                        <td className="px-3 py-2 text-center text-[10px] text-gray-600 truncate max-w-[100px]">
+                                            {request.interview_area}
+                                        </td>
+                                        <td className="px-3 py-2 text-center">
+                                            <span className="inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase" style={{
+                                                background: getStatusColor(request.status) + '15',
+                                                color: getStatusColor(request.status),
+                                                border: `1px solid ${getStatusColor(request.status)}30`
+                                            }}>
+                                                {request.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-2 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <button 
+                                                    onClick={() => setSelectedRequest(request)}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all border border-gray-200"
+                                                    title="View Details"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.43 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                    </svg>
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleUpdateStatus(request.id, 'COMPLETE')} 
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg text-white bg-green-500 hover:bg-green-600 transition-all shadow-sm group relative"
+                                                    title="Approve Request"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" className="w-4 h-4">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                                    </svg>
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleUpdateStatus(request.id, 'REJECTED')} 
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600 border border-gray-200 transition-all group"
+                                                    title="Reject Request"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" className="w-4 h-4">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )
                             ))}
                             {requests.length === 0 && !loading && (
                                 <tr><td colSpan={6} className="p-20 text-center text-gray-400 font-medium">No results matching your filters.</td></tr>
@@ -390,7 +512,7 @@ export default function AdminDashboard() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="p-6 pb-2 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10">
-                                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">VISITORS ({visitorsList.length})</h2>
+                                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{activeTab === 'general' ? `VISITORS (${visitorsList.length})` : 'INTERVIEWEE INFO'}</h2>
                                 <button
                                     onClick={() => setSelectedRequest(null)}
                                     className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
@@ -402,20 +524,39 @@ export default function AdminDashboard() {
                             </div>
 
                             <div className="px-6 py-2 flex-1">
-                                {/* Visitors List */}
-                                <div className="flex flex-col gap-3 mb-8">
-                                    {visitorsList.map((v: any, i: number) => (
-                                        <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50/50 px-5 py-4 rounded-xl border border-gray-100 transition-colors hover:bg-gray-50">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
-                                                <h3 className="text-sm font-extrabold text-[#0f172a] truncate">{v.name || 'Unnamed'}</h3>
-                                            </div>
-                                            <p className="text-xs text-gray-500 font-medium truncate sm:text-right ml-5 sm:ml-0">
-                                                {v.title ? `${v.title} @ ` : ''}{v.company || 'N/A'}
-                                            </p>
+                                {activeTab === 'general' ? (
+                                    <>
+                                        {/* Visitors List */}
+                                        <div className="flex flex-col gap-3 mb-8">
+                                            {visitorsList.map((v: any, i: number) => (
+                                                <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50/50 px-5 py-4 rounded-xl border border-gray-100 transition-colors hover:bg-gray-50">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                                        <h3 className="text-sm font-extrabold text-[#0f172a] truncate">{v.name || 'Unnamed'}</h3>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 font-medium truncate sm:text-right ml-5 sm:ml-0">
+                                                        {v.title ? `${v.title} @ ` : ''}{v.company || 'N/A'}
+                                                    </p>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* Interviewee Info */}
+                                        <div className="flex flex-col gap-3 mb-8">
+                                            <div className="flex flex-col gap-2 bg-gray-50/50 px-5 py-4 rounded-xl border border-gray-100">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                                    <h3 className="text-sm font-extrabold text-[#0f172a]">{selectedRequest.interviewee_name || 'Unnamed'}</h3>
+                                                </div>
+                                                <p className="text-xs text-gray-500 font-medium ml-5">
+                                                    {selectedRequest.job_title || 'N/A'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
 
                                 {/* Details List */}
                                 <div className="flex flex-col gap-1 border-t border-gray-100 pt-6">
@@ -446,85 +587,127 @@ export default function AdminDashboard() {
                                         </div>
                                     </div>
 
-                                    {/* Visitor Category */}
-                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
-                                        <div className="flex items-center gap-3 text-gray-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>
-                                            <span className="text-sm font-medium">Visitor Category</span>
-                                        </div>
-                                        <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.visitor_category}</div>
-                                    </div>
+                                    {activeTab === 'general' ? (
+                                        <>
+                                            {/* Visitor Category */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>
+                                                    <span className="text-sm font-medium">Visitor Category</span>
+                                                </div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.visitor_category}</div>
+                                            </div>
 
-                                    {/* Visit Dates */}
-                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
-                                        <div className="flex items-center gap-3 text-gray-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
-                                            <span className="text-sm font-medium">Visit Dates</span>
-                                        </div>
-                                        <div className="font-extrabold text-[#0f172a] text-sm">{new Date(selectedRequest.start_date).toLocaleDateString()} — {new Date(selectedRequest.end_date).toLocaleDateString()}</div>
-                                    </div>
+                                            {/* Visit Dates */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                                                    <span className="text-sm font-medium">Visit Dates</span>
+                                                </div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{new Date(selectedRequest.start_date).toLocaleDateString()} — {new Date(selectedRequest.end_date).toLocaleDateString()}</div>
+                                            </div>
 
-                                    {/* Purpose */}
-                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
-                                        <div className="flex items-center gap-3 text-gray-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
-                                            <span className="text-sm font-medium">Purpose</span>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.purpose_of_visit}</div>
-                                            {selectedRequest.purpose_detail && <div className="text-[10px] text-gray-400 font-medium mt-1">{selectedRequest.purpose_detail}</div>}
-                                        </div>
-                                    </div>
+                                            {/* Purpose */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                                                    <span className="text-sm font-medium">Purpose</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.purpose_of_visit}</div>
+                                                    {selectedRequest.purpose_detail && <div className="text-[10px] text-gray-400 font-medium mt-1">{selectedRequest.purpose_detail}</div>}
+                                                </div>
+                                            </div>
 
-                                    {/* Visiting Site */}
-                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
-                                        <div className="flex items-center gap-3 text-gray-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" /></svg>
-                                            <span className="text-sm font-medium">Visiting Site</span>
-                                        </div>
-                                        <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.visiting_site || 'N/A'}</div>
-                                    </div>
+                                            {/* Visiting Site */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" /></svg>
+                                                    <span className="text-sm font-medium">Visiting Site</span>
+                                                </div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.visiting_site || 'N/A'}</div>
+                                            </div>
 
-                                    {/* Cost Center */}
-                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
-                                        <div className="flex items-center gap-3 text-gray-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                                            <span className="text-sm font-medium">Cost Center</span>
-                                        </div>
-                                        <div className="font-extrabold text-[#0f172a] text-sm">{details.costCenter || 'N/A'}</div>
-                                    </div>
+                                            {/* Cost Center */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                                    <span className="text-sm font-medium">Cost Center</span>
+                                                </div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{details.costCenter || 'N/A'}</div>
+                                            </div>
 
-                                    {/* Factory Tour */}
-                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
-                                        <div className="flex items-center gap-3 text-gray-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
-                                            <span className="text-sm font-medium">Factory Tour</span>
-                                        </div>
-                                        <div className="font-extrabold text-[#0f172a] text-sm">{details.factoryTour || 'No'}</div>
-                                    </div>
+                                            {/* Factory Tour */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                                                    <span className="text-sm font-medium">Factory Tour</span>
+                                                </div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{details.factoryTour || 'No'}</div>
+                                            </div>
 
-                                    {/* Area Approvals */}
-                                    <div className="flex items-start justify-between py-4 border-b border-gray-50">
-                                        <div className="flex items-center gap-3 text-gray-500 mt-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                                            <span className="text-sm font-medium">Area Approvals</span>
-                                        </div>
-                                        <div className="flex flex-col gap-2 items-end">
-                                            {selectedRequest.request_approvals?.map((app: any) => (
-                                                <span key={app.id} className="px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-2" style={{
-                                                    background: getStatusColor(app.status) + '08',
-                                                    color: getStatusColor(app.status),
-                                                    border: `1px solid ${getStatusColor(app.status)}20`
-                                                }}>
-                                                    {app.room_areas?.name || 'Unknown'}
-                                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
-                                                </span>
-                                            ))}
-                                            {(!selectedRequest.request_approvals || selectedRequest.request_approvals.length === 0) && (
-                                                <span className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">None</span>
-                                            )}
-                                        </div>
-                                    </div>
+                                            {/* Area Approvals */}
+                                            <div className="flex items-start justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500 mt-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                                    <span className="text-sm font-medium">Area Approvals</span>
+                                                </div>
+                                                <div className="flex flex-col gap-2 items-end">
+                                                    {selectedRequest.request_approvals?.map((app: any) => (
+                                                        <span key={app.id} className="px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-2" style={{
+                                                            background: getStatusColor(app.status) + '08',
+                                                            color: getStatusColor(app.status),
+                                                            border: `1px solid ${getStatusColor(app.status)}20`
+                                                        }}>
+                                                            {app.room_areas?.name || 'Unknown'}
+                                                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
+                                                        </span>
+                                                    ))}
+                                                    {(!selectedRequest.request_approvals || selectedRequest.request_approvals.length === 0) && (
+                                                        <span className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">None</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {/* Department */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>
+                                                    <span className="text-sm font-medium">Department</span>
+                                                </div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.interview_department}</div>
+                                            </div>
+                                            
+                                            {/* Interviewer */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                                                    <span className="text-sm font-medium">Interviewer</span>
+                                                </div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.interviewer_name}</div>
+                                            </div>
+
+                                            {/* Schedule */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                                                    <span className="text-sm font-medium">Schedule</span>
+                                                </div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{new Date(selectedRequest.start_date).toLocaleDateString()} @ {selectedRequest.start_time}</div>
+                                            </div>
+
+                                            {/* Interview Area */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                                                    <span className="text-sm font-medium">Interview Area</span>
+                                                </div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.interview_area}</div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 

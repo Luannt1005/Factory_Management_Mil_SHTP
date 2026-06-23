@@ -28,7 +28,14 @@ export default function NewRequestPage() {
             mealRegistration: 'No',
             costCenter: ''
         },
-        roomIds: [] as string[]
+        roomIds: [] as string[],
+        // Interviewee specific
+        intervieweeName: '',
+        jobTitle: '',
+        interviewDepartment: '',
+        interviewerName: '',
+        startTime: '',
+        interviewArea: ''
     });
 
     useEffect(() => {
@@ -72,7 +79,12 @@ export default function NewRequestPage() {
     const handleSubmit = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/requests', {
+            let apiUrl = '/api/requests';
+            if (formData.visitorCategory === 'Interviewee') {
+                apiUrl = '/api/interviewee_requests';
+            }
+
+            const res = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -90,7 +102,13 @@ export default function NewRequestPage() {
                     visitingSite: 'SHTP',
                     purposeDetail: '',
                     details: { factoryTour: 'No', mealRegistration: 'No', costCenter: '' },
-                    roomIds: []
+                    roomIds: [],
+                    intervieweeName: '',
+                    jobTitle: '',
+                    interviewDepartment: '',
+                    interviewerName: '',
+                    startTime: '',
+                    interviewArea: ''
                 });
                 setActiveTab('dashboard');
             } else {
@@ -188,7 +206,7 @@ export default function NewRequestPage() {
         });
     };
 
-    const totalSteps = (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') ? 2 : 3;
+    const totalSteps = (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor' || formData.visitorCategory === 'Interviewee') ? 2 : 3;
 
     const StepIndicator = () => {
         const stepsArray = Array.from({ length: totalSteps }, (_, i) => i + 1);
@@ -375,105 +393,128 @@ export default function NewRequestPage() {
                                                 <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Basic Information</h2>
                                             </div>
                                             <div className="flex flex-col gap-6">
-                                                {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') && (
-                                                    <div className="flex flex-col gap-4 mb-4 animate-in fade-in duration-300">
-                                                        <label style={{ color: '#475569', fontWeight: 700 }}>Specific Visitor Category *</label>
-                                                        <div className="grid grid-cols-2 gap-4" style={{ maxWidth: '500px' }}>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setFormData({ ...formData, visitorCategory: 'Vendor' })}
-                                                                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 ${
-                                                                    formData.visitorCategory === 'Vendor' 
-                                                                    ? 'border-[#db011c] bg-[#db011c]/5 text-[#db011c]' 
-                                                                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-                                                                }`}
-                                                            >
-                                                                <div className={`p-2 rounded-lg ${formData.visitorCategory === 'Vendor' ? 'bg-[#db011c]/10' : 'bg-gray-100'}`}>
-                                                                    <BuildingOfficeIcon className="w-6 h-6" />
-                                                                </div>
-                                                                <span className="font-bold text-[15px]">Vendor</span>
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setFormData({ ...formData, visitorCategory: 'Contractor' })}
-                                                                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 ${
-                                                                    formData.visitorCategory === 'Contractor' 
-                                                                    ? 'border-[#db011c] bg-[#db011c]/5 text-[#db011c]' 
-                                                                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-                                                                }`}
-                                                            >
-                                                                <div className={`p-2 rounded-lg ${formData.visitorCategory === 'Contractor' ? 'bg-[#db011c]/10' : 'bg-gray-100'}`}>
-                                                                    <WrenchScrewdriverIcon className="w-6 h-6" />
-                                                                </div>
-                                                                <span className="font-bold text-[15px]">Contractor</span>
-                                                            </button>
+                                                {formData.visitorCategory === 'Interviewee' ? (
+                                                    <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+                                                        <div className="flex flex-col gap-2">
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>Interviewee Name *</label>
+                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white transition-colors" required value={formData.intervieweeName} onChange={e => setFormData({ ...formData, intervieweeName: e.target.value })} placeholder="Enter interviewee full name" />
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>Job Title *</label>
+                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white transition-colors" required value={formData.jobTitle} onChange={e => setFormData({ ...formData, jobTitle: e.target.value })} placeholder="e.g. Software Engineer" />
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>Interview Department *</label>
+                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white transition-colors" required value={formData.interviewDepartment} onChange={e => setFormData({ ...formData, interviewDepartment: e.target.value })} placeholder="e.g. IT" />
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>Interviewer Name *</label>
+                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white transition-colors" required value={formData.interviewerName} onChange={e => setFormData({ ...formData, interviewerName: e.target.value })} placeholder="Enter interviewer name" />
                                                         </div>
                                                     </div>
-                                                )}
-                                                <div className="flex flex-col gap-4">
-                                                    <label style={{ color: '#475569', fontWeight: 700 }}>Visiting Site *</label>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                                                        <div
-                                                            onClick={() => toggleSite('SHTP')}
-                                                            style={{
-                                                                cursor: 'pointer',
-                                                                borderRadius: '24px',
-                                                                overflow: 'hidden',
-                                                                border: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '5px solid #db011c' : '2px solid #e2e8f0',
-                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                                position: 'relative',
-                                                                transform: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'scale(1.02)' : 'scale(1)',
-                                                                boxShadow: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '0 20px 40px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
-                                                            }}
-                                                        >
-                                                            <img src="/shtp.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="SHTP Site" />
-                                                            <div style={{
-                                                                padding: '1.2rem',
-                                                                textAlign: 'center',
-                                                                fontWeight: 900,
-                                                                fontSize: '1.4rem',
-                                                                background: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '#db011c' : 'white',
-                                                                color: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
-                                                                letterSpacing: '0.05em'
-                                                            }}>
-                                                                SHTP SITE
+                                                ) : (
+                                                    <>
+                                                        {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') && (
+                                                            <div className="flex flex-col gap-4 mb-4 animate-in fade-in duration-300">
+                                                                <label style={{ color: '#475569', fontWeight: 700 }}>Specific Visitor Category *</label>
+                                                                <div className="grid grid-cols-2 gap-4" style={{ maxWidth: '500px' }}>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setFormData({ ...formData, visitorCategory: 'Vendor' })}
+                                                                        className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 ${
+                                                                            formData.visitorCategory === 'Vendor' 
+                                                                            ? 'border-[#db011c] bg-[#db011c]/5 text-[#db011c]' 
+                                                                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                                                        }`}
+                                                                    >
+                                                                        <div className={`p-2 rounded-lg ${formData.visitorCategory === 'Vendor' ? 'bg-[#db011c]/10' : 'bg-gray-100'}`}>
+                                                                            <BuildingOfficeIcon className="w-6 h-6" />
+                                                                        </div>
+                                                                        <span className="font-bold text-[15px]">Vendor</span>
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setFormData({ ...formData, visitorCategory: 'Contractor' })}
+                                                                        className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 ${
+                                                                            formData.visitorCategory === 'Contractor' 
+                                                                            ? 'border-[#db011c] bg-[#db011c]/5 text-[#db011c]' 
+                                                                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                                                        }`}
+                                                                    >
+                                                                        <div className={`p-2 rounded-lg ${formData.visitorCategory === 'Contractor' ? 'bg-[#db011c]/10' : 'bg-gray-100'}`}>
+                                                                            <WrenchScrewdriverIcon className="w-6 h-6" />
+                                                                        </div>
+                                                                        <span className="font-bold text-[15px]">Contractor</span>
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                            {(formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') && (
-                                                                <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
-                                                            )}
-                                                        </div>
+                                                        )}
+                                                        <div className="flex flex-col gap-4">
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>Visiting Site *</label>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                                                                <div
+                                                                    onClick={() => toggleSite('SHTP')}
+                                                                    style={{
+                                                                        cursor: 'pointer',
+                                                                        borderRadius: '24px',
+                                                                        overflow: 'hidden',
+                                                                        border: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '5px solid #db011c' : '2px solid #e2e8f0',
+                                                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                        position: 'relative',
+                                                                        transform: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'scale(1.02)' : 'scale(1)',
+                                                                        boxShadow: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '0 20px 40px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
+                                                                    }}
+                                                                >
+                                                                    <img src="/shtp.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="SHTP Site" />
+                                                                    <div style={{
+                                                                        padding: '1.2rem',
+                                                                        textAlign: 'center',
+                                                                        fontWeight: 900,
+                                                                        fontSize: '1.4rem',
+                                                                        background: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '#db011c' : 'white',
+                                                                        color: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
+                                                                        letterSpacing: '0.05em'
+                                                                    }}>
+                                                                        SHTP SITE
+                                                                    </div>
+                                                                    {(formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') && (
+                                                                        <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
+                                                                    )}
+                                                                </div>
 
-                                                        <div
-                                                            onClick={() => toggleSite('DDK')}
-                                                            style={{
-                                                                cursor: 'pointer',
-                                                                borderRadius: '24px',
-                                                                overflow: 'hidden',
-                                                                border: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '5px solid #db011c' : '2px solid #e2e8f0',
-                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                                position: 'relative',
-                                                                transform: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'scale(1.02)' : 'scale(1)',
-                                                                boxShadow: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '0 20px 40px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
-                                                            }}
-                                                        >
-                                                            <img src="/ddk.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="DDK Site" />
-                                                            <div style={{
-                                                                padding: '1.2rem',
-                                                                textAlign: 'center',
-                                                                fontWeight: 900,
-                                                                fontSize: '1.4rem',
-                                                                background: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '#db011c' : 'white',
-                                                                color: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
-                                                                letterSpacing: '0.05em'
-                                                            }}>
-                                                                DDK SITE
+                                                                <div
+                                                                    onClick={() => toggleSite('DDK')}
+                                                                    style={{
+                                                                        cursor: 'pointer',
+                                                                        borderRadius: '24px',
+                                                                        overflow: 'hidden',
+                                                                        border: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '5px solid #db011c' : '2px solid #e2e8f0',
+                                                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                        position: 'relative',
+                                                                        transform: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'scale(1.02)' : 'scale(1)',
+                                                                        boxShadow: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '0 20px 40px rgba(219, 1, 28, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
+                                                                    }}
+                                                                >
+                                                                    <img src="/ddk.png" style={{ width: '100%', height: '220px', objectFit: 'cover' }} alt="DDK Site" />
+                                                                    <div style={{
+                                                                        padding: '1.2rem',
+                                                                        textAlign: 'center',
+                                                                        fontWeight: 900,
+                                                                        fontSize: '1.4rem',
+                                                                        background: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '#db011c' : 'white',
+                                                                        color: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? 'white' : '#1e293b',
+                                                                        letterSpacing: '0.05em'
+                                                                    }}>
+                                                                        DDK SITE
+                                                                    </div>
+                                                                    {(formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') && (
+                                                                        <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            {(formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') && (
-                                                                <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'white', color: '#db011c', width: '35px', height: '35px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>✓</div>
-                                                            )}
                                                         </div>
-                                                    </div>
-                                                </div>
+                                                    </>
+                                                )}
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '3rem' }}>
                                                 <button onClick={nextStep} style={{ padding: '1rem 3rem', background: '#db011c', color: 'white', fontWeight: 700, borderRadius: '8px' }}>
@@ -485,96 +526,121 @@ export default function NewRequestPage() {
 
                                     {step === 2 && (
                                         <section>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', justifyContent: 'space-between' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                    <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
-                                                    <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Visitors Information</h2>
-                                                </div>
-                                                {formData.visitors.length < 10 && (
-                                                    <button type="button" onClick={addVisitor} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#db011c', fontWeight: 700, padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                                                        Add Visitor
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            {formData.visitors.slice(0, 1).map((visitor, idx) => (
-                                                <div key={idx} style={{ padding: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', marginBottom: '1.5rem', position: 'relative' }}>
-                                                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '1rem' }}>Visitor {idx + 1}</h3>
-                                                    {formData.visitors.length > 1 && (
-                                                        <button type="button" onClick={() => removeVisitor(idx)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem' }}>
-                                                            Remove
-                                                        </button>
-                                                    )}
-                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: formData.visitors.length > 1 ? '1.5rem' : '0' }}>
+                                            {formData.visitorCategory === 'Interviewee' ? (
+                                                <>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                                                        <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
+                                                        <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Schedule & Area</h2>
+                                                    </div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
                                                         <div className="flex flex-col gap-2">
-                                                            <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Full Name *</label>
-                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.name} onChange={e => updateVisitor(idx, 'name', e.target.value)} placeholder="Enter full name" />
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>Start Date *</label>
+                                                            <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} />
                                                         </div>
                                                         <div className="flex flex-col gap-2">
-                                                            <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Title / Position *</label>
-                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.title} onChange={e => updateVisitor(idx, 'title', e.target.value)} placeholder="e.g. Sales Manager" />
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>Start Time *</label>
+                                                            <input type="time" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} />
                                                         </div>
                                                         <div className="flex flex-col gap-2">
-                                                            <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Company *</label>
-                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.company} onChange={e => updateVisitor(idx, 'company', e.target.value)} placeholder="Your company name" />
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>Interview Area *</label>
+                                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.interviewArea} onChange={e => setFormData({ ...formData, interviewArea: e.target.value })} placeholder="e.g. Meeting Room 4" />
                                                         </div>
                                                     </div>
-
-                                                    {formData.visitors.length > 1 && (
-                                                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200/50 text-sm">
-                                                            <span className="font-semibold text-gray-500">
-                                                                ... and {formData.visitors.length - 1} more visitor(s)
-                                                            </span>
-                                                            <button 
-                                                                type="button" 
-                                                                onClick={() => setShowAllVisitorsModal(true)} 
-                                                                className="font-black text-[#db011c] hover:text-[#900112] hover:underline bg-transparent border-none p-0 cursor-pointer"
-                                                            >
-                                                                View All
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', justifyContent: 'space-between' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                            <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
+                                                            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Visitors Information</h2>
+                                                        </div>
+                                                        {formData.visitors.length < 10 && (
+                                                            <button type="button" onClick={addVisitor} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#db011c', fontWeight: 700, padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                                                Add Visitor
                                                             </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', marginTop: '2rem' }}>
-                                                <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
-                                                <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Visit Details & Schedule</h2>
-                                            </div>
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                                                <div className="flex flex-col gap-2">
-                                                    <label style={{ color: '#475569', fontWeight: 700 }}>Purpose of Visit *</label>
-                                                    <select className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" value={formData.purposeOfVisit} onChange={e => setFormData({ ...formData, purposeOfVisit: e.target.value })}>
-                                                        <option>Business / Meeting</option>
-                                                        <option>Installation & Maintenance</option>
-                                                        <option>Technical Support</option>
-                                                        <option>Audit / Inspection</option>
-                                                    </select>
-                                                </div>
-                                                <div className="flex flex-col gap-2">
-                                                    <label style={{ color: '#475569', fontWeight: 700 }}>Start Date *</label>
-                                                    <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} />
-                                                </div>
-                                                <div className="flex flex-col gap-2">
-                                                    <label style={{ color: '#475569', fontWeight: 700 }}>End Date *</label>
-                                                    <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} />
-                                                </div>
-
-                                                {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
-                                                    <div className="flex flex-col gap-2" style={{ gridColumn: '1 / -1' }}>
-                                                        <label style={{ color: '#475569', fontWeight: 700 }}>Detail of purpose *</label>
-                                                        <textarea
-                                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors"
-                                                            rows={3}
-                                                            required
-                                                            value={formData.purposeDetail}
-                                                            onChange={e => setFormData({ ...formData, purposeDetail: e.target.value })}
-                                                            placeholder="Please provide details of the visit purpose..."
-                                                        />
+                                                        )}
                                                     </div>
-                                                )}
-                                            </div>
+
+                                                    {formData.visitors.slice(0, 1).map((visitor, idx) => (
+                                                        <div key={idx} style={{ padding: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', marginBottom: '1.5rem', position: 'relative' }}>
+                                                            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '1rem' }}>Visitor {idx + 1}</h3>
+                                                            {formData.visitors.length > 1 && (
+                                                                <button type="button" onClick={() => removeVisitor(idx)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem' }}>
+                                                                    Remove
+                                                                </button>
+                                                            )}
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: formData.visitors.length > 1 ? '1.5rem' : '0' }}>
+                                                                <div className="flex flex-col gap-2">
+                                                                    <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Full Name *</label>
+                                                                    <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.name} onChange={e => updateVisitor(idx, 'name', e.target.value)} placeholder="Enter full name" />
+                                                                </div>
+                                                                <div className="flex flex-col gap-2">
+                                                                    <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Title / Position *</label>
+                                                                    <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.title} onChange={e => updateVisitor(idx, 'title', e.target.value)} placeholder="e.g. Sales Manager" />
+                                                                </div>
+                                                                <div className="flex flex-col gap-2">
+                                                                    <label style={{ color: '#475569', fontWeight: 700, fontSize: '0.9rem' }}>Company *</label>
+                                                                    <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-white transition-colors" required value={visitor.company} onChange={e => updateVisitor(idx, 'company', e.target.value)} placeholder="Your company name" />
+                                                                </div>
+                                                            </div>
+
+                                                            {formData.visitors.length > 1 && (
+                                                                <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200/50 text-sm">
+                                                                    <span className="font-semibold text-gray-500">
+                                                                        ... and {formData.visitors.length - 1} more visitor(s)
+                                                                    </span>
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => setShowAllVisitorsModal(true)} 
+                                                                        className="font-black text-[#db011c] hover:text-[#900112] hover:underline bg-transparent border-none p-0 cursor-pointer"
+                                                                    >
+                                                                        View All
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', marginTop: '2rem' }}>
+                                                        <div style={{ width: '4px', height: '30px', background: '#db011c' }} />
+                                                        <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b' }}>Visit Details & Schedule</h2>
+                                                    </div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>Purpose of Visit *</label>
+                                                            <select className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" value={formData.purposeOfVisit} onChange={e => setFormData({ ...formData, purposeOfVisit: e.target.value })}>
+                                                                <option>Business / Meeting</option>
+                                                                <option>Installation & Maintenance</option>
+                                                                <option>Technical Support</option>
+                                                                <option>Audit / Inspection</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>Start Date *</label>
+                                                            <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} />
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label style={{ color: '#475569', fontWeight: 700 }}>End Date *</label>
+                                                            <input type="date" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors" required value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} />
+                                                        </div>
+
+                                                        {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
+                                                            <div className="flex flex-col gap-2" style={{ gridColumn: '1 / -1' }}>
+                                                                <label style={{ color: '#475569', fontWeight: 700 }}>Detail of purpose *</label>
+                                                                <textarea
+                                                                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 xl focus:ring-red-500 bg-gray-50 focus:bg-white transition-colors"
+                                                                    rows={3}
+                                                                    required
+                                                                    value={formData.purposeDetail}
+                                                                    onChange={e => setFormData({ ...formData, purposeDetail: e.target.value })}
+                                                                    placeholder="Please provide details of the visit purpose..."
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
 
                                             {isExpatCategory && (
                                                 <div style={{ background: '#f8fafc', padding: '2rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
@@ -823,54 +889,97 @@ export default function NewRequestPage() {
                                 </div>
                             </div>
 
-                            {/* Visitor List */}
-                            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Visitors ({formData.visitors.length})</h4>
-                                <div className="flex flex-col gap-3">
-                                    {formData.visitors.map((v, i) => (
-                                        <div key={i} className="flex flex-col">
-                                            <div className="font-bold text-sm text-gray-900">{v.name || 'Unnamed'}</div>
-                                            <div className="text-xs text-gray-500">{v.title} {v.title && v.company ? '@' : ''} {v.company}</div>
+                            {formData.visitorCategory === 'Interviewee' ? (
+                                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Interviewee Information</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-medium">Interviewee Name</div>
+                                            <div className="font-bold text-gray-900">{formData.intervieweeName}</div>
                                         </div>
-                                    ))}
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-medium">Job Title</div>
+                                            <div className="font-bold text-gray-900">{formData.jobTitle}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-medium">Interview Department</div>
+                                            <div className="font-bold text-gray-900">{formData.interviewDepartment}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-medium">Interviewer Name</div>
+                                            <div className="font-bold text-gray-900">{formData.interviewerName}</div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Visitors ({formData.visitors.length})</h4>
+                                    <div className="flex flex-col gap-3">
+                                        {formData.visitors.map((v, i) => (
+                                            <div key={i} className="flex flex-col">
+                                                <div className="font-bold text-sm text-gray-900">{v.name || 'Unnamed'}</div>
+                                                <div className="text-xs text-gray-500">{v.title} {v.title && v.company ? '@' : ''} {v.company}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Visit Details */}
-                            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Visit Details</h4>
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <div className="text-xs text-gray-500 font-medium">From Date</div>
-                                        <div className="font-bold text-gray-900">{formData.startDate || 'N/A'}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-xs text-gray-500 font-medium">To Date</div>
-                                        <div className="font-bold text-gray-900">{formData.endDate || 'N/A'}</div>
-                                    </div>
-                                </div>
-                                <div className="mb-4">
-                                    <div className="text-xs text-gray-500 font-medium">Purpose</div>
-                                    <div className="font-bold text-gray-900">{formData.purposeOfVisit}</div>
-                                    {formData.purposeDetail && <div className="text-sm text-gray-700 mt-1">{formData.purposeDetail}</div>}
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <div className="text-xs text-gray-500 font-medium">Factory Tour</div>
-                                        <div className="font-bold text-gray-900">{formData.details.factoryTour}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-xs text-gray-500 font-medium">Meal Registration</div>
-                                        <div className="font-bold text-gray-900">{formData.details.mealRegistration}</div>
-                                    </div>
-                                    {formData.details.costCenter && (
-                                        <div className="col-span-2">
-                                            <div className="text-xs text-gray-500 font-medium">Cost Center</div>
-                                            <div className="font-bold text-gray-900">{formData.details.costCenter}</div>
+                            {formData.visitorCategory === 'Interviewee' ? (
+                                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Schedule & Area</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-medium">Start Date</div>
+                                            <div className="font-bold text-gray-900">{formData.startDate || 'N/A'}</div>
                                         </div>
-                                    )}
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-medium">Start Time</div>
+                                            <div className="font-bold text-gray-900">{formData.startTime || 'N/A'}</div>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <div className="text-xs text-gray-500 font-medium">Interview Area</div>
+                                            <div className="font-bold text-gray-900">{formData.interviewArea || 'N/A'}</div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Visit Details</h4>
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-medium">From Date</div>
+                                            <div className="font-bold text-gray-900">{formData.startDate || 'N/A'}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-medium">To Date</div>
+                                            <div className="font-bold text-gray-900">{formData.endDate || 'N/A'}</div>
+                                        </div>
+                                    </div>
+                                    <div className="mb-4">
+                                        <div className="text-xs text-gray-500 font-medium">Purpose</div>
+                                        <div className="font-bold text-gray-900">{formData.purposeOfVisit}</div>
+                                        {formData.purposeDetail && <div className="text-sm text-gray-700 mt-1">{formData.purposeDetail}</div>}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-medium">Factory Tour</div>
+                                            <div className="font-bold text-gray-900">{formData.details.factoryTour}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-medium">Meal Registration</div>
+                                            <div className="font-bold text-gray-900">{formData.details.mealRegistration}</div>
+                                        </div>
+                                        {formData.details.costCenter && (
+                                            <div className="col-span-2">
+                                                <div className="text-xs text-gray-500 font-medium">Cost Center</div>
+                                                <div className="font-bold text-gray-900">{formData.details.costCenter}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Selected Areas */}
                             {formData.roomIds.length > 0 && (

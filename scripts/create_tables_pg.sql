@@ -76,3 +76,21 @@ CREATE TABLE IF NOT EXISTS "VisitorCheckInOut" (
 CREATE INDEX IF NOT EXISTS idx_checkinout_request_id ON "VisitorCheckInOut"("requestId");
 CREATE INDEX IF NOT EXISTS idx_checkinout_code ON "VisitorCheckInOut"("visitorCode");
 CREATE INDEX IF NOT EXISTS idx_checkinout_status ON "VisitorCheckInOut"(status);
+
+CREATE TABLE IF NOT EXISTS "IntervieweeRequest" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "visitorCode" VARCHAR(50) UNIQUE NOT NULL,
+    "osName" VARCHAR(200) NOT NULL,
+    "intervieweeName" VARCHAR(200) NOT NULL,
+    "jobTitle" VARCHAR(200),
+    "interviewDepartment" VARCHAR(200),
+    "interviewerName" VARCHAR(200),
+    "startDate" DATE,
+    "startTime" VARCHAR(20),
+    "interviewArea" VARCHAR(200),
+    status VARCHAR(50) DEFAULT 'IN PROCESS',
+    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_intervieweereq_code ON "IntervieweeRequest"("visitorCode");
+

@@ -6,6 +6,10 @@ import Link from 'next/link';
 export default function AdminRoomsPage() {
     const [activeTab, setActiveTab] = useState<'rooms' | 'categories'>('rooms');
     
+    // Modal States
+    const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+
     // Room State
     const [rooms, setRooms] = useState<any[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
@@ -57,6 +61,7 @@ export default function AdminRoomsPage() {
         if (res.ok) {
             fetchRooms();
             setNewRoom({ category: categories.length > 0 ? categories[0].name : '', name: '', approver_email: '' });
+            setIsRoomModalOpen(false);
         } else {
             alert('Error creating room');
         }
@@ -97,6 +102,7 @@ export default function AdminRoomsPage() {
         if (res.ok) {
             fetchCategories();
             setNewCategory({ name: '', site_location: 'SHTP', bu: 'Milwaukee' });
+            setIsCategoryModalOpen(false);
         } else {
             const data = await res.json();
             alert(`Error: ${data.error}`);
@@ -131,71 +137,99 @@ export default function AdminRoomsPage() {
     return (
         <div className="flex flex-col gap-6">
             
-            {/* Tab Navigation */}
-            <div className="flex border-b border-gray-200 gap-6">
-                <button 
-                    onClick={() => setActiveTab('rooms')} 
-                    className={`pb-3 font-bold text-sm tracking-wide transition-colors ${activeTab === 'rooms' ? 'text-[#db011c] border-b-2 border-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    MANAGE ROOMS
-                </button>
-                <button 
-                    onClick={() => setActiveTab('categories')} 
-                    className={`pb-3 font-bold text-sm tracking-wide transition-colors ${activeTab === 'categories' ? 'text-[#db011c] border-b-2 border-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    ROOM CATEGORIES
-                </button>
+            {/* Tab Navigation & Actions */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-200 gap-4 pb-3">
+                <div className="flex gap-6">
+                    <button 
+                        onClick={() => setActiveTab('rooms')} 
+                        className={`font-bold text-sm tracking-wide transition-colors ${activeTab === 'rooms' ? 'text-[#db011c] border-b-2 border-[#db011c] -mb-[13px] pb-3' : 'text-gray-500 hover:text-gray-700 pb-3'}`}
+                    >
+                        MANAGE ROOMS
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('categories')} 
+                        className={`font-bold text-sm tracking-wide transition-colors ${activeTab === 'categories' ? 'text-[#db011c] border-b-2 border-[#db011c] -mb-[13px] pb-3' : 'text-gray-500 hover:text-gray-700 pb-3'}`}
+                    >
+                        ROOM CATEGORIES
+                    </button>
+                </div>
+                
+                {activeTab === 'rooms' ? (
+                    <button 
+                        onClick={() => setIsRoomModalOpen(true)}
+                        className="bg-[#db011c] text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-[#b90118] transition-colors"
+                    >
+                        + Add New Room
+                    </button>
+                ) : (
+                    <button 
+                        onClick={() => setIsCategoryModalOpen(true)}
+                        className="bg-[#db011c] text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-[#b90118] transition-colors"
+                    >
+                        + Add Category
+                    </button>
+                )}
             </div>
 
             {activeTab === 'rooms' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
-                    {/* ADD NEW ROOM */}
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-8 border border-gray-100 text-[#0f172a] h-fit sticky top-20">
-                        <h2 className="text-xl font-extrabold mb-6">Add New Room</h2>
-                        <form onSubmit={handleCreateRoom} className="flex flex-col gap-5">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Category</label>
-                                <select 
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                    value={newRoom.category} 
-                                    onChange={e => setNewRoom({ ...newRoom, category: e.target.value })}
-                                    required
+                <div className="animate-in fade-in duration-300">
+                    {/* ROOM MODAL */}
+                    {isRoomModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-100 relative">
+                                <button 
+                                    onClick={() => setIsRoomModalOpen(false)}
+                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
                                 >
-                                    <option value="" disabled>Select Category</option>
-                                    {categories.map(c => (
-                                        <option key={c.id} value={c.name}>{c.name}</option>
-                                    ))}
-                                </select>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                                <h2 className="text-xl font-extrabold mb-6">Add New Room</h2>
+                                <form onSubmit={handleCreateRoom} className="flex flex-col gap-5">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Category</label>
+                                        <select 
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
+                                            value={newRoom.category} 
+                                            onChange={e => setNewRoom({ ...newRoom, category: e.target.value })}
+                                            required
+                                        >
+                                            <option value="" disabled>Select Category</option>
+                                            {categories.map(c => (
+                                                <option key={c.id} value={c.name}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Room Name</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
+                                            value={newRoom.name} 
+                                            onChange={e => setNewRoom({ ...newRoom, name: e.target.value })} 
+                                            placeholder="e.g. Share Function Office L6M" 
+                                            required 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Approver Email</label>
+                                        <input 
+                                            type="email" 
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
+                                            value={newRoom.approver_email} 
+                                            onChange={e => setNewRoom({ ...newRoom, approver_email: e.target.value })} 
+                                            placeholder="approver@ttigroup.com.vn" 
+                                        />
+                                    </div>
+                                    <button type="submit" className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-[#db011c] hover:bg-[#b90118] transition-colors shadow-md">
+                                        Create Room
+                                    </button>
+                                </form>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Room Name</label>
-                                <input 
-                                    type="text" 
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                    value={newRoom.name} 
-                                    onChange={e => setNewRoom({ ...newRoom, name: e.target.value })} 
-                                    placeholder="e.g. Share Function Office L6M" 
-                                    required 
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Approver Email</label>
-                                <input 
-                                    type="email" 
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                    value={newRoom.approver_email} 
-                                    onChange={e => setNewRoom({ ...newRoom, approver_email: e.target.value })} 
-                                    placeholder="approver@ttigroup.com.vn" 
-                                />
-                            </div>
-                            <button type="submit" className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-[#db011c] hover:bg-[#b90118] transition-colors shadow-md">
-                                Create Room
-                            </button>
-                        </form>
-                    </div>
+                        </div>
+                    )}
 
                     {/* ROOM LIST */}
-                    <div className="lg:col-span-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
+                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
@@ -287,52 +321,62 @@ export default function AdminRoomsPage() {
             )}
 
             {activeTab === 'categories' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
-                    {/* ADD NEW CATEGORY */}
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-8 border border-gray-100 text-[#0f172a] h-fit sticky top-20">
-                        <h2 className="text-xl font-extrabold mb-6">Add Category</h2>
-                        <form onSubmit={handleCreateCategory} className="flex flex-col gap-5">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Category Name</label>
-                                <input 
-                                    type="text" 
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                    value={newCategory.name} 
-                                    onChange={e => setNewCategory({ ...newCategory, name: e.target.value })} 
-                                    placeholder="e.g. Common Office" 
-                                    required 
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Site Location</label>
-                                <select 
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                    value={newCategory.site_location} 
-                                    onChange={e => setNewCategory({ ...newCategory, site_location: e.target.value })}
+                <div className="animate-in fade-in duration-300">
+                    {/* CATEGORY MODAL */}
+                    {isCategoryModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-100 relative">
+                                <button 
+                                    onClick={() => setIsCategoryModalOpen(false)}
+                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
                                 >
-                                    <option value="SHTP">SHTP</option>
-                                    <option value="DDK">DDK</option>
-                                </select>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                                <h2 className="text-xl font-extrabold mb-6">Add Category</h2>
+                                <form onSubmit={handleCreateCategory} className="flex flex-col gap-5">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Category Name</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
+                                            value={newCategory.name} 
+                                            onChange={e => setNewCategory({ ...newCategory, name: e.target.value })} 
+                                            placeholder="e.g. Common Office" 
+                                            required 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Site Location</label>
+                                        <select 
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
+                                            value={newCategory.site_location} 
+                                            onChange={e => setNewCategory({ ...newCategory, site_location: e.target.value })}
+                                        >
+                                            <option value="SHTP">SHTP</option>
+                                            <option value="DDK">DDK</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">BU</label>
+                                        <select 
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
+                                            value={newCategory.bu} 
+                                            onChange={e => setNewCategory({ ...newCategory, bu: e.target.value })}
+                                        >
+                                            <option value="Milwaukee">Milwaukee</option>
+                                            <option value="Share Function">Share Function</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-[#db011c] hover:bg-[#b90118] transition-colors shadow-md">
+                                        Create Category
+                                    </button>
+                                </form>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">BU</label>
-                                <select 
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                    value={newCategory.bu} 
-                                    onChange={e => setNewCategory({ ...newCategory, bu: e.target.value })}
-                                >
-                                    <option value="Milwaukee">Milwaukee</option>
-                                    <option value="Share Function">Share Function</option>
-                                </select>
-                            </div>
-                            <button type="submit" className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-[#db011c] hover:bg-[#b90118] transition-colors shadow-md">
-                                Create Category
-                            </button>
-                        </form>
-                    </div>
+                        </div>
+                    )}
 
                     {/* CATEGORY LIST */}
-                    <div className="lg:col-span-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
+                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
