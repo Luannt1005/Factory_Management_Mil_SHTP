@@ -108,7 +108,7 @@ export default function DepartmentSlider() {
         }
       `}} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-12 lg:gap-y-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 w-full">
         {departments.map((dept, idx) => {
           // Stagger delays based on column index
           const delay = (idx % 2) * 100;
@@ -116,37 +116,27 @@ export default function DepartmentSlider() {
           const isReversed = Math.floor(idx / 2) % 2 === 1;
 
           return (
-            <div key={dept.id} className="w-full">
-              <ScrollReveal delay={delay}>
-                <div 
-                  className={`group relative flex flex-col sm:flex-row ${
-                    isReversed ? 'sm:flex-row-reverse' : 'sm:flex-row'
-                  } items-center gap-6 py-4 transition-all duration-500 hover:-translate-y-1 cursor-pointer w-full overflow-hidden`}
-                >
-                  {/* Image Block */}
-                  <div className="w-full sm:w-[46%] aspect-[4/3] overflow-hidden rounded-[1.8rem] border border-white/10 relative bg-black/20 shrink-0 dept-image shadow-xl">
-                    <img 
-                      src={dept.img} 
-                      alt={dept.title} 
-                      className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-[800ms] ease-out" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
-                    
-                    {/* Badge removed as per user request */}
-                  </div>
-
-                  {/* Text Block */}
-                  <div className={`w-full flex flex-col justify-center text-left items-start ${
-                    isReversed ? 'sm:pl-6' : 'sm:pr-6'
-                  } transition-transform duration-500`}>
-                    <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-wider mb-3 group-hover:text-[#db011c] transition-colors duration-300 leading-tight dept-title">
+            <div key={dept.id} className="w-full h-[300px] md:h-[400px] lg:h-[500px] relative group overflow-hidden border-b md:border-b-0 border-white/10">
+              <ScrollReveal delay={delay} className="w-full h-full">
+                <div className="w-full h-full relative cursor-pointer">
+                  {/* Background Image */}
+                  <img 
+                    src={dept.img} 
+                    alt={dept.title} 
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1500ms] ease-out dept-image" 
+                  />
+                  {/* Dark Gradient Overlay for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
+                  
+                  {/* Text Content positioned at left center/bottom */}
+                  <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12 lg:p-16">
+                    <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-white uppercase tracking-tighter mb-3 lg:mb-4 group-hover:text-gray-200 transition-colors duration-300 drop-shadow-md dept-title">
                       {dept.title}
                     </h3>
-                    <p className="text-sm text-white/70 leading-relaxed font-light line-clamp-4 dept-desc">
+                    <p className="text-sm md:text-base text-white/90 leading-relaxed font-normal max-w-lg drop-shadow dept-desc">
                       {dept.desc}
                     </p>
                   </div>
-
                 </div>
               </ScrollReveal>
             </div>

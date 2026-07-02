@@ -92,13 +92,17 @@ function AppHeader() {
       <header className="mwk-header">
         <div className="mwk-container">
           {/* Logo - Left */}
-          <Link href="/" className="mwk-logo">
+          <Link href="/" className="mwk-logo group">
             <Image
-              src="/milwaukee_logo.png"
-              width={140}
-              height={50}
+              src="/Milwaukee-logo-red.png"
+              width={200}
+              height={70}
               alt="Milwaukee logo"
+              className="brightness-0 invert object-contain"
             />
+            <span className="text-[10px] sm:text-xs font-black tracking-widest text-white/90 uppercase">
+              Factory Management
+            </span>
           </Link>
 
           {/* Navigation - Center */}

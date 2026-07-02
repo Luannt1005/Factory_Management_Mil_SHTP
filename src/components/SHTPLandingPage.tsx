@@ -4,20 +4,15 @@ import React, { useEffect, useRef, useState } from "react";
 import CoreTeamOrgChart from "./CoreTeamOrgChart";
 import OpsSupportOrgChart from "./OpsSupportOrgChart";
 
-// Flexible scroll reveal component for custom entrance animations
+// BRP Style Entrance Animation
 interface AnimatedSectionProps {
   children: React.ReactNode;
-  direction?: "up" | "left" | "right" | "zoom";
+  direction?: "up" | "left" | "right" | "fade";
   delay?: number;
   className?: string;
 }
 
-function AnimatedSection({
-  children,
-  direction = "up",
-  delay = 0,
-  className = "",
-}: AnimatedSectionProps) {
+function AnimatedSection({ children, direction = "up", delay = 0, className = "" }: AnimatedSectionProps) {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -29,376 +24,442 @@ function AnimatedSection({
           observer.unobserve(entry.target);
         }
       },
-      {
-        threshold: 0.05,
-        rootMargin: "0px 0px -5% 0px",
-      }
+      { threshold: 0.1, rootMargin: "0px 0px -5% 0px" }
     );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => {
-      if (ref.current) observer.unobserve(ref.current);
-    };
+    if (ref.current) observer.observe(ref.current);
+    return () => { if (ref.current) observer.unobserve(ref.current); };
   }, [delay]);
 
   const getTransitionClass = () => {
-    if (isVisible) {
-      return "opacity-100 translate-y-0 translate-x-0 scale-100";
-    }
+    if (isVisible) return "opacity-100 translate-y-0 translate-x-0";
     switch (direction) {
-      case "left":
-        return "opacity-0 -translate-x-12";
-      case "right":
-        return "opacity-0 translate-x-12";
-      case "zoom":
-        return "opacity-0 scale-90";
+      case "left": return "opacity-0 -translate-x-16";
+      case "right": return "opacity-0 translate-x-16";
+      case "fade": return "opacity-0";
       case "up":
-      default:
-        return "opacity-0 translate-y-12";
+      default: return "opacity-0 translate-y-16";
     }
   };
 
   return (
-    <div
-      ref={ref}
-      className={`transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${getTransitionClass()} ${className}`}
-    >
+    <div ref={ref} className={`transition-all duration-700 ease-out ${getTransitionClass()} ${className}`}>
       {children}
     </div>
   );
 }
 
+// BRP Style Section (Alternating Light themes)
+const Section = ({ dark, children, className = "" }: { dark?: boolean, children: React.ReactNode, className?: string }) => (
+  <section className={`w-full bg-white text-[#212529] ${className}`}>
+    {children}
+  </section>
+);
+
+// BRP Split Block (50/50 Image and Text)
+const SplitBlock = ({ img, title, desc, dark, reverse, badge }: any) => (
+  <div className={`grid grid-cols-1 lg:grid-cols-2 bg-white`}>
+    <div className={`relative h-[400px] lg:h-[600px] ${reverse ? "lg:order-last" : ""}`}>
+      <img src={img} alt={title} className="w-full h-full object-cover" />
+    </div>
+    <div className={`flex flex-col justify-center p-8 lg:p-24 text-[#212529] border-t lg:border-t-0 border-b border-gray-200`}>
+      <AnimatedSection direction={reverse ? "left" : "right"}>
+        {badge && <span className="block mb-4 text-[#db011c] font-black uppercase tracking-widest text-sm">{badge}</span>}
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter mb-6 leading-[0.9]">
+          {title}
+        </h2>
+        <p className={`text-lg font-normal leading-relaxed text-gray-600`}>
+          {desc}
+        </p>
+      </AnimatedSection>
+    </div>
+  </div>
+);
+
+// BRP Split Video Block (50/50 Video and Text)
+const SplitVideoBlock = ({ video, title, desc, dark, reverse, badge }: any) => (
+  <div className={`grid grid-cols-1 lg:grid-cols-2 bg-[#f4f4f4]`}>
+    <div className={`relative h-[400px] lg:h-[600px] ${reverse ? "lg:order-last" : ""}`}>
+      <video src={video} controls autoPlay muted playsInline className="w-full h-full object-cover" />
+    </div>
+    <div className={`flex flex-col justify-center p-8 lg:p-24 text-[#212529] border-t lg:border-t-0 border-b border-gray-200`}>
+      <AnimatedSection direction={reverse ? "left" : "right"}>
+        {badge && <span className="block mb-4 text-[#db011c] font-black uppercase tracking-widest text-sm">{badge}</span>}
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter mb-6 leading-[0.9]">
+          {title}
+        </h2>
+        <p className={`text-lg font-normal leading-relaxed text-gray-600`}>
+          {desc}
+        </p>
+      </AnimatedSection>
+    </div>
+  </div>
+);
+
+const constructionTabsData = [
+  {
+    id: "start",
+    title: "Start Sept 2020",
+    image: "/about_shtp/2.1.1 Construction Journey - Start Sept 2020.png",
+    desc: "Initial ground breaking and site preparation."
+  },
+  {
+    id: "piling",
+    title: "Piling July 2020",
+    image: "/about_shtp/2.1.2 Construction Journey - Piling July 2020.png",
+    desc: "Foundation piling and structural base work."
+  },
+  {
+    id: "structure",
+    title: "Structure Feb 2023",
+    image: "/about_shtp/2.1.3 Construction Journey - Structure Feb 2023.png",
+    desc: "Primary facility framing and structural assembly."
+  },
+  {
+    id: "operations",
+    title: "Operations Mar 2024",
+    image: "/about_shtp/2.1.4  Construction Journey- Operations Mar 2024.png",
+    desc: "Final exterior finishing and operational readiness."
+  }
+];
+
+function ConstructionTabs() {
+  const [activeTab, setActiveTab] = useState(0);
+  const data = constructionTabsData[activeTab];
+
+  return (
+    <div className="w-full px-8 lg:px-24 py-12 bg-[#f4f4f4]">
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-8 border-b border-gray-300">
+        {constructionTabsData.map((tab, idx) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(idx)}
+            className={`pb-4 text-sm font-bold uppercase tracking-wider transition-colors relative ${
+              activeTab === idx ? "text-gray-900" : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            {tab.title}
+            {activeTab === idx && (
+              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#db011c]" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 pt-16">
+        <AnimatedSection direction="left" className="flex flex-col justify-start">
+          <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-8 text-[#212529] leading-tight">
+            {data.title}
+          </h3>
+          
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#db011c] mt-2 shrink-0"></div>
+              <div>
+                <p className="text-sm font-bold text-[#db011c] uppercase tracking-widest mb-1">Milestone</p>
+                <p className="text-gray-700 text-lg leading-relaxed">{data.desc}</p>
+              </div>
+            </div>
+          </div>
+        </AnimatedSection>
+        
+        <AnimatedSection direction="right" className="relative w-full aspect-video md:aspect-[4/3] overflow-hidden rounded shadow-lg">
+          <img src={data.image} alt={data.title} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
+        </AnimatedSection>
+      </div>
+    </div>
+  );
+}
+
+function QuickStats() {
+  const stats = [
+    { value: "2,400+", label: "Factory employees" },
+    { value: "6", label: "Manufacturing lines" },
+    { value: "24/7", label: "Production operations" },
+    { value: "ISO 9001", label: "Quality certified" },
+  ];
+
+  return (
+    <div className="w-full px-8 lg:px-24 py-12 bg-white">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, idx) => (
+          <AnimatedSection key={idx} direction="up" delay={idx * 100}>
+            <div className="bg-white rounded-md shadow-sm border border-gray-100 border-t-4 border-t-[#db011c] p-6 flex flex-col justify-center h-full">
+              <h4 className="text-3xl font-black text-[#db011c] mb-2 uppercase tracking-tight">{stat.value}</h4>
+              <p className="text-gray-500 text-sm font-medium">{stat.label}</p>
+            </div>
+          </AnimatedSection>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BuildingOutlookSection() {
+  return (
+    <Section className="py-12 border-b border-gray-200 bg-white">
+      <div className="w-full px-8 lg:px-24 mb-8">
+        <AnimatedSection direction="up">
+           <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight leading-tight">
+             BUILDING <span className="text-[#db011c]">OUTLOOK</span>
+           </h3>
+        </AnimatedSection>
+      </div>
+
+      <div className="w-full flex flex-col md:flex-row h-[500px] lg:h-[600px]">
+        {/* 2024 Outlook */}
+        <div className="relative flex-1 w-full h-full group overflow-hidden">
+          <img 
+            src="/about_shtp/2.2 Building Outlook - 2024.jpg" 
+            alt="Building Outlook 2024" 
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 flex flex-col justify-end p-10 md:p-16 text-white">
+             <h3 className="text-3xl md:text-4xl font-black italic uppercase mb-4 tracking-tight drop-shadow-md">
+               2024 OUTLOOK
+             </h3>
+             <p className="text-sm md:text-base font-medium max-w-lg leading-relaxed text-gray-200 drop-shadow">
+               Our completed state-of-the-art manufacturing campus in Saigon Hi-Tech Park, fully operational and designed for optimal assembly and world-class operations.
+             </p>
+          </div>
+        </div>
+
+        {/* 202X Vision */}
+        <div className="relative flex-1 w-full h-full group overflow-hidden">
+          <img 
+            src="/about_shtp/2.3 Buildin g Outlook - 202X.jpg" 
+            alt="Building Outlook 202X" 
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 flex flex-col justify-end p-10 md:p-16 text-white">
+             <h3 className="text-3xl md:text-4xl font-black italic uppercase mb-4 tracking-tight drop-shadow-md">
+               202X VISION
+             </h3>
+             <p className="text-sm md:text-base font-medium max-w-lg leading-relaxed text-gray-200 drop-shadow">
+               Future expansion plans and continuous innovation as we scale our manufacturing capabilities to meet growing global demand.
+             </p>
+          </div>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+
 export default function SHTPLandingPage() {
   return (
-    <div className="w-full min-h-screen bg-[var(--color-bg-page)] text-gray-900 font-sans pb-32 px-4 md:px-8 space-y-24">
+    <div className="w-full min-h-screen bg-white font-sans overflow-x-hidden">
       
-      {/* 1. Header Banner */}
-      <AnimatedSection direction="zoom" className="w-full">
-        <div className="relative w-full h-[380px] rounded-3xl overflow-hidden flex items-center justify-center shadow-sm">
-          <div className="absolute inset-0 z-0 bg-black">
-            <img
-              src="/about_shtp/1.Site Map.png"
-              alt="SHTP Facility"
-              className="w-full h-full object-cover opacity-60 transition-transform duration-[12s] hover:scale-105"
-            />
-          </div>
-          <div className="relative z-10 text-center px-4">
-            <div className="inline-block mb-4 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
-              <span className="text-xs font-black text-white uppercase tracking-[0.2em]">Milwaukee Tool Vietnam</span>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter drop-shadow-2xl">
-              About <span className="text-[#db011c]">SHTP Facility</span>
-            </h1>
-          </div>
+      {/* 1. HERO BANNER - Full Bleed */}
+      <section className="relative w-full h-[80vh] min-h-[600px] flex items-center bg-black">
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <video src="/about_shtp/2.Construction Journey.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover opacity-60" />
         </div>
-      </AnimatedSection>
+      </section>
 
-      {/* 2. Facility Overview */}
-      <section className="grid lg:grid-cols-12 gap-12 items-center">
-        {/* Left Stats & Description */}
-        <div className="lg:col-span-7 space-y-6">
-          <AnimatedSection direction="left" className="space-y-6">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl font-black text-[#db011c]">01</span>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-[#db011c] pl-3">
-                Facility Overview
+      {/* QUICK STATS */}
+      <QuickStats />
+
+      {/* 2. FACILITY OVERVIEW */}
+      <Section className="py-24 md:py-32 border-b border-gray-200">
+        <div className="w-full px-8 lg:px-24">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+            <AnimatedSection direction="up" className="flex flex-col justify-center text-left">
+              <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-8">
+                01. FACILITY <br /><span className="text-[#db011c]">OVERVIEW</span>
               </h2>
-            </div>
-            <p className="text-gray-600 text-base md:text-lg leading-relaxed font-light">
-              Our state-of-the-art manufacturing campus in Saigon Hi-Tech Park is designed for innovation, optimal assembly, and world-class operations. The facility maximizes logistical flow and provides secure access for both heavy machinery and daily commuters.
-            </p>
-
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              {[
-                { label: "Location", value: "Saigon Hi-Tech Park" },
-                { label: "Levels", value: "6 Floors" },
-                { label: "Primary Function", value: "Manufacturing & R&D" },
-                { label: "Status", value: "Operational" },
-              ].map((stat, idx) => (
-                <div key={idx} className="bg-white/40 backdrop-blur-sm p-4 rounded-2xl border border-gray-200/30 hover:bg-white/60 transition-colors">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{stat.label}</p>
-                  <p className="text-gray-900 font-semibold text-sm md:text-base mt-1">{stat.value}</p>
-                </div>
-              ))}
-            </div>
-          </AnimatedSection>
-        </div>
-
-        {/* Right Featured Image */}
-        <div className="lg:col-span-5 flex items-center justify-center">
-          <AnimatedSection direction="right" className="w-full">
-            <div className="relative w-full h-[320px] lg:h-[400px] overflow-hidden rounded-3xl group shadow-sm bg-white border border-gray-100 p-2">
-              <img
-                src="/about_shtp/1.Site Map.png"
-                alt="Facility Site Map"
-                className="w-full h-full object-cover rounded-2xl transition-transform duration-700 group-hover:scale-[1.02]"
-              />
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* 3. Construction Journey */}
-      <section className="space-y-12">
-        <AnimatedSection direction="up">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl font-black text-[#db011c]">02</span>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-[#db011c] pl-3">
-              Construction Journey
-            </h2>
-          </div>
-          <p className="text-gray-500 font-light text-sm mt-4 max-w-2xl">
-            Witness the dynamic development of our manufacturing facility, from ground breaking to the final building exterior.
-          </p>
-        </AnimatedSection>
-
-        <div className="space-y-16">
-          {[
-            {
-              title: "Time-lapse Video",
-              src: "/about_shtp/2.Construction Journey.mp4",
-              desc: "Site construction progress from ground breaking to completion.",
-              isVideo: true
-            },
-            {
-              title: "Actual Progress",
-              src: "/about_shtp/2.1 Construction Journey.PNG",
-              desc: "Mid-stage facility framing and structural assembly.",
-              isVideo: false
-            },
-            {
-              title: "Building Outlook",
-              src: "/about_shtp/2.2 Construction Journey.PNG",
-              desc: "Final building exterior and site finishing.",
-              isVideo: false
-            },
-          ].map((item, idx) => {
-            const isEven = idx % 2 === 0;
-            return (
-              <div key={idx} className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-                {/* Image/Video container */}
-                <div className={`lg:col-span-7 ${isEven ? "" : "lg:order-last"}`}>
-                  <AnimatedSection direction={isEven ? "left" : "right"} className="group">
-                    <div className="overflow-hidden rounded-3xl bg-white border border-gray-100 p-2 aspect-[16/9] relative shadow-sm flex items-center justify-center">
-                      {item.isVideo ? (
-                        <video
-                          src={item.src}
-                          controls
-                          autoPlay
-                          muted
-                          playsInline
-                          className="w-full h-full object-cover rounded-2xl"
-                        />
-                      ) : (
-                        <img
-                          src={item.src}
-                          alt={item.title}
-                          className="w-full h-full object-cover rounded-2xl transition-transform duration-700 group-hover:scale-[1.02]"
-                        />
-                      )}
-                    </div>
-                  </AnimatedSection>
-                </div>
-                {/* Content container */}
-                <div className="lg:col-span-5 space-y-3">
-                  <AnimatedSection direction={isEven ? "right" : "left"}>
-                    <h3 className={`text-xl font-bold text-gray-900 ${isEven ? "" : "lg:text-right"}`}>{item.title}</h3>
-                    <p className={`text-gray-500 font-light text-sm md:text-base leading-relaxed ${isEven ? "" : "lg:text-right"}`}>{item.desc}</p>
-                  </AnimatedSection>
-                </div>
+              <p className="text-xl text-gray-700 leading-relaxed font-normal mb-12 max-w-2xl">
+                Our state-of-the-art manufacturing campus in Saigon Hi-Tech Park is designed for innovation, optimal assembly, and world-class operations. The facility maximizes logistical flow and provides secure access for both heavy machinery and daily commuters.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-8 border-t-4 border-[#212529] pt-12 max-w-2xl">
+                {[
+                  { label: "Location", value: "Saigon Hi-Tech Park" },
+                  { label: "Levels", value: "6 Floors" },
+                  { label: "Function", value: "Manufacturing & R&D" },
+                  { label: "Status", value: "Operational" },
+                ].map((stat, idx) => (
+                  <div key={idx}>
+                    <p className="text-[#db011c] font-black uppercase tracking-widest text-xs mb-2">{stat.label}</p>
+                    <p className="text-2xl font-black uppercase tracking-tight">{stat.value}</p>
+                  </div>
+                ))}
               </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* 4. Organizational Structure */}
-      <section className="space-y-16 pt-8">
-        <AnimatedSection direction="up">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl font-black text-[#db011c]">03</span>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-[#db011c] pl-3">
-              Organizational Structure
-            </h2>
+            </AnimatedSection>
+            
+            <AnimatedSection direction="up" delay={200} className="relative h-[500px] lg:h-[700px] w-full">
+              <img src="/about_shtp/1.Site Map.png" alt="Site Map" className="w-full h-full object-cover" />
+            </AnimatedSection>
           </div>
-          <p className="text-gray-500 font-light text-sm mt-4 max-w-2xl">
-            Our leadership and core team directing local operations, along with the functional hierarchy managing daily processes.
-          </p>
-        </AnimatedSection>
+        </div>
+      </Section>
 
-        <div className="space-y-16">
+      {/* 3. CONSTRUCTION JOURNEY */}
+      <Section className="bg-[#f4f4f4]">
+        <div className="py-24 px-8 lg:px-24 w-full text-left border-b border-gray-200">
           <AnimatedSection direction="up">
-             <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 md:p-10 border border-gray-200/30 shadow-sm overflow-x-auto custom-scrollbar">
-                <h3 className="text-xl font-bold text-gray-900 mb-8 text-center">Milwaukee PT VN Core Team</h3>
-                <div className="min-w-[800px] flex justify-center">
-                  <CoreTeamOrgChart />
-                </div>
-             </div>
-          </AnimatedSection>
-
-          <AnimatedSection direction="up" delay={200}>
-             <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 md:p-10 border border-gray-200/30 shadow-sm flex flex-col items-center group">
-                <h3 className="text-xl font-bold text-gray-900 mb-8 text-center">Operations Support</h3>
-                <div className="overflow-hidden rounded-2xl w-full flex justify-center">
-                   <img src="/about_shtp/4.Operations Support - Organization Chart.png" alt="Ops Support" className="max-w-full h-auto drop-shadow-sm transition-transform duration-[10s] group-hover:scale-105" />
-                </div>
-             </div>
+             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-6">
+                02. CONSTRUCTION <span className="text-[#db011c]">JOURNEY</span>
+             </h2>
+             <p className="text-xl text-gray-600 font-normal max-w-3xl">
+                Witness the dynamic development of our manufacturing facility, from ground breaking to the final building exterior.
+             </p>
           </AnimatedSection>
         </div>
-      </section>
+        
+        <ConstructionTabs />
+      </Section>
 
-      {/* 5. Facility Layouts */}
-      <section className="space-y-16 pt-8">
-        <AnimatedSection direction="up">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl font-black text-[#db011c]">04</span>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-[#db011c] pl-3">
-              Facility Layouts
-            </h2>
-          </div>
-        </AnimatedSection>
+      {/* BUILDING OUTLOOK */}
+      <BuildingOutlookSection />
+
+      {/* 4. ORGANIZATIONAL STRUCTURE */}
+      <Section className="pt-24 md:pt-32 pb-16 bg-white">
+        <div className="w-full px-8 lg:px-24 mb-12">
+          <AnimatedSection direction="up" className="text-left">
+             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-6">
+                03. ORGANIZATIONAL <span className="text-[#db011c]">STRUCTURE</span>
+             </h2>
+             <p className="text-xl text-gray-700 font-normal max-w-3xl">
+                Our leadership and core team directing local operations, along with the functional hierarchy managing daily processes.
+             </p>
+          </AnimatedSection>
+        </div>
+          
+        <div className="w-full flex flex-col gap-12">
+           <AnimatedSection direction="up">
+              <div className="w-full bg-slate-50 py-12 border-y border-gray-200">
+                 <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-8 text-center text-[#212529]">MILWAUKEE PT VN CORE TEAM</h3>
+                 <div className="overflow-x-auto w-full custom-scrollbar pb-4">
+                   <div className="min-w-[800px] flex justify-center">
+                      <CoreTeamOrgChart />
+                   </div>
+                 </div>
+              </div>
+           </AnimatedSection>
+
+           <AnimatedSection direction="up">
+              <div className="w-full bg-slate-50 py-12 border-b border-gray-200">
+                 <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-8 text-center text-[#212529]">OPERATIONS SUPPORT</h3>
+                 <div className="overflow-x-auto w-full custom-scrollbar pb-4">
+                   <div className="min-w-[800px] flex justify-center">
+                      <OpsSupportOrgChart />
+                   </div>
+                 </div>
+              </div>
+           </AnimatedSection>
+        </div>
+      </Section>
+
+      {/* 5. FACILITY LAYOUTS */}
+      <Section className="pt-24 md:pt-32 pb-0 bg-white">
+        <div className="w-full px-8 lg:px-24 mb-16 text-left">
+          <AnimatedSection direction="up">
+             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9]">
+                04. FACILITY <span className="text-[#db011c]">LAYOUTS</span>
+             </h2>
+          </AnimatedSection>
+        </div>
 
         {/* Manufacturing Layouts */}
-        <div className="space-y-12">
-          <AnimatedSection direction="left">
-            <h3 className="text-2xl font-extrabold text-gray-900 border-b-2 border-gray-200 pb-2">
-              Manufacturing Layouts
+        <div className="bg-[#f4f4f4] py-24 px-8 lg:px-24 border-y border-gray-200">
+          <div className="w-full">
+            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-16 border-b-4 border-[#db011c] inline-block pb-2 text-[#212529]">
+              MANUFACTURING LEVELS
             </h3>
-            <p className="text-gray-500 font-light text-sm md:text-base leading-relaxed mt-4">
-              Floor layouts for our manufacturing levels, designed for optimal assembly and logistics.
-            </p>
-          </AnimatedSection>
-
-          <div className="space-y-12">
-            {[
-              { level: "Level 1", desc: "Heavy machinery & primary production line.", img: "/about_shtp/5.1 Manufacturing Layout_Level 1.png" },
-              { level: "Level 3", desc: "Precision assembly & quality check.", img: "/about_shtp/5.2 Manufacturing Layout_Level 3.png" },
-              { level: "Level 5", desc: "Final testing & packaging staging area.", img: "/about_shtp/5.3 Manufacturing Layout_Level 5.png" },
-            ].map((layout, idx) => (
-              <AnimatedSection key={idx} direction="up" delay={150} className="grid lg:grid-cols-12 gap-8 items-center bg-white/40 backdrop-blur-sm p-4 md:p-8 rounded-3xl border border-gray-200/30 group shadow-sm">
-                <div className="lg:col-span-4 space-y-3">
-                  <h4 className="text-3xl font-bold text-gray-900">{layout.level}</h4>
-                  <p className="text-gray-600 text-sm md:text-base">{layout.desc}</p>
-                </div>
-                <div className="lg:col-span-8 overflow-hidden rounded-2xl bg-white aspect-[16/9] flex items-center justify-center p-2">
-                  <img src={layout.img} alt={layout.level} className="w-full h-full object-contain transition-transform duration-[10s] group-hover:scale-[1.03]" />
-                </div>
-              </AnimatedSection>
-            ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+              {[
+                { level: "LEVEL 1", desc: "HEAVY MACHINERY & PRIMARY PRODUCTION LINE", img: "/about_shtp/5.1 Manufacturing Layout_Level 1.png" },
+                { level: "LEVEL 3", desc: "PRECISION ASSEMBLY & QUALITY CHECK", img: "/about_shtp/5.2 Manufacturing Layout_Level 3.png" },
+                { level: "LEVEL 5", desc: "FINAL TESTING & PACKAGING STAGING AREA", img: "/about_shtp/5.3 Manufacturing Layout_Level 5.png" },
+              ].map((layout, idx) => (
+                <AnimatedSection key={idx} direction="up" className="bg-white p-8 flex flex-col h-full border-b-[8px] border-[#db011c] shadow-sm hover:shadow-md transition-shadow">
+                   <h5 className="text-3xl font-black uppercase tracking-tighter mb-2 text-[#db011c]">{layout.level}</h5>
+                   <p className="text-xs font-bold tracking-wide uppercase text-gray-500 mb-6">{layout.desc}</p>
+                   <div className="flex-grow flex items-center justify-center bg-[#f4f4f4] p-4">
+                     <img src={layout.img} alt={layout.level} className="w-full h-auto object-contain mix-blend-multiply" />
+                   </div>
+                </AnimatedSection>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Office Layouts */}
-        <div className="space-y-12 pt-8">
-          <AnimatedSection direction="right">
-            <h3 className="text-2xl font-extrabold text-gray-900 border-b-2 border-gray-200 pb-2 text-right">
-              Office Layouts
+        <div className="bg-white py-24 px-8 lg:px-24">
+          <div className="w-full">
+            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-16 border-b-4 border-[#db011c] inline-block pb-2 text-[#212529]">
+              OFFICE LEVELS
             </h3>
-            <p className="text-gray-500 font-light text-sm md:text-base leading-relaxed mt-4 text-right">
-              Modern, open-concept workspaces mapped out for administrative and support departments.
-            </p>
-          </AnimatedSection>
-
-          <div className="space-y-12">
-            {[
-              { level: "Level 2", desc: "Engineering bays & collaboration zones.", img: "/about_shtp/6.1 Office Layout_Level 2.png" },
-              { level: "Level 4", desc: "Operations offices & conference clusters.", img: "/about_shtp/6.2 Office Layout_Level 4.png" },
-              { level: "Level 6", desc: "Executive spaces & research workspaces.", img: "/about_shtp/6.3 Office Layout_Level 6.png" },
-            ].map((layout, idx) => (
-               <AnimatedSection key={idx} direction="up" delay={150} className="grid lg:grid-cols-12 gap-8 items-center bg-white/40 backdrop-blur-sm p-4 md:p-8 rounded-3xl border border-gray-200/30 group shadow-sm">
-                <div className="lg:col-span-8 overflow-hidden rounded-2xl bg-white aspect-[16/9] flex items-center justify-center p-2 lg:order-first order-last">
-                  <img src={layout.img} alt={layout.level} className="w-full h-full object-contain transition-transform duration-[10s] group-hover:scale-[1.03]" />
-                </div>
-                <div className="lg:col-span-4 space-y-3 lg:text-right">
-                  <h4 className="text-3xl font-bold text-gray-900">{layout.level}</h4>
-                  <p className="text-gray-600 text-sm md:text-base">{layout.desc}</p>
-                </div>
-              </AnimatedSection>
-            ))}
-          </div>
-        </div>
-
-        {/* Meeting Rooms Layouts */}
-        <div className="space-y-12 pt-8">
-          <AnimatedSection direction="left">
-             <h4 className="text-lg font-bold text-gray-800 border-l-3 border-[#db011c] pl-2.5">
-                Meeting Room Layouts
-              </h4>
-              <p className="text-xs text-gray-500 font-light mt-1">Specialized meeting hubs positioned across office and manufacturing floors.</p>
-          </AnimatedSection>
-
-          <div className="space-y-8">
-             {[
-                { level: "Level 2", img: "/about_shtp/7.1 Meeting room L2.PNG" },
-                { level: "Level 3", img: "/about_shtp/7.2 Meeting room L3.PNG" },
-                { level: "Level 4", img: "/about_shtp/7.3 Meeting room L4.PNG" },
-                { level: "Level 5", img: "/about_shtp/7.4 Meeting room L5.PNG" },
-                { level: "Level 6", img: "/about_shtp/7.5 Meeting room L6.PNG" },
-             ].map((room, idx) => (
-                <AnimatedSection key={idx} direction="zoom" delay={100} className="bg-white/40 backdrop-blur-sm p-4 rounded-3xl border border-gray-200/30 shadow-sm group flex flex-col md:flex-row items-center gap-6">
-                   <div className="flex-shrink-0 w-32 md:w-48 text-center md:text-left md:pl-4">
-                     <h5 className="text-xl font-bold text-gray-900">{room.level}</h5>
-                     <span className="text-xs text-gray-500 font-light">Meeting Rooms</span>
-                   </div>
-                   <div className="bg-white rounded-2xl p-2 w-full flex items-center justify-center h-48 md:h-64 overflow-hidden shadow-inner">
-                      <img src={room.img} alt={room.level} className="max-h-full max-w-full object-contain transition-transform duration-[10s] group-hover:scale-[1.03]" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+              {[
+                { level: "LEVEL 2", desc: "ENGINEERING BAYS & COLLABORATION ZONES", img: "/about_shtp/6.1 Office Layout_Level 2.png" },
+                { level: "LEVEL 4", desc: "OPERATIONS OFFICES & CONFERENCE CLUSTERS", img: "/about_shtp/6.2 Office Layout_Level 4.png" },
+                { level: "LEVEL 6", desc: "EXECUTIVE SPACES & RESEARCH WORKSPACES", img: "/about_shtp/6.3 Office Layout_Level 6.png" },
+              ].map((layout, idx) => (
+                <AnimatedSection key={idx} direction="up" className="bg-[#f4f4f4] p-8 flex flex-col h-full border-b-[8px] border-[#db011c] shadow-sm hover:shadow-md transition-shadow">
+                   <h5 className="text-3xl font-black uppercase tracking-tighter mb-2 text-[#db011c]">{layout.level}</h5>
+                   <p className="text-xs font-bold tracking-wide uppercase text-gray-500 mb-6">{layout.desc}</p>
+                   <div className="flex-grow flex items-center justify-center bg-white p-4 border border-gray-200">
+                     <img src={layout.img} alt={layout.level} className="w-full h-auto object-contain mix-blend-multiply" />
                    </div>
                 </AnimatedSection>
-             ))}
+              ))}
+            </div>
           </div>
         </div>
-
-      </section>
-
-      {/* 6. Visitor Registration Process */}
-      <section className="space-y-12 border-t border-gray-200/50 pt-16">
-        <div className="grid lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-5 lg:order-first">
-              <AnimatedSection direction="left" className="w-full">
-                <div className="overflow-hidden rounded-3xl bg-white p-4 border border-gray-100 shadow-sm group">
-                  <img
-                    src="/about_shtp/9. Visitor Registration Process.png"
-                    alt="Registration Process"
-                    className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-[1.02]"
-                  />
-                </div>
-              </AnimatedSection>
-            </div>
-            
-            <div className="lg:col-span-7 space-y-6">
-              <AnimatedSection direction="right" className="space-y-6">
-                 <div className="flex items-center gap-3">
-                  <span className="text-3xl font-black text-[#db011c]">05</span>
-                  <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-[#db011c] pl-3">
-                    Visitor Process
-                  </h2>
-                </div>
-                <p className="text-gray-500 font-light text-sm md:text-base leading-relaxed">
-                  A seamless online check-in, identity verification, and safety brief instruction flow designed to welcome our guests efficiently and safely. Ensure you complete the required registration before arriving on site.
-                </p>
-              </AnimatedSection>
+        
+        {/* Meeting Room Layouts */}
+        <div className="bg-[#f4f4f4] py-24 px-8 lg:px-24 border-t border-gray-200">
+          <div className="w-full">
+            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-16 border-b-4 border-[#db011c] inline-block pb-2 text-[#212529]">
+              MEETING ROOMS
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+              {[
+                { level: "LEVEL 2", img: "/about_shtp/7.1 Meeting room L2.PNG" },
+                { level: "LEVEL 3", img: "/about_shtp/7.2 Meeting room L3.PNG" },
+                { level: "LEVEL 4", img: "/about_shtp/7.3 Meeting room L4.PNG" },
+                { level: "LEVEL 5", img: "/about_shtp/7.4 Meeting room L5.PNG" },
+                { level: "LEVEL 6", img: "/about_shtp/7.5 Meeting room L6.PNG" },
+              ].map((room, idx) => (
+                <AnimatedSection key={idx} direction="up" className="bg-white p-8 flex flex-col h-full border-b-[8px] border-[#db011c] shadow-sm hover:shadow-md transition-shadow">
+                   <h5 className="text-3xl font-black uppercase tracking-tighter mb-6 text-[#212529]">{room.level}</h5>
+                   <div className="flex-grow flex items-center justify-center bg-[#f4f4f4] p-4">
+                     <img src={room.img} alt={room.level} className="w-full h-auto object-contain mix-blend-multiply" />
+                   </div>
+                </AnimatedSection>
+              ))}
             </div>
           </div>
-      </section>
+        </div>
+      </Section>
+
+      {/* 6. VISITOR REGISTRATION */}
+      <SplitBlock 
+        badge="VISITOR PROCESS"
+        title="SEAMLESS ONLINE CHECK-IN"
+        desc="Identity verification, safety brief instruction flow, and secure registration designed to welcome our guests efficiently. Ensure you complete the required registration before arriving on site."
+        img="/about_shtp/9. Visitor Registration Process.png"
+        dark={false}
+        reverse={false}
+      />
 
       <style dangerouslySetInnerHTML={{
         __html: `
         .custom-scrollbar::-webkit-scrollbar {
-          height: 8px;
+          height: 12px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(0, 0, 0, 0.05);
-          border-radius: 4px;
+          background: #f4f4f4;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(0, 0, 0, 0.2);
-          border-radius: 4px;
+          background: #db011c;
+          border: 3px solid #f4f4f4;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(0, 0, 0, 0.3);
+          background: #a00115;
         }
       `}} />
     </div>

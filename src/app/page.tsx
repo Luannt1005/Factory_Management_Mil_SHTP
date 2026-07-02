@@ -69,16 +69,16 @@ export default async function Home() {
   const token = session || legacyToken;
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-gradient-to-br from-[#db011c] to-[#900112] text-white font-sans">
+    <div className="flex flex-col w-full min-h-screen bg-white text-[#212529] font-sans">
       {/* Hero Section */}
       {token ? (
         <>
           <HeroVideo>
-            <div className="py-6" />
+            <></>
           </HeroVideo>
           {/* Brand Slogan */}
-          <div className="w-full text-center py-8 select-none">
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-black tracking-[0.25em] text-white uppercase">
+          <div className="w-full text-center py-12 md:py-16 select-none">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-black tracking-[0.25em] text-[#db011c] uppercase">
               Nothing but HEAVY DUTY™
             </p>
           </div>
@@ -88,7 +88,7 @@ export default async function Home() {
       )}
 
       {/* Milwaukee Culture Section */}
-      <section className="w-full bg-transparent py-24">
+      <section className="w-full bg-transparent pb-24">
         {/* Style block for staggered children reveal and logo spin */}
         <style dangerouslySetInnerHTML={{
           __html: `
@@ -116,17 +116,19 @@ export default async function Home() {
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-20 mb-20">
             <ScrollReveal delay={150} className="text-center md:text-left">
-              <h2 className="text-4xl md:text-[3.25rem] font-black text-white leading-none tracking-tight">MILWAUKEE CULTURE</h2>
-              <p className="text-base md:text-xl font-black tracking-[0.25em] text-white mt-4 uppercase">
+              <h2 className="text-4xl md:text-[3.25rem] font-black text-[#212529] leading-none tracking-tight">MILWAUKEE CULTURE</h2>
+              <p className="text-base md:text-xl font-black tracking-[0.25em] text-[#db011c] mt-4 uppercase">
                 7 CULTURE EXPECTATIONS
               </p>
             </ScrollReveal>
             <ScrollReveal delay={50}>
-              <img
-                src="/landing_page/Milwaukee Culture Logo.png"
-                alt="Milwaukee Culture Logo"
-                className="h-36 md:h-48 w-auto drop-shadow-[0_10px_30px_rgba(219,1,28,0.35)] hover:scale-105 transition-transform duration-300 culture-logo-reveal"
-              />
+              <div className="culture-logo-reveal inline-block hover:scale-105 transition-transform duration-300">
+                <img
+                  src="/landing_page/Milwaukee Culture Logo.png"
+                  alt="Milwaukee Culture Logo"
+                  className="h-32 md:h-40 w-auto"
+                />
+              </div>
             </ScrollReveal>
           </div>
 
@@ -140,7 +142,7 @@ export default async function Home() {
                   className={`${isLast ? 'md:col-span-2 lg:col-span-3 lg:max-w-4xl lg:mx-auto w-full' : ''} flex flex-col`}
                 >
                   <ScrollReveal delay={delay} className="h-full flex-1 flex flex-col">
-                    <div className="group relative w-full flex-1 flex flex-col bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#db011c]/30 rounded-3xl p-8 hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 overflow-hidden">
+                    <div className="group relative w-full flex-1 flex flex-col bg-[#b52427] border border-[#9a1c1e] hover:border-white/30 rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.15)] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)] transition-all duration-300 overflow-hidden">
 
                       {/* Logo and Number placed together in a flex row to prevent any clipping/cutoff */}
                       <div className="flex justify-between items-center mb-6 opacity-0 translate-y-4 expect-logo">
@@ -151,7 +153,7 @@ export default async function Home() {
                             className="h-full w-auto object-contain"
                           />
                         </div>
-                        <div className="text-4xl font-black text-white/20 group-hover:text-[#db011c]/60 transition-colors duration-500 font-sans select-none pointer-events-none">
+                        <div className="text-4xl font-black text-white/30 group-hover:text-white/60 transition-colors duration-500 font-sans select-none pointer-events-none">
                           {item.num}
                         </div>
                       </div>
@@ -159,7 +161,7 @@ export default async function Home() {
                       <p
                         className="text-sm md:text-base text-white/90 leading-relaxed font-normal opacity-0 translate-y-4 expect-desc"
                         dangerouslySetInnerHTML={{
-                          __html: item.desc.replace(/<strong>/g, '<strong class="text-white/90 font-medium">').replace(/<\/strong>/g, '</strong>')
+                          __html: item.desc.replace(/<strong>/g, '<strong class="text-white font-bold">').replace(/<\/strong>/g, '</strong>')
                         }}
                       />
                     </div>
@@ -173,15 +175,17 @@ export default async function Home() {
       </section>
 
       {/* Departments Section */}
-      <section className="w-full pt-20 pb-20 bg-transparent">
-        <div className="w-full px-8 md:px-16 max-w-7xl mx-auto">
+      <section className="w-full pt-20 pb-0 bg-transparent">
+        <div className="w-full px-8 md:px-16 max-w-7xl mx-auto mb-12">
           <ScrollReveal>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-center mb-4 tracking-tight">Our Departments</h2>
-            <p className="text-center text-xl text-[#ffe5e5] mb-16 max-w-3xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase text-center mb-4 text-[#db011c]">OUR DEPARTMENTS</h2>
+            <p className="text-center text-xl text-gray-600 max-w-3xl mx-auto">
               Explore the various divisions driving innovation and excellence at our facility.
             </p>
           </ScrollReveal>
-
+        </div>
+        
+        <div className="w-full">
           <DepartmentSlider />
         </div>
       </section>
@@ -192,7 +196,7 @@ export default async function Home() {
           <div className="w-full px-8 md:px-16">
 
             <div className="max-w-6xl mx-auto mb-20 text-center" style={{ transform: 'translateX(-3%)' }}>
-              <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-6">Contact</h2>
+              <h2 className="text-4xl md:text-5xl font-extrabold text-[#212529] tracking-tight mb-6">Contact</h2>
               <div className="w-24 h-1 bg-[#db011c] mx-auto rounded-full"></div>
             </div>
 
@@ -200,17 +204,17 @@ export default async function Home() {
 
               {/* Reception Card - text only, out of box */}
               <div className="flex flex-col items-center md:items-start md:mr-auto w-full max-w-md group">
-                <h3 className="text-2xl font-black text-white tracking-widest uppercase mb-8 relative inline-block">
+                <h3 className="text-2xl font-black text-[#212529] tracking-widest uppercase mb-8 relative inline-block">
                   Reception Desk
-                  <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-12 h-1 bg-white group-hover:w-full transition-all duration-500"></span>
+                  <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-12 h-1 bg-[#db011c] group-hover:w-full transition-all duration-500"></span>
                 </h3>
                 <div className="space-y-6 w-full">
-                  <a href="tel:+8402873088869" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
-                    <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Tel:</span>
-                    <span className="font-light">(+84) 0287 3088 869 <span className="text-white/50 text-sm ml-1 block sm:inline">(Ext: 66797)</span></span>
+                  <a href="tel:+8402873088869" className="flex items-start gap-4 text-xl text-gray-600 hover:text-[#db011c] transition-colors group/link">
+                    <span className="w-24 shrink-0 text-[#212529] font-bold transition-transform group-hover/link:translate-x-1">Tel:</span>
+                    <span className="font-light">(+84) 0287 3088 869 <span className="text-gray-400 text-sm ml-1 block sm:inline">(Ext: 66797)</span></span>
                   </a>
-                  <a href="mailto:MILVNSHTPReception@ttigroup.com.vn" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
-                    <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Email:</span>
+                  <a href="mailto:MILVNSHTPReception@ttigroup.com.vn" className="flex items-start gap-4 text-xl text-gray-600 hover:text-[#db011c] transition-colors group/link">
+                    <span className="w-24 shrink-0 text-[#212529] font-bold transition-transform group-hover/link:translate-x-1">Email:</span>
                     <span className="font-light break-all">MILVNSHTPReception@ttigroup.com.vn</span>
                   </a>
                 </div>
@@ -218,17 +222,17 @@ export default async function Home() {
 
               {/* EHS Team Card */}
               <div className="flex flex-col items-center md:items-start md:ml-auto w-full max-w-md group">
-                <h3 className="text-2xl font-black text-white tracking-widest uppercase mb-8 relative inline-block">
+                <h3 className="text-2xl font-black text-[#212529] tracking-widest uppercase mb-8 relative inline-block">
                   EHS Team
-                  <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-12 h-1 bg-white group-hover:w-full transition-all duration-500"></span>
+                  <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-12 h-1 bg-[#db011c] group-hover:w-full transition-all duration-500"></span>
                 </h3>
                 <div className="space-y-6 w-full">
-                  <a href="tel:+84961958951" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
-                    <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Hotline:</span>
+                  <a href="tel:+84961958951" className="flex items-start gap-4 text-xl text-gray-600 hover:text-[#db011c] transition-colors group/link">
+                    <span className="w-24 shrink-0 text-[#212529] font-bold transition-transform group-hover/link:translate-x-1">Hotline:</span>
                     <span className="font-light">(+84) 961 958 951</span>
                   </a>
-                  <a href="mailto:TTIVNMILPTEHS@ttigroup.com.vn" className="flex items-start gap-4 text-xl text-white/80 hover:text-white transition-colors group/link">
-                    <span className="w-24 shrink-0 text-white font-bold transition-transform group-hover/link:translate-x-1">Email:</span>
+                  <a href="mailto:TTIVNMILPTEHS@ttigroup.com.vn" className="flex items-start gap-4 text-xl text-gray-600 hover:text-[#db011c] transition-colors group/link">
+                    <span className="w-24 shrink-0 text-[#212529] font-bold transition-transform group-hover/link:translate-x-1">Email:</span>
                     <span className="font-light break-all">TTIVNMILPTEHS@ttigroup.com.vn</span>
                   </a>
                 </div>

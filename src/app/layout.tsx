@@ -34,13 +34,12 @@ export default function RootLayout({
       >
         <NextAuthProvider>
           <UserProvider>
-            <div className="flex flex-col w-full h-screen overflow-hidden">
-              <Header />
-              <div className="flex-1 flex overflow-hidden">
-                <Sidebar />
+            <div className="flex w-full h-screen overflow-hidden">
+              <Sidebar />
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <Header />
                 <main className="flex-1 overflow-auto bg-[var(--color-bg-page)] relative scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent transition-colors duration-300 flex flex-col">
                   <LayoutContentWrapper>
-                    <PageHeader />
                     <PageTransition>
                       {children}
                     </PageTransition>
