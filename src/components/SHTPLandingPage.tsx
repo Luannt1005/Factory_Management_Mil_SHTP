@@ -13,36 +13,8 @@ interface AnimatedSectionProps {
 }
 
 function AnimatedSection({ children, direction = "up", delay = 0, className = "" }: AnimatedSectionProps) {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setIsVisible(true), delay);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -5% 0px" }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => { if (ref.current) observer.unobserve(ref.current); };
-  }, [delay]);
-
-  const getTransitionClass = () => {
-    if (isVisible) return "opacity-100 translate-y-0 translate-x-0";
-    switch (direction) {
-      case "left": return "opacity-0 -translate-x-16";
-      case "right": return "opacity-0 translate-x-16";
-      case "fade": return "opacity-0";
-      case "up":
-      default: return "opacity-0 translate-y-16";
-    }
-  };
-
   return (
-    <div ref={ref} className={`transition-all duration-700 ease-out ${getTransitionClass()} ${className}`}>
+    <div className={`opacity-100 translate-y-0 translate-x-0 ${className}`}>
       {children}
     </div>
   );

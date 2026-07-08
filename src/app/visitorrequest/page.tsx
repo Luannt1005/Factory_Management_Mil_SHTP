@@ -6,13 +6,36 @@ import { ArrowLeftIcon, BuildingOffice2Icon, GlobeAsiaAustraliaIcon, UserGroupIc
 import Link from 'next/link';
 import Dashboard from '../visitordashboard/page';
 
+const InputLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
+    <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', marginTop: '8px' }}>
+        {children}
+        {required && <span style={{ color: '#db011c', marginLeft: '4px' }}>*</span>}
+    </label>
+);
+
+const Input = (props: any) => (
+    <input 
+        {...props} 
+        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', color: '#1e293b', outline: 'none' }}
+        onFocus={(e) => e.target.style.borderColor = '#db011c'}
+        onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+    />
+);
+
+const SectionHeader = ({ title }: { title: string }) => (
+    <div style={{ borderBottom: '1.5px solid #db011c', marginBottom: '24px', marginTop: '40px' }}>
+        <h2 style={{ fontSize: '13px', fontWeight: 900, color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'inline-block' }}>
+            {title}
+        </h2>
+    </div>
+);
+
 export default function NewRequestPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'request' | 'dashboard'>('request');
     const [rooms, setRooms] = useState<any[]>([]);
     const [step, setStep] = useState(1);
-    const [showAllVisitorsModal, setShowAllVisitorsModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -29,7 +52,6 @@ export default function NewRequestPage() {
             costCenter: ''
         },
         roomIds: [] as string[],
-        // Interviewee specific
         intervieweeName: '',
         jobTitle: '',
         interviewDepartment: '',
@@ -122,70 +144,12 @@ export default function NewRequestPage() {
         }
     };
 
-    const nextStep = () => {
-        if (step === 1 && formData.visitorCategory === 'Vendor/Contractor') {
-            alert('Please select whether you are a Vendor or Contractor.');
-            return;
-        }
-        setStep(s => s + 1);
-    };
-    const prevStep = () => setStep(s => s - 1);
-
-    const updateDetails = (key: string, value: any) => {
-        setFormData({ ...formData, details: { ...formData.details, [key]: value } });
-    };
-
-    const toggleRoom = (id: string) => {
-        setFormData(prev => ({
-            ...prev,
-            roomIds: prev.roomIds.includes(id)
-                ? prev.roomIds.filter(rid => rid !== id)
-                : [...prev.roomIds, id]
-        }));
-    };
-
-    const filteredRooms = rooms.filter((room: any) => {
-        if (formData.visitingSite === 'Both') return true;
-        return room.site_location === formData.visitingSite;
-    });
-
-    const groupedRooms = filteredRooms.reduce((acc: any, room: any) => {
-        if (!acc[room.category]) acc[room.category] = [];
-        acc[room.category].push(room);
-        return acc;
-    }, {});
-
-    const toggleSite = (site: string) => {
-        setFormData(prev => {
-            const isSHTP = prev.visitingSite === 'SHTP' || prev.visitingSite === 'Both';
-            const isDDK = prev.visitingSite === 'DDK' || prev.visitingSite === 'Both';
-
-            let nextSHTP = isSHTP;
-            let nextDDK = isDDK;
-
-            if (site === 'SHTP') nextSHTP = !isSHTP;
-            else nextDDK = !isDDK;
-
-            // Ensure at least one is selected
-            if (!nextSHTP && !nextDDK) return prev;
-
-            let nextVal = 'SHTP';
-            if (nextSHTP && nextDDK) nextVal = 'Both';
-            else if (nextDDK) nextVal = 'DDK';
-
-            return { ...prev, visitingSite: nextVal };
-        });
-    };
-
-    const isExpatCategory = formData.visitorCategory === 'MIL/TTI Expat / SHTP Business trip';
-
     const addVisitor = () => {
         if (formData.visitors.length < 10) {
             setFormData(prev => ({
                 ...prev,
                 visitors: [...prev.visitors, { name: '', title: '', company: '' }]
             }));
-            setShowAllVisitorsModal(true);
         }
     };
 
@@ -206,40 +170,48 @@ export default function NewRequestPage() {
         });
     };
 
-    const totalSteps = (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor' || formData.visitorCategory === 'Interviewee') ? 2 : 3;
+    const toggleSite = (site: string) => {
+        setFormData(prev => {
+            const isSHTP = prev.visitingSite === 'SHTP' || prev.visitingSite === 'Both';
+            const isDDK = prev.visitingSite === 'DDK' || prev.visitingSite === 'Both';
 
-    
-    const InputLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
-        <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', marginTop: '8px' }}>
-            {children}
-            {required && <span style={{ color: '#db011c', marginLeft: '4px' }}>*</span>}
-        </label>
-    );
+            let nextSHTP = isSHTP;
+            let nextDDK = isDDK;
 
-    const Input = (props: any) => (
-        <input 
-            {...props} 
-            style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', color: '#1e293b', outline: 'none' }}
-            onFocus={(e) => e.target.style.borderColor = '#db011c'}
-            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-        />
-    );
+            if (site === 'SHTP') nextSHTP = !isSHTP;
+            else nextDDK = !isDDK;
 
-    const SectionHeader = ({ title }: { title: string }) => (
-        <div style={{ borderBottom: '1.5px solid #db011c', marginBottom: '24px', marginTop: '40px' }}>
-            <h2 style={{ fontSize: '13px', fontWeight: 900, color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'inline-block' }}>
-                {title}
-            </h2>
-        </div>
-    );
+            if (!nextSHTP && !nextDDK) return prev;
+
+            let nextVal = 'SHTP';
+            if (nextSHTP && nextDDK) nextVal = 'Both';
+            else if (nextDDK) nextVal = 'DDK';
+
+            return { ...prev, visitingSite: nextVal };
+        });
+    };
+
+    const updateDetails = (key: string, value: any) => {
+        setFormData({ ...formData, details: { ...formData.details, [key]: value } });
+    };
+
+    const toggleRoom = (id: string) => {
+        setFormData(prev => ({
+            ...prev,
+            roomIds: prev.roomIds.includes(id)
+                ? prev.roomIds.filter(rid => rid !== id)
+                : [...prev.roomIds, id]
+        }));
+    };
+
+    const isExpatCategory = formData.visitorCategory === 'MIL/TTI Expat / SHTP Business trip';
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#f4f6f9', padding: '1.5rem 2rem' }}>
-            <div style={{ width: '100%', margin: '0 auto' }}>
+        <div className="w-full">
+            <div className="w-full mx-auto">
                 
                 {activeTab === 'request' ? (
                     <>
-                        {/* Category Selection Title */}
                         <div style={{ marginBottom: '12px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             Select visitor category to begin registration
                         </div>
@@ -323,27 +295,29 @@ export default function NewRequestPage() {
                                         </div>
                                         
                                         {formData.visitors.map((visitor, idx) => (
-                                            <div key={idx} style={{ position: 'relative', marginBottom: formData.visitors.length > 1 ? '24px' : '0', paddingBottom: formData.visitors.length > 1 ? '24px' : '0', borderBottom: formData.visitors.length > 1 ? '1px dashed #e2e8f0' : 'none' }}>
-                                                {formData.visitors.length > 1 && (
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>VISITOR {idx + 1}</span>
+                                            <div key={idx} style={{ position: 'relative', marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center', borderBottom: formData.visitors.length > 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '16px' }}>
+                                                <div style={{ width: '70px', flexShrink: 0 }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>VISITOR {idx + 1}</span>
+                                                </div>
+                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Full Name <span style={{ color: '#db011c' }}>*</span></label>
+                                                    <Input type="text" required placeholder="e.g. Nguyen Van A" value={visitor.name} onChange={(e: any) => updateVisitor(idx, 'name', e.target.value)} />
+                                                </div>
+                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Company <span style={{ color: '#db011c' }}>*</span></label>
+                                                    <Input type="text" required placeholder="e.g. Bosch Vietnam" value={visitor.company} onChange={(e: any) => updateVisitor(idx, 'company', e.target.value)} />
+                                                </div>
+                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Title <span style={{ color: '#db011c' }}>*</span></label>
+                                                    <Input type="text" required placeholder="e.g. Manager" value={visitor.title} onChange={(e: any) => updateVisitor(idx, 'title', e.target.value)} />
+                                                </div>
+                                                {formData.visitors.length > 1 ? (
+                                                    <div style={{ width: '60px', flexShrink: 0, textAlign: 'right' }}>
                                                         <button type="button" onClick={() => removeVisitor(idx)} style={{ color: '#ef4444', background: 'none', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>REMOVE</button>
                                                     </div>
+                                                ) : (
+                                                    <div style={{ width: '60px', flexShrink: 0 }}></div>
                                                 )}
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
-                                                    <div>
-                                                        <InputLabel required>Full Name</InputLabel>
-                                                        <Input type="text" required placeholder="e.g. Nguyen Van A" value={visitor.name} onChange={(e: any) => updateVisitor(idx, 'name', e.target.value)} />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel required>Company / Vendor Name</InputLabel>
-                                                        <Input type="text" required placeholder="e.g. Bosch Vietnam" value={visitor.company} onChange={(e: any) => updateVisitor(idx, 'company', e.target.value)} />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel required>Title / Position</InputLabel>
-                                                        <Input type="text" required placeholder="e.g. Manager" value={visitor.title} onChange={(e: any) => updateVisitor(idx, 'title', e.target.value)} />
-                                                    </div>
-                                                </div>
                                             </div>
                                         ))}
                                     </>
@@ -531,54 +505,7 @@ export default function NewRequestPage() {
             </div>
 
             {/* KEEP EXISTING MODALS */}
-            {showAllVisitorsModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
-                    <div className="bg-white w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
-                            <div>
-                                <h3 className="font-extrabold text-[#0f172a] text-xl">Manage Visitors</h3>
-                            </div>
-                            <button onClick={() => setShowAllVisitorsModal(false)} className="text-gray-400 bg-gray-50 rounded-full w-10 h-10">&times;</button>
-                        </div>
-                        <div className="px-6 py-4 bg-gray-50/50 flex-1 overflow-y-auto">
-                            <div className="flex justify-end mb-3">
-                                <button type="button" onClick={addVisitor} className="bg-[#db011c] text-white font-bold px-4 py-2.5 rounded-xl">
-                                    Add New Visitor
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {formData.visitors.map((visitor, idx) => (
-                                    <div key={idx} className="bg-white p-5 rounded-2xl border border-gray-200">
-                                        <div className="flex justify-between mb-4">
-                                            <h4 className="font-bold text-gray-700">Visitor {idx + 1}</h4>
-                                            {formData.visitors.length > 1 && (
-                                                <button onClick={() => removeVisitor(idx)} className="text-red-500 font-bold text-sm">Remove</button>
-                                            )}
-                                        </div>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-xs font-bold text-gray-500 mb-1">Full Name</label>
-                                                <input type="text" className="w-full px-3 py-2 rounded-lg border bg-gray-50" value={visitor.name} onChange={e => updateVisitor(idx, 'name', e.target.value)} />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-gray-500 mb-1">Title</label>
-                                                <input type="text" className="w-full px-3 py-2 rounded-lg border bg-gray-50" value={visitor.title} onChange={e => updateVisitor(idx, 'title', e.target.value)} />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-gray-500 mb-1">Company</label>
-                                                <input type="text" className="w-full px-3 py-2 rounded-lg border bg-gray-50" value={visitor.company} onChange={e => updateVisitor(idx, 'company', e.target.value)} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="px-6 py-4 border-t border-gray-100 bg-white">
-                            <button onClick={() => setShowAllVisitorsModal(false)} className="w-full bg-gray-900 text-white font-bold py-3 rounded-xl">Done</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* KEEP EXISTING MODALS */}
             
             {showReviewModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4">

@@ -175,6 +175,15 @@ function AppHeader() {
                   </div>
                 </div>
                 <div className="mwk-user-dropdown-divider"></div>
+                {['admin', 'Admin', 'Global Admin'].includes(user.role || '') && (
+                  <Link
+                    href="/systemadmin"
+                    className="mwk-user-logout-btn"
+                    style={{ textAlign: 'left', display: 'block', color: '#111', textDecoration: 'none' }}
+                  >
+                    Quản lý hệ thống (System Admin)
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="mwk-user-logout-btn"

@@ -89,29 +89,7 @@ export default async function Home() {
 
       {/* Milwaukee Culture Section */}
       <section className="w-full bg-transparent pb-24">
-        {/* Style block for staggered children reveal and logo spin */}
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          .reveal-active .expect-logo {
-            opacity: 1 !important;
-            transform: translateY(0) !important;
-            transition: all 800ms cubic-bezier(0.16, 1, 0.3, 1) 100ms;
-          }
-          .reveal-active .expect-desc {
-            opacity: 1 !important;
-            transform: translateY(0) !important;
-            transition: all 800ms cubic-bezier(0.16, 1, 0.3, 1) 250ms;
-          }
-          .culture-logo-reveal {
-            transform: rotate(-360deg) scale(0.2);
-            opacity: 0;
-            transition: all 1200ms cubic-bezier(0.16, 1, 0.3, 1) 50ms;
-          }
-          .reveal-active .culture-logo-reveal {
-            transform: rotate(0) scale(1);
-            opacity: 1;
-          }
-        `}} />
+
         <div className="w-full px-8 md:px-16 max-w-7xl mx-auto">
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-20 mb-20">
@@ -122,7 +100,7 @@ export default async function Home() {
               </p>
             </ScrollReveal>
             <ScrollReveal delay={50}>
-              <div className="culture-logo-reveal inline-block hover:scale-105 transition-transform duration-300">
+              <div className="inline-block hover:scale-105 transition-transform duration-300">
                 <img
                   src="/landing_page/Milwaukee Culture Logo.png"
                   alt="Milwaukee Culture Logo"
@@ -145,7 +123,7 @@ export default async function Home() {
                     <div className="group relative w-full flex-1 flex flex-col bg-[#b52427] border border-[#9a1c1e] hover:border-white/30 rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.15)] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)] transition-all duration-300 overflow-hidden">
 
                       {/* Logo and Number placed together in a flex row to prevent any clipping/cutoff */}
-                      <div className="flex justify-between items-center mb-6 opacity-0 translate-y-4 expect-logo">
+                      <div className="flex justify-between items-center mb-6">
                         <div className="h-12 flex items-center">
                           <img
                             src={item.logo}
@@ -159,7 +137,7 @@ export default async function Home() {
                       </div>
 
                       <p
-                        className="text-sm md:text-base text-white/90 leading-relaxed font-normal opacity-0 translate-y-4 expect-desc"
+                        className="text-sm md:text-base text-white/90 leading-relaxed font-normal"
                         dangerouslySetInnerHTML={{
                           __html: item.desc.replace(/<strong>/g, '<strong class="text-white font-bold">').replace(/<\/strong>/g, '</strong>')
                         }}

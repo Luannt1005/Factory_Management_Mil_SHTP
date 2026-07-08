@@ -1,5 +1,6 @@
 'use client';
 import ScrollReveal from '@/components/ScrollReveal';
+import Image from 'next/image';
 
 const departments = [
   {
@@ -77,36 +78,7 @@ const departments = [
 export default function DepartmentSlider() {
   return (
     <div className="w-full pb-20">
-      {/* Styles for Staggered Parallax Scroll Entrance */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        .dept-image {
-          transform: scale(0.9) rotate(-1deg);
-          opacity: 0;
-          transition: all 850ms cubic-bezier(0.16, 1, 0.3, 1) 50ms;
-        }
-        .reveal-active .dept-image {
-          transform: scale(1) rotate(0);
-          opacity: 1;
-        }
-        .dept-title {
-          transform: translateY(15px);
-          opacity: 0;
-          transition: all 700ms cubic-bezier(0.16, 1, 0.3, 1) 180ms;
-        }
-        .reveal-active .dept-title {
-          transform: translateY(0);
-          opacity: 1;
-        }
-        .dept-desc {
-          transform: translateY(15px);
-          opacity: 0;
-          transition: all 700ms cubic-bezier(0.16, 1, 0.3, 1) 280ms;
-        }
-        .reveal-active .dept-desc {
-          transform: translateY(0);
-          opacity: 1;
-        }
-      `}} />
+      {/* Removed style block for scroll performance */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-0 w-full">
         {departments.map((dept, idx) => {
@@ -120,20 +92,23 @@ export default function DepartmentSlider() {
               <ScrollReveal delay={delay} className="w-full h-full">
                 <div className="w-full h-full relative cursor-pointer">
                   {/* Background Image */}
-                  <img 
+                  <Image 
                     src={dept.img} 
-                    alt={dept.title} 
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1500ms] ease-out dept-image" 
+                    alt={dept.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    priority={idx < 2}
+                    className="object-cover group-hover:scale-105 transition-transform duration-[1500ms] ease-out" 
                   />
                   {/* Dark Gradient Overlay for text readability */}
                   <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
                   
                   {/* Text Content positioned at left center/bottom */}
                   <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12 lg:p-16">
-                    <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-white uppercase tracking-tighter mb-3 lg:mb-4 group-hover:text-gray-200 transition-colors duration-300 drop-shadow-md dept-title">
+                    <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-white uppercase tracking-tighter mb-3 lg:mb-4 group-hover:text-gray-200 transition-colors duration-300 drop-shadow-md">
                       {dept.title}
                     </h3>
-                    <p className="text-sm md:text-base text-white/90 leading-relaxed font-normal max-w-lg drop-shadow dept-desc">
+                    <p className="text-sm md:text-base text-white/90 leading-relaxed font-normal max-w-lg drop-shadow">
                       {dept.desc}
                     </p>
                   </div>
