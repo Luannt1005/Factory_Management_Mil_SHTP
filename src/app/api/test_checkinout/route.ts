@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
