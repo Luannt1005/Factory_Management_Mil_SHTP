@@ -47,12 +47,19 @@ export async function POST(request: Request) {
 
         await visitorPool.query('BEGIN');
 
-        // Generate Custom ID: DDMMYY_N
+        // Generate Custom ID with Prefix
+        let catPrefix = 'V'; // Default for MIL / TTI EXPAT
+        if (visitorCategory === 'Vendor') {
+            catPrefix = 'VV';
+        } else if (visitorCategory === 'Contractor') {
+            catPrefix = 'VC';
+        }
+
         const now = new Date();
         const dd = String(now.getDate()).padStart(2, '0');
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const yy = String(now.getFullYear()).slice(-2);
-        const datePrefix = `${dd}${mm}${yy}`;
+        const datePrefix = `${catPrefix}${dd}${mm}${yy}`;
 
         // Find the last sequence for today
         const { rows: lastReq } = await visitorPool.query(

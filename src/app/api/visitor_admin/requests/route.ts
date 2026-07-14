@@ -190,3 +190,35 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
+export async function DELETE(request: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session || !session.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        if ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { ids } = body;
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return NextResponse.json({ error: 'No IDs provided' }, { status: 400 });
+        }
+
+        const visitorPool = await getVisitorDbConnection();
+        
+        // Use ANY array operator for postgres
+        await visitorPool.query('DELETE FROM "VisitorRequest" WHERE id = ANY($1)', [ids]);
+
+        return NextResponse.json({ message: 'Requests deleted successfully' }, { status: 200 });
+
+    } catch (err: any) {
+        console.error('Delete requests error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}

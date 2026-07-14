@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon, BuildingOffice2Icon, GlobeAsiaAustraliaIcon, UserGroupIcon, BuildingOfficeIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import Dashboard from '../visitordashboard/page';
+import * as XLSX from 'xlsx';
 
 const InputLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
     <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', marginTop: '8px' }}>
@@ -37,6 +39,12 @@ export default function NewRequestPage() {
     const [rooms, setRooms] = useState<any[]>([]);
     const [step, setStep] = useState(1);
     const [showReviewModal, setShowReviewModal] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const [formData, setFormData] = useState({
         visitors: [{ name: '', title: '', company: '' }],
@@ -162,6 +170,57 @@ export default function NewRequestPage() {
         }
     };
 
+    const downloadTemplate = () => {
+        const worksheet = XLSX.utils.json_to_sheet([
+            { 'Full Name': 'Nguyen Van A', 'Company': 'Example Corp', 'Title': 'Software Engineer' },
+            { 'Full Name': 'Tran Thi B', 'Company': 'Example Corp', 'Title': 'Project Manager' }
+        ]);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Visitors');
+        XLSX.writeFile(workbook, 'Visitor_Information_Template.xlsx');
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = new Uint8Array(event.target?.result as ArrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+
+                const newVisitors = jsonData.map(row => ({
+                    name: row['Full Name'] || '',
+                    company: row['Company'] || '',
+                    title: row['Title'] || ''
+                })).filter(v => v.name);
+
+                if (newVisitors.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        visitors: newVisitors.slice(0, 10) // Limit to max 10
+                    }));
+                    alert(`Successfully imported ${Math.min(newVisitors.length, 10)} visitors from Excel.`);
+                } else {
+                    alert('No valid visitor data found in the Excel file. Please use the provided template.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error parsing Excel file. Please ensure you are using the correct template format.');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+        
+        // Reset file input so the same file can be uploaded again if needed
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     const updateVisitor = (index: number, field: string, value: string) => {
         setFormData(prev => {
             const newVisitors = [...prev.visitors];
@@ -260,7 +319,7 @@ export default function NewRequestPage() {
                                 {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') ? 'VENDOR / CONTRACTOR' : formData.visitorCategory === 'Interviewee' ? 'INTERVIEWEE' : 'MIL / TTI EXPAT'}
                             </div>
 
-                            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+                            <form onSubmit={(e) => { e.preventDefault(); setShowReviewModal(true); }}>
                                 
                                 {/* VISITOR INFORMATION */}
                                 <SectionHeader title="Visitor Information" />
@@ -286,12 +345,37 @@ export default function NewRequestPage() {
                                     </div>
                                 ) : (
                                     <>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            {formData.visitors.length < 10 && (
-                                                <button type="button" onClick={addVisitor} style={{ backgroundColor: 'transparent', color: '#db011c', border: '1px solid #db011c', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', marginBottom: '16px' }}>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                            {formData.visitors.length < 10 ? (
+                                                <button type="button" onClick={addVisitor} style={{ backgroundColor: 'transparent', color: '#db011c', border: '1px solid #db011c', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
                                                     + ADD ANOTHER VISITOR
                                                 </button>
+                                            ) : (
+                                                <div style={{ fontSize: '11px', color: '#db011c', fontWeight: 700 }}>MAX 10 VISITORS REACHED</div>
                                             )}
+                                            
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <button type="button" onClick={downloadTemplate} style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                                    </svg>
+                                                    DOWNLOAD TEMPLATE
+                                                </button>
+                                                
+                                                <input 
+                                                    type="file" 
+                                                    accept=".xlsx, .xls" 
+                                                    ref={fileInputRef} 
+                                                    onChange={handleFileUpload} 
+                                                    style={{ display: 'none' }} 
+                                                />
+                                                <button type="button" onClick={() => fileInputRef.current?.click()} style={{ backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                                    </svg>
+                                                    UPLOAD EXCEL
+                                                </button>
+                                            </div>
                                         </div>
                                         
                                         {formData.visitors.map((visitor, idx) => (
@@ -439,7 +523,7 @@ export default function NewRequestPage() {
                                 )}
 
                                 {/* FINAL REQUIREMENTS */}
-                                {formData.visitorCategory !== 'Interviewee' && (
+                                {isExpatCategory && (
                                     <>
                                         <SectionHeader title="Final Requirements" />
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
@@ -482,13 +566,6 @@ export default function NewRequestPage() {
                                         >
                                             {loading ? 'PROCESSING...' : 'SUBMIT REQUEST'}
                                         </button>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => alert('Draft saved (simulated)')}
-                                            style={{ backgroundColor: 'white', color: '#475569', fontSize: '13px', fontWeight: 800, padding: '10px 24px', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer' }}
-                                        >
-                                            SAVE DRAFT
-                                        </button>
                                     </div>
                                     <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500 }}>
                                         Fields marked <span style={{ color: '#db011c' }}>*</span> are required
@@ -507,17 +584,75 @@ export default function NewRequestPage() {
             {/* KEEP EXISTING MODALS */}
             {/* KEEP EXISTING MODALS */}
             
-            {showReviewModal && (
+            {showReviewModal && mounted && createPortal(
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
-                    <div className="bg-white w-full max-w-2xl rounded-3xl p-8">
-                        <h2 className="text-2xl font-bold mb-4">Review Registration</h2>
-                        <p>Please review your data before submitting.</p>
+                    <div className="bg-white w-full max-w-2xl rounded-3xl p-8 max-h-[90vh] overflow-y-auto">
+                        <h2 className="text-2xl font-bold mb-4 text-[#0f172a]">Review Registration</h2>
+                        <div className="space-y-4 text-sm text-gray-700 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                            <div className="grid grid-cols-2 gap-4 border-b border-gray-200 pb-4">
+                                <div>
+                                    <span className="block text-xs font-bold text-gray-400 uppercase">Category</span>
+                                    <span className="font-semibold text-gray-900">{formData.visitorCategory}</span>
+                                </div>
+                                {formData.visitorCategory !== 'Interviewee' ? (
+                                    <>
+                                        <div>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Purpose</span>
+                                            <span className="font-semibold text-gray-900">{formData.purposeOfVisit}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Site</span>
+                                            <span className="font-semibold text-gray-900">{formData.visitingSite}</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Interviewee</span>
+                                            <span className="font-semibold text-gray-900">{formData.intervieweeName}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Department</span>
+                                            <span className="font-semibold text-gray-900">{formData.interviewDepartment}</span>
+                                        </div>
+                                    </>
+                                )}
+                                <div>
+                                    <span className="block text-xs font-bold text-gray-400 uppercase">Dates</span>
+                                    <span className="font-semibold text-gray-900">{formData.startDate} to {formData.endDate || formData.startDate}</span>
+                                </div>
+                            </div>
+
+                            {formData.visitorCategory !== 'Interviewee' && (
+                                <div>
+                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Visitors</span>
+                                    <ul className="space-y-2">
+                                        {formData.visitors.map((v, i) => (
+                                            <li key={i} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                                                <span className="font-bold text-[#0f172a]">{v.name}</span> <span className="text-gray-500">— {v.title} at {v.company}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                            
+                            {isExpatCategory && (
+                                <div className="pt-2">
+                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Final Requirements</span>
+                                    <div className="flex gap-6">
+                                        <div className="bg-white px-3 py-2 rounded border border-gray-200 shadow-sm">Factory Tour: <span className={`font-bold ${formData.details.factoryTour === 'Yes' ? 'text-green-600' : 'text-gray-500'}`}>{formData.details.factoryTour}</span></div>
+                                        <div className="bg-white px-3 py-2 rounded border border-gray-200 shadow-sm">Meal: <span className={`font-bold ${formData.details.mealRegistration === 'Yes' ? 'text-green-600' : 'text-gray-500'}`}>{formData.details.mealRegistration}</span></div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                         <div className="flex justify-end gap-4 mt-8">
-                            <button onClick={() => setShowReviewModal(false)} className="px-6 py-2 rounded-lg border font-bold">Cancel</button>
-                            <button onClick={() => { setShowReviewModal(false); handleSubmit(); }} className="px-6 py-2 rounded-lg bg-[#db011c] text-white font-bold">Submit</button>
+                            <button onClick={() => setShowReviewModal(false)} className="px-6 py-2 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-50">Edit Information</button>
+                            <button onClick={() => { setShowReviewModal(false); handleSubmit(); }} className="px-6 py-2 rounded-lg bg-[#db011c] text-white font-bold hover:bg-red-700 shadow-md">Confirm & Submit</button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

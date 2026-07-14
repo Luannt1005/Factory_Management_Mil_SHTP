@@ -1,20 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session || !session.user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        if ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin') {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date'); // YYYY-MM-DD
         const startDate = searchParams.get('startDate'); // YYYY-MM-DD
@@ -190,8 +179,7 @@ const flattenVisitorCTE = `WITH FlattenedVisitors AS (
 
     } catch (error: any) {
         console.error('Fetch check-in/out visitors error:', error);
-        require('fs').appendFileSync('c:\\Users\\luan.nguyen\\Desktop\\test org\\Orgchart_TTI_onprem\\scratch\\api_error.log', 'CheckInOut Route Error: ' + error.stack + '\n');
-        return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 

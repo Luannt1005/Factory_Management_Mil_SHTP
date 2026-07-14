@@ -15,6 +15,7 @@ export default function AdminDashboard() {
     const [code, setCode] = useState('');
     const [exporting, setExporting] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
+    const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
     const router = useRouter();
 
     useEffect(() => {
@@ -23,6 +24,7 @@ export default function AdminDashboard() {
 
     const fetchRequests = async (page: number) => {
         setLoading(true);
+        setSelectedRowIds([]);
         try {
             let url = activeTab === 'general' ? `/api/visitor_admin/requests?page=${page}&limit=${pagination.limit}` : `/api/visitor_admin/interviewee_requests?page=${page}&limit=${pagination.limit}`;
             if (startDate && endDate) {
@@ -131,6 +133,29 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleDeleteSelected = async () => {
+        if (selectedRowIds.length === 0) return;
+        if (!confirm('Are you sure you want to delete the selected requests?')) return;
+        
+        try {
+            const endpoint = activeTab === 'general' ? '/api/visitor_admin/requests' : '/api/visitor_admin/interviewee_requests';
+            const res = await fetch(endpoint, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: selectedRowIds }),
+            });
+            if (res.ok) {
+                setSelectedRowIds([]);
+                fetchRequests(pagination.page);
+            } else {
+                alert('Failed to delete requests');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('An error occurred');
+        }
+    };
+
     const parseDetails = (details: any) => {
         if (!details) return {};
         if (typeof details === 'object') return details;
@@ -224,6 +249,14 @@ export default function AdminDashboard() {
                             Clear
                         </button>
                     )}
+                    {selectedRowIds.length > 0 && (
+                        <button
+                            onClick={handleDeleteSelected}
+                            className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-md transition-all ml-2"
+                        >
+                            Delete Selected ({selectedRowIds.length})
+                        </button>
+                    )}
                     <button
                         onClick={handleExportExcel}
                         disabled={exporting}
@@ -244,6 +277,17 @@ export default function AdminDashboard() {
                         <thead>
                             {activeTab === 'general' ? (
                                 <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                    <th className="px-3 py-2 w-8">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={requests.length > 0 && selectedRowIds.length === requests.length}
+                                            onChange={(e) => {
+                                                if (e.target.checked) setSelectedRowIds(requests.map(r => r.id));
+                                                else setSelectedRowIds([]);
+                                            }}
+                                            className="rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                                        />
+                                    </th>
                                     <th className="px-3 py-2">Code</th>
                                     <th className="px-3 py-2">Visitor Info</th>
                                     <th className="px-3 py-2">Category</th>
@@ -257,6 +301,17 @@ export default function AdminDashboard() {
                                 </tr>
                             ) : (
                                 <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                    <th className="px-3 py-2 w-8">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={requests.length > 0 && selectedRowIds.length === requests.length}
+                                            onChange={(e) => {
+                                                if (e.target.checked) setSelectedRowIds(requests.map(r => r.id));
+                                                else setSelectedRowIds([]);
+                                            }}
+                                            className="rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                                        />
+                                    </th>
                                     <th className="px-3 py-2">Code</th>
                                     <th className="px-3 py-2">Interviewee Info</th>
                                     <th className="px-3 py-2">Interview Details</th>
@@ -272,6 +327,17 @@ export default function AdminDashboard() {
                             {requests.map((request) => (
                                 activeTab === 'general' ? (
                                     <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-3 py-2">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={selectedRowIds.includes(request.id)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) setSelectedRowIds([...selectedRowIds, request.id]);
+                                                    else setSelectedRowIds(selectedRowIds.filter(id => id !== request.id));
+                                                }}
+                                                className="rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                                            />
+                                        </td>
                                         <td className="px-3 py-2">
                                             <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
                                                 #{request.id.split('-')[0].toUpperCase()}
@@ -319,11 +385,16 @@ export default function AdminDashboard() {
                                             {request.request_approvals?.length > 0 ? (
                                                 <div className="flex flex-col gap-1">
                                                     {request.request_approvals.map((app: any) => (
-                                                        <div key={app.id} className="text-[9px] flex items-center justify-between gap-2 text-gray-600 border border-gray-100 p-1 rounded bg-gray-50/50">
-                                                            <span className="font-bold flex items-center gap-1">
-                                                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
-                                                                <span className="truncate max-w-[80px]">{app.room_areas?.name || 'Area'}</span>
-                                                            </span>
+                                                        <div key={app.id} className="text-[9px] flex flex-col gap-0.5 text-gray-600 border border-gray-100 p-1 rounded bg-gray-50/50">
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <span className="font-bold flex items-center gap-1">
+                                                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
+                                                                    <span className="truncate max-w-[80px]">{app.room_areas?.name || 'Area'}</span>
+                                                                </span>
+                                                            </div>
+                                                            {app.status === 'PENDING' && app.approver_email && (
+                                                                <span className="text-[8px] text-gray-400 font-medium truncate max-w-[120px]" title={`Pending at: ${app.approver_email}`}>P: {app.approver_email.split('@')[0]}</span>
+                                                            )}
                                                         </div>
                                                     ))}
                                                 </div>
@@ -375,6 +446,17 @@ export default function AdminDashboard() {
                                 </tr>
                                 ) : (
                                     <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-3 py-2">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={selectedRowIds.includes(request.id)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) setSelectedRowIds([...selectedRowIds, request.id]);
+                                                    else setSelectedRowIds(selectedRowIds.filter(id => id !== request.id));
+                                                }}
+                                                className="rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                                            />
+                                        </td>
                                         <td className="px-3 py-2">
                                             <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
                                                 #{request.id.split('-')[0].toUpperCase()}
@@ -654,14 +736,19 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div className="flex flex-col gap-2 items-end">
                                                     {selectedRequest.request_approvals?.map((app: any) => (
-                                                        <span key={app.id} className="px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-2" style={{
-                                                            background: getStatusColor(app.status) + '08',
-                                                            color: getStatusColor(app.status),
-                                                            border: `1px solid ${getStatusColor(app.status)}20`
-                                                        }}>
-                                                            {app.room_areas?.name || 'Unknown'}
-                                                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
-                                                        </span>
+                                                        <div key={app.id} className="flex flex-col items-end gap-0.5">
+                                                            <span className="px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-2" style={{
+                                                                background: getStatusColor(app.status) + '08',
+                                                                color: getStatusColor(app.status),
+                                                                border: `1px solid ${getStatusColor(app.status)}20`
+                                                            }}>
+                                                                {app.room_areas?.name || 'Unknown'}
+                                                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
+                                                            </span>
+                                                            {app.status === 'PENDING' && app.approver_email && (
+                                                                <span className="text-[10px] text-gray-500 font-medium break-all">Pending at: {app.approver_email}</span>
+                                                            )}
+                                                        </div>
                                                     ))}
                                                     {(!selectedRequest.request_approvals || selectedRequest.request_approvals.length === 0) && (
                                                         <span className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">None</span>

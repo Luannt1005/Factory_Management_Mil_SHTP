@@ -411,10 +411,15 @@ export default function Dashboard() {
                                                 <Row icon={ShieldCheckIcon} label="Area Approvals">
                                                     <div className="flex flex-col gap-2 w-full items-end">
                                                         {selectedRequest.request_approvals.map((app: any) => (
-                                                            <span key={app.id} className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100" style={{ color: getStatusColor(app.status) }}>
-                                                                {app.room_areas?.name || 'Area'}
-                                                                <span className="w-1.5 h-1.5 rounded-full ml-1" style={{ background: getStatusColor(app.status) }}></span>
-                                                            </span>
+                                                            <div key={app.id} className="flex flex-col items-end gap-0.5">
+                                                                <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100" style={{ color: getStatusColor(app.status) }}>
+                                                                    {app.room_areas?.name || 'Area'}
+                                                                    <span className="w-1.5 h-1.5 rounded-full ml-1" style={{ background: getStatusColor(app.status) }}></span>
+                                                                </span>
+                                                                {app.status === 'PENDING' && app.approver_email && (
+                                                                    <span className="text-[10px] text-gray-500 font-medium break-all">Pending at: {app.approver_email}</span>
+                                                                )}
+                                                            </div>
                                                         ))}
                                                     </div>
                                                 </Row>

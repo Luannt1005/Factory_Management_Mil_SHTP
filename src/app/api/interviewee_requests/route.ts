@@ -19,12 +19,12 @@ export async function POST(request: Request) {
 
         await visitorPool.query('BEGIN');
 
-        // Generate Custom ID: V_DDMMYY_N
+        // Generate Custom ID with Prefix for Interviewee
         const now = new Date();
         const dd = String(now.getDate()).padStart(2, '0');
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const yy = String(now.getFullYear()).slice(-2);
-        const datePrefix = `V_${dd}${mm}${yy}`;
+        const datePrefix = `VI${dd}${mm}${yy}`;
 
         // Find the last sequence for today
         const { rows: lastReq } = await visitorPool.query(
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
         let sequence = 1;
         if (lastReq.length > 0) {
             const lastId = lastReq[0].visitorCode;
-            const lastSeqStr = lastId.split('_')[2];
+            const lastSeqStr = lastId.split('_')[1]; // Fixed from [2] to [1]
             if (lastSeqStr) {
                 sequence = parseInt(lastSeqStr) + 1;
             }
