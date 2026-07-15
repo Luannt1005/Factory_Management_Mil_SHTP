@@ -92,13 +92,19 @@ export async function POST(request: Request) {
 
         const isExpat = visitorCategory === 'MIL/TTI Expat / SHTP Business trip';
         const powerAutomateUrl = process.env.POWER_AUTOMATE_FOR_LEAVE_URL;
+        const powerAutomateVPUrl = process.env.POWER_AUTOMATE_VP_APPROVAL_URL;
 
         if (isExpat && roomIds && roomIds.length > 0) {
+            const { rows: allRoomsCountRow } = await visitorPool.query('SELECT COUNT(*) FROM "RoomArea"');
+            const totalRooms = parseInt(allRoomsCountRow[0].count);
+            const isVPApproval = (roomIds.length / totalRooms) > 0.6;
+
             const { rows: rooms } = await visitorPool.query(
                 'SELECT id, name, "approverEmail" FROM "RoomArea" WHERE id = ANY($1::text[])',
                 [roomIds]
             );
 
+            // 1. Standard loop for each room (always run this)
             for (const room of rooms) {
                 const { rows: approvalRows } = await visitorPool.query(
                     `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
@@ -138,6 +144,51 @@ export async function POST(request: Request) {
                     } catch (paError) {
                         console.error(`Failed to trigger Power Automate for room ${room.name}:`, paError);
                     }
+                }
+            }
+
+            // 2. If >60%, ALSO trigger for VP Lee Hon Kay
+            if (isVPApproval && rooms.length > 0) {
+                const vpEmail = 'Luan.Nguyen@ttigroup.com.vn';
+                const { rows: approvalRows } = await visitorPool.query(
+                    `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
+                     VALUES (gen_random_uuid(), $1, $2, $3, 'PENDING', NOW())
+                     RETURNING id`,
+                    [visitorRequestId, null, vpEmail]
+                );
+
+                const approvalId = approvalRows[0].id;
+
+                if (powerAutomateVPUrl) {
+                    try {
+                        await fetch(powerAutomateVPUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                record: {
+                                    approval_id: approvalId,
+                                    id: visitorRequestId,
+                                    approver_email: vpEmail,
+                                    room_name: 'Multiple Rooms (>60%)',
+                                    visitor_name: visitorName + (visitors && visitors.length > 1 ? ` (+ ${visitors.length - 1} others)` : ''),
+                                    visitorTitle: visitorTitle,
+                                    currentCompany: currentCompany,
+                                    startDate: startDate,
+                                    endDate: endDate,
+                                    purposeOfVisit: purposeOfVisit,
+                                    submitterName: (session.user as any).username,
+                                    visitorCategory: visitorCategory,
+                                    submitterEmail: (session.user as any).username || session.user.email,
+                                    visitors_list: visitors
+                                }
+                            }),
+                        });
+                        console.log(`Power Automate triggered successfully for VP: ${vpEmail}`);
+                    } catch (paError) {
+                        console.error(`Failed to trigger Power Automate for VP ${vpEmail}:`, paError);
+                    }
+                } else {
+                    console.log(`POWER_AUTOMATE_VP_APPROVAL_URL is not configured. VP email not sent.`);
                 }
             }
         } else if (!isExpat) {

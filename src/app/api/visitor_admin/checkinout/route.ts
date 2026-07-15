@@ -32,6 +32,7 @@ export async function GET(request: Request) {
 const flattenVisitorCTE = `WITH FlattenedVisitors AS (
     SELECT 
         r.id::text AS "requestId",
+        r.id::text AS "requestCode",
         r."visitorCategory",
         r."startDate",
         r."endDate",
@@ -57,6 +58,7 @@ const flattenVisitorCTE = `WITH FlattenedVisitors AS (
 
     SELECT 
         i.id::text AS "requestId",
+        i."visitorCode" AS "requestCode",
         'Interviewee' AS "visitorCategory",
         i."startDate",
         i."startDate" AS "endDate",
@@ -131,6 +133,7 @@ const flattenVisitorCTE = `WITH FlattenedVisitors AS (
             ${flattenVisitorCTE}
             SELECT 
                 r."requestId",
+                r."requestCode",
                 r."visitorCategory",
                 r."startDate",
                 r."endDate",

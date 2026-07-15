@@ -187,7 +187,7 @@ export default function HistoryTab() {
                                     onClick={() => setExpandedRequest(expandedRequest === req.requestId ? null : req.requestId)}
                                 >
                                     <div className="col-span-2 font-bold text-sm text-gray-900">
-                                        {req.requestId}
+                                        {req.requestCode || req.requestId}
                                     </div>
                                     <div className="col-span-4 text-sm text-gray-700 font-medium">
                                         {req.submitterName} {req.visitors && req.visitors.length > 0 && <span className="text-[11px] text-gray-400 font-bold ml-2">({req.visitors.length} Visitors)</span>}

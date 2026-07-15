@@ -195,7 +195,7 @@ export default function CheckInOutManagement() {
                                                 onClick={() => setExpandedExpected(expandedExpected === req.requestId ? null : req.requestId)}
                                             >
                                                 <div className="col-span-2 font-bold text-sm text-gray-900 tracking-tight">
-                                                    {req.requestId}
+                                                    {req.requestCode || req.requestId}
                                                 </div>
                                                 <div className="col-span-4 text-sm text-gray-700 font-medium">
                                                     {req.submitterName} <span className="text-[11px] font-bold text-gray-400 ml-2">({req.visitors?.length || 0} Visitors)</span>

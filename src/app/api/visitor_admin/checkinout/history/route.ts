@@ -28,6 +28,7 @@ export async function GET(request: Request) {
 const combinedRequestsCTE = `WITH CombinedRequests AS (
     SELECT 
         r.id::text AS "requestId",
+        r.id::text AS "requestCode",
         p.name AS "submitterName",
         r."visitorCategory",
         r."visitingSite",
@@ -48,6 +49,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
 
     SELECT 
         i.id::text AS "requestId",
+        i."visitorCode" AS "requestCode",
         i."osName" AS "submitterName",
         'Interviewee' AS "visitorCategory",
         i."interviewArea" AS "visitingSite",
@@ -102,6 +104,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
             ${combinedRequestsCTE}
             SELECT 
                 r."requestId",
+                r."requestCode",
                 r."submitterName",
                 r."visitorCategory",
                 r."visitingSite",

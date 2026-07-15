@@ -389,7 +389,7 @@ export default function AdminDashboard() {
                                                             <div className="flex items-center justify-between gap-2">
                                                                 <span className="font-bold flex items-center gap-1">
                                                                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
-                                                                    <span className="truncate max-w-[80px]">{app.room_areas?.name || 'Area'}</span>
+                                                                    <span className="truncate max-w-[80px]">{app.room_areas?.name || 'VP Approval'}</span>
                                                                 </span>
                                                             </div>
                                                             {app.status === 'PENDING' && app.approver_email && (
@@ -742,7 +742,7 @@ export default function AdminDashboard() {
                                                                 color: getStatusColor(app.status),
                                                                 border: `1px solid ${getStatusColor(app.status)}20`
                                                             }}>
-                                                                {app.room_areas?.name || 'Unknown'}
+                                                                {app.room_areas?.name || 'VP Approval (All Rooms)'}
                                                                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
                                                             </span>
                                                             {app.status === 'PENDING' && app.approver_email && (
