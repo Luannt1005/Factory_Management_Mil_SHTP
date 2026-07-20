@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
-import { getVisitorDbConnection } from '@/lib/db';
+import { getDbConnection } from '@/lib/db';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await getServerSession(authOptions);
         if (!session || !session.user) {
@@ -14,14 +14,15 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        const requestId = params.id;
+        const resolvedParams = await params;
+        const requestId = resolvedParams.id;
         const body = await request.json();
         const { 
             start_date, end_date, visitor_category, visiting_site, 
             details, visitors, interviewee_name, job_title, interview_department
         } = body;
 
-        const visitorPool = await getVisitorDbConnection();
+        const visitorPool = await getDbConnection();
 
         // Ensure objects are stringified for DB storage.
         const detailsStr = typeof details === 'object' ? JSON.stringify(details) : details;
