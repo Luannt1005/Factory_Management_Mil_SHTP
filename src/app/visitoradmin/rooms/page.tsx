@@ -138,19 +138,19 @@ export default function AdminRoomsPage() {
         <div className="flex flex-col gap-6">
             
             {/* Tab Navigation & Actions */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-200 gap-4 pb-3">
-                <div className="flex gap-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-200 gap-4">
+                <div className="flex gap-4">
                     <button 
                         onClick={() => setActiveTab('rooms')} 
-                        className={`font-bold text-sm tracking-wide transition-colors ${activeTab === 'rooms' ? 'text-[#db011c] border-b-2 border-[#db011c] -mb-[13px] pb-3' : 'text-gray-500 hover:text-gray-700 pb-3'}`}
+                        className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'rooms' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                     >
-                        MANAGE ROOMS
+                        Manage Rooms
                     </button>
                     <button 
                         onClick={() => setActiveTab('categories')} 
-                        className={`font-bold text-sm tracking-wide transition-colors ${activeTab === 'categories' ? 'text-[#db011c] border-b-2 border-[#db011c] -mb-[13px] pb-3' : 'text-gray-500 hover:text-gray-700 pb-3'}`}
+                        className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'categories' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                     >
-                        ROOM CATEGORIES
+                        Room Categories
                     </button>
                 </div>
                 

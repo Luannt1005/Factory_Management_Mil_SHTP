@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
+import EditRequestModal from './EditRequestModal';
 
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
@@ -15,10 +17,13 @@ export default function AdminDashboard() {
     const [code, setCode] = useState('');
     const [exporting, setExporting] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
+    const [editingRequest, setEditingRequest] = useState<any>(null);
     const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+    const [mounted, setMounted] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
+        setMounted(true);
         fetchRequests(1);
     }, [startDate, endDate, category, code, activeTab]);
 
@@ -223,12 +228,10 @@ export default function AdminDashboard() {
                             className="text-sm border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
                         >
                             <option value="">All</option>
-                            <option value="Customer">Customer</option>
-                            <option value="Vendor / Supplier / Contractor">Vendor / Supplier</option>
-                            <option value="Inter-company">Inter-company</option>
-                            <option value="Government / Investor / Official">Government / Investor</option>
+                            <option value="Vendor">Vendor</option>
+                            <option value="Contractor">Contractor</option>
+                            <option value="MIL/TTI Expat / SHTP Business trip">MIL/TTI Expat / SHTP Business trip</option>
                             <option value="Interviewee">Interviewee</option>
-                            <option value="Other">Other</option>
                         </select>
                     </div>
                     <div className="flex items-center gap-2">
@@ -271,12 +274,12 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-200 text-[#0f172a]">
+            <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-200 text-[#0f172a] max-w-[calc(100vw-2rem)]">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             {activeTab === 'general' ? (
-                                <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                <tr className="bg-[#1a1a1a] text-white border-b border-gray-800 text-[10px] font-black uppercase tracking-widest">
                                     <th className="px-3 py-2 w-8">
                                         <input 
                                             type="checkbox" 
@@ -300,7 +303,7 @@ export default function AdminDashboard() {
                                     <th className="px-3 py-2 text-right">Actions</th>
                                 </tr>
                             ) : (
-                                <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                <tr className="bg-[#1a1a1a] text-white border-b border-gray-800 text-[10px] font-black uppercase tracking-widest">
                                     <th className="px-3 py-2 w-8">
                                         <input 
                                             type="checkbox" 
@@ -414,6 +417,15 @@ export default function AdminDashboard() {
                                         <td className="px-3 py-2 text-right">
                                         <div className="flex justify-end gap-2">
                                             <button 
+                                                onClick={() => setEditingRequest(request)}
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-200"
+                                                title="Edit Request"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                                                </svg>
+                                            </button>
+                                            <button 
                                                 onClick={() => setSelectedRequest(request)}
                                                 className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all border border-gray-200"
                                                 title="View Details"
@@ -498,6 +510,15 @@ export default function AdminDashboard() {
                                         </td>
                                         <td className="px-3 py-2 text-right">
                                             <div className="flex justify-end gap-2">
+                                                <button 
+                                                    onClick={() => setEditingRequest(request)}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-200"
+                                                    title="Edit Request"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                                                    </svg>
+                                                </button>
                                                 <button 
                                                     onClick={() => setSelectedRequest(request)}
                                                     className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all border border-gray-200"
@@ -584,13 +605,15 @@ export default function AdminDashboard() {
                     return [{ name: selectedRequest.visitor_name, title: selectedRequest.visitor_title, company: selectedRequest.current_company }];
                 })();
 
-                return (
+                if (!mounted) return null;
+
+                return createPortal(
                     <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4 sm:p-8"
                         onClick={() => setSelectedRequest(null)}
                     >
                         <div
-                            className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200 border-t-[8px] border-t-[#db011c] custom-scrollbar flex flex-col"
+                            className="bg-white w-full max-w-2xl max-h-full overflow-y-auto rounded-2xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200 border-t-[8px] border-t-[#db011c] custom-scrollbar flex flex-col"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="p-6 pb-2 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10">
@@ -742,7 +765,7 @@ export default function AdminDashboard() {
                                                                 color: getStatusColor(app.status),
                                                                 border: `1px solid ${getStatusColor(app.status)}20`
                                                             }}>
-                                                                {app.room_areas?.name || 'VP Approval (All Rooms)'}
+                                                                {app.room_areas?.name || (selectedRequest.visitor_category === 'MIL/TTI Expat / SHTP Business trip' ? 'VP Approval (All Rooms)' : 'Manager Approval')}
                                                                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
                                                             </span>
                                                             {app.status === 'PENDING' && app.approver_email && (
@@ -808,9 +831,21 @@ export default function AdminDashboard() {
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 );
             })()}
+            {/* EDIT MODAL */}
+            {editingRequest && (
+                <EditRequestModal 
+                    request={editingRequest} 
+                    onClose={() => setEditingRequest(null)} 
+                    onSave={() => {
+                        setEditingRequest(null);
+                        fetchRequests(pagination.page);
+                    }} 
+                />
+            )}
         </div>
     );
 }

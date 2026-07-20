@@ -164,7 +164,7 @@ export const authOptions: NextAuthOptions = {
           if (email) {
             // Truy vấn lại DB để lấy thông tin chính xác nhất (bao gồm Role)
             const result = await pool.query(
-              "SELECT id, username, role, orgchart_role, visitor_role, job_title, department, location FROM users WHERE LOWER(TRIM(username)) = LOWER($1) OR LOWER(TRIM(username)) = LOWER($2)", 
+              "SELECT id, username, full_name, role, orgchart_role, visitor_role, job_title, department, location FROM users WHERE LOWER(TRIM(username)) = LOWER($1) OR LOWER(TRIM(username)) = LOWER($2)", 
               [email, email.split('@')[0]]
             );
 
@@ -175,6 +175,7 @@ export const authOptions: NextAuthOptions = {
               token.orgchart_role = dbUser.orgchart_role || "user";
               token.visitor_role = dbUser.visitor_role || "user";
               token.email = dbUser.username;
+              token.name = dbUser.full_name || token.name; // Keep native token.name if full_name is empty
               token.jobTitle = dbUser.job_title;
               token.department = dbUser.department;
               token.location = dbUser.location;
@@ -226,8 +227,9 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).visitor_role = token.visitor_role;
         (session.user as any).username = token.email;
         session.user.image = token.picture as string;
-        // Đảm bảo session.user.email cũng khớp với email trong DB
         session.user.email = token.email as string;
+        session.user.name = token.name as string;
+        (session.user as any).full_name = token.name as string;
         
         (session.user as any).jobTitle = token.jobTitle;
         (session.user as any).department = token.department;

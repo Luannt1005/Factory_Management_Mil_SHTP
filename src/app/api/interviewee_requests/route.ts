@@ -9,6 +9,8 @@ export async function POST(request: Request) {
         const session = await getServerSession(authOptions);
         if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+        const powerAutomateNotificationUrl = process.env.POWER_AUTOMATE_EMAIL_NOTIFICATION_URL;
+
         const body = await request.json();
         const {
             intervieweeName, jobTitle, interviewDepartment, interviewerName,
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
         
         const newVisitorCode = `${datePrefix}_${String(sequence).padStart(2, '0')}`;
 
-        const osName = (session.user as any).full_name || (session.user as any).username || session.user.email;
+        const osName = session.user.name || (session.user as any).full_name || (session.user as any).username || session.user.email;
 
         const { rows: intervieweeRequests } = await visitorPool.query(
             `INSERT INTO "IntervieweeRequest" 
@@ -54,6 +56,35 @@ export async function POST(request: Request) {
         );
 
         await visitorPool.query('COMMIT');
+
+        // Trigger email notification webhook if configured
+        if (powerAutomateNotificationUrl) {
+            try {
+                const paResponse = await fetch(powerAutomateNotificationUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        record_type: 'new_interviewee_request_notification',
+                        request_id: newVisitorCode, 
+                        visitor_category: 'Interviewee',
+                        submitter_name: osName,
+                        submitter_email: session.user.email,
+                        start_date: startDate,
+                        visitor_name: intervieweeName,
+                        job_title: jobTitle,
+                        interview_department: interviewDepartment
+                    })
+                });
+                if (!paResponse.ok) {
+                    console.error('Power Automate Email Hook Failed:', paResponse.status, await paResponse.text());
+                } else {
+                    console.log('Email notification sent successfully to Power Automate.');
+                }
+            } catch (e) {
+                console.error('Failed to trigger notification webhook:', e);
+            }
+        }
+
         return NextResponse.json({ message: 'Request created successfully', id: intervieweeRequests[0].id }, { status: 201 });
 
     } catch (error: any) {

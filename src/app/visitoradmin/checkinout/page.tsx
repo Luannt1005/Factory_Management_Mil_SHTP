@@ -121,21 +121,19 @@ export default function CheckInOutManagement() {
     return (
         <div className="w-full pb-10 px-6 mx-auto">
             {/* Header and Tabs */}
-            <div className="mb-4 -mt-2 flex flex-col md:flex-row justify-start items-start md:items-center gap-4">
-                <div className="flex bg-gray-100 rounded-lg p-1 w-full md:w-auto">
-                    <button 
-                        className={`flex-1 md:flex-none px-6 py-2 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === 'checkin' ? 'bg-white text-[#db011c] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                        onClick={() => setActiveTab('checkin')}
-                    >
-                        Active Check-in/out
-                    </button>
-                    <button 
-                        className={`flex-1 md:flex-none px-6 py-2 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === 'history' ? 'bg-white text-[#db011c] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                        onClick={() => setActiveTab('history')}
-                    >
-                        In/Out Logs
-                    </button>
-                </div>
+            <div className="flex gap-4 border-b border-gray-200 mb-6">
+                <button
+                    onClick={() => setActiveTab('checkin')}
+                    className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'checkin' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    Active Check-in/out
+                </button>
+                <button
+                    onClick={() => setActiveTab('history')}
+                    className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'history' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    In/Out Logs
+                </button>
             </div>
 
             {activeTab === 'history' ? (
@@ -179,7 +177,7 @@ export default function CheckInOutManagement() {
                             </div>
                         ) : (
                             <div className="flex flex-col border border-gray-200 rounded overflow-hidden">
-                                <div className="hidden md:grid grid-cols-12 gap-4 bg-[#f8fafc] text-gray-600 px-6 py-3 font-bold text-[10px] uppercase tracking-wider items-center border-b border-gray-200">
+                                <div className="hidden md:grid grid-cols-12 gap-4 bg-[#1a1a1a] text-white px-6 py-3 font-bold text-[10px] uppercase tracking-wider items-center border-b border-gray-200">
                                     <div className="col-span-2">REQUEST CODE</div>
                                     <div className="col-span-4">SUBMITTER</div>
                                     <div className="col-span-3">CATEGORY</div>
@@ -215,9 +213,10 @@ export default function CheckInOutManagement() {
                                                 </div>
                                             </div>
                                             
-                                            {/* Expanded Visitors */}
-                                            {expandedExpected === req.requestId && (
-                                                <div className="px-6 py-4 bg-[#f8fafc] border-t border-gray-100 shadow-inner overflow-x-auto">
+                                            {/* Expanded Visitors with Smooth Animation */}
+                                            <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${expandedExpected === req.requestId ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                                <div className="overflow-hidden">
+                                                    <div className="px-6 py-4 bg-[#f8fafc] border-t border-gray-100 shadow-inner overflow-x-auto">
                                                     <div className="flex flex-col gap-0 min-w-[700px]">
                                                         {req.visitors && req.visitors.length > 0 ? (
                                                             <>
@@ -296,7 +295,8 @@ export default function CheckInOutManagement() {
                                                         )}
                                                     </div>
                                                 </div>
-                                            )}
+                                            </div>
+                                        </div>
                                         </div>
                                     ))
                                 ) : (

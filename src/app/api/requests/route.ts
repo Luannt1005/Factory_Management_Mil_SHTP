@@ -93,6 +93,7 @@ export async function POST(request: Request) {
         const isExpat = visitorCategory === 'MIL/TTI Expat / SHTP Business trip';
         const powerAutomateUrl = process.env.POWER_AUTOMATE_FOR_LEAVE_URL;
         const powerAutomateVPUrl = process.env.POWER_AUTOMATE_VP_APPROVAL_URL;
+        const powerAutomateNotificationUrl = process.env.POWER_AUTOMATE_EMAIL_NOTIFICATION_URL;
 
         if (isExpat && roomIds && roomIds.length > 0) {
             const { rows: allRoomsCountRow } = await visitorPool.query('SELECT COUNT(*) FROM "RoomArea"');
@@ -133,7 +134,7 @@ export async function POST(request: Request) {
                                     startDate: startDate,
                                     endDate: endDate,
                                     purposeOfVisit: purposeOfVisit,
-                                    submitterName: (session.user as any).username,
+                                    submitterName: session.user.name || (session.user as any).username,
                                     visitorCategory: visitorCategory,
                                     submitterEmail: (session.user as any).username || session.user.email,
                                     visitors_list: visitors
@@ -176,7 +177,7 @@ export async function POST(request: Request) {
                                     startDate: startDate,
                                     endDate: endDate,
                                     purposeOfVisit: purposeOfVisit,
-                                    submitterName: (session.user as any).username,
+                                    submitterName: session.user.name || (session.user as any).username,
                                     visitorCategory: visitorCategory,
                                     submitterEmail: (session.user as any).username || session.user.email,
                                     visitors_list: visitors
@@ -221,7 +222,7 @@ export async function POST(request: Request) {
                                 startDate: startDate,
                                 endDate: endDate,
                                 purposeOfVisit: purposeOfVisit,
-                                submitterName: (session.user as any).username,
+                                submitterName: session.user.name || (session.user as any).username,
                                 visitorCategory: visitorCategory,
                                 submitterEmail: submitterEmail,
                                 visitors_list: visitors
@@ -236,6 +237,35 @@ export async function POST(request: Request) {
         }
 
         await visitorPool.query('COMMIT');
+
+        // Trigger email notification webhook if configured
+        if (powerAutomateNotificationUrl) {
+            try {
+                const paResponse = await fetch(powerAutomateNotificationUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        record_type: 'new_request_notification',
+                        request_id: newRequestId,
+                        visitor_category: visitorCategory,
+                        submitter_name: session.user.name || (session.user as any).username || session.user.email,
+                        submitter_email: session.user.email,
+                        start_date: startDate,
+                        end_date: endDate,
+                        visitor_name: visitorName,
+                        company: currentCompany
+                    })
+                });
+                if (!paResponse.ok) {
+                    console.error('Power Automate Email Hook Failed:', paResponse.status, await paResponse.text());
+                } else {
+                    console.log('Email notification sent successfully to Power Automate.');
+                }
+            } catch (e) {
+                console.error('Failed to trigger notification webhook:', e);
+            }
+        }
+
         return NextResponse.json({ message: 'Request created successfully', id: visitorRequestId }, { status: 201 });
 
     } catch (error: any) {

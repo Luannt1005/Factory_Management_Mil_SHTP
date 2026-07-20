@@ -216,8 +216,9 @@ export default function HistoryTab() {
                                 </div>
 
                                 {/* Expanded Visitors */}
-                                {expandedRequest === req.requestId && (
-                                    <div className="px-6 py-4 bg-[#f8fafc] border-t border-gray-100 shadow-inner">
+                                <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${expandedRequest === req.requestId ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                    <div className="overflow-hidden">
+                                        <div className="px-6 py-4 bg-[#f8fafc] border-t border-gray-100 shadow-inner overflow-x-auto">
                                         <div className="flex flex-col gap-0">
                                             {req.visitors && req.visitors.length > 0 ? (
                                                 <>
@@ -318,9 +319,10 @@ export default function HistoryTab() {
                                             ) : (
                                                 <div className="text-sm text-gray-500 py-2">No visitors data available.</div>
                                             )}
+                                            </div>
                                         </div>
                                     </div>
-                                )}
+                                </div>
                             </div>
                         ))}
                     </div>
