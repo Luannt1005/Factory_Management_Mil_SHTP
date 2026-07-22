@@ -25,6 +25,8 @@ async function getOrCreateVisitorProfile(user: any, visitorPool: any) {
     return newProfiles[0].id;
 }
 
+const formatEmail = (email: string | null | undefined) => { if (!email || typeof email !== 'string') return 'unknown@ttigroup.com.vn'; return email.includes('@') ? email : `@ttigroup.com.vn`; };
+
 export async function POST(request: Request) {
     let visitorPool;
     try {
@@ -136,7 +138,7 @@ export async function POST(request: Request) {
                                     purposeOfVisit: purposeOfVisit,
                                     submitterName: session.user.name || (session.user as any).username,
                                     visitorCategory: visitorCategory,
-                                    submitterEmail: (session.user as any).username || session.user.email,
+                                    submitterEmail: formatEmail((session.user as any).username || session.user.email),
                                     visitors_list: visitors
                                 }
                             }),
@@ -179,7 +181,7 @@ export async function POST(request: Request) {
                                     purposeOfVisit: purposeOfVisit,
                                     submitterName: session.user.name || (session.user as any).username,
                                     visitorCategory: visitorCategory,
-                                    submitterEmail: (session.user as any).username || session.user.email,
+                                    submitterEmail: formatEmail((session.user as any).username || session.user.email),
                                     visitors_list: visitors
                                 }
                             }),
@@ -194,7 +196,7 @@ export async function POST(request: Request) {
             }
         } else if (!isExpat) {
             // For Vendor, Contractor, etc., insert a single approval record for Supervisor Approval
-            const submitterEmail = (session.user as any).username || session.user.email || 'unknown@tti.com';
+            const submitterEmail = formatEmail((session.user as any).username || session.user.email);
             const { rows: approvalRows } = await visitorPool.query(
                 `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
                  VALUES (gen_random_uuid(), $1, NULL, $2, 'PENDING', NOW())
@@ -249,7 +251,7 @@ export async function POST(request: Request) {
                         request_id: newRequestId,
                         visitor_category: visitorCategory,
                         submitter_name: session.user.name || (session.user as any).username || session.user.email,
-                        submitter_email: session.user.email,
+                        submitter_email: formatEmail(session.user.email || (session.user as any).username),
                         start_date: startDate,
                         end_date: endDate,
                         visitor_name: visitorName,

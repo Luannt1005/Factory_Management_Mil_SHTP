@@ -124,6 +124,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
                                         'visitorCompany', 'Candidate',
                                         'visitorCode', r."visitorCode_override",
                                         'checkInOutStatus', COALESCE(c.status, 'PENDING'),
+                                        'cardNumber', c."cardNumber",
                                         'checkInTime', c."checkInTime",
                                         'checkOutTime', c."checkOutTime",
                                         'visitorIndex', 0
@@ -141,6 +142,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
                                         'visitorCompany', COALESCE(v.elem->>'company', (r.visitors_json::json)->0->>'company'),
                                         'visitorCode', r."requestId" || '-V' || v.idx,
                                         'checkInOutStatus', COALESCE(c.status, 'PENDING'),
+                                        'cardNumber', c."cardNumber",
                                         'checkInTime', c."checkInTime",
                                         'checkOutTime', c."checkOutTime",
                                         'visitorIndex', (v.idx::int - 1)

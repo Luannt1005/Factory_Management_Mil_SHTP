@@ -148,6 +148,7 @@ const flattenVisitorCTE = `WITH FlattenedVisitors AS (
                 c."checkInTime",
                 c."checkOutTime",
                 COALESCE(c.status, 'PENDING') AS "checkInOutStatus",
+                c."cardNumber",
                 r."visitorCode"
             FROM FlattenedVisitors r
             LEFT JOIN "VisitorCheckInOut" c ON r."requestId" = c."requestId" AND r."visitorIndex" = c."visitorIndex"
@@ -211,7 +212,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { action, requestId, visitorIndex, visitorName, visitorCode } = body;
+        const { action, requestId, visitorIndex, visitorName, visitorCode, cardNumber } = body;
 
         if (!action || !requestId || visitorIndex === undefined || !visitorName || !visitorCode) {
             return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -223,30 +224,32 @@ export async function POST(request: Request) {
             // Upsert with checkInTime = NOW()
             await visitorPool.query(`
                 INSERT INTO "VisitorCheckInOut" 
-                    ("requestId", "visitorIndex", "visitorName", "visitorCode", "checkInTime", status, "updatedAt")
+                    ("requestId", "visitorIndex", "visitorName", "visitorCode", "checkInTime", status, "updatedAt", "cardNumber")
                 VALUES 
-                    ($1, $2, $3, $4, NOW(), 'CHECKED_IN', NOW())
+                    ($1, $2, $3, $4, NOW(), 'CHECKED_IN', NOW(), $5)
                 ON CONFLICT ("visitorCode") 
                 DO UPDATE SET 
                     "checkInTime" = NOW(), 
                     status = 'CHECKED_IN',
-                    "updatedAt" = NOW()
-            `, [requestId, visitorIndex, visitorName, visitorCode]);
+                    "updatedAt" = NOW(),
+                    "cardNumber" = EXCLUDED."cardNumber"
+            `, [requestId, visitorIndex, visitorName, visitorCode, cardNumber || null]);
 
             return NextResponse.json({ message: 'Checked in successfully' });
         } else if (action === 'CHECK_OUT') {
             // Upsert with checkOutTime = NOW()
             await visitorPool.query(`
                 INSERT INTO "VisitorCheckInOut" 
-                    ("requestId", "visitorIndex", "visitorName", "visitorCode", "checkOutTime", status, "updatedAt")
+                    ("requestId", "visitorIndex", "visitorName", "visitorCode", "checkOutTime", status, "updatedAt", "cardNumber")
                 VALUES 
-                    ($1, $2, $3, $4, NOW(), 'CHECKED_OUT', NOW())
+                    ($1, $2, $3, $4, NOW(), 'CHECKED_OUT', NOW(), $5)
                 ON CONFLICT ("visitorCode") 
                 DO UPDATE SET 
                     "checkOutTime" = NOW(), 
                     status = 'CHECKED_OUT',
-                    "updatedAt" = NOW()
-            `, [requestId, visitorIndex, visitorName, visitorCode]);
+                    "updatedAt" = NOW(),
+                    "cardNumber" = EXCLUDED."cardNumber"
+            `, [requestId, visitorIndex, visitorName, visitorCode, cardNumber || null]);
 
             return NextResponse.json({ message: 'Checked out successfully' });
         } else if (action === 'RESET') {

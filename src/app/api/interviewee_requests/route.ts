@@ -3,6 +3,8 @@ import { getVisitorDbConnection } from '@/lib/visitor-db';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
+const formatEmail = (email: string | null | undefined) => { if (!email || typeof email !== 'string') return 'unknown@ttigroup.com.vn'; return email.includes('@') ? email : `@ttigroup.com.vn`; };
+
 export async function POST(request: Request) {
     let visitorPool;
     try {
@@ -68,7 +70,7 @@ export async function POST(request: Request) {
                         request_id: newVisitorCode, 
                         visitor_category: 'Interviewee',
                         submitter_name: osName,
-                        submitter_email: session.user.email,
+                        submitter_email: formatEmail(session.user.email || (session.user as any).username),
                         start_date: startDate,
                         visitor_name: intervieweeName,
                         job_title: jobTitle,

@@ -5,17 +5,19 @@ import { useState, useEffect, useCallback } from 'react';
 export default function HistoryTab() {
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [filters, setFilters] = useState({
-        date: '',
-        category: '',
-        search: ''
-    });
+    const [filters, setFilters] = useState({ date: new Date().toISOString().split('T')[0], category: '', search: '' });
     const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [cardNumbers, setCardNumbers] = useState<Record<string, string>>({});
+
+    const handleCardNumberChange = (requestId: string, visitorIndex: number, value: string) => {
+        setCardNumbers(prev => ({ ...prev, [`${requestId}-${visitorIndex}`]: value }));
+    };
 
     const handleAction = async (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET') => {
         setActionLoading(`${requestId}-${v.visitorIndex}`);
         try {
+            const cardNumber = cardNumbers[`${requestId}-${v.visitorIndex}`] || v.cardNumber || '';
             const res = await fetch('/api/visitor_admin/checkinout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -24,7 +26,8 @@ export default function HistoryTab() {
                     requestId, 
                     visitorIndex: v.visitorIndex,
                     visitorName: v.visitorName,
-                    visitorCode: v.visitorCode
+                    visitorCode: v.visitorCode,
+                    cardNumber
                 })
             });
             if (res.ok) {
@@ -92,10 +95,10 @@ export default function HistoryTab() {
         return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
     };
 
-    const formatDate = (dateString: string | null) => {
+    const formatDateShort = (dateString: string | null) => {
         if (!dateString) return '';
         const d = new Date(dateString);
-        return d.toLocaleDateString('en-GB'); // DD/MM/YYYY
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
     };
 
     const getCategoryBadgeClass = (category: string) => {
@@ -114,12 +117,6 @@ export default function HistoryTab() {
         if (s === 'REJECTED') return 'text-red-600 bg-red-50';
         if (s === 'PENDING') return 'text-orange-600 bg-orange-50';
         return 'text-gray-600 bg-gray-50';
-    };
-
-    const formatDateShort = (dateString: string | null) => {
-        if (!dateString) return '';
-        const d = new Date(dateString);
-        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
     };
 
     return (
@@ -224,17 +221,18 @@ export default function HistoryTab() {
                                                 <>
                                                     {/* Header for expanded visitors */}
                                                     <div className="flex justify-between items-center pb-2 border-b border-gray-300 mb-2">
-                                                        <div className="flex items-center gap-6">
-                                                            <div className="w-[120px] text-[10px] text-gray-500 font-bold uppercase tracking-wider">VISITOR CODE</div>
-                                                            <div className="w-[180px] text-[10px] text-gray-500 font-bold uppercase tracking-wider">FULL NAME</div>
-                                                            <div className="w-[120px] text-[10px] text-gray-500 font-bold uppercase tracking-wider">TITLE</div>
-                                                            <div className="w-[150px] text-[10px] text-gray-500 font-bold uppercase tracking-wider">COMPANY</div>
+                                                            <div className="flex items-center gap-6">
+                                                                <div className="w-[120px] text-[10px] text-gray-500 font-bold uppercase tracking-wider">VISITOR CODE</div>
+                                                                <div className="w-[180px] text-[10px] text-gray-500 font-bold uppercase tracking-wider">FULL NAME</div>
+                                                                <div className="w-[120px] text-[10px] text-gray-500 font-bold uppercase tracking-wider">TITLE</div>
+                                                                <div className="w-[150px] text-[10px] text-gray-500 font-bold uppercase tracking-wider">COMPANY</div>
+                                                            </div>
+                                                            <div className="flex items-center gap-4 text-[10px] text-gray-500 font-bold uppercase tracking-wider pr-[215px]">
+                                                                <div className="w-[100px] text-center">CARD NUMBER</div>
+                                                                <div className="w-[120px] text-center">TIME IN</div>
+                                                                <div className="w-[120px] text-center">TIME OUT</div>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-4 text-[10px] text-gray-500 font-bold uppercase tracking-wider pr-[215px]">
-                                                            <div className="w-[120px] text-center">TIME IN</div>
-                                                            <div className="w-[120px] text-center">TIME OUT</div>
-                                                        </div>
-                                                    </div>
 
                                                     {req.visitors.map((v: any, vIdx: number) => (
                                                         <div key={vIdx} className={`py-3 flex justify-between items-center ${vIdx !== req.visitors.length - 1 ? 'border-b border-dashed border-gray-200' : ''}`}>
@@ -252,8 +250,19 @@ export default function HistoryTab() {
                                                                     <div className="text-[13px] font-medium text-gray-600 truncate" title={v.visitorCompany || req.visitingSite}>{v.visitorCompany || req.visitingSite}</div>
                                                                 </div>
                                                             </div>
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="flex gap-4 text-center mr-4">
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="w-[100px] mr-2">
+                                                                        <input 
+                                                                            type="text" 
+                                                                            placeholder="Card No." 
+                                                                            className="w-full text-xs px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] focus:ring-1 focus:ring-[#db011c]" 
+                                                                            value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
+                                                                            onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            
+                                                                        />
+                                                                    </div>
+                                                                    <div className="flex gap-4 text-center mr-4">
                                                                     <div className="w-[120px]">
                                                                         <div className={`text-[11px] font-bold ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatDateTime(v.checkInTime)}</div>
                                                                     </div>

@@ -19,6 +19,11 @@ export default function CheckInOutManagement() {
     const [onSiteSearch, setOnSiteSearch] = useState('');
     const [onSiteCategory, setOnSiteCategory] = useState('');
     const [expandedExpected, setExpandedExpected] = useState<string | null>(null);
+    const [cardNumbers, setCardNumbers] = useState<Record<string, string>>({});
+
+    const handleCardNumberChange = (requestId: string, visitorIndex: number, value: string) => {
+        setCardNumbers(prev => ({ ...prev, [`${requestId}-${visitorIndex}`]: value }));
+    };
 
     useEffect(() => {
         setMounted(true);
@@ -59,6 +64,7 @@ export default function CheckInOutManagement() {
     const handleAction = async (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET') => {
         setActionLoading(`${requestId}-${v.visitorIndex}`);
         try {
+            const cardNumber = cardNumbers[`${requestId}-${v.visitorIndex}`] || v.cardNumber || '';
             const res = await fetch('/api/visitor_admin/checkinout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -67,7 +73,8 @@ export default function CheckInOutManagement() {
                     requestId, 
                     visitorIndex: v.visitorIndex,
                     visitorName: v.visitorName,
-                    visitorCode: v.visitorCode
+                    visitorCode: v.visitorCode,
+                    cardNumber
                 })
             });
             if (res.ok) {
@@ -228,6 +235,7 @@ export default function CheckInOutManagement() {
                                                                         <div className="w-[150px] text-[10px] text-gray-500 font-bold uppercase tracking-wider">COMPANY</div>
                                                                     </div>
                                                                     <div className="flex items-center gap-4 text-[10px] text-gray-500 font-bold uppercase tracking-wider pr-[215px]">
+                                                                        <div className="w-[100px] text-center">CARD NUMBER</div>
                                                                         <div className="w-[120px] text-center">TIME IN</div>
                                                                         <div className="w-[120px] text-center">TIME OUT</div>
                                                                     </div>
@@ -242,6 +250,16 @@ export default function CheckInOutManagement() {
                                                                             <div className="w-[150px] text-[13px] font-medium text-gray-600 truncate" title={v.visitorCompany || req.visitingSite}>{v.visitorCompany || req.visitingSite}</div>
                                                                         </div>
                                                                         <div className="flex items-center gap-4">
+                                                                            <div className="w-[100px] mr-2">
+                                                                                <input 
+                                                                                    type="text" 
+                                                                                    placeholder="Card No." 
+                                                                                    className="w-full text-xs px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                                                                                    value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
+                                                                                    onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)} onClick={(e) => e.stopPropagation()}
+                                                                                    
+                                                                                />
+                                                                            </div>
                                                                             <div className="flex gap-4 text-center mr-4">
                                                                                 <div className="w-[120px]">
                                                                                     <div className={`text-[11px] font-bold ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatDateTime(v.checkInTime)}</div>

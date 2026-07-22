@@ -166,6 +166,7 @@ export async function PATCH(request: Request) {
                         'UPDATE "VisitorRequest" SET status=$1 WHERE id=$2',
                         [finalStatus, reqId]
                     );
+
                 }
             }
 
@@ -180,6 +181,9 @@ export async function PATCH(request: Request) {
                 'UPDATE "VisitorRequest" SET status=$1 WHERE id=$2 RETURNING *',
                 [updates.status, id]
             );
+
+
+
             return NextResponse.json({ message: 'Request updated successfully', data: rows[0] }, { status: 200 });
         }
 
