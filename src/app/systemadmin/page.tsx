@@ -4,11 +4,12 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import UserManagement from "./components/UserManagement";
 import RoleManagement from "./components/RoleManagement";
-import { UsersIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
+import PendingApprovals from "./components/PendingApprovals";
+import { UsersIcon, ShieldCheckIcon, ClockIcon } from "@heroicons/react/24/outline";
 
 function SystemAdminContent() {
     const [isAuthorized, setIsAuthorized] = useState(false);
-    const [activeTab, setActiveTab] = useState<"users" | "roles">("users");
+    const [activeTab, setActiveTab] = useState<"users" | "roles" | "pending">("users");
     const router = useRouter();
 
     // specific check for admin role
@@ -59,6 +60,12 @@ function SystemAdminContent() {
                         >
                             Roles & Permissions
                         </button>
+                        <button
+                            onClick={() => setActiveTab("pending")}
+                            className={`pb-3 px-1 text-sm font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === "pending" ? "border-[#b52427] text-[#b52427]" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                        >
+                            Pending Approvals
+                        </button>
                     </div>
                 </div>
             </header>
@@ -66,7 +73,9 @@ function SystemAdminContent() {
             <main className="flex-1 p-6 overflow-hidden">
                 <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
                     <div className="h-full animate-in fade-in duration-300">
-                        {activeTab === "users" ? <UserManagement /> : <RoleManagement />}
+                        {activeTab === "users" && <UserManagement />}
+                        {activeTab === "roles" && <RoleManagement />}
+                        {activeTab === "pending" && <PendingApprovals />}
                     </div>
                 </div>
             </main>

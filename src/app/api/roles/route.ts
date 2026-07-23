@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { getDbConnection } from "@/lib/db";
 import { isAuthenticated, unauthorizedResponse } from "@/lib/auth-server";

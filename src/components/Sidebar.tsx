@@ -118,25 +118,17 @@ export default function Sidebar() {
   );
 
   const checkRole = (itemPath: string, requiredRole?: string) => {
+    // Global admin always has access to everything
     if (userRole === "admin") return true;
 
-    const orgchartRole = user?.orgchart_role;
-    const visitorRole = user?.visitor_role;
+    // Unrestricted paths
+    if (itemPath.startsWith('/introduction') || itemPath.startsWith('/profile')) return true;
 
-    if (itemPath.startsWith("/visitoradmin") || itemPath.startsWith("/visitoranalytics")) {
-      return visitorRole === "admin";
-    }
+    const allowedPages = (user as any)?.allowedPages || [];
 
-    if (itemPath === "/admin") {
-      return orgchartRole === "admin";
-    }
-
-    if (orgchartRole === "viewer" && !itemPath.startsWith("/visitor")) {
-      const allowedPaths = ["/orgchart", "/dashboard", "/customize", "/profile"];
-      return allowedPaths.some((path) => itemPath.startsWith(path));
-    }
-
-    return !requiredRole;
+    // Check if the user's allowedPages array contains this itemPath
+    // or if the itemPath starts with any of the allowed pages
+    return allowedPages.some((p: string) => itemPath === p || itemPath.startsWith(p + '/'));
   };
 
   const getRenderItems = (items: NavItem[]): NavItem[] => {

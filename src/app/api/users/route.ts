@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { getDbConnection } from "@/lib/db";
 import { isAuthenticated, unauthorizedResponse } from "@/lib/auth-server";
@@ -12,7 +13,7 @@ export async function GET() {
     }
     try {
         const pool = await getDbConnection();
-        const result = await pool.query("SELECT id, username, full_name, role, orgchart_role, visitor_role, created_at, employee_id, email, last_login, sso_provider, status, department, job_title FROM users ORDER BY full_name ASC");
+        const result = await pool.query("SELECT id, username, full_name, role, orgchart_role, visitor_role, created_at, employee_id, email, last_login, sso_provider, status, department, job_title, location, app_role_ids FROM users ORDER BY full_name ASC");
 
         return NextResponse.json({
             success: true,
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
     }
     try {
         const body = await req.json();
-        const { username, full_name, password, role, orgchart_role, visitor_role, employee_id, email, status, department, job_title } = body;
+        const { username, full_name, password, role, orgchart_role, visitor_role, employee_id, email, status, department, job_title, location, app_role_ids } = body;
 
         if (!username || !full_name || !password) {
             return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
@@ -52,8 +53,8 @@ export async function POST(req: Request) {
         }
 
         const result = await pool.query(
-            "INSERT INTO users (username, full_name, password, role, orgchart_role, visitor_role, employee_id, email, status, department, job_title) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
-            [username, full_name, password, role || 'user', orgchart_role || 'user', visitor_role || 'user', employee_id || null, email || null, status || 'Active', department || null, job_title || null]
+            "INSERT INTO users (username, full_name, password, role, orgchart_role, visitor_role, employee_id, email, status, department, job_title, location, app_role_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *",
+            [username, full_name, password, role || 'user', orgchart_role || 'user', visitor_role || 'user', employee_id || null, email || null, status || 'Active', department || null, job_title || null, location || null, app_role_ids || []]
         );
 
         return NextResponse.json({
@@ -80,7 +81,7 @@ export async function PUT(req: Request) {
     }
     try {
         const body = await req.json();
-        const { id, full_name, role, orgchart_role, visitor_role, password, employee_id, email, status, department, job_title } = body;
+        const { id, full_name, role, orgchart_role, visitor_role, password, employee_id, email, status, department, job_title, location, app_role_ids } = body;
 
         if (!id) {
             return NextResponse.json({ success: false, message: "User ID is required" }, { status: 400 });
@@ -88,14 +89,14 @@ export async function PUT(req: Request) {
 
         const pool = await getDbConnection();
 
-        let query = "UPDATE users SET full_name = $1, role = $2, orgchart_role = $3, visitor_role = $4, employee_id = $5, email = $6, status = $7, department = $8, job_title = $9";
-        const values: any[] = [full_name, role, orgchart_role, visitor_role, employee_id || null, email || null, status || 'Active', department || null, job_title || null];
+        let query = "UPDATE users SET full_name = $1, role = $2, orgchart_role = $3, visitor_role = $4, employee_id = $5, email = $6, status = $7, department = $8, job_title = $9, location = $10, app_role_ids = $11";
+        const values: any[] = [full_name, role, orgchart_role, visitor_role, employee_id || null, email || null, status || 'Active', department || null, job_title || null, location || null, app_role_ids || []];
 
         if (password && password.trim() !== "") {
-            query += ", password = $10 WHERE id = $11";
+            query += ", password = $12 WHERE id = $13";
             values.push(password, id);
         } else {
-            query += " WHERE id = $10";
+            query += " WHERE id = $12";
             values.push(id);
         }
 

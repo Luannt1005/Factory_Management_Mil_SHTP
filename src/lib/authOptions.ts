@@ -46,6 +46,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role || "user",
           orgchart_role: user.orgchart_role || "user",
           visitor_role: user.visitor_role || "user",
+          app_role_ids: user.app_role_ids || [],
         };
       },
     }),
@@ -110,6 +111,9 @@ export const authOptions: NextAuthOptions = {
             }
           }
 
+          let userStatus = "Active";
+          const isShtp = location && location.toUpperCase().includes('SHTP');
+
           if (result.rows.length === 0) {
             console.log("[SSO DB Lookup] User not found, creating new account for:", fullEmail);
             
@@ -118,18 +122,21 @@ export const authOptions: NextAuthOptions = {
               return false; 
             }
 
+            userStatus = isShtp ? "Active" : "Pending Approval";
             const dummyPassword = "sso_user_no_password_" + Math.random().toString(36).substring(7);
             const insertResult = await pool.query(
-              "INSERT INTO users (username, password, full_name, role, orgchart_role, visitor_role, job_title, department, location) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
-              [fullEmail, dummyPassword, name, "user", "user", "user", jobTitle, department, location]
+              "INSERT INTO users (username, password, full_name, role, orgchart_role, visitor_role, job_title, department, location, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+              [fullEmail, dummyPassword, name, "user", "user", "user", jobTitle, department, location, userStatus]
             );
             const newUser = insertResult.rows[0];
             user.id = newUser.id.toString();
             (user as any).role = newUser.role;
             (user as any).orgchart_role = newUser.orgchart_role;
             (user as any).visitor_role = newUser.visitor_role;
+            (user as any).app_role_ids = [];
           } else {
             const existingUser = result.rows[0];
+            userStatus = existingUser.status || "Active";
             
             // Update the existing user with new details if they are available from Graph API
             if (jobTitle || department || location) {
@@ -143,8 +150,20 @@ export const authOptions: NextAuthOptions = {
             (user as any).role = existingUser.role || "user";
             (user as any).orgchart_role = existingUser.orgchart_role || "user";
             (user as any).visitor_role = existingUser.visitor_role || "user";
+            (user as any).app_role_ids = existingUser.app_role_ids || [];
             user.email = existingUser.username;
           }
+
+          if (userStatus === "Pending Approval") {
+             console.log("[SSO Login Blocked] User is Pending Approval due to non-SHTP location:", fullEmail);
+             return `/access-denied?email=${encodeURIComponent(fullEmail)}&name=${encodeURIComponent(name)}&username=${encodeURIComponent(usernamePart || '')}`;
+          }
+          
+          if (userStatus === "Inactive") {
+             console.log("[SSO Login Blocked] User is Inactive:", fullEmail);
+             return false;
+          }
+
         }
         return true;
       } catch (error: any) {
@@ -164,7 +183,7 @@ export const authOptions: NextAuthOptions = {
           if (email) {
             // Truy vấn lại DB để lấy thông tin chính xác nhất (bao gồm Role)
             const result = await pool.query(
-              "SELECT id, username, full_name, role, orgchart_role, visitor_role, job_title, department, location FROM users WHERE LOWER(TRIM(username)) = LOWER($1) OR LOWER(TRIM(username)) = LOWER($2)", 
+              "SELECT id, username, full_name, role, orgchart_role, visitor_role, job_title, department, location, app_role_ids FROM users WHERE LOWER(TRIM(username)) = LOWER($1) OR LOWER(TRIM(username)) = LOWER($2)", 
               [email, email.split('@')[0]]
             );
 
@@ -174,17 +193,36 @@ export const authOptions: NextAuthOptions = {
               token.role = dbUser.role || "user";
               token.orgchart_role = dbUser.orgchart_role || "user";
               token.visitor_role = dbUser.visitor_role || "user";
+              token.app_role_ids = dbUser.app_role_ids || [];
               token.email = dbUser.username;
               token.name = dbUser.full_name || token.name; // Keep native token.name if full_name is empty
               token.jobTitle = dbUser.job_title;
               token.department = dbUser.department;
               token.location = dbUser.location;
+              
+              // Resolve allowed pages based on app_role_ids
+              let allowedPages: string[] = [];
+              if (token.app_role_ids && (token.app_role_ids as string[]).length > 0) {
+                 const rolesRes = await pool.query(
+                   "SELECT permissions FROM app_roles WHERE id = ANY($1::int[])", 
+                   [(token.app_role_ids as string[]).map(Number)]
+                 );
+                 rolesRes.rows.forEach(r => {
+                   if (r.permissions && Array.isArray(r.permissions)) {
+                     allowedPages.push(...r.permissions);
+                   }
+                 });
+              }
+              token.allowedPages = [...new Set(allowedPages)];
+
             } else {
               // Trường hợp hy hữu: User vừa đăng nhập thành công ở signIn nhưng DB chưa kịp cập nhật hoặc lỗi
               token.id = user.id;
               token.role = (user as any).role || "user";
               token.orgchart_role = (user as any).orgchart_role || "user";
               token.visitor_role = (user as any).visitor_role || "user";
+              token.app_role_ids = (user as any).app_role_ids || [];
+              token.allowedPages = [];
               token.email = email;
             }
           }
@@ -225,6 +263,8 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).role = token.role;
         (session.user as any).orgchart_role = token.orgchart_role;
         (session.user as any).visitor_role = token.visitor_role;
+        (session.user as any).app_role_ids = token.app_role_ids;
+        (session.user as any).allowedPages = token.allowedPages || [];
         (session.user as any).username = token.email;
         session.user.image = token.picture as string;
         session.user.email = token.email as string;
@@ -237,9 +277,8 @@ export const authOptions: NextAuthOptions = {
       }
       console.log("[NextAuth Session]", { 
         user: session.user?.email, 
-        role: (session.user as any).role,
-        orgchart_role: (session.user as any).orgchart_role,
-        visitor_role: (session.user as any).visitor_role
+        app_roles: (session.user as any).app_role_ids,
+        allowed_pages: (session.user as any).allowedPages
       });
       return session;
     },

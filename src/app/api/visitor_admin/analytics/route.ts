@@ -1,7 +1,9 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { hasPageAccess } from '@/lib/auth-server';
 
 export async function GET(request: Request) {
     try {
@@ -11,92 +13,207 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin') {
+        if (!(await hasPageAccess('/visitoradmin'))) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         const visitorPool = await getVisitorDbConnection();
 
-        // 1. Weekly Trends (Last 7 days)
-        const weeklyQuery = `
-            SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count
-            FROM "VisitorRequest"
-            WHERE "createdAt" >= current_date - interval '7 days'
-            GROUP BY DATE_TRUNC('day', "createdAt")
-            ORDER BY date
-        `;
-        const { rows: weeklyRows } = await visitorPool.query(weeklyQuery);
-        const weeklyData = weeklyRows.map(r => ({
-            date: new Date(r.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-            count: parseInt(r.count)
-        }));
+        // 1. STAT CARDS
+        // Visitors Today (Scheduled for today)
+        const todayRes = await visitorPool.query(`
+            SELECT COUNT(*) as count FROM (
+                SELECT id FROM "VisitorRequest" WHERE DATE("startDate") = CURRENT_DATE
+                UNION ALL
+                SELECT id::text FROM "IntervieweeRequest" WHERE DATE("startDate") = CURRENT_DATE
+            ) t
+        `);
+        const yesterdayRes = await visitorPool.query(`
+            SELECT COUNT(*) as count FROM (
+                SELECT id FROM "VisitorRequest" WHERE DATE("startDate") = CURRENT_DATE - 1
+                UNION ALL
+                SELECT id::text FROM "IntervieweeRequest" WHERE DATE("startDate") = CURRENT_DATE - 1
+            ) t
+        `);
+        const visitorsToday = parseInt(todayRes.rows[0]?.count || 0);
+        const visitorsYesterday = parseInt(yesterdayRes.rows[0]?.count || 0);
+        const visitorsTodayGrowth = visitorsYesterday === 0 ? 100 : Math.round(((visitorsToday - visitorsYesterday) / visitorsYesterday) * 100);
 
-        // 2. Monthly Trends (Last 6 months)
-        const monthlyQuery = `
-            SELECT DATE_TRUNC('month', "createdAt") as month, COUNT(*) as count
-            FROM "VisitorRequest"
-            WHERE "createdAt" >= current_date - interval '6 months'
-            GROUP BY DATE_TRUNC('month', "createdAt")
-            ORDER BY month
-        `;
-        const { rows: monthlyRows } = await visitorPool.query(monthlyQuery);
-        const monthlyData = monthlyRows.map(r => ({
-            month: new Date(r.month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-            count: parseInt(r.count)
-        }));
+        // Currently Present (Keep relying on CheckInOut for accuracy)
+        const presentRes = await visitorPool.query(`
+            SELECT COUNT(*) as count 
+            FROM "VisitorCheckInOut" 
+            WHERE status = 'CHECKED_IN'
+        `);
+        const currentlyPresent = parseInt(presentRes.rows[0]?.count || 0);
 
-        // 3. Category Distribution
-        const categoryQuery = `
-            SELECT "visitorCategory" as category, COUNT(*) as count
-            FROM "VisitorRequest"
-            GROUP BY "visitorCategory"
-        `;
-        const { rows: categoryRows } = await visitorPool.query(categoryQuery);
-        const categoryData = categoryRows.map(r => ({
-            name: r.category,
-            value: parseInt(r.count)
-        }));
+        // Total This Week (Scheduled for this week)
+        const thisWeekRes = await visitorPool.query(`
+            SELECT COUNT(*) as count FROM (
+                SELECT id FROM "VisitorRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE)
+                UNION ALL
+                SELECT id::text FROM "IntervieweeRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE)
+            ) t
+        `);
+        const lastWeekRes = await visitorPool.query(`
+            SELECT COUNT(*) as count FROM (
+                SELECT id FROM "VisitorRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND "startDate" < date_trunc('week', CURRENT_DATE)
+                UNION ALL
+                SELECT id::text FROM "IntervieweeRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND "startDate" < date_trunc('week', CURRENT_DATE)
+            ) t
+        `);
+        const totalThisWeek = parseInt(thisWeekRes.rows[0]?.count || 0);
+        const totalLastWeek = parseInt(lastWeekRes.rows[0]?.count || 0);
+        const weekGrowth = totalLastWeek === 0 ? 100 : Math.round(((totalThisWeek - totalLastWeek) / totalLastWeek) * 100);
 
-        // 4. Status Distribution
-        const statusQuery = `
-            SELECT status, COUNT(*) as count
+        // Average Stay Duration this week (Planned duration)
+        const avgStayRes = await visitorPool.query(`
+            SELECT AVG(EXTRACT(EPOCH FROM ("endDate" - "startDate"))/60) as avg_minutes
             FROM "VisitorRequest"
-            GROUP BY status
-        `;
-        const { rows: statusRows } = await visitorPool.query(statusQuery);
-        const statusData = statusRows.map(r => ({
-            name: r.status,
-            value: parseInt(r.count)
-        }));
-
-        // 5. Total counts this week vs last week (simplified to just last 7 days vs previous 7 days)
-        const currentWeekCount = weeklyRows.reduce((sum, r) => sum + parseInt(r.count), 0);
-        
-        const lastWeekQuery = `
-            SELECT COUNT(*) as count
+            WHERE "endDate" IS NOT NULL AND "startDate" >= date_trunc('week', CURRENT_DATE)
+        `);
+        const lastWeekAvgRes = await visitorPool.query(`
+            SELECT AVG(EXTRACT(EPOCH FROM ("endDate" - "startDate"))/60) as avg_minutes
             FROM "VisitorRequest"
-            WHERE "createdAt" >= current_date - interval '14 days' 
-              AND "createdAt" < current_date - interval '7 days'
-        `;
-        const { rows: lastWeekRows } = await visitorPool.query(lastWeekQuery);
-        const lastWeekCount = parseInt(lastWeekRows[0].count);
+            WHERE "endDate" IS NOT NULL AND "startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND "startDate" < date_trunc('week', CURRENT_DATE)
+        `);
+        const avgStayMinutes = Math.round(parseFloat(avgStayRes.rows[0]?.avg_minutes || 0));
+        const avgStayLastWeek = Math.round(parseFloat(lastWeekAvgRes.rows[0]?.avg_minutes || 0));
+        const avgStayChange = avgStayMinutes - avgStayLastWeek;
 
-        const totalQuery = `SELECT COUNT(*) as sum FROM "VisitorRequest"`;
-        const { rows: totalRows } = await visitorPool.query(totalQuery);
-        
         const summary = {
-            totalRequests: parseInt(totalRows[0].sum),
-            currentWeekCount,
-            lastWeekCount,
-            growth: lastWeekCount === 0 ? 100 : Math.round(((currentWeekCount - lastWeekCount) / lastWeekCount) * 100)
+            visitorsToday,
+            visitorsTodayGrowth,
+            currentlyPresent,
+            totalThisWeek,
+            weekGrowth,
+            avgStayMinutes,
+            avgStayChange
         };
 
+        // 2. TREND DATA
+        const trendRes = await visitorPool.query(`
+            SELECT 'Tuần ' || ROW_NUMBER() OVER(ORDER BY date_trunc('week', "startDate")) as label, COUNT(*) as value
+            FROM (
+                SELECT "startDate" FROM "VisitorRequest" WHERE "startDate" >= CURRENT_DATE - interval '7 weeks'
+                UNION ALL
+                SELECT "startDate" FROM "IntervieweeRequest" WHERE "startDate" >= CURRENT_DATE - interval '7 weeks'
+            ) t
+            GROUP BY date_trunc('week', "startDate")
+            ORDER BY date_trunc('week', "startDate")
+        `);
+        const trendData = trendRes.rows;
+
+        // 3. PERIODIC DATA
+        const periodicRes = await visitorPool.query(`
+            SELECT 'T' || EXTRACT(ISODOW FROM "startDate") + 1 as label, COUNT(*) as value
+            FROM (
+                SELECT "startDate" FROM "VisitorRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE)
+                UNION ALL
+                SELECT "startDate" FROM "IntervieweeRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE)
+            ) t
+            GROUP BY EXTRACT(ISODOW FROM "startDate")
+            ORDER BY EXTRACT(ISODOW FROM "startDate")
+        `);
+        
+        const periodicData = [];
+        for (let i = 2; i <= 8; i++) {
+            const label = i === 8 ? 'CN' : 'T' + i;
+            const match = periodicRes.rows.find(r => r.label === 'T' + i);
+            periodicData.push({ label, value: match ? parseInt(match.value) : 0 });
+        }
+
+        // 4. CATEGORY DISTRIBUTION
+        const categoryRes = await visitorPool.query(`
+            SELECT category, COUNT(*) as count FROM (
+                SELECT COALESCE("visitorCategory", 'Other') as category FROM "VisitorRequest"
+                UNION ALL
+                SELECT 'Interviewee' as category FROM "IntervieweeRequest"
+            ) t
+            GROUP BY category
+        `);
+        let categoryData = categoryRes.rows.map(r => ({
+            name: r.category,
+            value: parseInt(r.count)
+        })).filter(c => c.name !== 'Other');
+
+        const nameMap: Record<string, string> = {
+            'MIL/TTI Expat / SHTP Business trip': 'MIL-TTI Expat',
+            'Vendor': 'Vendor',
+            'Contractor': 'Contractor',
+            'Interviewee': 'Interviewee'
+        };
+        categoryData = categoryData.map(c => ({ ...c, name: nameMap[c.name] || c.name }));
+
+        const totalCategories = categoryData.reduce((sum, item) => sum + item.value, 0);
+        categoryData = categoryData.map(c => ({
+            ...c, percentage: totalCategories > 0 ? Math.round((c.value / totalCategories) * 100) : 0
+        }));
+
+        // 5. DEPARTMENT & BU DISTRIBUTION
+        const deptRes = await visitorPool.query(`
+            SELECT 
+                COALESCE(ra.category, ir."interviewDepartment", 'Others') as department,
+                COALESCE(rc.bu, CASE WHEN ir."interviewDepartment" IS NOT NULL THEN 'Share Function' ELSE 'Milwaukee' END) as bu,
+                COUNT(*) as count
+            FROM (
+                SELECT id, null as "interviewDepartment" FROM "VisitorRequest"
+                UNION ALL
+                SELECT id::text as id, "interviewDepartment" FROM "IntervieweeRequest"
+            ) req
+            LEFT JOIN "RequestApproval" ra_app ON req.id = ra_app."requestId"
+            LEFT JOIN "RoomArea" ra ON ra_app."roomAreaId" = ra.id
+            LEFT JOIN "RoomCategory" rc ON ra.category = rc.name
+            LEFT JOIN "IntervieweeRequest" ir ON req.id = ir.id::text AND req."interviewDepartment" IS NOT NULL
+            GROUP BY 1, 2
+        `);
+
+        const deptMap: Record<string, any> = {};
+        deptRes.rows.forEach(r => {
+            const dept = r.department || 'Others';
+            if (!deptMap[dept]) deptMap[dept] = { name: dept, MIL: 0, SF: 0, total: 0 };
+            const count = parseInt(r.count) || 0;
+            if (r.bu === 'Milwaukee') deptMap[dept].MIL += count;
+            else deptMap[dept].SF += count;
+            deptMap[dept].total += count;
+        });
+
+        const departmentData = Object.values(deptMap).sort((a: any, b: any) => b.total - a.total).slice(0, 7);
+
+        let totalMIL = 0, totalSF = 0;
+        Object.values(deptMap).forEach((d: any) => { totalMIL += d.MIL; totalSF += d.SF; });
+        const buDistribution = [ { name: 'MIL', value: totalMIL }, { name: 'SF', value: totalSF } ];
+
+        // 6. RECENT ACTIVITY
+        const recentRes = await visitorPool.query(`
+            SELECT 
+                "visitorName" as name,
+                status,
+                "createdAt" as time,
+                COALESCE("visitorCategory", 'Other') as category,
+                'Visitor' as type
+            FROM "VisitorRequest"
+            UNION ALL
+            SELECT 
+                "intervieweeName" as name,
+                status,
+                "createdAt" as time,
+                'Interviewee' as category,
+                'Interviewee' as type
+            FROM "IntervieweeRequest"
+            ORDER BY time DESC
+            LIMIT 20
+        `);
+
+        const uniqueRecent = recentRes.rows.map(row => ({
+            name: row.name,
+            details: `Đơn đăng ký mới - ${nameMap[row.category] || row.category}`,
+            status: row.status,
+            time: new Date(row.time).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+        }));
+
         return NextResponse.json({ 
-            weeklyData,
-            monthlyData,
-            categoryData,
-            statusData,
-            summary
+            summary, trendData, periodicData, categoryData, departmentData, buDistribution, recentActivity: uniqueRecent
         }, { status: 200 });
 
     } catch (error: any) {

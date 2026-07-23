@@ -1,6 +1,8 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
+import { hasPageAccess } from '@/lib/auth-server';
 import { getDbConnection } from '@/lib/db';
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -10,7 +12,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
         // Ensure user has admin rights
-        if ((session.user as any).role !== 'admin' && (session.user as any).visitor_role !== 'admin') {
+        if (!(await hasPageAccess('/visitoradmin'))) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 

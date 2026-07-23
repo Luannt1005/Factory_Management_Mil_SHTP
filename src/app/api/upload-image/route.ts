@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { isAuthenticated, unauthorizedResponse, getCurrentUser } from "@/lib/auth-server";
 import { promises as fs, existsSync } from "fs";

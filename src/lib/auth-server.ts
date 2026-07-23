@@ -42,3 +42,21 @@ export async function getCurrentUser(): Promise<string | null> {
         return null;
     }
 }
+
+/**
+ * Checks if the user has access to a specific page path.
+ */
+export async function hasPageAccess(pagePath: string): Promise<boolean> {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) return false;
+    
+    const user = session.user as any;
+    if (user.role === 'admin') return true;
+    
+    if (user.allowedPages && Array.isArray(user.allowedPages)) {
+        return user.allowedPages.some((p: string) => p === pagePath || p.startsWith(pagePath + '/'));
+    }
+    
+    return false;
+}
+
