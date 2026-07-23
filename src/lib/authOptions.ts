@@ -235,18 +235,21 @@ export const authOptions: NextAuthOptions = {
               
               // Resolve allowed pages based on app_role_ids
               let allowedPages: string[] = [];
+              let app_role_names: string[] = [];
               if (token.app_role_ids && (token.app_role_ids as string[]).length > 0) {
                  const rolesRes = await pool.query(
-                   "SELECT permissions FROM app_roles WHERE id = ANY($1::int[])", 
+                   "SELECT name, permissions FROM app_roles WHERE id = ANY($1::int[])", 
                    [(token.app_role_ids as string[]).map(Number)]
                  );
                  rolesRes.rows.forEach(r => {
+                   if (r.name) app_role_names.push(r.name);
                    if (r.permissions && Array.isArray(r.permissions)) {
                      allowedPages.push(...r.permissions);
                    }
                  });
               }
               token.allowedPages = [...new Set(allowedPages)];
+              token.app_role_names = app_role_names;
 
             } else {
               // Trường hợp hy hữu: User vừa đăng nhập thành công ở signIn nhưng DB chưa kịp cập nhật hoặc lỗi
@@ -295,10 +298,11 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
         (session.user as any).orgchart_role = token.orgchart_role;
-        (session.user as any).visitor_role = token.visitor_role;
-        (session.user as any).app_role_ids = token.app_role_ids;
-        (session.user as any).allowedPages = token.allowedPages || [];
-        (session.user as any).username = token.email;
+        (session.user as any).visitor_role = token.visitor_role as string;
+        (session.user as any).app_role_ids = token.app_role_ids as string[];
+        (session.user as any).app_role_names = token.app_role_names as string[];
+        (session.user as any).allowedPages = token.allowedPages as string[];
+        (session.user as any).email = token.email as string;
         session.user.image = token.picture as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;

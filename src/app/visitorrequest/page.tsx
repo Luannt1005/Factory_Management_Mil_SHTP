@@ -7,6 +7,7 @@ import { ArrowLeftIcon, BuildingOffice2Icon, GlobeAsiaAustraliaIcon, UserGroupIc
 import Link from 'next/link';
 import Dashboard from '../visitordashboard/page';
 import * as XLSX from 'xlsx';
+import { useSession } from 'next-auth/react';
 
 const InputLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
     <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', marginTop: '8px' }}>
@@ -33,6 +34,8 @@ const SectionHeader = ({ title }: { title: string }) => (
 );
 
 export default function NewRequestPage() {
+    const { data: session } = useSession();
+    const isHrVisitor = (session?.user as any)?.app_role_names?.includes('Hr Visitor') || (session?.user as any)?.role === 'admin';
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'request' | 'dashboard'>('request');
@@ -283,11 +286,16 @@ export default function NewRequestPage() {
                                 { id: 'Interviewee', label: 'INTERVIEWEE', desc: 'Job candidates visiting for interview' }
                             ].map(cat => {
                                 const isActive = formData.visitorCategory === cat.id || (cat.id === 'Vendor/Contractor' && (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor'));
+                                const isDisabled = cat.id === 'Interviewee' && !isHrVisitor;
                                 
                                 return (
                                     <div 
                                         key={cat.id}
                                         onClick={() => {
+                                            if (isDisabled) {
+                                                alert("You need Hr Visitor role to create an Interviewee request.");
+                                                return;
+                                            }
                                             if (cat.id === 'Vendor/Contractor') {
                                                 setFormData({...formData, visitorCategory: 'Vendor'});
                                             } else {
@@ -295,10 +303,10 @@ export default function NewRequestPage() {
                                             }
                                         }}
                                         style={{
-                                            cursor: 'pointer', padding: '20px', borderRadius: '8px', backgroundColor: isActive ? '#fff5f5' : 'white', 
+                                            cursor: isDisabled ? 'not-allowed' : 'pointer', padding: '20px', borderRadius: '8px', backgroundColor: isActive ? '#fff5f5' : 'white', 
                                             border: isActive ? '1px solid #db011c' : '1px solid #e2e8f0',
-                                            textAlign: 'center', transition: 'all 0.2s',
-                                            boxShadow: isActive ? '0 0 0 1px #db011c' : '0 1px 2px rgba(0,0,0,0.05)'
+                                            textAlign: 'center', transition: 'all 0.2s', opacity: isDisabled ? 0.5 : 1,
+                                            boxShadow: isActive ? '0 4px 12px rgba(219,1,28,0.1)' : '0 2px 4px rgba(0,0,0,0.02)'
                                         }}
                                     >
                                         <div style={{ fontWeight: 700, fontSize: '13px', marginBottom: '6px', letterSpacing: '0.02em', color: isActive ? '#db011c' : '#334155' }}>

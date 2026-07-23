@@ -5,8 +5,11 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon, CalendarDaysIcon, DocumentTextIcon, UserGroupIcon, MapPinIcon, CurrencyDollarIcon, BuildingOfficeIcon, IdentificationIcon, TagIcon, ClockIcon, CheckCircleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { useSession } from 'next-auth/react';
 
 export default function Dashboard() {
+    const { data: session } = useSession();
+    const isHrVisitor = (session?.user as any)?.app_role_names?.includes('Hr Visitor') || (session?.user as any)?.role === 'admin';
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 0 });
@@ -84,11 +87,18 @@ export default function Dashboard() {
                     General Visitors
                 </button>
                 <button
-                    onClick={() => { setActiveTab('interviewee'); setPageToOneAndFetch(); }}
+                    onClick={() => { 
+                        if (!isHrVisitor) {
+                            alert("You need Hr Visitor role to view Interviewee requests.");
+                            return;
+                        }
+                        setActiveTab('interviewee'); 
+                        setPageToOneAndFetch(); 
+                    }}
                     className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'interviewee'
                         ? 'bg-white text-[#db011c] shadow-sm ring-1 ring-gray-200/50'
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
-                        }`}
+                        } ${!isHrVisitor ? 'opacity-50 cursor-not-allowed hover:bg-transparent hover:text-gray-500' : ''}`}
                 >
                     Interviewee
                 </button>
