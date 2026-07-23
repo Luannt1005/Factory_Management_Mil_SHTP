@@ -124,25 +124,58 @@ export const authOptions: NextAuthOptions = {
 
             userStatus = isShtp ? "Active" : "Pending Approval";
             const dummyPassword = "sso_user_no_password_" + Math.random().toString(36).substring(7);
+            
+            // Get role IDs for default assignment
+            const defaultRolesResult = await pool.query("SELECT id, name FROM app_roles WHERE name = 'User Visitor' OR name = 'Admin Orgchart'");
+            const roleMap = new Map();
+            defaultRolesResult.rows.forEach((r: any) => roleMap.set(r.name, r.id));
+            const userVisitorId = roleMap.get('User Visitor');
+            const adminOrgchartId = roleMap.get('Admin Orgchart');
+            
+            let app_role_ids: string[] = [];
+            if (userVisitorId) app_role_ids.push(userVisitorId);
+            if ((department === 'IDM Control' || department === 'Management') && adminOrgchartId) {
+                app_role_ids.push(adminOrgchartId);
+            }
+
             const insertResult = await pool.query(
-              "INSERT INTO users (username, password, full_name, role, orgchart_role, visitor_role, job_title, department, location, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-              [fullEmail, dummyPassword, name, "user", "user", "user", jobTitle, department, location, userStatus]
+              "INSERT INTO users (username, password, full_name, role, orgchart_role, visitor_role, job_title, department, location, status, app_role_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
+              [fullEmail, dummyPassword, name, "user", "user", "user", jobTitle, department, location, userStatus, app_role_ids]
             );
             const newUser = insertResult.rows[0];
             user.id = newUser.id.toString();
             (user as any).role = newUser.role;
             (user as any).orgchart_role = newUser.orgchart_role;
             (user as any).visitor_role = newUser.visitor_role;
-            (user as any).app_role_ids = [];
+            (user as any).app_role_ids = newUser.app_role_ids || [];
           } else {
             const existingUser = result.rows[0];
             userStatus = existingUser.status || "Active";
             
+            let app_role_ids: string[] = existingUser.app_role_ids || [];
+            let updatedRoles = false;
+            
+            // Get role IDs for default assignment
+            const defaultRolesResult = await pool.query("SELECT id, name FROM app_roles WHERE name = 'User Visitor' OR name = 'Admin Orgchart'");
+            const roleMap = new Map();
+            defaultRolesResult.rows.forEach((r: any) => roleMap.set(r.name, r.id));
+            const userVisitorId = roleMap.get('User Visitor');
+            const adminOrgchartId = roleMap.get('Admin Orgchart');
+            
+            if (userVisitorId && !app_role_ids.includes(userVisitorId)) {
+                app_role_ids.push(userVisitorId);
+                updatedRoles = true;
+            }
+            if ((department === 'IDM Control' || department === 'Management' || existingUser.department === 'IDM Control' || existingUser.department === 'Management') && adminOrgchartId && !app_role_ids.includes(adminOrgchartId)) {
+                app_role_ids.push(adminOrgchartId);
+                updatedRoles = true;
+            }
+            
             // Update the existing user with new details if they are available from Graph API
-            if (jobTitle || department || location) {
+            if (jobTitle || department || location || updatedRoles) {
               await pool.query(
-                "UPDATE users SET job_title = COALESCE($1, job_title), department = COALESCE($2, department), location = COALESCE($3, location) WHERE id = $4",
-                [jobTitle, department, location, existingUser.id]
+                "UPDATE users SET job_title = COALESCE($1, job_title), department = COALESCE($2, department), location = COALESCE($3, location), app_role_ids = $4 WHERE id = $5",
+                [jobTitle, department, location, app_role_ids, existingUser.id]
               );
             }
 
