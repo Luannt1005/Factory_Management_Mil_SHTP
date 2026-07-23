@@ -238,8 +238,8 @@ export const authOptions: NextAuthOptions = {
               let app_role_names: string[] = [];
               if (token.app_role_ids && (token.app_role_ids as string[]).length > 0) {
                  const rolesRes = await pool.query(
-                   "SELECT name, permissions FROM app_roles WHERE id = ANY($1::int[])", 
-                   [(token.app_role_ids as string[]).map(Number)]
+                   "SELECT name, permissions FROM app_roles WHERE id = ANY($1::uuid[])", 
+                   [token.app_role_ids]
                  );
                  rolesRes.rows.forEach(r => {
                    if (r.name) app_role_names.push(r.name);
