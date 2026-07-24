@@ -20,6 +20,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Global admin always has access
+  if (token.role === "admin") {
+    return NextResponse.next();
+  }
+
+  const { pathname } = request.nextUrl;
+
+  // Unrestricted paths (everyone logged in can access)
+  const unrestrictedPaths = ['/', '/introduction', '/profile', '/access-denied'];
+  if (unrestrictedPaths.some(p => pathname === p || pathname.startsWith(p + '/'))) {
+    return NextResponse.next();
+  }
+
+  // Check RBAC from token
+  const allowedPages = (token.allowedPages as string[]) || [];
+  
+  // If the user's allowedPages array contains this pathname
+  // or if the pathname starts with any of the allowed pages
+  const isAllowed = allowedPages.some((p: string) => pathname === p || pathname.startsWith(p + '/'));
+
+  if (!isAllowed) {
+    // Redirect to an access denied page or home page
+    const url = new URL("/access-denied", request.url);
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 }
 
