@@ -12,6 +12,7 @@ interface User {
     visitor_role: string;
     image?: string;
     app_role_names?: string[];
+    allowedPages?: string[];
 }
 
 interface UserContextProps {
@@ -37,6 +38,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
                 visitor_role: (session.user as any).visitor_role || "user",
                 image: session.user.image || undefined,
                 app_role_names: (session.user as any).app_role_names || [],
+                allowedPages: (session.user as any).allowedPages || [],
             };
             setUser(nextUser);
             localStorage.setItem('user', JSON.stringify(nextUser));
