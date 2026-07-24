@@ -160,7 +160,7 @@ export default function Sidebar() {
     })
     .filter((group) => group.items.length > 0);
 
-  if (["/login", "/signup", "/profile", "/systemadmin"].includes(pathname)) {
+  if (["/login", "/signup"].includes(pathname)) {
     return null;
   }
 
