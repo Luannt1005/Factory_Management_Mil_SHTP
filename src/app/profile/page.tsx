@@ -184,12 +184,13 @@ export default function ProfilePage() {
                         <form onSubmit={handleProfileUpdate} className="rounded-xl bg-[var(--color-bg-card)] p-6 shadow-sm border border-[var(--color-border-light)]">
                             <div className="mb-6 flex items-center justify-between">
                                 <h2 className="text-lg font-semibold text-[var(--color-text-title)]">General Information</h2>
-                                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium 
-                                    ${profile.role === 'admin'
-                                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}`}>
-                                    {profile.role?.toUpperCase() || 'USER'}
-                                </span>
+                                <div className="flex gap-2 flex-wrap">
+                                    {(user?.app_role_names?.length ? user.app_role_names : ['USER']).map((r, idx) => (
+                                        <span key={idx} className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                            {r.toUpperCase()}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="grid gap-6">
@@ -208,11 +209,11 @@ export default function ProfilePage() {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-[var(--color-text-body)] flex items-center gap-2">
-                                            Role
+                                            Assigned Roles
                                         </label>
                                         <input
                                             type="text"
-                                            value={profile.role?.toUpperCase()}
+                                            value={user?.app_role_names?.join(', ') || 'No roles assigned'}
                                             disabled
                                             className="w-full cursor-not-allowed rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] px-4 py-2 text-[var(--color-text-muted)]"
                                         />
