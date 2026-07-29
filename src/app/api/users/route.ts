@@ -54,7 +54,7 @@ export async function POST(req: Request) {
 
         const result = await pool.query(
             "INSERT INTO users (username, full_name, password, role, orgchart_role, visitor_role, employee_id, email, status, department, job_title, location, app_role_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *",
-            [username, full_name, password, role || 'user', orgchart_role || 'user', visitor_role || 'user', employee_id || null, email || null, status || 'Active', department || null, job_title || null, location || null, app_role_ids || []]
+            [username, full_name, password, role || 'user', orgchart_role || 'user', visitor_role || 'user', employee_id || null, email || '', status || 'Active', department || null, job_title || null, location || null, app_role_ids || []]
         );
 
         return NextResponse.json({
@@ -90,7 +90,7 @@ export async function PUT(req: Request) {
         const pool = await getDbConnection();
 
         let query = "UPDATE users SET full_name = $1, role = $2, orgchart_role = $3, visitor_role = $4, employee_id = $5, email = $6, status = $7, department = $8, job_title = $9, location = $10, app_role_ids = $11";
-        const values: any[] = [full_name, role, orgchart_role, visitor_role, employee_id || null, email || null, status || 'Active', department || null, job_title || null, location || null, app_role_ids || []];
+        const values: any[] = [full_name, role, orgchart_role, visitor_role, employee_id || null, email || '', status || 'Active', department || null, job_title || null, location || null, app_role_ids || []];
 
         if (password && password.trim() !== "") {
             query += ", password = $12 WHERE id = $13";

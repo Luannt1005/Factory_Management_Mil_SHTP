@@ -39,11 +39,13 @@ export async function GET(request: Request) {
         const visitorsYesterday = parseInt(yesterdayRes.rows[0]?.count || 0);
         const visitorsTodayGrowth = visitorsYesterday === 0 ? 100 : Math.round(((visitorsToday - visitorsYesterday) / visitorsYesterday) * 100);
 
-        // Currently Present (Keep relying on CheckInOut for accuracy)
+        // Currently Present (Keep relying on CheckInOut for accuracy, but ensure request exists)
         const presentRes = await visitorPool.query(`
             SELECT COUNT(*) as count 
-            FROM "VisitorCheckInOut" 
-            WHERE status = 'CHECKED_IN'
+            FROM "VisitorCheckInOut" c
+            LEFT JOIN "VisitorRequest" vr ON c."requestId" = vr.id
+            LEFT JOIN "IntervieweeRequest" ir ON c."requestId" = ir.id::text
+            WHERE c.status = 'CHECKED_IN' AND (vr.id IS NOT NULL OR ir.id IS NOT NULL)
         `);
         const currentlyPresent = parseInt(presentRes.rows[0]?.count || 0);
 

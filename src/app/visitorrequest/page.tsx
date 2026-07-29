@@ -22,6 +22,14 @@ const Input = (props: any) => (
         style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', color: '#1e293b', outline: 'none' }}
         onFocus={(e) => e.target.style.borderColor = '#db011c'}
         onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+        onClick={(e) => {
+            if (props.type === 'date' || props.type === 'time') {
+                try {
+                    (e.target as any).showPicker();
+                } catch (err) {}
+            }
+            if (props.onClick) props.onClick(e);
+        }}
     />
 );
 
@@ -143,7 +151,11 @@ export default function NewRequestPage() {
                     startTime: '',
                     interviewArea: ''
                 });
-                setActiveTab('dashboard');
+                if (formData.visitorCategory === 'Interviewee') {
+                    router.push('/visitordashboard?tab=interviewee');
+                } else {
+                    router.push('/visitordashboard?tab=general');
+                }
             } else {
                 const error = await res.json();
                 alert(`Lỗi: ${error.error}`);

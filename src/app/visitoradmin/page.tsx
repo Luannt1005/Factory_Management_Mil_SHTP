@@ -292,7 +292,9 @@ export default function AdminDashboard() {
                                         />
                                     </th>
                                     <th className="px-3 py-2">Code</th>
-                                    <th className="px-3 py-2">Visitor Info</th>
+                                    <th className="px-3 py-2">Visitor Name</th>
+                                    <th className="px-3 py-2">Company</th>
+                                    <th className="px-3 py-2">Title</th>
                                     <th className="px-3 py-2">Category</th>
                                     <th className="px-3 py-2">Submitter</th>
                                     <th className="px-3 py-2 text-center">Start Date</th>
@@ -316,8 +318,9 @@ export default function AdminDashboard() {
                                         />
                                     </th>
                                     <th className="px-3 py-2">Code</th>
-                                    <th className="px-3 py-2">Interviewee Info</th>
-                                    <th className="px-3 py-2">Interview Details</th>
+                                    <th className="px-3 py-2">Interviewee Name</th>
+                                    <th className="px-3 py-2">Job Title</th>
+                                    <th className="px-3 py-2">Interviewer</th>
                                     <th className="px-3 py-2 text-center">Start Date</th>
                                     <th className="px-3 py-2 text-center">Start Time</th>
                                     <th className="px-3 py-2 text-center">Area</th>
@@ -359,14 +362,18 @@ export default function AdminDashboard() {
                                                     return '';
                                                 })()}
                                             </div>
-                                            <div className="text-[10px] text-gray-500 mt-0.5 tracking-tight truncate max-w-[120px]">{request.current_company} / {request.visitor_title}</div>
+                                        </td>
+                                        <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
+                                            {request.current_company || '-'}
+                                        </td>
+                                        <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
+                                            {request.visitor_title || '-'}
                                         </td>
                                         <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
                                             {request.visitor_category}
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-bold text-[#0f172a] truncate max-w-[120px]">{request.profiles?.name}</div>
-                                            <div className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[120px]">{request.profiles?.department}</div>
                                         </td>
                                         <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
                                             {new Date(request.start_date).toLocaleDateString('vi-VN')}
@@ -478,16 +485,13 @@ export default function AdminDashboard() {
                                             <div className="font-extrabold text-[#0f172a] truncate max-w-[150px]">
                                                 {request.interviewee_name}
                                             </div>
-                                            <div className="text-[10px] text-gray-500 mt-0.5 tracking-tight truncate max-w-[150px]">
-                                                {request.job_title}
-                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
+                                            {request.job_title || '-'}
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-bold text-[#0f172a] text-[11px] truncate max-w-[120px]">
-                                                Dept: {request.interview_department}
-                                            </div>
-                                            <div className="text-[10px] text-gray-500 mt-0.5 tracking-tight truncate max-w-[120px]">
-                                                By: {request.interviewer_name}
+                                                {request.interviewer_name || '-'}
                                             </div>
                                         </td>
                                         <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
@@ -632,16 +636,17 @@ export default function AdminDashboard() {
                                 {activeTab === 'general' ? (
                                     <>
                                         {/* Visitors List */}
-                                        <div className="flex flex-col gap-3 mb-8">
+                                        <div className="flex flex-col gap-1.5 mb-8">
                                             {visitorsList.map((v: any, i: number) => (
-                                                <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50/50 px-5 py-4 rounded-xl border border-gray-100 transition-colors hover:bg-gray-50">
+                                                <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 bg-gray-50/50 px-4 py-2 rounded-lg border border-gray-100 transition-colors hover:bg-gray-50">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
                                                         <h3 className="text-sm font-extrabold text-[#0f172a] truncate">{v.name || 'Unnamed'}</h3>
                                                     </div>
-                                                    <p className="text-xs text-gray-500 font-medium truncate sm:text-right ml-5 sm:ml-0">
-                                                        {v.title ? `${v.title} @ ` : ''}{v.company || 'N/A'}
-                                                    </p>
+                                                    <div className="flex flex-col text-[11px] text-gray-500 font-medium sm:text-right ml-5 sm:ml-0 gap-0.5">
+                                                        <span className="truncate max-w-[200px]"><span className="text-gray-400 font-normal">Title:</span> <span className="text-gray-700">{v.title || 'N/A'}</span></span>
+                                                        <span className="truncate max-w-[200px]"><span className="text-gray-400 font-normal">Company:</span> <span className="text-gray-700">{v.company || 'N/A'}</span></span>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>

@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         const { rows: intervieweeRequests } = await visitorPool.query(
             `INSERT INTO "IntervieweeRequest" 
              ("visitorCode", "osName", "intervieweeName", "jobTitle", "interviewDepartment", "interviewerName", "startDate", "startTime", "interviewArea", status, "updatedAt")
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'IN PROCESS', NOW())
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'COMPLETE', NOW())
              RETURNING id`,
             [newVisitorCode, osName, intervieweeName, jobTitle, interviewDepartment, interviewerName, new Date(startDate), startTime, interviewArea]
         );

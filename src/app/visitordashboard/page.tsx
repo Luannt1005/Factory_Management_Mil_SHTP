@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon, CalendarDaysIcon, DocumentTextIcon, UserGroupIcon, MapPinIcon, CurrencyDollarIcon, BuildingOfficeIcon, IdentificationIcon, TagIcon, ClockIcon, CheckCircleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useSession } from 'next-auth/react';
 
-export default function Dashboard() {
+import { Suspense } from 'react';
+
+function DashboardContent() {
     const { data: session } = useSession();
     const isHrVisitor = (session?.user as any)?.app_role_names?.includes('Hr Visitor') || (session?.user as any)?.role === 'admin';
     const [requests, setRequests] = useState<any[]>([]);
@@ -16,40 +18,68 @@ export default function Dashboard() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
+    const [editingInterviewee, setEditingInterviewee] = useState<any>(null);
+    const [editFormData, setEditFormData] = useState<any>({});
+    const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
     const [mounted, setMounted] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const tabParam = searchParams.get('tab');
+    
+    // Set initial activeTab based on searchParams, but only once on mount
+    useEffect(() => {
+        if (tabParam === 'interviewee') {
+            setActiveTab('interviewee');
+        } else if (tabParam === 'general') {
+            setActiveTab('general');
+        }
+    }, [tabParam]);
 
     useEffect(() => {
         setMounted(true);
-        fetchMyRequests(1);
+        fetchMyRequests(1, activeTab);
     }, [startDate, endDate, activeTab]);
 
-    const setPageToOneAndFetch = () => {
+    const resetPage = () => {
         setPagination(prev => ({ ...prev, page: 1 }));
-        fetchMyRequests(1);
     };
 
-    const fetchMyRequests = async (page: number) => {
+    const abortControllerRef = useRef<AbortController | null>(null);
+
+    const fetchMyRequests = async (page: number, tabOverride?: string) => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+        const { signal } = abortControllerRef.current;
+
         setLoading(true);
         try {
-            const apiEndpoint = activeTab === 'general' ? '/api/requests' : '/api/interviewee_requests/my';
+            const currentTab = tabOverride || activeTab;
+            const apiEndpoint = currentTab === 'general' ? '/api/requests' : '/api/interviewee_requests/my';
             let url = `${apiEndpoint}?page=${page}&limit=${pagination.limit}`;
             if (startDate && endDate) {
                 url += `&startDate=${startDate}&endDate=${endDate}`;
             }
-            const res = await fetch(url);
+            const res = await fetch(url, { signal });
             if (res.ok) {
                 const data = await res.json();
-                setRequests(data.requests);
-                setPagination(data.pagination);
-            } else if (res.status === 401) {
+                if (!signal.aborted) {
+                    setRequests(data.requests);
+                    setPagination(data.pagination);
+                }
+            } else if (res.status === 401 && !signal.aborted) {
                 router.push('/login?redirect=' + window.location.pathname);
             }
-        } catch (err) {
+        } catch (err: any) {
+            if (err.name === 'AbortError') return;
             console.error(err);
         } finally {
-            setLoading(false);
+            // Only stop loading if we haven't started a new request
+            if (!signal.aborted) {
+                setLoading(false);
+            }
         }
     };
 
@@ -73,12 +103,49 @@ export default function Dashboard() {
         }
     };
 
+    useEffect(() => {
+        if (editingInterviewee) {
+            setEditFormData({
+                intervieweeName: editingInterviewee.interviewee_name || '',
+                jobTitle: editingInterviewee.job_title || '',
+                interviewDepartment: editingInterviewee.interview_department || '',
+                interviewerName: editingInterviewee.interviewer_name || '',
+                startDate: editingInterviewee.start_date ? new Date(editingInterviewee.start_date).toISOString().split('T')[0] : '',
+                startTime: editingInterviewee.start_time || '',
+                interviewArea: editingInterviewee.interview_area || '',
+            });
+        }
+    }, [editingInterviewee]);
+
+    const submitEditInterviewee = async () => {
+        setSaving(true);
+        try {
+            const res = await fetch(`/api/interviewee_requests/${editingInterviewee.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editFormData),
+            });
+            if (res.ok) {
+                alert('Request updated successfully!');
+                setEditingInterviewee(null);
+                fetchMyRequests(pagination.page);
+            } else {
+                const data = await res.json();
+                alert(`Error: ${data.error}`);
+            }
+        } catch (e) {
+            alert('Internal server error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-6">
             {/* TABS */}
             <div className="flex bg-white/50 backdrop-blur-sm p-1 rounded-xl border border-gray-200 shadow-sm w-fit">
                 <button
-                    onClick={() => { setActiveTab('general'); setPageToOneAndFetch(); }}
+                    onClick={() => { setActiveTab('general'); resetPage(); }}
                     className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'general'
                         ? 'bg-white text-[#db011c] shadow-sm ring-1 ring-gray-200/50'
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
@@ -93,7 +160,7 @@ export default function Dashboard() {
                             return;
                         }
                         setActiveTab('interviewee'); 
-                        setPageToOneAndFetch(); 
+                        resetPage(); 
                     }}
                     className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'interviewee'
                         ? 'bg-white text-[#db011c] shadow-sm ring-1 ring-gray-200/50'
@@ -161,7 +228,6 @@ export default function Dashboard() {
                                     <th className="px-6 py-4 text-center">Schedule Date</th>
                                     <th className="px-6 py-4 text-center">Schedule Time</th>
                                     <th className="px-6 py-4 text-center">Area</th>
-                                    <th className="px-6 py-4 text-center">Overall Status</th>
                                     <th className="px-6 py-4 text-right pr-10">Details</th>
                                 </tr>
                             )}
@@ -263,19 +329,23 @@ export default function Dashboard() {
                                     <td className="px-6 py-5 text-center text-[11px] text-gray-600">
                                         {request.interview_area}
                                     </td>
-                                    <td className="px-6 py-5 text-center">
-                                        <span className="inline-block px-3 py-1 rounded-md text-[10px] font-black tracking-tighter uppercase" style={{
-                                            background: getStatusColor(request.status) + '15',
-                                            color: getStatusColor(request.status),
-                                            border: `1px solid ${getStatusColor(request.status)}30`
-                                        }}>
-                                            {request.status}
-                                        </span>
-                                    </td>
                                     <td className="px-6 py-5 text-right pr-8">
-                                        <button className="text-[11px] font-black text-[#db011c] uppercase tracking-tighter hover:underline">
-                                            View Details &rarr;
-                                        </button>
+                                        <div className="flex gap-4 justify-end">
+                                            {(!request.edit_count || request.edit_count < 3) && (
+                                                <button 
+                                                    className="text-[11px] font-black text-amber-600 uppercase tracking-tighter hover:underline"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingInterviewee(request);
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            )}
+                                            <button className="text-[11px] font-black text-[#db011c] uppercase tracking-tighter hover:underline">
+                                                View Details &rarr;
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -485,6 +555,90 @@ export default function Dashboard() {
                 );
             })(), document.body)}
 
+            {mounted && editingInterviewee && createPortal((
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setEditingInterviewee(null)}></div>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 max-h-[90vh] flex flex-col overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <h2 className="text-xl font-black text-[#0f172a] uppercase tracking-tight">Edit Interviewee Request</h2>
+                            <button onClick={() => setEditingInterviewee(null)} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <div className="p-8 overflow-y-auto custom-scrollbar">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <InputLabel required>Interviewee Name</InputLabel>
+                                    <Input required value={editFormData.intervieweeName || ''} onChange={(e: any) => setEditFormData({...editFormData, intervieweeName: e.target.value})} placeholder="e.g. Nguyen Van A" />
+                                </div>
+                                <div>
+                                    <InputLabel required>Job Title</InputLabel>
+                                    <Input required value={editFormData.jobTitle || ''} onChange={(e: any) => setEditFormData({...editFormData, jobTitle: e.target.value})} placeholder="e.g. Software Engineer" />
+                                </div>
+                                <div>
+                                    <InputLabel required>Interview Department</InputLabel>
+                                    <Input required value={editFormData.interviewDepartment || ''} onChange={(e: any) => setEditFormData({...editFormData, interviewDepartment: e.target.value})} placeholder="e.g. IT Department" />
+                                </div>
+                                <div>
+                                    <InputLabel required>Interviewer Name</InputLabel>
+                                    <Input required value={editFormData.interviewerName || ''} onChange={(e: any) => setEditFormData({...editFormData, interviewerName: e.target.value})} placeholder="e.g. Tran Thi B" />
+                                </div>
+                                <div>
+                                    <InputLabel required>Schedule Date</InputLabel>
+                                    <Input required type="date" value={editFormData.startDate || ''} onChange={(e: any) => setEditFormData({...editFormData, startDate: e.target.value})} />
+                                </div>
+                                <div>
+                                    <InputLabel required>Schedule Time</InputLabel>
+                                    <Input required type="time" value={editFormData.startTime || ''} onChange={(e: any) => setEditFormData({...editFormData, startTime: e.target.value})} />
+                                </div>
+                                <div className="col-span-2">
+                                    <InputLabel required>Interview Area</InputLabel>
+                                    <Input required value={editFormData.interviewArea || ''} onChange={(e: any) => setEditFormData({...editFormData, interviewArea: e.target.value})} placeholder="e.g. Meeting Room 1" />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-4">
+                            <button onClick={() => setEditingInterviewee(null)} className="px-6 py-2 rounded-lg font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                            <button onClick={submitEditInterviewee} disabled={saving} className="px-6 py-2 rounded-lg font-bold text-white bg-[#db011c] hover:bg-[#b00116] shadow-md transition-colors disabled:opacity-50">
+                                {saving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ), document.body)}
+
         </div>
     );
 }
+
+export default function Dashboard() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Dashboard...</div>}>
+            <DashboardContent />
+        </Suspense>
+    );
+}
+
+const Input = (props: any) => (
+    <input 
+        {...props} 
+        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', color: '#1e293b', outline: 'none' }}
+        onFocus={(e) => e.target.style.borderColor = '#db011c'}
+        onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+        onClick={(e) => {
+            if (props.type === 'date' || props.type === 'time') {
+                try {
+                    (e.target as any).showPicker();
+                } catch (err) {}
+            }
+            if (props.onClick) props.onClick(e);
+        }}
+    />
+);
+
+const InputLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
+    <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', marginTop: '8px' }}>
+        {children}
+        {required && <span style={{ color: '#db011c', marginLeft: '4px' }}>*</span>}
+    </label>
+);

@@ -50,6 +50,7 @@ export async function GET(request: Request) {
                 r."startTime" as start_time,
                 r."interviewArea" as interview_area,
                 r.status,
+                r."editCount" as edit_count,
                 r."createdAt" as created_at
             FROM "IntervieweeRequest" r
             ${whereClause}

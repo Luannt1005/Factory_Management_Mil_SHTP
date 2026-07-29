@@ -9,6 +9,10 @@ import {
 export default function VisitorAnalytics() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [dateFilter, setDateFilter] = useState('today');
+    const [buFilter, setBuFilter] = useState('all');
+    const [departmentFilter, setDepartmentFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -50,7 +54,7 @@ export default function VisitorAnalytics() {
     };
 
     const StatCard = ({ id, icon, title, value, growth, unit, subtitle }: any) => (
-        <div className="bg-white rounded border border-gray-200 p-4 shadow-sm flex flex-col relative overflow-hidden h-[120px] justify-between">
+        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col relative overflow-hidden h-[120px] justify-between transition-shadow hover:shadow-md">
             <div className="flex justify-between items-start">
                 <div className="text-[10px] text-gray-400 font-bold uppercase">{id}</div>
                 <div className="text-[#db011c]">{icon}</div>
@@ -72,8 +76,53 @@ export default function VisitorAnalytics() {
     const COLORS = ['#db011c', '#2b2b2b'];
 
     return (
-        <div className="w-full pb-10 px-6 bg-[#f4f6f9] min-h-screen pt-6 font-sans">
+        <div className="w-full pb-10 px-4 sm:px-6 bg-transparent min-h-screen pt-4 font-sans">
             
+            {/* Filters Row */}
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Bộ lọc:</span>
+                <select 
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                >
+                    <option value="today">Hôm nay</option>
+                    <option value="week">Tuần này</option>
+                    <option value="month">Tháng này</option>
+                    <option value="year">Năm nay</option>
+                </select>
+                <select 
+                    value={buFilter}
+                    onChange={(e) => setBuFilter(e.target.value)}
+                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                >
+                    <option value="all">Tất cả BU</option>
+                    {buDistribution?.map((b: any) => (
+                        <option key={b.name} value={b.name}>{b.name === 'MIL' ? 'Milwaukee (MIL)' : b.name === 'SF' ? 'Smart Factory (SF)' : b.name}</option>
+                    ))}
+                </select>
+                <select 
+                    value={departmentFilter}
+                    onChange={(e) => setDepartmentFilter(e.target.value)}
+                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                >
+                    <option value="all">Tất cả phòng ban</option>
+                    {departmentData?.map((d: any) => (
+                        <option key={d.name} value={d.name}>{d.name}</option>
+                    ))}
+                </select>
+                <select 
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                >
+                    <option value="all">Tất cả loại khách</option>
+                    {categoryData?.map((c: any) => (
+                        <option key={c.name} value={c.name}>{c.name}</option>
+                    ))}
+                </select>
+            </div>
+
             {/* ROW 1: Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <StatCard 
@@ -113,7 +162,7 @@ export default function VisitorAnalytics() {
 
             {/* ROW 2: Trends and Donut */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-                <div className="lg:col-span-2 bg-white rounded border border-gray-200 p-5 shadow-sm">
+                <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">LƯỢT KHÁCH THEO THỜI GIAN</div>
@@ -143,7 +192,7 @@ export default function VisitorAnalytics() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded border border-gray-200 p-5 shadow-sm flex flex-col">
+                <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm flex flex-col">
                     <div>
                         <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">PHÂN BỔ THEO BU</div>
                         <h3 className="text-sm font-black text-gray-900 uppercase">MIL & SF</h3>
@@ -181,7 +230,7 @@ export default function VisitorAnalytics() {
             </div>
 
             {/* ROW 3: Periodic Report */}
-            <div className="bg-white rounded border border-gray-200 p-5 shadow-sm mb-4">
+            <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm mb-4">
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">BÁO CÁO ĐỊNH KỲ</div>
@@ -215,7 +264,7 @@ export default function VisitorAnalytics() {
             </div>
 
             {/* ROW 4: Category Distribution */}
-            <div className="bg-white rounded border border-gray-200 p-5 shadow-sm mb-4">
+            <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm mb-4">
                 <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">BÁO CÁO THEO LOẠI KHÁCH</div>
                 <h3 className="text-sm font-black text-gray-900 uppercase mb-6">Vendor / Contractor / MIL-TTI Expat / Interviewee</h3>
                 
@@ -268,7 +317,7 @@ export default function VisitorAnalytics() {
 
             {/* ROW 5: Department & Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2 bg-white rounded border border-gray-200 p-5 shadow-sm">
+                <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
                     <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">BÁO CÁO THEO BỘ PHẬN</div>
                     <h3 className="text-sm font-black text-gray-900 uppercase mb-6">Lượt khách theo bộ phận (MIL / SF)</h3>
                     
@@ -313,7 +362,7 @@ export default function VisitorAnalytics() {
                     </table>
                 </div>
 
-                <div className="bg-white rounded border border-gray-200 p-5 shadow-sm overflow-hidden flex flex-col h-[500px]">
+                <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm overflow-hidden flex flex-col h-[500px]">
                     <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">ĐƠN ĐĂNG KÝ</div>
                     <h3 className="text-sm font-black text-[#db011c] uppercase flex items-center gap-2 mb-4">
                         Đơn mới đăng ký <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#db011c] opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-[#db011c]"></span></span>

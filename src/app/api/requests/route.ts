@@ -5,8 +5,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
 async function getOrCreateVisitorProfile(user: any, visitorPool: any) {
-    const email = user.username;
-    const name = user.full_name || user.username;
+    const email = formatEmail(user.email || user.username);
+    const name = user.name || user.full_name || user.email || user.username || 'Unknown User';
 
     const { rows: profiles } = await visitorPool.query(
         'SELECT id FROM "User" WHERE email = $1',
@@ -109,6 +109,7 @@ export async function POST(request: Request) {
             );
 
             // 1. Standard loop for each room (always run this)
+            const roomsPayload = [];
             for (const room of rooms) {
                 const { rows: approvalRows } = await visitorPool.query(
                     `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
@@ -119,35 +120,39 @@ export async function POST(request: Request) {
 
                 const approvalId = approvalRows[0].id;
 
-                // Trigger Power Automate per room (department-specific approval)
-                if (powerAutomateUrl) {
-                    try {
-                        await fetch(powerAutomateUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                record: {
-                                    approval_id: approvalId,
-                                    id: visitorRequestId,
-                                    approver_email: room.approverEmail,
-                                    room_name: room.name,
-                                    visitor_name: visitorName + (visitors && visitors.length > 1 ? ` (+ ${visitors.length - 1} others)` : ''),
-                                    visitorTitle: visitorTitle,
-                                    currentCompany: currentCompany,
-                                    startDate: startDate,
-                                    endDate: endDate,
-                                    purposeOfVisit: purposeOfVisit,
-                                    submitterName: session.user.name || (session.user as any).username,
-                                    visitorCategory: visitorCategory,
-                                    submitterEmail: formatEmail((session.user as any).username || session.user.email),
-                                    visitors_list: visitors
-                                }
-                            }),
-                        });
-                        console.log(`Power Automate triggered successfully for room: ${room.name} (${room.approverEmail})`);
-                    } catch (paError) {
-                        console.error(`Failed to trigger Power Automate for room ${room.name}:`, paError);
-                    }
+                roomsPayload.push({
+                    approval_id: approvalId,
+                    approver_email: room.approverEmail,
+                    room_name: room.name
+                });
+            }
+
+            // Trigger Power Automate ONCE with unified payload
+            if (powerAutomateUrl && roomsPayload.length > 0) {
+                try {
+                    await fetch(powerAutomateUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            requestDetails: {
+                                id: visitorRequestId,
+                                visitor_name: visitorName + (visitors && visitors.length > 1 ? ` (+ ${visitors.length - 1} others)` : ''),
+                                visitorTitle: visitorTitle,
+                                currentCompany: currentCompany,
+                                startDate: startDate,
+                                endDate: endDate,
+                                purposeOfVisit: purposeOfVisit,
+                                submitterName: session.user.name || (session.user as any).username,
+                                submitterEmail: formatEmail((session.user as any).username || session.user.email),
+                                visitorCategory: visitorCategory,
+                                visitors_list: visitors
+                            },
+                            rooms: roomsPayload
+                        }),
+                    });
+                    console.log(`Power Automate triggered successfully for unified room approval.`);
+                } catch (paError) {
+                    console.error(`Failed to trigger unified Power Automate:`, paError);
                 }
             }
 
@@ -213,12 +218,8 @@ export async function POST(request: Request) {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            record: {
-                                approval_id: approvalId,
+                            requestDetails: {
                                 id: visitorRequestId,
-                                record_type: 'approver_request',
-                                approver_email: submitterEmail, // Will be overridden in Power Automate by Supervisor's email
-                                room_name: `${visitorCategory} Approval (Supervisor)`,
                                 visitor_name: visitorName + (visitors && visitors.length > 1 ? ` (+ ${visitors.length - 1} others)` : ''),
                                 visitorTitle: visitorTitle,
                                 currentCompany: currentCompany,
@@ -229,7 +230,14 @@ export async function POST(request: Request) {
                                 visitorCategory: visitorCategory,
                                 submitterEmail: submitterEmail,
                                 visitors_list: visitors
-                            }
+                            },
+                            rooms: [
+                                {
+                                    approval_id: approvalId,
+                                    approver_email: submitterEmail,
+                                    room_name: `${visitorCategory} Approval (Supervisor)`
+                                }
+                            ]
                         }),
                     });
                     console.log(`Power Automate triggered successfully for supervisor approval: ${submitterEmail}`);
@@ -242,6 +250,7 @@ export async function POST(request: Request) {
         await visitorPool.query('COMMIT');
 
         // Trigger email notification webhook if configured
+        /*
         if (powerAutomateNotificationUrl) {
             try {
                 const paResponse = await fetch(powerAutomateNotificationUrl, {
@@ -268,6 +277,7 @@ export async function POST(request: Request) {
                 console.error('Failed to trigger notification webhook:', e);
             }
         }
+        */
 
         return NextResponse.json({ message: 'Request created successfully', id: visitorRequestId }, { status: 201 });
 
