@@ -146,20 +146,29 @@ function ConstructionTabs() {
 
 function QuickStats() {
   const stats = [
-    { value: "2,400+", label: "Factory employees" },
-    { value: "6", label: "Manufacturing lines" },
+    { value: "5,000+", label: "Factory employee" },
+    { value: "50+", label: "Manufacturing lines" },
     { value: "24/7", label: "Production operations" },
     { value: "ISO 9001", label: "Quality certified" },
+    { value: "GOLD", label: "LEED certified", isGold: true },
   ];
 
   return (
     <div className="w-full px-8 lg:px-24 py-12 bg-white">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {stats.map((stat, idx) => (
           <AnimatedSection key={idx} direction="up" delay={idx * 100}>
-            <div className="bg-white rounded-md shadow-sm border border-gray-100 border-t-4 border-t-[#db011c] p-6 flex flex-col justify-center h-full">
-              <h4 className="text-3xl font-black text-[#db011c] mb-2 uppercase tracking-tight">{stat.value}</h4>
+            <div className="bg-white rounded-md shadow-sm border border-gray-100 border-t-4 border-t-[#db011c] p-6 flex flex-col justify-center h-full relative overflow-hidden">
+              <h4 className={`text-3xl font-black mb-2 uppercase tracking-tight ${stat.isGold ? 'text-[#cfa03f]' : 'text-[#db011c]'}`}>
+                {stat.value}
+              </h4>
               <p className="text-gray-500 text-sm font-medium">{stat.label}</p>
+              
+              {stat.isGold && (
+                <div className="absolute top-4 right-4">
+                  <img src="/about_shtp/leed_gold_certificate.png" alt="LEED Gold" className="w-14 h-14 object-contain mix-blend-multiply" />
+                </div>
+              )}
             </div>
           </AnimatedSection>
         ))}
@@ -236,23 +245,23 @@ export default function SHTPLandingPage() {
       {/* 2. FACILITY OVERVIEW */}
       <Section className="py-24 md:py-32 border-b border-gray-200">
         <div className="w-full px-8 lg:px-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <AnimatedSection direction="up" className="flex flex-col justify-center text-left">
+          <div className="flex flex-col gap-16">
+            <AnimatedSection direction="up" className="flex flex-col justify-center text-center">
               <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-8">
-                01. FACILITY <br /><span className="text-[#db011c]">OVERVIEW</span>
+                01. FACILITY <span className="text-[#db011c]">OVERVIEW</span>
               </h2>
-              <p className="text-xl text-gray-700 leading-relaxed font-normal mb-12 max-w-2xl">
+              <p className="text-xl text-gray-700 leading-relaxed font-normal mb-12 max-w-4xl mx-auto">
                 Our state-of-the-art manufacturing campus in Saigon Hi-Tech Park is designed for innovation, optimal assembly, and world-class operations. The facility maximizes logistical flow and provides secure access for both heavy machinery and daily commuters.
               </p>
               
-              <div className="grid grid-cols-2 gap-8 border-t-4 border-[#212529] pt-12 max-w-2xl">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-8 border-t border-gray-200 pt-12 w-full max-w-6xl mx-auto">
                 {[
                   { label: "Location", value: "Saigon Hi-Tech Park" },
                   { label: "Levels", value: "6 Floors" },
                   { label: "Function", value: "Manufacturing & R&D" },
                   { label: "Status", value: "Operational" },
                 ].map((stat, idx) => (
-                  <div key={idx}>
+                  <div key={idx} className="text-center">
                     <p className="text-[#db011c] font-black uppercase tracking-widest text-xs mb-2">{stat.label}</p>
                     <p className="text-2xl font-black uppercase tracking-tight">{stat.value}</p>
                   </div>
@@ -260,8 +269,8 @@ export default function SHTPLandingPage() {
               </div>
             </AnimatedSection>
             
-            <AnimatedSection direction="up" delay={200} className="relative h-[500px] lg:h-[700px] w-full">
-              <img src="/about_shtp/1.Site Map.png" alt="Site Map" className="w-full h-full object-cover" />
+            <AnimatedSection direction="up" delay={200} className="w-full">
+              <img src="/about_shtp/1.Site Map.png" alt="Site Map" className="w-full h-auto object-contain" />
             </AnimatedSection>
           </div>
         </div>
@@ -409,14 +418,24 @@ export default function SHTPLandingPage() {
       </Section>
 
       {/* 6. VISITOR REGISTRATION */}
-      <SplitBlock 
-        badge="VISITOR PROCESS"
-        title="SEAMLESS ONLINE CHECK-IN"
-        desc="Identity verification, safety brief instruction flow, and secure registration designed to welcome our guests efficiently. Ensure you complete the required registration before arriving on site."
-        img="/about_shtp/9. Visitor Registration Process.png"
-        dark={false}
-        reverse={false}
-      />
+      <Section className="py-24 md:py-32 bg-white">
+        <div className="w-full px-8 lg:px-24">
+          <div className="flex flex-col gap-12">
+            <AnimatedSection direction="up" className="flex flex-col justify-center text-center">
+              <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-8">
+                05. VISITOR <span className="text-[#db011c]">PROCESS</span>
+              </h2>
+              <p className="text-xl text-gray-700 leading-relaxed font-normal max-w-4xl mx-auto">
+                Identity verification, safety brief instruction flow, and secure registration designed to welcome our guests efficiently. Ensure you complete the required registration before arriving on site.
+              </p>
+            </AnimatedSection>
+            
+            <AnimatedSection direction="up" delay={200} className="w-full">
+              <img src="/about_shtp/9. Visitor Registration Process.png" alt="Visitor Registration Process" className="w-full h-auto object-contain" />
+            </AnimatedSection>
+          </div>
+        </div>
+      </Section>
 
       <style dangerouslySetInnerHTML={{
         __html: `

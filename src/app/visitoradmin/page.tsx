@@ -399,7 +399,9 @@ export default function AdminDashboard() {
                                                             <div className="flex items-center justify-between gap-2">
                                                                 <span className="font-bold flex items-center gap-1">
                                                                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
-                                                                    <span className="truncate max-w-[80px]">{app.room_areas?.name || 'VP Approval'}</span>
+                                                                    <span className="truncate max-w-[80px]">
+                                                                        {app.room_areas?.name || (request.visitor_category !== 'MIL/TTI Expat / SHTP Business trip' ? 'Manager Approval' : 'VP Approval')}
+                                                                    </span>
                                                                 </span>
                                                             </div>
                                                             {app.status === 'PENDING' && app.approver_email && (

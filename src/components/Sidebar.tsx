@@ -126,9 +126,22 @@ export default function Sidebar() {
 
     const allowedPages = (user as any)?.allowedPages || [];
 
-    // Check if the user's allowedPages array contains this itemPath
+    // Map legacy permission strings to actual paths
+    const legacyMap: Record<string, string[]> = {
+      'manage:visitors': ['/visitoradmin'],
+      'view:visitors': ['/visitordashboard', '/visitorrequest']
+    };
+
+    const expandedAllowedPages = new Set(allowedPages);
+    allowedPages.forEach((p: string) => {
+      if (legacyMap[p]) {
+        legacyMap[p].forEach(mappedPath => expandedAllowedPages.add(mappedPath));
+      }
+    });
+
+    // Check if the user's expanded allowedPages array contains this itemPath
     // or if the itemPath starts with any of the allowed pages
-    return allowedPages.some((p: string) => itemPath === p || itemPath.startsWith(p + '/'));
+    return Array.from(expandedAllowedPages).some((p: any) => itemPath === p || itemPath.startsWith(p + '/'));
   };
 
   const getRenderItems = (items: NavItem[]): NavItem[] => {

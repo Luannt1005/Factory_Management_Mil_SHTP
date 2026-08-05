@@ -6,7 +6,7 @@ export default function ContactsPage() {
     // Operations Support Team data
     const operationsShtp = [
         { name: 'Winnie Nguyen Phuong Thuy', role: 'MFG/SCM', email: 'phuongthuy.nguyen@ttigroup.com.vn' },
-        { name: 'Prudence Le Nguyen Kim Anh', role: 'ENG(NPD/VE/PSE/TestLab)', email: 'nguyenkimanh.le@ttigroup.com.vn' },
+        { name: 'Phoebe Vong My Phung (VN.MIL-PT-MGT)', role: 'ENG(NPD/VE/PSE/TestLab)', email: 'myphung.vong@ttigroup.com.vn' },
         { name: 'Phoebe Vong My Phung', role: 'ENG(EE/MT)', email: 'myphung.vong@ttigroup.com.vn' },
         { name: 'Shally Le Thi Xuan Mai', role: 'QM', email: 'thixuanmai.le@ttigroup.com.vn' },
         { name: 'Le Yen Nhi', role: 'AME/Auto/Opex', email: 'yennhi.le@ttigroup.com.vn' },

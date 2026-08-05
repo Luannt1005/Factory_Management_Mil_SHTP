@@ -80,23 +80,23 @@ export default function VisitorAnalytics() {
             
             {/* Filters Row */}
             <div className="flex flex-wrap items-center gap-4 mb-4">
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Bộ lọc:</span>
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Filters:</span>
                 <select 
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
                     className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
                 >
-                    <option value="today">Hôm nay</option>
-                    <option value="week">Tuần này</option>
-                    <option value="month">Tháng này</option>
-                    <option value="year">Năm nay</option>
+                    <option value="today">Today</option>
+                    <option value="week">This week</option>
+                    <option value="month">This month</option>
+                    <option value="year">This year</option>
                 </select>
                 <select 
                     value={buFilter}
                     onChange={(e) => setBuFilter(e.target.value)}
                     className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
                 >
-                    <option value="all">Tất cả BU</option>
+                    <option value="all">All BUs</option>
                     {buDistribution?.map((b: any) => (
                         <option key={b.name} value={b.name}>{b.name === 'MIL' ? 'Milwaukee (MIL)' : b.name === 'SF' ? 'Smart Factory (SF)' : b.name}</option>
                     ))}
@@ -106,7 +106,7 @@ export default function VisitorAnalytics() {
                     onChange={(e) => setDepartmentFilter(e.target.value)}
                     className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
                 >
-                    <option value="all">Tất cả phòng ban</option>
+                    <option value="all">All Departments</option>
                     {departmentData?.map((d: any) => (
                         <option key={d.name} value={d.name}>{d.name}</option>
                     ))}
@@ -116,7 +116,7 @@ export default function VisitorAnalytics() {
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
                 >
-                    <option value="all">Tất cả loại khách</option>
+                    <option value="all">All Visitor Types</option>
                     {categoryData?.map((c: any) => (
                         <option key={c.name} value={c.name}>{c.name}</option>
                     ))}
@@ -127,35 +127,35 @@ export default function VisitorAnalytics() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <StatCard 
                     id="STAT-01" 
-                    title="Khách hôm nay" 
+                    title="Visitors Today" 
                     value={summary.visitorsToday} 
                     growth={summary.visitorsTodayGrowth} 
-                    subtitle="so với hôm qua"
+                    subtitle="vs yesterday"
                     icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>}
                 />
                 <StatCard 
                     id="STAT-02" 
-                    title="Đang có mặt" 
+                    title="Currently Present" 
                     value={summary.currentlyPresent} 
                     growth={0} 
-                    subtitle="trong khuôn viên"
+                    subtitle="on campus"
                     icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>}
                 />
                 <StatCard 
                     id="STAT-03" 
-                    title="Tổng lượt tuần này" 
+                    title="Total This Week" 
                     value={summary.totalThisWeek} 
                     growth={summary.weekGrowth} 
-                    subtitle="so với tuần trước"
+                    subtitle="vs last week"
                     icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>}
                 />
                 <StatCard 
                     id="STAT-04" 
-                    title="Thời gian lưu trú TB" 
+                    title="Avg. Stay Time" 
                     value={summary.avgStayMinutes} 
-                    unit="p"
+                    unit="m"
                     growth={summary.avgStayChange} 
-                    subtitle="so với tuần trước"
+                    subtitle="vs last week"
                     icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
                 />
             </div>
@@ -165,13 +165,13 @@ export default function VisitorAnalytics() {
                 <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
                     <div className="flex justify-between items-center mb-6">
                         <div>
-                            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">LƯỢT KHÁCH THEO THỜI GIAN</div>
-                            <h3 className="text-sm font-black text-gray-900 uppercase">Xu hướng lượt khách</h3>
+                            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">VISITORS OVER TIME</div>
+                            <h3 className="text-sm font-black text-gray-900 uppercase">Visitor Trends</h3>
                         </div>
                         <div className="flex bg-gray-100 p-1 rounded">
-                            <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">Ngày</button>
-                            <button className="px-3 py-1 text-xs font-bold text-white bg-[#db011c] rounded shadow-sm">Tuần</button>
-                            <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">Tháng</button>
+                            <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">Day</button>
+                            <button className="px-3 py-1 text-xs font-bold text-white bg-[#db011c] rounded shadow-sm">Week</button>
+                            <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">Month</button>
                         </div>
                     </div>
                     <div className="h-[200px] w-full">
@@ -194,7 +194,7 @@ export default function VisitorAnalytics() {
 
                 <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm flex flex-col">
                     <div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">PHÂN BỔ THEO BU</div>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">BU DISTRIBUTION</div>
                         <h3 className="text-sm font-black text-gray-900 uppercase">MIL & SF</h3>
                     </div>
                     <div className="flex-1 flex flex-col items-center justify-center relative -mt-4">
@@ -219,10 +219,10 @@ export default function VisitorAnalytics() {
                         </ResponsiveContainer>
                         <div className="flex items-center justify-center gap-6 mt-2 w-full">
                             <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                                <div className="w-2 h-2 bg-[#db011c]"></div> MIL — {buDistribution.find((b:any)=>b.name==='MIL')?.value || 0} lượt
+                                <div className="w-2 h-2 bg-[#db011c]"></div> MIL — {buDistribution.find((b:any)=>b.name==='MIL')?.value || 0} visits
                             </div>
                             <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                                <div className="w-2 h-2 bg-[#2b2b2b]"></div> SF — {buDistribution.find((b:any)=>b.name==='SF')?.value || 0} lượt
+                                <div className="w-2 h-2 bg-[#2b2b2b]"></div> SF — {buDistribution.find((b:any)=>b.name==='SF')?.value || 0} visits
                             </div>
                         </div>
                     </div>
@@ -233,13 +233,13 @@ export default function VisitorAnalytics() {
             <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm mb-4">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">BÁO CÁO ĐỊNH KỲ</div>
-                        <h3 className="text-sm font-black text-gray-900 uppercase">Báo cáo theo tuần / tháng / năm</h3>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">PERIODIC REPORT</div>
+                        <h3 className="text-sm font-black text-gray-900 uppercase">Report by week / month / year</h3>
                     </div>
                     <div className="flex bg-gray-100 p-1 rounded">
-                        <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">Theo tuần</button>
-                        <button className="px-3 py-1 text-xs font-bold text-white bg-[#db011c] rounded shadow-sm">Theo tháng</button>
-                        <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">Theo năm</button>
+                        <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">By week</button>
+                        <button className="px-3 py-1 text-xs font-bold text-white bg-[#db011c] rounded shadow-sm">By month</button>
+                        <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">By year</button>
                     </div>
                 </div>
                 <div className="flex items-end justify-between h-[180px] w-full px-4 pt-4 border-b border-gray-200 relative pb-6">
@@ -265,7 +265,7 @@ export default function VisitorAnalytics() {
 
             {/* ROW 4: Category Distribution */}
             <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm mb-4">
-                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">BÁO CÁO THEO LOẠI KHÁCH</div>
+                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">VISITOR CATEGORY REPORT</div>
                 <h3 className="text-sm font-black text-gray-900 uppercase mb-6">Vendor / Contractor / MIL-TTI Expat / Interviewee</h3>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
@@ -318,8 +318,8 @@ export default function VisitorAnalytics() {
             {/* ROW 5: Department & Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">BÁO CÁO THEO BỘ PHẬN</div>
-                    <h3 className="text-sm font-black text-gray-900 uppercase mb-6">Lượt khách theo bộ phận (MIL / SF)</h3>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">DEPARTMENT REPORT</div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase mb-6">Visits by department (MIL / SF)</h3>
                     
                     {/* Stacked Bars */}
                     <div className="mb-8">
@@ -343,10 +343,10 @@ export default function VisitorAnalytics() {
                     <table className="w-full text-xs text-center border-t border-gray-200">
                         <thead>
                             <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase tracking-wider">
-                                <th className="text-left py-3 w-1/3">BỘ PHẬN</th>
+                                <th className="text-left py-3 w-1/3">DEPARTMENT</th>
                                 <th className="py-3">MIL</th>
                                 <th className="py-3">SF</th>
-                                <th className="py-3 font-black text-gray-900">TỔNG</th>
+                                <th className="py-3 font-black text-gray-900">TOTAL</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -363,9 +363,9 @@ export default function VisitorAnalytics() {
                 </div>
 
                 <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm overflow-hidden flex flex-col h-[500px]">
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">ĐƠN ĐĂNG KÝ</div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">REGISTRATIONS</div>
                     <h3 className="text-sm font-black text-[#db011c] uppercase flex items-center gap-2 mb-4">
-                        Đơn mới đăng ký <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#db011c] opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-[#db011c]"></span></span>
+                        New Registrations <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#db011c] opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-[#db011c]"></span></span>
                     </h3>
                     <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 relative">
                         {/* Custom scrollbar styling in global css or here */}

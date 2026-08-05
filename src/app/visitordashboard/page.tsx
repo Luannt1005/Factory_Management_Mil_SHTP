@@ -17,6 +17,7 @@ function DashboardContent() {
     const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 0 });
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
     const [editingInterviewee, setEditingInterviewee] = useState<any>(null);
     const [editFormData, setEditFormData] = useState<any>({});
@@ -29,6 +30,7 @@ function DashboardContent() {
     
     // Set initial activeTab based on searchParams, but only once on mount
     useEffect(() => {
+        setMounted(true);
         if (tabParam === 'interviewee') {
             setActiveTab('interviewee');
         } else if (tabParam === 'general') {
@@ -37,9 +39,10 @@ function DashboardContent() {
     }, [tabParam]);
 
     useEffect(() => {
-        setMounted(true);
-        fetchMyRequests(1, activeTab);
-    }, [startDate, endDate, activeTab]);
+        if (session) {
+            fetchMyRequests(pagination.page);
+        }
+    }, [pagination.page, startDate, endDate, activeTab, session]);
 
     const resetPage = () => {
         setPagination(prev => ({ ...prev, page: 1 }));
@@ -61,6 +64,9 @@ function DashboardContent() {
             let url = `${apiEndpoint}?page=${page}&limit=${pagination.limit}`;
             if (startDate && endDate) {
                 url += `&startDate=${startDate}&endDate=${endDate}`;
+            }
+            if (searchTerm) {
+                url += `&search=${encodeURIComponent(searchTerm)}`;
             }
             const res = await fetch(url, { signal });
             if (res.ok) {
@@ -192,17 +198,34 @@ function DashboardContent() {
                             className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
                         />
                     </div>
-                    {(startDate || endDate) && (
+                    {(startDate || endDate || searchTerm) && (
                         <button
-                            onClick={() => { setStartDate(''); setEndDate(''); }}
+                            onClick={() => { setStartDate(''); setEndDate(''); setSearchTerm(''); fetchMyRequests(1); }}
                             className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4"
                         >
                             Clear Filters
                         </button>
                     )}
                 </div>
+                
+                <div className="flex items-center gap-2">
+                    <input
+                        type="text"
+                        placeholder="Search code/Visitor/Company"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { resetPage(); fetchMyRequests(1); } }}
+                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 w-64 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
+                    />
+                    <button 
+                        onClick={() => { resetPage(); fetchMyRequests(1); }}
+                        className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors"
+                    >
+                        Search
+                    </button>
+                </div>
 
-                <div className="text-sm font-medium text-gray-500">
+                <div className="text-sm font-medium text-gray-500 w-full text-right mt-2 md:mt-0 md:w-auto">
                     Showing <span className="text-gray-900 font-bold">{requests.length}</span> of <span className="text-gray-900 font-bold">{pagination.total}</span> requests
                 </div>
             </div>
@@ -213,8 +236,9 @@ function DashboardContent() {
                         <thead>
                             {activeTab === 'general' ? (
                                 <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                                    <th className="px-6 py-4">Code</th>
+                                    <th className="px-6 py-4">Visitor request code</th>
                                     <th className="px-6 py-4">Visitor / Company</th>
+                                    <th className="px-6 py-4 text-center">Category</th>
                                     <th className="px-6 py-4 text-center">Visit Period</th>
                                     <th className="px-6 py-4 text-center">Workflows</th>
                                     <th className="px-6 py-4 text-center">Overall Status</th>
@@ -222,7 +246,7 @@ function DashboardContent() {
                                 </tr>
                             ) : (
                                 <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                                    <th className="px-6 py-4">Code</th>
+                                    <th className="px-6 py-4">Visitor request code</th>
                                     <th className="px-6 py-4">Interviewee</th>
                                     <th className="px-6 py-4">Department / Interviewer</th>
                                     <th className="px-6 py-4 text-center">Schedule Date</th>
@@ -258,6 +282,11 @@ function DashboardContent() {
                                             })()}
                                         </div>
                                         <div className="text-[11px] text-gray-500 mt-0.5 tracking-tight">{request.current_company} / {request.visitor_title}</div>
+                                    </td>
+                                    <td className="px-6 py-5 text-center">
+                                        <span className="text-[11px] font-bold text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                                            {request.visitor_category}
+                                        </span>
                                     </td>
                                     <td className="px-6 py-5 text-center text-gray-700 tabular-nums font-bold">
                                         {new Date(request.start_date).toLocaleDateString('vi-VN')} - {new Date(request.end_date).toLocaleDateString('vi-VN')}
@@ -338,8 +367,9 @@ function DashboardContent() {
                                                         e.stopPropagation();
                                                         setEditingInterviewee(request);
                                                     }}
+                                                    title={`You have ${3 - (request.edit_count || 0)} edit(s) remaining`}
                                                 >
-                                                    Edit
+                                                    Edit ({3 - (request.edit_count || 0)})
                                                 </button>
                                             )}
                                             <button className="text-[11px] font-black text-[#db011c] uppercase tracking-tighter hover:underline">

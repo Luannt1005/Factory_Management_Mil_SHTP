@@ -12,6 +12,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
+        const search = searchParams.get('search');
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
         const offset = (page - 1) * limit;
@@ -31,6 +32,12 @@ export async function GET(request: Request) {
             whereClause += ` AND r."startDate" >= $${paramCount+1} AND r."startDate" <= $${paramCount+2}`;
             queryParams.push(startDate, endDate);
             paramCount += 2;
+        }
+
+        if (search) {
+            whereClause += ` AND (r."visitorCode" ILIKE $${paramCount+1} OR r."intervieweeName" ILIKE $${paramCount+1})`;
+            queryParams.push(`%${search}%`);
+            paramCount++;
         }
 
         const countQuery = `SELECT COUNT(*) FROM "IntervieweeRequest" r ${whereClause}`;

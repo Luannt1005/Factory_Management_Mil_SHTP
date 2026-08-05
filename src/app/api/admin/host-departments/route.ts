@@ -15,12 +15,12 @@ export async function GET(request: Request) {
 
         const visitorPool = await getVisitorDbConnection();
         const query = showAll 
-            ? 'SELECT r.id, r.category, r.name, r.description, r."approverEmail" as approver_email, r."isActive" as is_active, c.site_location FROM "RoomArea" r LEFT JOIN "RoomCategory" c ON r.category = c.name ORDER BY r.category ASC'
-            : 'SELECT r.id, r.category, r.name, r.description, r."approverEmail" as approver_email, r."isActive" as is_active, c.site_location FROM "RoomArea" r LEFT JOIN "RoomCategory" c ON r.category = c.name WHERE r."isActive" = true ORDER BY r.category ASC';
+            ? 'SELECT id, functional_dept, functional_host_name, functional_host_email, department, department_host_name, department_host_email, is_active FROM "HostDepartment" ORDER BY functional_dept ASC, department ASC'
+            : 'SELECT id, functional_dept, functional_host_name, functional_host_email, department, department_host_name, department_host_email, is_active FROM "HostDepartment" WHERE is_active = true ORDER BY functional_dept ASC, department ASC';
             
-        const { rows: rooms } = await visitorPool.query(query);
+        const { rows: hostDepartments } = await visitorPool.query(query);
 
-        return NextResponse.json({ rooms }, { status: 200 });
+        return NextResponse.json({ hostDepartments }, { status: 200 });
     } catch (error) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -32,15 +32,19 @@ export async function POST(request: Request) {
         if (!(await hasPageAccess('/visitoradmin'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const body = await request.json();
-        const { category, name, description, approver_email } = body;
+        const { functional_dept, functional_host_name, functional_host_email, department, department_host_name, department_host_email } = body;
         
         const visitorPool = await getVisitorDbConnection();
         const { rows } = await visitorPool.query(
-            'INSERT INTO "RoomArea" (id, category, name, description, "approverEmail", "isActive", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, $4, true, NOW()) RETURNING id, category, name, description, "approverEmail" as approver_email, "isActive" as is_active',
-            [category, name, description, approver_email]
+            `INSERT INTO "HostDepartment" (
+                id, functional_dept, functional_host_name, functional_host_email, department, department_host_name, department_host_email, is_active, created_at, updated_at
+            ) VALUES (
+                gen_random_uuid(), $1, $2, $3, $4, $5, $6, true, NOW(), NOW()
+            ) RETURNING *`,
+            [functional_dept, functional_host_name, functional_host_email || null, department, department_host_name, department_host_email || null]
         );
 
-        return NextResponse.json({ message: 'Room created successfully', data: rows[0] }, { status: 201 });
+        return NextResponse.json({ message: 'Host Department created successfully', data: rows[0] }, { status: 201 });
     } catch (err: any) {
         return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
     }
@@ -52,15 +56,19 @@ export async function PATCH(request: Request) {
         if (!(await hasPageAccess('/visitoradmin'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const body = await request.json();
-        const { id, category, name, description, approver_email, is_active } = body;
+        const { id, functional_dept, functional_host_name, functional_host_email, department, department_host_name, department_host_email, is_active } = body;
         
         const visitorPool = await getVisitorDbConnection();
-        const { rows } = await visitorPool.query(
-            'UPDATE "RoomArea" SET category=COALESCE($1, category), name=COALESCE($2, name), description=COALESCE($3, description), "approverEmail"=$4, "isActive"=COALESCE($5, "isActive"), "updatedAt"=NOW() WHERE id=$6 RETURNING id, category, name, description, "approverEmail" as approver_email, "isActive" as is_active',
-            [category, name, description, approver_email, is_active, id]
+        await visitorPool.query(
+            `UPDATE "HostDepartment" 
+             SET functional_dept = $1, functional_host_name = $2, functional_host_email = $3, 
+                 department = $4, department_host_name = $5, department_host_email = $6, 
+                 is_active = $7, updated_at = NOW() 
+             WHERE id = $8`,
+            [functional_dept, functional_host_name, functional_host_email || null, department, department_host_name, department_host_email || null, is_active, id]
         );
 
-        return NextResponse.json({ message: 'Room updated successfully', data: rows[0] }, { status: 200 });
+        return NextResponse.json({ message: 'Host Department updated successfully' }, { status: 200 });
     } catch (err: any) {
         return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
     }
@@ -73,13 +81,13 @@ export async function DELETE(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
-        
-        if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+
+        if (!id) return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
 
         const visitorPool = await getVisitorDbConnection();
-        await visitorPool.query('DELETE FROM "RoomArea" WHERE id = $1', [id]);
+        await visitorPool.query('DELETE FROM "HostDepartment" WHERE id = $1', [id]);
 
-        return NextResponse.json({ message: 'Room deleted successfully' }, { status: 200 });
+        return NextResponse.json({ message: 'Host Department deleted successfully' }, { status: 200 });
     } catch (err: any) {
         return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
     }

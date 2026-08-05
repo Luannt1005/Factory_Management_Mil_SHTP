@@ -38,8 +38,15 @@ export async function POST(request: Request) {
         const {
             visitors, startDate, endDate,
             purposeOfVisit, visitorCategory, details, roomIds,
-            visitingSite, purposeDetail
+            visitingSite, purposeDetail, functionalDept, department
         } = body;
+
+        // Enhance details with host department info
+        const enhancedDetails = {
+            ...details,
+            functionalDept: functionalDept || null,
+            department: department || null
+        };
 
         const primaryVisitor = visitors && visitors.length > 0 ? visitors[0] : { name: '', title: '', company: '' };
         const visitorName = primaryVisitor.name;
@@ -88,7 +95,7 @@ export async function POST(request: Request) {
              (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt", "visitingSite", "purposeDetail", visitors)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'IN PROCESS', NOW(), $11, $12, $13)
              RETURNING id`,
-            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate), purposeOfVisit, visitorCategory, JSON.stringify(details), visitingSite, purposeDetail, JSON.stringify(visitors || [])]
+            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate), purposeOfVisit, visitorCategory, JSON.stringify(enhancedDetails), visitingSite, purposeDetail, JSON.stringify(visitors || [])]
         );
 
         const visitorRequestId = visitorRequests[0].id;
@@ -99,7 +106,7 @@ export async function POST(request: Request) {
         const powerAutomateNotificationUrl = process.env.POWER_AUTOMATE_EMAIL_NOTIFICATION_URL;
 
         if (isExpat && roomIds && roomIds.length > 0) {
-            const { rows: allRoomsCountRow } = await visitorPool.query('SELECT COUNT(*) FROM "RoomArea"');
+            const { rows: allRoomsCountRow } = await visitorPool.query('SELECT COUNT(*) FROM "RoomArea" WHERE "isActive" = true');
             const totalRooms = parseInt(allRoomsCountRow[0].count);
             const isVPApproval = (roomIds.length / totalRooms) > 0.6;
 
@@ -108,8 +115,51 @@ export async function POST(request: Request) {
                 [roomIds]
             );
 
-            // 1. Standard loop for each room (always run this)
             const roomsPayload = [];
+
+            // Add Host Department Approvals if selected
+            if (functionalDept && department) {
+                const { rows: hostDepts } = await visitorPool.query(
+                    'SELECT functional_host_email, department_host_email, functional_host_name, department_host_name FROM "HostDepartment" WHERE functional_dept = $1 AND department = $2 AND is_active = true LIMIT 1',
+                    [functionalDept, department]
+                );
+
+                if (hostDepts.length > 0) {
+                    const hostDept = hostDepts[0];
+                    
+                    // Functional Host Approval
+                    if (hostDept.functional_host_email) {
+                        const { rows: funcApprovalRows } = await visitorPool.query(
+                            `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
+                             VALUES (gen_random_uuid(), $1, NULL, $2, 'PENDING', NOW())
+                             RETURNING id`,
+                            [visitorRequestId, hostDept.functional_host_email]
+                        );
+                        roomsPayload.push({
+                            approval_id: funcApprovalRows[0].id,
+                            approver_email: hostDept.functional_host_email,
+                            room_name: `Host: ${functionalDept} (${hostDept.functional_host_name})`
+                        });
+                    }
+
+                    // Department Host Approval
+                    if (hostDept.department_host_email) {
+                        const { rows: deptApprovalRows } = await visitorPool.query(
+                            `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
+                             VALUES (gen_random_uuid(), $1, NULL, $2, 'PENDING', NOW())
+                             RETURNING id`,
+                            [visitorRequestId, hostDept.department_host_email]
+                        );
+                        roomsPayload.push({
+                            approval_id: deptApprovalRows[0].id,
+                            approver_email: hostDept.department_host_email,
+                            room_name: `Host: ${department} (${hostDept.department_host_name})`
+                        });
+                    }
+                }
+            }
+
+            // 1. Standard loop for each room (always run this)
             for (const room of rooms) {
                 const { rows: approvalRows } = await visitorPool.query(
                     `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
@@ -127,7 +177,7 @@ export async function POST(request: Request) {
                 });
             }
 
-            // Trigger Power Automate ONCE with unified payload
+            // Trigger Power Automate ONCE with payload containing rooms and VP variables
             if (powerAutomateUrl && roomsPayload.length > 0) {
                 try {
                     await fetch(powerAutomateUrl, {
@@ -145,7 +195,8 @@ export async function POST(request: Request) {
                                 submitterName: session.user.name || (session.user as any).username,
                                 submitterEmail: formatEmail((session.user as any).username || session.user.email),
                                 visitorCategory: visitorCategory,
-                                visitors_list: visitors
+                                visitors_list: visitors,
+                                is_vp_approval: (isVPApproval && rooms.length > 0) ? true : false
                             },
                             rooms: roomsPayload
                         }),
@@ -153,51 +204,6 @@ export async function POST(request: Request) {
                     console.log(`Power Automate triggered successfully for unified room approval.`);
                 } catch (paError) {
                     console.error(`Failed to trigger unified Power Automate:`, paError);
-                }
-            }
-
-            // 2. If >60%, ALSO trigger for VP Lee Hon Kay
-            if (isVPApproval && rooms.length > 0) {
-                const vpEmail = 'Luan.Nguyen@ttigroup.com.vn';
-                const { rows: approvalRows } = await visitorPool.query(
-                    `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
-                     VALUES (gen_random_uuid(), $1, $2, $3, 'PENDING', NOW())
-                     RETURNING id`,
-                    [visitorRequestId, null, vpEmail]
-                );
-
-                const approvalId = approvalRows[0].id;
-
-                if (powerAutomateVPUrl) {
-                    try {
-                        await fetch(powerAutomateVPUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                record: {
-                                    approval_id: approvalId,
-                                    id: visitorRequestId,
-                                    approver_email: vpEmail,
-                                    room_name: 'Multiple Rooms (>60%)',
-                                    visitor_name: visitorName + (visitors && visitors.length > 1 ? ` (+ ${visitors.length - 1} others)` : ''),
-                                    visitorTitle: visitorTitle,
-                                    currentCompany: currentCompany,
-                                    startDate: startDate,
-                                    endDate: endDate,
-                                    purposeOfVisit: purposeOfVisit,
-                                    submitterName: session.user.name || (session.user as any).username,
-                                    visitorCategory: visitorCategory,
-                                    submitterEmail: formatEmail((session.user as any).username || session.user.email),
-                                    visitors_list: visitors
-                                }
-                            }),
-                        });
-                        console.log(`Power Automate triggered successfully for VP: ${vpEmail}`);
-                    } catch (paError) {
-                        console.error(`Failed to trigger Power Automate for VP ${vpEmail}:`, paError);
-                    }
-                } else {
-                    console.log(`POWER_AUTOMATE_VP_APPROVAL_URL is not configured. VP email not sent.`);
                 }
             }
         } else if (!isExpat) {
@@ -296,6 +302,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
+        const search = searchParams.get('search');
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
         const offset = (page - 1) * limit;
@@ -311,6 +318,12 @@ export async function GET(request: Request) {
             whereClause += ` AND (r."startDate" <= $${paramCount+1} AND r."endDate" >= $${paramCount})`;
             queryParams.push(startDate, endDate);
             paramCount += 2;
+        }
+
+        if (search) {
+            whereClause += ` AND (r.id ILIKE $${paramCount} OR r."visitorName" ILIKE $${paramCount} OR r."currentCompany" ILIKE $${paramCount})`;
+            queryParams.push(`%${search}%`);
+            paramCount++;
         }
 
         // Get total count for pagination

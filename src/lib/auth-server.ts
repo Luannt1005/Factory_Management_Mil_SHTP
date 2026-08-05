@@ -54,7 +54,19 @@ export async function hasPageAccess(pagePath: string): Promise<boolean> {
     if (user.role === 'admin') return true;
     
     if (user.allowedPages && Array.isArray(user.allowedPages)) {
-        return user.allowedPages.some((p: string) => p === pagePath || p.startsWith(pagePath + '/'));
+        // Map legacy permission strings to actual paths
+        const legacyMap: Record<string, string[]> = {
+            'manage:visitors': ['/visitoradmin'],
+            'view:visitors': ['/visitordashboard', '/visitorrequest']
+        };
+
+        const expandedAllowedPages = new Set(user.allowedPages);
+        user.allowedPages.forEach((p: string) => {
+            if (legacyMap[p]) {
+                legacyMap[p].forEach(mappedPath => expandedAllowedPages.add(mappedPath));
+            }
+        });
+        return Array.from(expandedAllowedPages).some((p: any) => p === pagePath || p.startsWith(pagePath + '/'));
     }
     
     return false;

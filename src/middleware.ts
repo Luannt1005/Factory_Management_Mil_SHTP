@@ -36,9 +36,23 @@ export async function middleware(request: NextRequest) {
   // Check RBAC from token
   const allowedPages = (token.allowedPages as string[]) || [];
   
+  // Map legacy permission strings to actual paths
+  const legacyMap: Record<string, string[]> = {
+    'manage:visitors': ['/visitoradmin'],
+    'view:visitors': ['/visitordashboard', '/visitorrequest']
+  };
+
+  // Expand allowed pages with legacy mappings
+  const expandedAllowedPages = new Set(allowedPages);
+  allowedPages.forEach(p => {
+    if (legacyMap[p]) {
+      legacyMap[p].forEach(mappedPath => expandedAllowedPages.add(mappedPath));
+    }
+  });
+  
   // If the user's allowedPages array contains this pathname
   // or if the pathname starts with any of the allowed pages
-  const isAllowed = allowedPages.some((p: string) => pathname === p || pathname.startsWith(p + '/'));
+  const isAllowed = Array.from(expandedAllowedPages).some((p: string) => pathname === p || pathname.startsWith(p + '/'));
 
   if (!isAllowed) {
     // Redirect to an access denied page or home page

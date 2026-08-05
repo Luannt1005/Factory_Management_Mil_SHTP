@@ -48,6 +48,7 @@ export default function NewRequestPage() {
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'request' | 'dashboard'>('request');
     const [rooms, setRooms] = useState<any[]>([]);
+    const [hostDepartments, setHostDepartments] = useState<any[]>([]);
     const [step, setStep] = useState(1);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -76,7 +77,9 @@ export default function NewRequestPage() {
         interviewDepartment: '',
         interviewerName: '',
         startTime: '',
-        interviewArea: ''
+        interviewArea: '',
+        functionalDept: '',
+        department: ''
     });
 
     useEffect(() => {
@@ -91,7 +94,17 @@ export default function NewRequestPage() {
                 console.error("Failed to fetch rooms", err);
             }
         };
+        const fetchHostDepartments = async () => {
+            try {
+                const res = await fetch('/api/admin/host-departments?all=false');
+                if (res.ok) {
+                    const data = await res.json();
+                    setHostDepartments(data.hostDepartments);
+                }
+            } catch (err) {}
+        };
         fetchRooms();
+        fetchHostDepartments();
     }, []);
 
     useEffect(() => {
@@ -149,7 +162,9 @@ export default function NewRequestPage() {
                     interviewDepartment: '',
                     interviewerName: '',
                     startTime: '',
-                    interviewArea: ''
+                    interviewArea: '',
+                    functionalDept: '',
+                    department: ''
                 });
                 if (formData.visitorCategory === 'Interviewee') {
                     router.push('/visitordashboard?tab=interviewee');
@@ -279,6 +294,33 @@ export default function NewRequestPage() {
     };
 
     const isExpatCategory = formData.visitorCategory === 'MIL/TTI Expat / SHTP Business trip';
+
+    // Calculate date limits
+    const today = new Date();
+    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    
+    // Vendor/Contractor max end date (7 working days from today)
+    const addWorkingDays = (startDate: Date, days: number) => {
+        let date = new Date(startDate);
+        let addedDays = 0;
+        while (addedDays < days) {
+            date.setDate(date.getDate() + 1);
+            if (date.getDay() !== 0 && date.getDay() !== 6) {
+                addedDays++;
+            }
+        }
+        return date;
+    };
+    
+    let maxEndDateStr = undefined;
+    if (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') {
+        const maxDate = addWorkingDays(today, 7);
+        maxEndDateStr = maxDate.getFullYear() + '-' + String(maxDate.getMonth() + 1).padStart(2, '0') + '-' + String(maxDate.getDate()).padStart(2, '0');
+    } else if (isExpatCategory) {
+        const maxDate = new Date(today);
+        maxDate.setMonth(maxDate.getMonth() + 6);
+        maxEndDateStr = maxDate.getFullYear() + '-' + String(maxDate.getMonth() + 1).padStart(2, '0') + '-' + String(maxDate.getDate()).padStart(2, '0');
+    }
 
     return (
         <div className="w-full">
@@ -454,7 +496,7 @@ export default function NewRequestPage() {
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
                                         <div>
                                             <InputLabel required>Start Date</InputLabel>
-                                            <Input type="date" required value={formData.startDate} onChange={(e: any) => setFormData({...formData, startDate: e.target.value})} />
+                                            <Input type="date" required min={todayStr} value={formData.startDate} onChange={(e: any) => setFormData({...formData, startDate: e.target.value})} />
                                         </div>
                                         <div>
                                             <InputLabel required>Start Time</InputLabel>
@@ -500,11 +542,11 @@ export default function NewRequestPage() {
                                         </div>
                                         <div>
                                             <InputLabel required>Start Date</InputLabel>
-                                            <Input type="date" required value={formData.startDate} onChange={(e: any) => setFormData({...formData, startDate: e.target.value})} />
+                                            <Input type="date" required min={todayStr} value={formData.startDate} onChange={(e: any) => setFormData({...formData, startDate: e.target.value})} />
                                         </div>
                                         <div>
                                             <InputLabel required>End Date</InputLabel>
-                                            <Input type="date" required value={formData.endDate} onChange={(e: any) => setFormData({...formData, endDate: e.target.value})} />
+                                            <Input type="date" required min={formData.startDate || todayStr} max={maxEndDateStr} value={formData.endDate} onChange={(e: any) => setFormData({...formData, endDate: e.target.value})} />
                                         </div>
                                         {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
                                             <div style={{ gridColumn: '1 / -1' }}>
@@ -524,6 +566,46 @@ export default function NewRequestPage() {
 
                                 {isExpatCategory && (
                                     <>
+                                        <SectionHeader title="Host Department" />
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                                            <div>
+                                                <InputLabel required>Functional Dept</InputLabel>
+                                                <select 
+                                                    required
+                                                    value={formData.functionalDept}
+                                                    onChange={e => setFormData({ ...formData, functionalDept: e.target.value, department: '' })}
+                                                    style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none' }}
+                                                >
+                                                    <option value="" disabled>Select Functional Dept</option>
+                                                    {[...new Set(hostDepartments.map(h => h.functional_dept))].map(dept => (
+                                                        <option key={dept as string} value={dept as string}>{dept as string}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <InputLabel required>Department</InputLabel>
+                                                <select 
+                                                    required
+                                                    value={formData.department}
+                                                    onChange={e => setFormData({ ...formData, department: e.target.value })}
+                                                    disabled={!formData.functionalDept}
+                                                    style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none', opacity: formData.functionalDept ? 1 : 0.5 }}
+                                                >
+                                                    <option value="" disabled>Select Department</option>
+                                                    {hostDepartments.filter(h => h.functional_dept === formData.functionalDept).map(h => (
+                                                        <option key={h.id} value={h.department}>{h.department}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        {formData.functionalDept && formData.department && (
+                                            <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#f1f5f9', borderRadius: '6px', fontSize: '13px', color: '#334155' }}>
+                                                <div style={{ marginBottom: '4px' }}><strong>Functional Dept Host:</strong> {hostDepartments.find(h => h.functional_dept === formData.functionalDept && h.department === formData.department)?.functional_host_name || 'N/A'}</div>
+                                                <div><strong>Department Host:</strong> {hostDepartments.find(h => h.functional_dept === formData.functionalDept && h.department === formData.department)?.department_host_name || 'N/A'}</div>
+                                                <div style={{ marginTop: '6px', fontSize: '11px', color: '#64748b' }}>* These hosts will receive approval requests for this visit.</div>
+                                            </div>
+                                        )}
+
                                         <SectionHeader title="Room Access" />
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
                                             {rooms.filter(room => formData.visitingSite === 'Both' || room.site_location === formData.visitingSite).map((r: any) => {
@@ -532,9 +614,12 @@ export default function NewRequestPage() {
                                                     <div 
                                                         key={r.id} 
                                                         onClick={() => toggleRoom(r.id)}
-                                                        style={{ padding: '12px', border: isSelected ? '2px solid #db011c' : '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: isSelected ? '#fff5f5' : 'white', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                                                        style={{ padding: '12px', border: isSelected ? '2px solid #db011c' : '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: isSelected ? '#fff5f5' : 'white', cursor: 'pointer' }}
                                                     >
-                                                        {r.name}
+                                                        <div style={{ fontSize: '13px', fontWeight: 600 }}>{r.name}</div>
+                                                        {r.description && (
+                                                            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', fontWeight: 400 }}>{r.description}</div>
+                                                        )}
                                                     </div>
                                                 )
                                             })}
@@ -553,9 +638,9 @@ export default function NewRequestPage() {
                                                     </svg>
                                                     <span style={{ fontWeight: 500 }}>
                                                         {isVPTriggered ? (
-                                                            <><strong>Đã đạt trên 60% tổng số phòng ({Math.round(ratio * 100)}%):</strong> Yêu cầu này CHẮC CHẮN SẼ được gửi thêm cho VP Lee Hon Kay phê duyệt bên cạnh các quản lý phòng.</>
+                                                            <><strong>Over 60% of total rooms selected ({Math.round(ratio * 100)}%):</strong> This request WILL BE additionally sent to VP Lee Hon Kay for approval.</>
                                                         ) : (
-                                                            <><strong>Lưu ý:</strong> Nếu chọn trên 60% tổng số phòng, yêu cầu sẽ được gửi thêm cho VP Lee Hon Kay để phê duyệt. (Hiện tại: {Math.round(ratio * 100)}%)</>
+                                                            <><strong>Note:</strong> If over 60% of total rooms are selected, the request will additionally be sent to VP Lee Hon Kay for approval. (Current: {Math.round(ratio * 100)}%)</>
                                                         )}
                                                     </span>
                                                 </div>
@@ -593,10 +678,7 @@ export default function NewRequestPage() {
                                     </>
                                 )}
 
-                                {/* Warning Box */}
-                                <div style={{ marginTop: '32px', marginBottom: '24px', padding: '12px 16px', backgroundColor: '#fff9e6', border: '1px solid #fce49c', color: '#9c7811', fontSize: '12px', borderRadius: '6px', fontWeight: 500 }}>
-                                    Vendors accessing production areas must present a valid safety induction certificate and wear PPE. PPE available at Gate A.
-                                </div>
+
 
                                 {/* Actions */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>

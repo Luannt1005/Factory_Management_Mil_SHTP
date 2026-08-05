@@ -155,18 +155,18 @@ export async function GET(request: Request) {
         // 5. DEPARTMENT & BU DISTRIBUTION
         const deptRes = await visitorPool.query(`
             SELECT 
-                COALESCE(ra.category, ir."interviewDepartment", 'Others') as department,
-                COALESCE(rc.bu, CASE WHEN ir."interviewDepartment" IS NOT NULL THEN 'Share Function' ELSE 'Milwaukee' END) as bu,
+                COALESCE(u.department, 'Others') as department,
+                CASE 
+                    WHEN u.name LIKE '%VN.MIL%' OR u.name NOT LIKE '%(%)%' THEN 'MIL'
+                    ELSE 'SF'
+                END as bu,
                 COUNT(*) as count
             FROM (
-                SELECT id, null as "interviewDepartment" FROM "VisitorRequest"
+                SELECT id, "submitterId", null as "osName" FROM "VisitorRequest"
                 UNION ALL
-                SELECT id::text as id, "interviewDepartment" FROM "IntervieweeRequest"
+                SELECT id::text as id, null as "submitterId", "osName" FROM "IntervieweeRequest"
             ) req
-            LEFT JOIN "RequestApproval" ra_app ON req.id = ra_app."requestId"
-            LEFT JOIN "RoomArea" ra ON ra_app."roomAreaId" = ra.id
-            LEFT JOIN "RoomCategory" rc ON ra.category = rc.name
-            LEFT JOIN "IntervieweeRequest" ir ON req.id = ir.id::text AND req."interviewDepartment" IS NOT NULL
+            LEFT JOIN "User" u ON u.id = req."submitterId" OR u.name = req."osName"
             GROUP BY 1, 2
         `);
 
@@ -175,7 +175,7 @@ export async function GET(request: Request) {
             const dept = r.department || 'Others';
             if (!deptMap[dept]) deptMap[dept] = { name: dept, MIL: 0, SF: 0, total: 0 };
             const count = parseInt(r.count) || 0;
-            if (r.bu === 'Milwaukee') deptMap[dept].MIL += count;
+            if (r.bu === 'MIL') deptMap[dept].MIL += count;
             else deptMap[dept].SF += count;
             deptMap[dept].total += count;
         });

@@ -12,7 +12,7 @@ export async function POST(request: Request) {
         const session = await getServerSession(authOptions);
         if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const powerAutomateNotificationUrl = process.env.POWER_AUTOMATE_EMAIL_NOTIFICATION_URL;
+        const powerAutomateNotificationUrl = process.env.POWER_AUTOMATE_FOR_LEAVE_URL;
 
         const body = await request.json();
         const {
@@ -67,15 +67,23 @@ export async function POST(request: Request) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        record_type: 'new_interviewee_request_notification',
-                        request_id: newVisitorCode, 
-                        visitor_category: 'Interviewee',
-                        submitter_name: osName,
-                        submitter_email: formatEmail(session.user.email || (session.user as any).username),
-                        start_date: startDate,
-                        visitor_name: intervieweeName,
-                        job_title: jobTitle,
-                        interview_department: interviewDepartment
+                        requestDetails: {
+                            id: newVisitorCode,
+                            visitor_name: intervieweeName,
+                            visitorTitle: jobTitle,
+                            currentCompany: "", // Not applicable for interviewee
+                            startDate: startDate,
+                            endDate: startDate,
+                            purposeOfVisit: "Interview",
+                            submitterName: osName,
+                            submitterEmail: formatEmail(session.user.email || (session.user as any).username),
+                            visitorCategory: 'Interviewee',
+                            interviewerName: interviewerName,
+                            startTime: startTime,
+                            interviewArea: interviewArea,
+                            interviewDepartment: interviewDepartment
+                        },
+                        rooms: [] // No approvals needed for interviewee
                     })
                 });
                 if (!paResponse.ok) {

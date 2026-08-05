@@ -149,6 +149,15 @@ export default function UserManagement() {
         return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
     };
 
+    const getBU = (fullname: string) => {
+        if (!fullname) return 'Mil';
+        const hasParentheses = fullname.includes('(') && fullname.includes(')');
+        if (fullname.includes('VN.MIL') || !hasParentheses) {
+            return 'Mil';
+        }
+        return 'SF';
+    };
+
     const renderRoleChips = (user: UserAccount) => {
         const ids = user.app_role_ids || [];
         if (ids.length === 0) return <span className="text-gray-400">-</span>;
@@ -321,6 +330,7 @@ export default function UserManagement() {
                     <thead className="bg-[#fcf5f5] sticky top-0 z-10">
                         <tr>
                             <th className="py-3 px-4 text-[10px] font-bold text-[#b52427] uppercase tracking-wider">User</th>
+                            <th className="py-3 px-4 text-[10px] font-bold text-[#b52427] uppercase tracking-wider">BU</th>
                             <th className="py-3 px-4 text-[10px] font-bold text-[#b52427] uppercase tracking-wider">Email</th>
                             <th className="py-3 px-4 text-[10px] font-bold text-[#b52427] uppercase tracking-wider">Assigned Roles</th>
                             <th className="py-3 px-4 text-[10px] font-bold text-[#b52427] uppercase tracking-wider">Title</th>
@@ -349,6 +359,11 @@ export default function UserManagement() {
                                             {user.employee_id && <span className="text-[10px] text-gray-500">{user.employee_id}</span>}
                                         </div>
                                     </div>
+                                </td>
+                                <td className="py-2.5 px-4 text-xs font-bold text-gray-700">
+                                    <span className={`px-2 py-1 rounded bg-gray-100`}>
+                                        {getBU(user.full_name)}
+                                    </span>
                                 </td>
                                 <td className="py-2.5 px-4 text-xs text-gray-600">{user.email || user.username}</td>
                                 <td className="py-2.5 px-4">{renderRoleChips(user)}</td>
