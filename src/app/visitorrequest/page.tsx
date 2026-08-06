@@ -202,8 +202,8 @@ export default function NewRequestPage() {
 
     const downloadTemplate = () => {
         const worksheet = XLSX.utils.json_to_sheet([
-            { 'Full Name': 'Nguyen Van A', 'Company': 'Example Corp', 'Title': 'Software Engineer' },
-            { 'Full Name': 'Tran Thi B', 'Company': 'Example Corp', 'Title': 'Project Manager' }
+            { 'Full Name': 'Nguyen Van A', 'Company': 'TTI VN', 'Title': 'Software Engineer' },
+            { 'Full Name': 'Tran Thi B', 'Company': 'TTI VN', 'Title': 'Project Manager' }
         ]);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Visitors');
@@ -451,7 +451,7 @@ export default function NewRequestPage() {
                                                 </div>
                                                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Company <span style={{ color: '#db011c' }}>*</span></label>
-                                                    <Input type="text" required placeholder="e.g. Bosch Vietnam" value={visitor.company} onChange={(e: any) => updateVisitor(idx, 'company', e.target.value)} />
+                                                    <Input type="text" required placeholder="e.g. TTI VN" value={visitor.company} onChange={(e: any) => updateVisitor(idx, 'company', e.target.value)} />
                                                 </div>
                                                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Title <span style={{ color: '#db011c' }}>*</span></label>
