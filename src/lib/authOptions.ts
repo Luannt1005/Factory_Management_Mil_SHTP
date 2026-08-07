@@ -112,7 +112,10 @@ export const authOptions: NextAuthOptions = {
           }
 
           let userStatus = "Active";
-          const isShtp = location && location.toUpperCase().includes('SHTP');
+          const isAutoApproveLocation = location && (
+            location.toUpperCase().includes('SHTP') || 
+            location.toUpperCase().includes('MIL - FACTORY (DDK)')
+          );
 
           if (result.rows.length === 0) {
             console.log("[SSO DB Lookup] User not found, creating new account for:", fullEmail);
@@ -122,7 +125,7 @@ export const authOptions: NextAuthOptions = {
               return false; 
             }
 
-            userStatus = isShtp ? "Active" : "Pending Approval";
+            userStatus = isAutoApproveLocation ? "Active" : "Pending Approval";
             const dummyPassword = "sso_user_no_password_" + Math.random().toString(36).substring(7);
             
             // Get role IDs for default assignment
