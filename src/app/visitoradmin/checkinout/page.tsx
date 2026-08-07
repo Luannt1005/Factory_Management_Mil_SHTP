@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/app/context/UserContext';
 
 type ViewMode = 'group' | 'visitor';
 type StatusFilter = 'ALL' | 'PENDING' | 'CHECKED_IN' | 'CHECKED_OUT';
@@ -12,6 +13,10 @@ const removeAccents = (str: string) => {
 
 export default function CheckInOutManagement() {
     const router = useRouter();
+    const { user } = useUser();
+    const isSecurity = user?.app_role_names?.includes('Security') || false;
+    const isReceptionist = user?.app_role_names?.includes('Receptionist') || false;
+    
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     
@@ -196,39 +201,44 @@ export default function CheckInOutManagement() {
             >
                 Check In
             </button>
-            <button
-                disabled={actionLoading === `${req.requestId}-${v.visitorIndex}` || v.checkInOutStatus !== 'CHECKED_IN'}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    handleAction(req.requestId, v, 'CHECK_OUT');
-                }}
-                className={`whitespace-nowrap text-[9px] font-bold uppercase px-2 py-1.5 rounded shadow-sm transition-colors ${
-                    v.checkInOutStatus !== 'CHECKED_IN'
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-gray-800 hover:bg-gray-700 text-white'
-                }`}
-            >
-                Check Out
-            </button>
             
-            {/* Reset/Refresh button */}
-            <div className={`ml-1 ${v.checkInOutStatus === 'CHECKED_IN' || v.checkInOutStatus === 'CHECKED_OUT' ? 'visible' : 'invisible'}`}>
+            {!isSecurity && (
                 <button
-                    disabled={actionLoading === `${req.requestId}-${v.visitorIndex}`}
+                    disabled={actionLoading === `${req.requestId}-${v.visitorIndex}` || v.checkInOutStatus !== 'CHECKED_IN'}
                     onClick={(e) => {
                         e.stopPropagation();
-                        if (window.confirm(`Reset check-in/out status for ${v.visitorName}?`)) {
-                            handleAction(req.requestId, v, 'RESET');
-                        }
+                        handleAction(req.requestId, v, 'CHECK_OUT');
                     }}
-                    title="Reset Status"
-                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                    className={`whitespace-nowrap text-[9px] font-bold uppercase px-2 py-1.5 rounded shadow-sm transition-colors ${
+                        v.checkInOutStatus !== 'CHECKED_IN'
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-800 hover:bg-gray-700 text-white'
+                    }`}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
+                    Check Out
                 </button>
-            </div>
+            )}
+            
+            {/* Reset/Refresh button */}
+            {!isSecurity && !isReceptionist && (
+                <div className={`ml-1 ${v.checkInOutStatus === 'CHECKED_IN' || v.checkInOutStatus === 'CHECKED_OUT' ? 'visible' : 'invisible'}`}>
+                    <button
+                        disabled={actionLoading === `${req.requestId}-${v.visitorIndex}`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`Reset check-in/out status for ${v.visitorName}?`)) {
+                                handleAction(req.requestId, v, 'RESET');
+                            }
+                        }}
+                        title="Reset Status"
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
+            )}
         </div>
     );
 
@@ -375,9 +385,11 @@ export default function CheckInOutManagement() {
                                             <input 
                                                 type="text" 
                                                 placeholder="Card No." 
-                                                className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c]" 
+                                                className={`w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] ${isSecurity ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`} 
                                                 value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
                                                 onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
+                                                disabled={isSecurity}
+                                                readOnly={isSecurity}
                                             />
                                         </div>
                                         <div className={`text-[11px] font-bold text-center ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatTime(v.checkInTime)}</div>
@@ -452,10 +464,12 @@ export default function CheckInOutManagement() {
                                                                             <input 
                                                                                 type="text" 
                                                                                 placeholder="Card No." 
-                                                                                className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c]" 
+                                                                                className={`w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] ${isSecurity ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`} 
                                                                                 value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
                                                                                 onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
                                                                                 onClick={(e) => e.stopPropagation()}
+                                                                                disabled={isSecurity}
+                                                                                readOnly={isSecurity}
                                                                             />
                                                                         </div>
                                                                         <div className={`text-[11px] font-bold text-center ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatTime(v.checkInTime)}</div>
