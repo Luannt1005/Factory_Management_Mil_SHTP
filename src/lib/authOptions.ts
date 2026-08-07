@@ -114,7 +114,7 @@ export const authOptions: NextAuthOptions = {
           let userStatus = "Active";
           const isAutoApproveLocation = location && (
             location.toUpperCase().includes('SHTP') || 
-            location.toUpperCase().includes('MIL - FACTORY (DDK)')
+            location.toUpperCase().includes('DDK')
           );
 
           if (result.rows.length === 0) {
