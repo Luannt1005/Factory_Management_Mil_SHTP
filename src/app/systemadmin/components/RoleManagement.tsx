@@ -34,7 +34,9 @@ const PERMISSION_MATRIX = [
         pages: [
             { key: "/visitordashboard", label: "Visitor Dashboard" },
             { key: "/visitorrequest", label: "Visitor Requests" },
-            { key: "/visitoradmin", label: "Visitor Admin" },
+            { key: "/visitoradmin/checkinout", label: "Check In / Out" },
+            { key: "/visitoradmin/rooms", label: "Manage Room" },
+            { key: "/visitoradmin", label: "Admin Settings" },
             { key: "/visitoranalytics", label: "Visitor Analytics" }
         ]
     }
