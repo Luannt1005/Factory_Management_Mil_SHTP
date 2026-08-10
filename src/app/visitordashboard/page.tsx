@@ -296,7 +296,7 @@ function DashboardContent() {
                                             {request.request_approvals?.map((app: any) => (
                                                 <div
                                                     key={app.id}
-                                                    title={`${app.room_areas?.name || 'Area'}: ${app.status}`}
+                                                    title={`${app.room_areas?.name || (request.visitor_category !== 'MIL/TTI Expat / SHTP Business trip' ? 'Manager Approval' : 'VP Approval')}: ${app.status}`}
                                                     className="w-2.5 h-2.5 rounded-full border border-white shadow-sm"
                                                     style={{
                                                         background: getStatusColor(app.status),
