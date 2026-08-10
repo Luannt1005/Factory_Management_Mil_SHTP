@@ -602,7 +602,6 @@ export default function NewRequestPage() {
                                             <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#f1f5f9', borderRadius: '6px', fontSize: '13px', color: '#334155' }}>
                                                 <div style={{ marginBottom: '4px' }}><strong>Functional Dept Host:</strong> {hostDepartments.find(h => h.functional_dept === formData.functionalDept && h.department === formData.department)?.functional_host_name || 'N/A'}</div>
                                                 <div><strong>Department Host:</strong> {hostDepartments.find(h => h.functional_dept === formData.functionalDept && h.department === formData.department)?.department_host_name || 'N/A'}</div>
-                                                <div style={{ marginTop: '6px', fontSize: '11px', color: '#64748b' }}>* These hosts will receive approval requests for this visit.</div>
                                             </div>
                                         )}
 
