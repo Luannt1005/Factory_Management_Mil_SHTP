@@ -125,7 +125,7 @@ export default function CheckInOutManagement() {
     const formatDateShort = (dateString: string | null) => {
         if (!dateString) return '';
         const d = new Date(dateString);
-        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
     };
 
     const getCategoryBadgeClass = (category: string) => {
