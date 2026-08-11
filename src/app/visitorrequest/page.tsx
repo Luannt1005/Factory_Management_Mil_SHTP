@@ -719,6 +719,42 @@ export default function NewRequestPage() {
                     <div className="bg-white w-full max-w-2xl rounded-3xl p-8 max-h-[90vh] overflow-y-auto">
                         <h2 className="text-2xl font-bold mb-4 text-[#0f172a]">Review Registration</h2>
                         <div className="space-y-4 text-sm text-gray-700">
+                            {formData.visitorCategory === 'Interviewee' ? (
+                                <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-200">
+                                    <div>
+                                        <span className="block text-xs font-bold text-gray-400 uppercase">Interviewee Name</span>
+                                        <span className="font-semibold text-gray-900">{formData.intervieweeName}</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs font-bold text-gray-400 uppercase">Job Title</span>
+                                        <span className="font-semibold text-gray-900">{formData.jobTitle}</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs font-bold text-gray-400 uppercase">Department</span>
+                                        <span className="font-semibold text-gray-900">{formData.interviewDepartment}</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs font-bold text-gray-400 uppercase">Interviewer Name</span>
+                                        <span className="font-semibold text-gray-900">{formData.interviewerName}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="pb-4 border-b border-gray-200">
+                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Visitors ({formData.visitors.length})</span>
+                                    <ul className="space-y-2">
+                                        {formData.visitors.map((v, i) => (
+                                            <li key={i} className="py-2 flex items-center justify-between border-b border-gray-100 last:border-0">
+                                                <div>
+                                                    <span className="font-bold text-[#0f172a]">{v.name}</span>
+                                                    <span className="text-gray-500 text-xs ml-2">— {v.title}</span>
+                                                </div>
+                                                <span className="text-gray-500 text-xs font-bold bg-gray-100 px-2 py-1 rounded">{v.company}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-2 gap-4 pb-4">
                                 <div>
                                     <span className="block text-xs font-bold text-gray-400 uppercase">Category</span>
@@ -757,29 +793,8 @@ export default function NewRequestPage() {
                                 )}
                             </div>
 
-                            {formData.visitorCategory === 'Interviewee' && (
-                                <div className="grid grid-cols-2 gap-4 pt-2">
-                                    <div>
-                                        <span className="block text-xs font-bold text-gray-400 uppercase">Interviewee Name</span>
-                                        <span className="font-semibold text-gray-900">{formData.intervieweeName}</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-xs font-bold text-gray-400 uppercase">Job Title</span>
-                                        <span className="font-semibold text-gray-900">{formData.jobTitle}</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-xs font-bold text-gray-400 uppercase">Department</span>
-                                        <span className="font-semibold text-gray-900">{formData.interviewDepartment}</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-xs font-bold text-gray-400 uppercase">Interviewer Name</span>
-                                        <span className="font-semibold text-gray-900">{formData.interviewerName}</span>
-                                    </div>
-                                </div>
-                            )}
-
                             {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
-                                <div className="pt-2">
+                                <div className="pt-2 border-t border-gray-200">
                                     <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Scope of Work / Purpose Detail</span>
                                     <div className="pt-1 text-sm whitespace-pre-wrap font-medium text-gray-900">
                                         {formData.purposeDetail}
@@ -788,7 +803,7 @@ export default function NewRequestPage() {
                             )}
 
                             {isExpatCategory && (
-                                <div className="grid grid-cols-2 gap-4 pt-2">
+                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
                                     <div>
                                         <span className="block text-xs font-bold text-gray-400 uppercase">Functional Dept</span>
                                         <span className="font-semibold text-gray-900">{formData.functionalDept}</span>
@@ -803,23 +818,6 @@ export default function NewRequestPage() {
                                             <span className="font-semibold text-gray-900">{formData.details.costCenter}</span>
                                         </div>
                                     )}
-                                </div>
-                            )}
-
-                            {formData.visitorCategory !== 'Interviewee' && (
-                                <div className="pt-2">
-                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Visitors ({formData.visitors.length})</span>
-                                    <ul className="space-y-2">
-                                        {formData.visitors.map((v, i) => (
-                                            <li key={i} className="py-2 flex items-center justify-between border-b border-gray-100 last:border-0">
-                                                <div>
-                                                    <span className="font-bold text-[#0f172a]">{v.name}</span>
-                                                    <span className="text-gray-500 text-xs ml-2">— {v.title}</span>
-                                                </div>
-                                                <span className="text-gray-500 text-xs font-bold bg-gray-100 px-2 py-1 rounded">{v.company}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
                                 </div>
                             )}
                             
