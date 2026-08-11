@@ -14,6 +14,7 @@ export async function GET(request: Request) {
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
         const code = searchParams.get('code');
+        const status = searchParams.get('status');
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
         const offset = (page - 1) * limit;
@@ -33,6 +34,12 @@ export async function GET(request: Request) {
         if (code) {
             whereClause += ` AND r."visitorCode" ILIKE $${paramCount+1}`;
             queryParams.push(`%${code}%`);
+            paramCount += 1;
+        }
+
+        if (status) {
+            whereClause += ` AND r.status = $${paramCount+1}`;
+            queryParams.push(status);
             paramCount += 1;
         }
 

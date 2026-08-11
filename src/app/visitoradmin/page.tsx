@@ -15,6 +15,7 @@ export default function AdminDashboard() {
     const [endDate, setEndDate] = useState('');
     const [category, setCategory] = useState('');
     const [code, setCode] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
     const [exporting, setExporting] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
     const [editingRequest, setEditingRequest] = useState<any>(null);
@@ -25,7 +26,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         setMounted(true);
         fetchRequests(1);
-    }, [startDate, endDate, category, code, activeTab]);
+    }, [startDate, endDate, category, code, statusFilter, activeTab]);
 
     const fetchRequests = async (page: number) => {
         setLoading(true);
@@ -40,6 +41,9 @@ export default function AdminDashboard() {
             }
             if (code) {
                 url += `&code=${encodeURIComponent(code)}`;
+            }
+            if (statusFilter) {
+                url += `&status=${encodeURIComponent(statusFilter)}`;
             }
             const res = await fetch(url);
             if (res.ok) {
@@ -68,6 +72,9 @@ export default function AdminDashboard() {
             }
             if (code) {
                 url += `&code=${encodeURIComponent(code)}`;
+            }
+            if (statusFilter) {
+                url += `&status=${encodeURIComponent(statusFilter)}`;
             }
             
             const res = await fetch(url);
@@ -201,7 +208,17 @@ export default function AdminDashboard() {
 
             {/* Filters Row */}
             <div className="flex flex-wrap items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-200 shadow-sm">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Code</label>
+                        <input 
+                            type="text" 
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            placeholder="e.g. 2206"
+                            className="text-sm border border-gray-300 rounded-lg px-2 py-1 w-24 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                        />
+                    </div>
                     <div className="flex items-center gap-2">
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">From</label>
                         <input 
@@ -235,18 +252,23 @@ export default function AdminDashboard() {
                         </select>
                     </div>
                     <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Code</label>
-                        <input 
-                            type="text" 
-                            value={code}
-                            onChange={(e) => setCode(e.target.value)}
-                            placeholder="e.g. 2206"
-                            className="text-sm border border-gray-300 rounded-lg px-2 py-1 w-24 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
-                        />
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Status</label>
+                        <select 
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="text-sm border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                        >
+                            <option value="">All</option>
+                            <option value="PENDING">PENDING</option>
+                            <option value="IN PROCESS">IN PROCESS</option>
+                            <option value="APPROVED">APPROVED</option>
+                            <option value="REJECTED">REJECTED</option>
+                            <option value="COMPLETE">COMPLETE</option>
+                        </select>
                     </div>
-                    {(startDate || endDate || category || code) && (
+                    {(startDate || endDate || category || code || statusFilter) && (
                         <button 
-                            onClick={() => { setStartDate(''); setEndDate(''); setCategory(''); setCode(''); }}
+                            onClick={() => { setStartDate(''); setEndDate(''); setCategory(''); setCode(''); setStatusFilter(''); }}
                             className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4"
                         >
                             Clear
@@ -373,7 +395,7 @@ export default function AdminDashboard() {
                                             {request.visitor_category}
                                         </td>
                                         <td className="px-3 py-2">
-                                            <div className="font-bold text-[#0f172a] truncate max-w-[120px]">{request.profiles?.name}</div>
+                                            <div className="font-bold text-[#0f172a] truncate max-w-[250px]" title={request.profiles?.name}>{request.profiles?.name}</div>
                                         </td>
                                         <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
                                             {new Date(request.start_date).toLocaleDateString('vi-VN')}
