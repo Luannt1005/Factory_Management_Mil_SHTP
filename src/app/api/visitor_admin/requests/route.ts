@@ -158,11 +158,15 @@ export async function PATCH(request: Request) {
                 );
 
                 if (allApps.length > 0) {
-                    const anyRejected = allApps.some(a => a.status === 'REJECTED');
+                    const anyApproved = allApps.some(a => a.status === 'APPROVED');
+                    const allRejected = allApps.every(a => a.status === 'REJECTED');
                     const allDone = allApps.every(a => a.status === 'APPROVED' || a.status === 'REJECTED');
+                    
                     let finalStatus = 'IN PROCESS';
-                    if (anyRejected) finalStatus = 'REJECTED';
-                    else if (allDone) finalStatus = 'COMPLETE';
+                    if (allDone) {
+                        if (allRejected) finalStatus = 'REJECTED';
+                        else if (anyApproved) finalStatus = 'COMPLETE';
+                    }
 
                     await visitorPool.query(
                         'UPDATE "VisitorRequest" SET status=$1 WHERE id=$2',
