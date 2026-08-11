@@ -718,8 +718,8 @@ export default function NewRequestPage() {
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
                     <div className="bg-white w-full max-w-2xl rounded-3xl p-8 max-h-[90vh] overflow-y-auto">
                         <h2 className="text-2xl font-bold mb-4 text-[#0f172a]">Review Registration</h2>
-                        <div className="space-y-4 text-sm text-gray-700 bg-gray-50 p-6 rounded-xl border border-gray-200">
-                            <div className="grid grid-cols-2 gap-4 border-b border-gray-200 pb-4">
+                        <div className="space-y-4 text-sm text-gray-700">
+                            <div className="grid grid-cols-2 gap-4 pb-4">
                                 <div>
                                     <span className="block text-xs font-bold text-gray-400 uppercase">Category</span>
                                     <span className="font-semibold text-gray-900">{formData.visitorCategory}</span>
@@ -781,7 +781,7 @@ export default function NewRequestPage() {
                             {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
                                 <div className="pt-2">
                                     <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Scope of Work / Purpose Detail</span>
-                                    <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm text-sm whitespace-pre-wrap font-medium">
+                                    <div className="pt-1 text-sm whitespace-pre-wrap font-medium text-gray-900">
                                         {formData.purposeDetail}
                                     </div>
                                 </div>
@@ -811,7 +811,7 @@ export default function NewRequestPage() {
                                     <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Visitors ({formData.visitors.length})</span>
                                     <ul className="space-y-2">
                                         {formData.visitors.map((v, i) => (
-                                            <li key={i} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between">
+                                            <li key={i} className="py-2 flex items-center justify-between border-b border-gray-100 last:border-0">
                                                 <div>
                                                     <span className="font-bold text-[#0f172a]">{v.name}</span>
                                                     <span className="text-gray-500 text-xs ml-2">— {v.title}</span>
@@ -843,10 +843,10 @@ export default function NewRequestPage() {
                                 <div className="pt-2">
                                     <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Requirements</span>
                                     <div className="flex gap-4">
-                                        <div className="bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm text-sm">
+                                        <div className="py-1 text-sm">
                                             Factory Tour: <span className={`font-bold ${formData.details.factoryTour === 'Yes' ? 'text-green-600' : 'text-gray-500'}`}>{formData.details.factoryTour}</span>
                                         </div>
-                                        <div className="bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm text-sm">
+                                        <div className="py-1 text-sm">
                                             Meal: <span className={`font-bold ${formData.details.mealRegistration === 'Yes' ? 'text-green-600' : 'text-gray-500'}`}>{formData.details.mealRegistration}</span>
                                         </div>
                                     </div>
