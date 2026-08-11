@@ -743,12 +743,21 @@ export default function NewRequestPage() {
                                     <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Visitors ({formData.visitors.length})</span>
                                     <ul className="space-y-2">
                                         {formData.visitors.map((v, i) => (
-                                            <li key={i} className="py-2 flex items-center justify-between border-b border-gray-100 last:border-0">
-                                                <div>
-                                                    <span className="font-bold text-[#0f172a]">{v.name}</span>
-                                                    <span className="text-gray-500 text-xs ml-2">— {v.title}</span>
+                                            <li key={i} className="py-2 flex items-start justify-between border-b border-gray-100 last:border-0">
+                                                <div className="flex gap-6">
+                                                    <div>
+                                                        <span className="text-gray-400 text-[10px] uppercase font-bold block">Name</span>
+                                                        <span className="font-bold text-[#0f172a]">{v.name}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-400 text-[10px] uppercase font-bold block">Title</span>
+                                                        <span className="text-gray-700 font-medium">{v.title}</span>
+                                                    </div>
                                                 </div>
-                                                <span className="text-gray-500 text-xs font-bold bg-gray-100 px-2 py-1 rounded">{v.company}</span>
+                                                <div className="text-right">
+                                                    <span className="text-gray-400 text-[10px] uppercase font-bold block mb-1">Company</span>
+                                                    <span className="text-gray-700 text-xs font-bold bg-gray-100 px-2 py-1 rounded inline-block">{v.company}</span>
+                                                </div>
                                             </li>
                                         ))}
                                     </ul>
