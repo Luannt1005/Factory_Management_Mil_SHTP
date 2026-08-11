@@ -741,26 +741,28 @@ export default function NewRequestPage() {
                             ) : (
                                 <div className="pb-4 border-b border-gray-200">
                                     <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Visitors ({formData.visitors.length})</span>
-                                    <ul className="space-y-2">
-                                        {formData.visitors.map((v, i) => (
-                                            <li key={i} className="py-2 flex items-start justify-between border-b border-gray-100 last:border-0">
-                                                <div className="flex gap-6">
-                                                    <div>
-                                                        <span className="text-gray-400 text-[10px] uppercase font-bold block">Name</span>
-                                                        <span className="font-bold text-[#0f172a]">{v.name}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-gray-400 text-[10px] uppercase font-bold block">Title</span>
-                                                        <span className="text-gray-700 font-medium">{v.title}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="text-gray-400 text-[10px] uppercase font-bold block mb-1">Company</span>
-                                                    <span className="text-gray-700 text-xs font-bold bg-gray-100 px-2 py-1 rounded inline-block">{v.company}</span>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="border-b border-gray-200">
+                                                    <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Name</th>
+                                                    <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Title</th>
+                                                    <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Company</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {formData.visitors.map((v, i) => (
+                                                    <tr key={i} className="border-b border-gray-100 last:border-0">
+                                                        <td className="py-2 font-bold text-[#0f172a]">{v.name}</td>
+                                                        <td className="py-2 text-gray-700 font-medium">{v.title}</td>
+                                                        <td className="py-2">
+                                                            <span className="text-gray-700 text-xs font-bold bg-gray-100 px-2 py-1 rounded inline-block">{v.company}</span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             )}
 
