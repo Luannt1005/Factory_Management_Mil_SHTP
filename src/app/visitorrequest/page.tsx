@@ -251,10 +251,17 @@ export default function NewRequestPage() {
         }
     };
 
+    const capitalizeWords = (str: string) => {
+        if (!str) return str;
+        // capitalize after space, hyphen, or at start
+        return str.replace(/(^\w|\s\w|-\w)/g, m => m.toUpperCase());
+    };
+
     const updateVisitor = (index: number, field: string, value: string) => {
         setFormData(prev => {
             const newVisitors = [...prev.visitors];
-            newVisitors[index] = { ...newVisitors[index], [field]: value };
+            const capitalizedValue = typeof value === 'string' ? capitalizeWords(value) : value;
+            newVisitors[index] = { ...newVisitors[index], [field]: capitalizedValue };
             return { ...prev, visitors: newVisitors };
         });
     };
@@ -390,19 +397,19 @@ export default function NewRequestPage() {
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
                                         <div>
                                             <InputLabel required>Interviewee Name</InputLabel>
-                                            <Input type="text" required placeholder="Enter interviewee full name" value={formData.intervieweeName} onChange={(e: any) => setFormData({...formData, intervieweeName: e.target.value})} />
+                                            <Input type="text" required placeholder="Enter interviewee full name" value={formData.intervieweeName} onChange={(e: any) => setFormData({...formData, intervieweeName: capitalizeWords(e.target.value)})} />
                                         </div>
                                         <div>
                                             <InputLabel required>Job Title</InputLabel>
-                                            <Input type="text" required placeholder="e.g. Software Engineer" value={formData.jobTitle} onChange={(e: any) => setFormData({...formData, jobTitle: e.target.value})} />
+                                            <Input type="text" required placeholder="e.g. Software Engineer" value={formData.jobTitle} onChange={(e: any) => setFormData({...formData, jobTitle: capitalizeWords(e.target.value)})} />
                                         </div>
                                         <div>
                                             <InputLabel required>Interview Department</InputLabel>
-                                            <Input type="text" required placeholder="e.g. IT" value={formData.interviewDepartment} onChange={(e: any) => setFormData({...formData, interviewDepartment: e.target.value})} />
+                                            <Input type="text" required placeholder="e.g. IT" value={formData.interviewDepartment} onChange={(e: any) => setFormData({...formData, interviewDepartment: capitalizeWords(e.target.value)})} />
                                         </div>
                                         <div>
                                             <InputLabel required>Interviewer Name</InputLabel>
-                                            <Input type="text" required placeholder="Enter interviewer name" value={formData.interviewerName} onChange={(e: any) => setFormData({...formData, interviewerName: e.target.value})} />
+                                            <Input type="text" required placeholder="Enter interviewer name" value={formData.interviewerName} onChange={(e: any) => setFormData({...formData, interviewerName: capitalizeWords(e.target.value)})} />
                                         </div>
                                     </div>
                                 ) : (
