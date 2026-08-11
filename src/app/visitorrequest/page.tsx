@@ -734,44 +734,121 @@ export default function NewRequestPage() {
                                             <span className="block text-xs font-bold text-gray-400 uppercase">Site</span>
                                             <span className="font-semibold text-gray-900">{formData.visitingSite}</span>
                                         </div>
+                                        <div>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Dates</span>
+                                            <span className="font-semibold text-gray-900">{formData.startDate} to {formData.endDate || formData.startDate}</span>
+                                        </div>
                                     </>
                                 ) : (
                                     <>
                                         <div>
-                                            <span className="block text-xs font-bold text-gray-400 uppercase">Interviewee</span>
-                                            <span className="font-semibold text-gray-900">{formData.intervieweeName}</span>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Interview Date</span>
+                                            <span className="font-semibold text-gray-900">{formData.startDate}</span>
                                         </div>
                                         <div>
-                                            <span className="block text-xs font-bold text-gray-400 uppercase">Department</span>
-                                            <span className="font-semibold text-gray-900">{formData.interviewDepartment}</span>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Start Time</span>
+                                            <span className="font-semibold text-gray-900">{formData.startTime}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Interview Area</span>
+                                            <span className="font-semibold text-gray-900">{formData.interviewArea}</span>
                                         </div>
                                     </>
                                 )}
-                                <div>
-                                    <span className="block text-xs font-bold text-gray-400 uppercase">Dates</span>
-                                    <span className="font-semibold text-gray-900">{formData.startDate} to {formData.endDate || formData.startDate}</span>
-                                </div>
                             </div>
 
+                            {formData.visitorCategory === 'Interviewee' && (
+                                <div className="grid grid-cols-2 gap-4 pt-2">
+                                    <div>
+                                        <span className="block text-xs font-bold text-gray-400 uppercase">Interviewee Name</span>
+                                        <span className="font-semibold text-gray-900">{formData.intervieweeName}</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs font-bold text-gray-400 uppercase">Job Title</span>
+                                        <span className="font-semibold text-gray-900">{formData.jobTitle}</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs font-bold text-gray-400 uppercase">Department</span>
+                                        <span className="font-semibold text-gray-900">{formData.interviewDepartment}</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs font-bold text-gray-400 uppercase">Interviewer Name</span>
+                                        <span className="font-semibold text-gray-900">{formData.interviewerName}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
+                                <div className="pt-2">
+                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Scope of Work / Purpose Detail</span>
+                                    <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm text-sm whitespace-pre-wrap font-medium">
+                                        {formData.purposeDetail}
+                                    </div>
+                                </div>
+                            )}
+
+                            {isExpatCategory && (
+                                <div className="grid grid-cols-2 gap-4 pt-2">
+                                    <div>
+                                        <span className="block text-xs font-bold text-gray-400 uppercase">Functional Dept</span>
+                                        <span className="font-semibold text-gray-900">{formData.functionalDept}</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs font-bold text-gray-400 uppercase">Department</span>
+                                        <span className="font-semibold text-gray-900">{formData.department}</span>
+                                    </div>
+                                    {formData.details.costCenter && (
+                                        <div>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Cost Center</span>
+                                            <span className="font-semibold text-gray-900">{formData.details.costCenter}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {formData.visitorCategory !== 'Interviewee' && (
-                                <div>
-                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Visitors</span>
+                                <div className="pt-2">
+                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Visitors ({formData.visitors.length})</span>
                                     <ul className="space-y-2">
                                         {formData.visitors.map((v, i) => (
-                                            <li key={i} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                                                <span className="font-bold text-[#0f172a]">{v.name}</span> <span className="text-gray-500">— {v.title} at {v.company}</span>
+                                            <li key={i} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between">
+                                                <div>
+                                                    <span className="font-bold text-[#0f172a]">{v.name}</span>
+                                                    <span className="text-gray-500 text-xs ml-2">— {v.title}</span>
+                                                </div>
+                                                <span className="text-gray-500 text-xs font-bold bg-gray-100 px-2 py-1 rounded">{v.company}</span>
                                             </li>
                                         ))}
                                     </ul>
                                 </div>
                             )}
                             
+                            {isExpatCategory && formData.roomIds.length > 0 && (
+                                <div className="pt-2">
+                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Selected Rooms ({formData.roomIds.length})</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {formData.roomIds.map(rid => {
+                                            const r = rooms.find(room => room.id === rid);
+                                            return r ? (
+                                                <span key={rid} className="text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-1 rounded-full">
+                                                    {r.name}
+                                                </span>
+                                            ) : null;
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
                             {isExpatCategory && (
                                 <div className="pt-2">
-                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Final Requirements</span>
-                                    <div className="flex gap-6">
-                                        <div className="bg-white px-3 py-2 rounded border border-gray-200 shadow-sm">Factory Tour: <span className={`font-bold ${formData.details.factoryTour === 'Yes' ? 'text-green-600' : 'text-gray-500'}`}>{formData.details.factoryTour}</span></div>
-                                        <div className="bg-white px-3 py-2 rounded border border-gray-200 shadow-sm">Meal: <span className={`font-bold ${formData.details.mealRegistration === 'Yes' ? 'text-green-600' : 'text-gray-500'}`}>{formData.details.mealRegistration}</span></div>
+                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Requirements</span>
+                                    <div className="flex gap-4">
+                                        <div className="bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm text-sm">
+                                            Factory Tour: <span className={`font-bold ${formData.details.factoryTour === 'Yes' ? 'text-green-600' : 'text-gray-500'}`}>{formData.details.factoryTour}</span>
+                                        </div>
+                                        <div className="bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm text-sm">
+                                            Meal: <span className={`font-bold ${formData.details.mealRegistration === 'Yes' ? 'text-green-600' : 'text-gray-500'}`}>{formData.details.mealRegistration}</span>
+                                        </div>
                                     </div>
                                 </div>
                             )}
