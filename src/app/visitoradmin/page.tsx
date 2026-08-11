@@ -404,8 +404,10 @@ export default function AdminDashboard() {
                                                                     </span>
                                                                 </span>
                                                             </div>
-                                                            {app.status === 'PENDING' && app.approver_email && (
-                                                                <span className="text-[8px] text-gray-400 font-medium truncate max-w-[120px]" title={`Pending at: ${app.approver_email}`}>P: {app.approver_email.split('@')[0]}</span>
+                                                            {app.approver_email && (
+                                                                <span className="text-[8px] text-gray-400 font-medium truncate max-w-[120px]" title={`${app.status === 'PENDING' ? 'Pending at' : (app.status === 'APPROVED' ? 'Approved by' : 'Rejected by')}: ${app.approver_email}`}>
+                                                                    {app.status === 'PENDING' ? 'P:' : (app.status === 'APPROVED' ? 'A:' : 'R:')} {app.approver_email.split('@')[0]}
+                                                                </span>
                                                             )}
                                                         </div>
                                                     ))}
@@ -775,8 +777,10 @@ export default function AdminDashboard() {
                                                                 {app.room_areas?.name || (selectedRequest.visitor_category === 'MIL/TTI Expat / SHTP Business trip' ? 'VP Approval (All Rooms)' : 'Manager Approval')}
                                                                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
                                                             </span>
-                                                            {app.status === 'PENDING' && app.approver_email && (
-                                                                <span className="text-[10px] text-gray-500 font-medium break-all">Pending at: {app.approver_email}</span>
+                                                            {app.approver_email && (
+                                                                <span className="text-[10px] text-gray-500 font-medium break-all">
+                                                                    {app.status === 'PENDING' ? 'Pending at:' : (app.status === 'APPROVED' ? 'Approved by:' : 'Rejected by:')} {app.approver_email}
+                                                                </span>
                                                             )}
                                                         </div>
                                                     ))}

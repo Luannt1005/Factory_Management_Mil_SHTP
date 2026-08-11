@@ -526,8 +526,10 @@ function DashboardContent() {
                                                                     {app.room_areas?.name || 'Area'}
                                                                     <span className="w-1.5 h-1.5 rounded-full ml-1" style={{ background: getStatusColor(app.status) }}></span>
                                                                 </span>
-                                                                {app.status === 'PENDING' && app.approver_email && (
-                                                                    <span className="text-[10px] text-gray-500 font-medium break-all">Pending at: {app.approver_email}</span>
+                                                                {app.approver_email && (
+                                                                    <span className="text-[10px] text-gray-500 font-medium break-all">
+                                                                        {app.status === 'PENDING' ? 'Pending at:' : (app.status === 'APPROVED' ? 'Approved by:' : 'Rejected by:')} {app.approver_email}
+                                                                    </span>
                                                                 )}
                                                             </div>
                                                         ))}
