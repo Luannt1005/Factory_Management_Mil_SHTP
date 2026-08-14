@@ -119,7 +119,7 @@ export default function NewRequestPage() {
                 const validRoomIds = prev.roomIds.filter(id => {
                     const room = rooms.find(r => r.id === id);
                     if (!room) return false;
-                    if (prev.visitingSite === 'Both') return true;
+                    if (prev.visitingSite === 'SHTP/DDK') return true;
                     return room.site_location === prev.visitingSite;
                 });
                 if (validRoomIds.length !== prev.roomIds.length) {
@@ -268,8 +268,8 @@ export default function NewRequestPage() {
 
     const toggleSite = (site: string) => {
         setFormData(prev => {
-            const isSHTP = prev.visitingSite === 'SHTP' || prev.visitingSite === 'Both';
-            const isDDK = prev.visitingSite === 'DDK' || prev.visitingSite === 'Both';
+            const isSHTP = prev.visitingSite === 'SHTP' || prev.visitingSite === 'SHTP/DDK';
+            const isDDK = prev.visitingSite === 'DDK' || prev.visitingSite === 'SHTP/DDK';
 
             let nextSHTP = isSHTP;
             let nextDDK = isDDK;
@@ -280,7 +280,7 @@ export default function NewRequestPage() {
             if (!nextSHTP && !nextDDK) return prev;
 
             let nextVal = 'SHTP';
-            if (nextSHTP && nextDDK) nextVal = 'Both';
+            if (nextSHTP && nextDDK) nextVal = 'SHTP/DDK';
             else if (nextDDK) nextVal = 'DDK';
 
             return { ...prev, visitingSite: nextVal };
@@ -382,327 +382,346 @@ export default function NewRequestPage() {
                         </div>
 
                         {/* Form Container */}
-                        <div style={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                            {/* Active Category Badge */}
-                            <div style={{ display: 'inline-block', backgroundColor: '#db011c', color: 'white', fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '4px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') ? 'VENDOR / CONTRACTOR' : formData.visitorCategory === 'Interviewee' ? 'INTERVIEWEE' : 'MIL / TTI EXPAT'}
-                            </div>
+                        {formData.visitorCategory && (
+                            <div style={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                {/* Active Category Badge */}
+                                <div style={{ display: 'inline-block', backgroundColor: '#db011c', color: 'white', fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '4px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') ? 'VENDOR / CONTRACTOR' : formData.visitorCategory === 'Interviewee' ? 'INTERVIEWEE' : 'MIL / TTI EXPAT'}
+                                </div>
 
-                            <form onSubmit={(e) => { e.preventDefault(); setShowReviewModal(true); }}>
-                                
-                                {/* VISITOR INFORMATION */}
-                                <SectionHeader title="Visitor Information" />
-                                
-                                {formData.visitorCategory === 'Interviewee' ? (
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
-                                        <div>
-                                            <InputLabel required>Interviewee Name</InputLabel>
-                                            <Input type="text" required placeholder="Enter interviewee full name" value={formData.intervieweeName} onChange={(e: any) => setFormData({...formData, intervieweeName: capitalizeWords(e.target.value)})} />
-                                        </div>
-                                        <div>
-                                            <InputLabel required>Job Title</InputLabel>
-                                            <Input type="text" required placeholder="e.g. Software Engineer" value={formData.jobTitle} onChange={(e: any) => setFormData({...formData, jobTitle: capitalizeWords(e.target.value)})} />
-                                        </div>
-                                        <div>
-                                            <InputLabel required>Interview Department</InputLabel>
-                                            <Input type="text" required placeholder="e.g. IT" value={formData.interviewDepartment} onChange={(e: any) => setFormData({...formData, interviewDepartment: capitalizeWords(e.target.value)})} />
-                                        </div>
-                                        <div>
-                                            <InputLabel required>Interviewer Name</InputLabel>
-                                            <Input type="text" required placeholder="Enter interviewer name" value={formData.interviewerName} onChange={(e: any) => setFormData({...formData, interviewerName: capitalizeWords(e.target.value)})} />
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                            {formData.visitors.length < 10 ? (
-                                                <button type="button" onClick={addVisitor} style={{ backgroundColor: 'transparent', color: '#db011c', border: '1px solid #db011c', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
-                                                    + ADD ANOTHER VISITOR
-                                                </button>
-                                            ) : (
-                                                <div style={{ fontSize: '11px', color: '#db011c', fontWeight: 700 }}>MAX 10 VISITORS REACHED</div>
-                                            )}
-                                            
-                                            <div style={{ display: 'flex', gap: '10px' }}>
-                                                <button type="button" onClick={downloadTemplate} style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                                    </svg>
-                                                    DOWNLOAD TEMPLATE
-                                                </button>
-                                                
-                                                <input 
-                                                    type="file" 
-                                                    accept=".xlsx, .xls" 
-                                                    ref={fileInputRef} 
-                                                    onChange={handleFileUpload} 
-                                                    style={{ display: 'none' }} 
-                                                />
-                                                <button type="button" onClick={() => fileInputRef.current?.click()} style={{ backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                                                    </svg>
-                                                    UPLOAD EXCEL
-                                                </button>
-                                            </div>
-                                        </div>
-                                        
-                                        {formData.visitors.map((visitor, idx) => (
-                                            <div key={idx} style={{ position: 'relative', marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center', borderBottom: formData.visitors.length > 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '16px' }}>
-                                                <div style={{ width: '70px', flexShrink: 0 }}>
-                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>VISITOR {idx + 1}</span>
-                                                </div>
-                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Full Name <span style={{ color: '#db011c' }}>*</span></label>
-                                                    <Input type="text" required placeholder="e.g. Nguyen Van A" value={visitor.name} onChange={(e: any) => updateVisitor(idx, 'name', e.target.value)} />
-                                                </div>
-                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Company <span style={{ color: '#db011c' }}>*</span></label>
-                                                    <Input type="text" required placeholder="e.g. TTI VN" value={visitor.company} onChange={(e: any) => updateVisitor(idx, 'company', e.target.value)} />
-                                                </div>
-                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Title <span style={{ color: '#db011c' }}>*</span></label>
-                                                    <Input type="text" required placeholder="e.g. Manager" value={visitor.title} onChange={(e: any) => updateVisitor(idx, 'title', e.target.value)} />
-                                                </div>
-                                                {formData.visitors.length > 1 ? (
-                                                    <div style={{ width: '60px', flexShrink: 0, textAlign: 'right' }}>
-                                                        <button type="button" onClick={() => removeVisitor(idx)} style={{ color: '#ef4444', background: 'none', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>REMOVE</button>
-                                                    </div>
-                                                ) : (
-                                                    <div style={{ width: '60px', flexShrink: 0 }}></div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </>
-                                )}
-
-                                {/* VENDOR DETAILS */}
-                                {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') && (
-                                    <>
-                                        <SectionHeader title="Vendor Details" />
+                                <form onSubmit={(e) => { e.preventDefault(); setShowReviewModal(true); }}>
+                                    
+                                    {/* VISITOR INFORMATION */}
+                                    <SectionHeader title="Visitor Information" />
+                                    
+                                    {formData.visitorCategory === 'Interviewee' ? (
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
-                                            <div style={{ gridColumn: '1 / -1' }}>
-                                                <InputLabel required>Specific Vendor Category</InputLabel>
-                                                <div style={{ display: 'flex', gap: '16px' }}>
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
-                                                        <input type="radio" name="vendorType" checked={formData.visitorCategory === 'Vendor'} onChange={() => setFormData({...formData, visitorCategory: 'Vendor'})} /> Vendor
-                                                    </label>
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
-                                                        <input type="radio" name="vendorType" checked={formData.visitorCategory === 'Contractor'} onChange={() => setFormData({...formData, visitorCategory: 'Contractor'})} /> Contractor
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-
-                                {/* VISIT DETAILS */}
-                                <SectionHeader title="Visit Details" />
-                                
-                                {formData.visitorCategory === 'Interviewee' ? (
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
-                                        <div>
-                                            <InputLabel required>Start Date</InputLabel>
-                                            <Input type="date" required min={todayStr} value={formData.startDate} onChange={(e: any) => setFormData({...formData, startDate: e.target.value})} />
-                                        </div>
-                                        <div>
-                                            <InputLabel required>Start Time</InputLabel>
-                                            <Input type="time" required value={formData.startTime} onChange={(e: any) => setFormData({...formData, startTime: e.target.value})} />
-                                        </div>
-                                        <div>
-                                            <InputLabel required>Interview Area</InputLabel>
-                                            <Input type="text" required placeholder="e.g. Meeting Room 4" value={formData.interviewArea} onChange={(e: any) => setFormData({...formData, interviewArea: e.target.value})} />
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
-                                        <div>
-                                            <InputLabel required>Visiting Site</InputLabel>
-                                            <div style={{ display: 'flex', gap: '16px' }}>
-                                                <div 
-                                                    onClick={() => toggleSite('SHTP')}
-                                                    style={{ flex: 1, padding: '12px', textAlign: 'center', border: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '2px solid #db011c' : '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', backgroundColor: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'Both') ? '#fff5f5' : 'white', fontWeight: 700, fontSize: '13px' }}
-                                                >
-                                                    SHTP
-                                                </div>
-                                                <div 
-                                                    onClick={() => toggleSite('DDK')}
-                                                    style={{ flex: 1, padding: '12px', textAlign: 'center', border: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '2px solid #db011c' : '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', backgroundColor: (formData.visitingSite === 'DDK' || formData.visitingSite === 'Both') ? '#fff5f5' : 'white', fontWeight: 700, fontSize: '13px' }}
-                                                >
-                                                    DDK
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <InputLabel required>Purpose of Visit</InputLabel>
-                                            <select 
-                                                required
-                                                value={formData.purposeOfVisit}
-                                                onChange={e => setFormData({ ...formData, purposeOfVisit: e.target.value })}
-                                                style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none' }}
-                                            >
-                                                <option>Business / Meeting</option>
-                                                <option>Installation & Maintenance</option>
-                                                <option>Technical Support</option>
-                                                <option>Audit / Inspection</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <InputLabel required>Start Date</InputLabel>
-                                            <Input type="date" required min={todayStr} value={formData.startDate} onChange={(e: any) => setFormData({...formData, startDate: e.target.value})} />
-                                        </div>
-                                        <div>
-                                            <InputLabel required>End Date</InputLabel>
-                                            <Input type="date" required min={formData.startDate || todayStr} max={maxEndDateStr} value={formData.endDate} onChange={(e: any) => setFormData({...formData, endDate: e.target.value})} />
-                                        </div>
-                                        {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
-                                            <div style={{ gridColumn: '1 / -1' }}>
-                                                <InputLabel required>Scope of Work / Purpose Detail</InputLabel>
-                                                <textarea 
-                                                    rows={3}
-                                                    required
-                                                    placeholder="Describe the reason for visit..."
-                                                    value={formData.purposeDetail}
-                                                    onChange={(e: any) => setFormData({...formData, purposeDetail: e.target.value})}
-                                                    style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none', resize: 'vertical' }}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {isExpatCategory && (
-                                    <>
-                                        <SectionHeader title="Host Department" />
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                                             <div>
-                                                <InputLabel required>Functional Dept</InputLabel>
+                                                <InputLabel required>Interviewee Name</InputLabel>
+                                                <Input type="text" required placeholder="Enter interviewee full name" value={formData.intervieweeName} onChange={(e: any) => setFormData({...formData, intervieweeName: capitalizeWords(e.target.value)})} />
+                                            </div>
+                                            <div>
+                                                <InputLabel required>Job Title</InputLabel>
+                                                <Input type="text" required placeholder="e.g. Software Engineer" value={formData.jobTitle} onChange={(e: any) => setFormData({...formData, jobTitle: capitalizeWords(e.target.value)})} />
+                                            </div>
+                                            <div>
+                                                <InputLabel required>Interview Department</InputLabel>
+                                                <Input type="text" required placeholder="e.g. IT" value={formData.interviewDepartment} onChange={(e: any) => setFormData({...formData, interviewDepartment: capitalizeWords(e.target.value)})} />
+                                            </div>
+                                            <div>
+                                                <InputLabel required>Interviewer Name</InputLabel>
+                                                <Input type="text" required placeholder="Enter interviewer name" value={formData.interviewerName} onChange={(e: any) => setFormData({...formData, interviewerName: capitalizeWords(e.target.value)})} />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                                {formData.visitors.length < 10 ? (
+                                                    <button type="button" onClick={addVisitor} style={{ backgroundColor: 'transparent', color: '#db011c', border: '1px solid #db011c', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
+                                                        + ADD ANOTHER VISITOR
+                                                    </button>
+                                                ) : (
+                                                    <div style={{ fontSize: '11px', color: '#db011c', fontWeight: 700 }}>MAX 10 VISITORS REACHED</div>
+                                                )}
+                                                
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    <button type="button" onClick={downloadTemplate} style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                                        </svg>
+                                                        DOWNLOAD TEMPLATE
+                                                    </button>
+                                                    
+                                                    <input 
+                                                        type="file" 
+                                                        accept=".xlsx, .xls" 
+                                                        ref={fileInputRef} 
+                                                        onChange={handleFileUpload} 
+                                                        style={{ display: 'none' }} 
+                                                    />
+                                                    <button type="button" onClick={() => fileInputRef.current?.click()} style={{ backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                                        </svg>
+                                                        UPLOAD EXCEL
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            {formData.visitors.map((visitor, idx) => (
+                                                <div key={idx} style={{ position: 'relative', marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center', borderBottom: formData.visitors.length > 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '16px' }}>
+                                                    <div style={{ width: '70px', flexShrink: 0 }}>
+                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>VISITOR {idx + 1}</span>
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Full Name <span style={{ color: '#db011c' }}>*</span></label>
+                                                        <Input type="text" required placeholder="e.g. Nguyen Van A" value={visitor.name} onChange={(e: any) => updateVisitor(idx, 'name', e.target.value)} />
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Company <span style={{ color: '#db011c' }}>*</span></label>
+                                                        <Input type="text" required placeholder="e.g. TTI VN" value={visitor.company} onChange={(e: any) => updateVisitor(idx, 'company', e.target.value)} />
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Title <span style={{ color: '#db011c' }}>*</span></label>
+                                                        <Input type="text" required placeholder="e.g. Manager" value={visitor.title} onChange={(e: any) => updateVisitor(idx, 'title', e.target.value)} />
+                                                    </div>
+                                                    {formData.visitors.length > 1 ? (
+                                                        <div style={{ width: '60px', flexShrink: 0, textAlign: 'right' }}>
+                                                            <button type="button" onClick={() => removeVisitor(idx)} style={{ color: '#ef4444', background: 'none', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>REMOVE</button>
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ width: '60px', flexShrink: 0 }}></div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </>
+                                    )}
+
+                                    {/* VENDOR DETAILS */}
+                                    {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') && (
+                                        <div style={{ marginTop: '24px', display: 'flex', gap: '24px', alignItems: 'center' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#334155' }}>
+                                                <input 
+                                                    type="radio" 
+                                                    name="vendorContractorType" 
+                                                    value="Vendor"
+                                                    checked={formData.visitorCategory === 'Vendor'}
+                                                    onChange={() => setFormData({...formData, visitorCategory: 'Vendor'})}
+                                                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                                                />
+                                                Vendor
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#334155' }}>
+                                                <input 
+                                                    type="radio" 
+                                                    name="vendorContractorType" 
+                                                    value="Contractor"
+                                                    checked={formData.visitorCategory === 'Contractor'}
+                                                    onChange={() => setFormData({...formData, visitorCategory: 'Contractor'})}
+                                                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                                                />
+                                                Contractor
+                                            </label>
+                                        </div>
+                                    )}
+
+                                    <SectionHeader title="Visit Details" />
+                                    
+                                    {formData.visitorCategory === 'Interviewee' ? (
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
+                                            <div>
+                                                <InputLabel required>Start Date</InputLabel>
+                                                <Input type="date" required min={todayStr} value={formData.startDate} onChange={(e: any) => setFormData({...formData, startDate: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <InputLabel required>Start Time</InputLabel>
+                                                <Input type="time" required value={formData.startTime} onChange={(e: any) => setFormData({...formData, startTime: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <InputLabel required>Interview Area</InputLabel>
+                                                <Input type="text" required placeholder="e.g. Meeting Room 4" value={formData.interviewArea} onChange={(e: any) => setFormData({...formData, interviewArea: e.target.value})} />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
+                                            <div>
+                                                <InputLabel required>Visiting Site</InputLabel>
+                                                <div style={{ display: 'flex', gap: '16px' }}>
+                                                    <div 
+                                                        onClick={() => toggleSite('SHTP')}
+                                                        style={{ flex: 1, padding: '12px', textAlign: 'center', border: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'SHTP/DDK') ? '2px solid #db011c' : '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', backgroundColor: (formData.visitingSite === 'SHTP' || formData.visitingSite === 'SHTP/DDK') ? '#fff5f5' : 'white', fontWeight: 700, fontSize: '13px' }}
+                                                    >
+                                                        SHTP
+                                                    </div>
+                                                    <div 
+                                                        onClick={() => toggleSite('DDK')}
+                                                        style={{ flex: 1, padding: '12px', textAlign: 'center', border: (formData.visitingSite === 'DDK' || formData.visitingSite === 'SHTP/DDK') ? '2px solid #db011c' : '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', backgroundColor: (formData.visitingSite === 'DDK' || formData.visitingSite === 'SHTP/DDK') ? '#fff5f5' : 'white', fontWeight: 700, fontSize: '13px' }}
+                                                    >
+                                                        DDK
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <InputLabel required>Purpose of Visit</InputLabel>
                                                 <select 
                                                     required
-                                                    value={formData.functionalDept}
-                                                    onChange={e => setFormData({ ...formData, functionalDept: e.target.value, department: '' })}
+                                                    value={formData.purposeOfVisit}
+                                                    onChange={e => setFormData({ ...formData, purposeOfVisit: e.target.value })}
                                                     style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none' }}
                                                 >
-                                                    <option value="" disabled>Select Functional Dept</option>
-                                                    {[...new Set(hostDepartments.map(h => h.functional_dept))].map(dept => (
-                                                        <option key={dept as string} value={dept as string}>{dept as string}</option>
-                                                    ))}
+                                                    <option>Business / Meeting</option>
+                                                    <option>Installation & Maintenance</option>
+                                                    <option>Technical Support</option>
+                                                    <option>Audit / Inspection</option>
                                                 </select>
                                             </div>
                                             <div>
-                                                <InputLabel required>Department</InputLabel>
-                                                <select 
-                                                    required
-                                                    value={formData.department}
-                                                    onChange={e => setFormData({ ...formData, department: e.target.value })}
-                                                    disabled={!formData.functionalDept}
-                                                    style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none', opacity: formData.functionalDept ? 1 : 0.5 }}
-                                                >
-                                                    <option value="" disabled>Select Department</option>
-                                                    {hostDepartments.filter(h => h.functional_dept === formData.functionalDept).map(h => (
-                                                        <option key={h.id} value={h.department}>{h.department}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-                                        {formData.functionalDept && formData.department && (
-                                            <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#f1f5f9', borderRadius: '6px', fontSize: '13px', color: '#334155' }}>
-                                                <div style={{ marginBottom: '4px' }}><strong>Functional Dept Host:</strong> {hostDepartments.find(h => h.functional_dept === formData.functionalDept && h.department === formData.department)?.functional_host_name || 'N/A'}</div>
-                                                <div><strong>Department Host:</strong> {hostDepartments.find(h => h.functional_dept === formData.functionalDept && h.department === formData.department)?.department_host_name || 'N/A'}</div>
-                                            </div>
-                                        )}
-
-                                        <SectionHeader title="Room Access" />
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-                                            {rooms.filter(room => formData.visitingSite === 'Both' || room.site_location === formData.visitingSite).map((r: any) => {
-                                                const isSelected = formData.roomIds.includes(r.id);
-                                                return (
-                                                    <div 
-                                                        key={r.id} 
-                                                        onClick={() => toggleRoom(r.id)}
-                                                        style={{ padding: '12px', border: isSelected ? '2px solid #db011c' : '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: isSelected ? '#fff5f5' : 'white', cursor: 'pointer' }}
-                                                    >
-                                                        <div style={{ fontSize: '13px', fontWeight: 600 }}>{r.name}</div>
-                                                        {r.description && (
-                                                            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', fontWeight: 400 }}>{r.description}</div>
-                                                        )}
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-                                        {(() => {
-                                            const ratio = rooms.length > 0 ? (formData.roomIds.length / rooms.length) : 0;
-                                            const isBULeaderTriggered = ratio > 0.6;
-                                            return (
-                                                <div style={{ marginTop: '12px', padding: '10px 14px', backgroundColor: isBULeaderTriggered ? '#fee2e2' : '#dcfce7', borderLeft: `4px solid ${isBULeaderTriggered ? '#ef4444' : '#22c55e'}`, borderRadius: '4px', fontSize: '12px', color: isBULeaderTriggered ? '#991b1b' : '#166534', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style={{ width: '16px', height: '16px', flexShrink: 0, marginTop: '2px' }}>
-                                                        {isBULeaderTriggered ? (
-                                                            <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
-                                                        ) : (
-                                                            <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 11.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
-                                                        )}
-                                                    </svg>
-                                                    <span style={{ fontWeight: 500 }}>
-                                                        {isBULeaderTriggered ? (
-                                                            <><strong>Over 60% of total rooms selected ({Math.round(ratio * 100)}%):</strong> This request WILL BE additionally sent to BU Leader for approval.</>
-                                                        ) : (
-                                                            <><strong>Note:</strong> If over 60% of total rooms are selected, the request will additionally be sent to BU Leader for approval. (Current: {Math.round(ratio * 100)}%)</>
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            );
-                                        })()}
-                                    </>
-                                )}
-
-                                {/* FINAL REQUIREMENTS */}
-                                {isExpatCategory && (
-                                    <>
-                                        <SectionHeader title="Final Requirements" />
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
-                                            <div>
-                                                <InputLabel>Factory Tour Requested?</InputLabel>
-                                                <div style={{ display: 'flex', gap: '12px' }}>
-                                                    <button type="button" onClick={() => updateDetails('factoryTour', 'Yes')} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: formData.details.factoryTour === 'Yes' ? '#db011c' : 'white', color: formData.details.factoryTour === 'Yes' ? 'white' : '#475569', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>YES</button>
-                                                    <button type="button" onClick={() => updateDetails('factoryTour', 'No')} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: formData.details.factoryTour === 'No' ? '#db011c' : 'white', color: formData.details.factoryTour === 'No' ? 'white' : '#475569', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>NO</button>
-                                                </div>
+                                                <InputLabel required>Start Date</InputLabel>
+                                                <Input type="date" required min={todayStr} value={formData.startDate} onChange={(e: any) => setFormData({...formData, startDate: e.target.value})} />
                                             </div>
                                             <div>
-                                                <InputLabel>Meal Registration?</InputLabel>
-                                                <div style={{ display: 'flex', gap: '12px' }}>
-                                                    <button type="button" onClick={() => updateDetails('mealRegistration', 'Yes')} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: formData.details.mealRegistration === 'Yes' ? '#db011c' : 'white', color: formData.details.mealRegistration === 'Yes' ? 'white' : '#475569', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>YES</button>
-                                                    <button type="button" onClick={() => updateDetails('mealRegistration', 'No')} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: formData.details.mealRegistration === 'No' ? '#db011c' : 'white', color: formData.details.mealRegistration === 'No' ? 'white' : '#475569', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>NO</button>
-                                                </div>
+                                                <InputLabel required>End Date</InputLabel>
+                                                <Input type="date" required min={formData.startDate || todayStr} max={maxEndDateStr} value={formData.endDate} onChange={(e: any) => setFormData({...formData, endDate: e.target.value})} />
                                             </div>
-                                            {formData.details.mealRegistration === 'Yes' && (
-                                                <div>
-                                                    <InputLabel required>Charged Cost Center</InputLabel>
-                                                    <Input type="text" required placeholder="000-00-0000" value={formData.details.costCenter} onChange={(e: any) => updateDetails('costCenter', e.target.value)} />
+                                            {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
+                                                <div style={{ gridColumn: '1 / -1' }}>
+                                                    <InputLabel required>Scope of Work / Purpose Detail</InputLabel>
+                                                    <textarea 
+                                                        rows={3}
+                                                        required
+                                                        placeholder="Describe the reason for visit..."
+                                                        value={formData.purposeDetail}
+                                                        onChange={(e: any) => setFormData({...formData, purposeDetail: e.target.value})}
+                                                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none', resize: 'vertical' }}
+                                                    />
                                                 </div>
                                             )}
                                         </div>
-                                    </>
-                                )}
+                                    )}
+
+                                    {isExpatCategory && (
+                                        <>
+                                            <SectionHeader title="Host Department" />
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                                                <div>
+                                                    <InputLabel required>Functional Dept</InputLabel>
+                                                    <select 
+                                                        required
+                                                        value={formData.functionalDept}
+                                                        onChange={e => setFormData({ ...formData, functionalDept: e.target.value, department: '' })}
+                                                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none' }}
+                                                    >
+                                                        <option value="" disabled>Select Functional Dept</option>
+                                                        {[...new Set(hostDepartments.map(h => h.functional_dept))].map(dept => (
+                                                            <option key={dept as string} value={dept as string}>{dept as string}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <InputLabel required>Department</InputLabel>
+                                                    <select 
+                                                        required
+                                                        value={formData.department}
+                                                        onChange={e => setFormData({ ...formData, department: e.target.value })}
+                                                        disabled={!formData.functionalDept}
+                                                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none', opacity: formData.functionalDept ? 1 : 0.5 }}
+                                                    >
+                                                        <option value="" disabled>Select Department</option>
+                                                        {hostDepartments.filter(h => h.functional_dept === formData.functionalDept).map((h, i) => (
+                                                            <option key={i} value={h.department}>{h.department}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <SectionHeader title="Select Rooms" />
+                                            {rooms.length === 0 ? (
+                                                <div style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic' }}>No rooms available.</div>
+                                            ) : (
+                                                <>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
+                                                        {rooms.filter(room => formData.visitingSite === 'SHTP/DDK' || room.site_location === formData.visitingSite).map(room => (
+                                                            <div 
+                                                                key={room.id}
+                                                                onClick={() => toggleRoom(room.id)}
+                                                                style={{ 
+                                                                    padding: '12px', borderRadius: '8px', border: formData.roomIds.includes(room.id) ? '2px solid #db011c' : '1px solid #e2e8f0',
+                                                                    backgroundColor: formData.roomIds.includes(room.id) ? '#fff5f5' : 'white', cursor: 'pointer', transition: 'all 0.15s'
+                                                                }}
+                                                            >
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                                                    <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: formData.roomIds.includes(room.id) ? 'none' : '1px solid #cbd5e1', backgroundColor: formData.roomIds.includes(room.id) ? '#db011c' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                        {formData.roomIds.includes(room.id) && (
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" style={{ width: '12px', height: '12px' }}>
+                                                                                <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+                                                                            </svg>
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{ fontWeight: 800, fontSize: '13px', color: formData.roomIds.includes(room.id) ? '#db011c' : '#1e293b' }}>
+                                                                        {room.name}
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ fontSize: '11px', color: '#64748b', paddingLeft: '24px' }}>{room.description || 'No description'}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    {(() => {
+                                                        const ratio = rooms.length > 0 ? (formData.roomIds.length / rooms.length) : 0;
+                                                        const isBULeaderTriggered = ratio > 0.6;
+                                                        return (
+                                                            <div style={{ marginTop: '12px', padding: '10px 14px', backgroundColor: isBULeaderTriggered ? '#fee2e2' : '#dcfce7', borderLeft: `4px solid ${isBULeaderTriggered ? '#ef4444' : '#22c55e'}`, borderRadius: '4px', fontSize: '12px', color: isBULeaderTriggered ? '#991b1b' : '#166534', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style={{ width: '16px', height: '16px', flexShrink: 0, marginTop: '2px' }}>
+                                                                    {isBULeaderTriggered ? (
+                                                                        <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
+                                                                    ) : (
+                                                                        <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 11.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+                                                                    )}
+                                                                </svg>
+                                                                <span style={{ fontWeight: 500 }}>
+                                                                    {isBULeaderTriggered ? (
+                                                                        <><strong>Over 60% of total rooms selected ({Math.round(ratio * 100)}%):</strong> This request WILL BE additionally sent to BU Leader for approval.</>
+                                                                    ) : (
+                                                                        <><strong>Note:</strong> If over 60% of total rooms are selected, the request will additionally be sent to BU Leader for approval. (Current: {Math.round(ratio * 100)}%)</>
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {/* FINAL REQUIREMENTS */}
+                                    {isExpatCategory && (
+                                                <>
+                                                    <SectionHeader title="Final Requirements" />
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
+                                                        <div>
+                                                            <InputLabel>Factory Tour Requested?</InputLabel>
+                                                            <div style={{ display: 'flex', gap: '12px' }}>
+                                                                <button type="button" onClick={() => updateDetails('factoryTour', 'Yes')} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: formData.details.factoryTour === 'Yes' ? '#db011c' : 'white', color: formData.details.factoryTour === 'Yes' ? 'white' : '#475569', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>YES</button>
+                                                                <button type="button" onClick={() => updateDetails('factoryTour', 'No')} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: formData.details.factoryTour === 'No' ? '#db011c' : 'white', color: formData.details.factoryTour === 'No' ? 'white' : '#475569', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>NO</button>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <InputLabel>Meal Registration?</InputLabel>
+                                                            <div style={{ display: 'flex', gap: '12px' }}>
+                                                                <button type="button" onClick={() => updateDetails('mealRegistration', 'Yes')} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: formData.details.mealRegistration === 'Yes' ? '#db011c' : 'white', color: formData.details.mealRegistration === 'Yes' ? 'white' : '#475569', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>YES</button>
+                                                                <button type="button" onClick={() => updateDetails('mealRegistration', 'No')} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: formData.details.mealRegistration === 'No' ? '#db011c' : 'white', color: formData.details.mealRegistration === 'No' ? 'white' : '#475569', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>NO</button>
+                                                            </div>
+                                                        </div>
+                                                        {formData.details.mealRegistration === 'Yes' && (
+                                                            <div>
+                                                                <InputLabel required>Charged Cost Center</InputLabel>
+                                                                <Input type="text" required placeholder="000-00-0000" value={formData.details.costCenter} onChange={(e: any) => updateDetails('costCenter', e.target.value)} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
 
 
 
-                                {/* Actions */}
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
-                                    <div style={{ display: 'flex', gap: '16px' }}>
-                                        <button 
-                                            type="submit" 
-                                            disabled={loading}
-                                            style={{ backgroundColor: '#db011c', color: 'white', fontSize: '13px', fontWeight: 800, padding: '10px 24px', borderRadius: '6px', border: 'none', cursor: 'pointer', boxShadow: '0 2px 4px rgba(219,1,28,0.2)' }}
-                                        >
-                                            {loading ? 'PROCESSING...' : 'SUBMIT REQUEST'}
-                                        </button>
-                                    </div>
-                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500 }}>
-                                        Fields marked <span style={{ color: '#db011c' }}>*</span> are required
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+                                            {/* Actions */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
+                                                <div style={{ display: 'flex', gap: '16px' }}>
+                                                    <button 
+                                                        type="submit" 
+                                                        disabled={loading}
+                                                        style={{ backgroundColor: '#db011c', color: 'white', fontSize: '13px', fontWeight: 800, padding: '10px 24px', borderRadius: '6px', border: 'none', cursor: 'pointer', boxShadow: '0 2px 4px rgba(219,1,28,0.2)' }}
+                                                    >
+                                                        {loading ? 'PROCESSING...' : 'SUBMIT REQUEST'}
+                                                    </button>
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500 }}>
+                                                    Fields marked <span style={{ color: '#db011c' }}>*</span> are required
+                                                </div>
+                                            </div>
+                                </form>
+                            </div>
+                        )}
+                        {/* End Form Container */}
                     </>
                 ) : (
                     <div style={{ marginTop: '16px' }}>

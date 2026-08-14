@@ -25,7 +25,8 @@ export default function CheckInOutManagement() {
         date: new Date().toISOString().split('T')[0], 
         category: '', 
         search: '',
-        visitorName: ''
+        visitorName: '',
+        site: ''
     });
     const [viewMode, setViewMode] = useState<ViewMode>('group');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
@@ -45,6 +46,7 @@ export default function CheckInOutManagement() {
             if (filters.date) query.append('date', filters.date);
             if (filters.category) query.append('category', filters.category);
             if (filters.search) query.append('search', filters.search);
+            if (filters.site) query.append('site', filters.site);
             query.append('limit', '200'); // Fetch more for flattened view
 
             const res = await fetch(`/api/visitor_admin/checkinout/history?${query.toString()}`);
@@ -248,7 +250,7 @@ export default function CheckInOutManagement() {
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 {/* Advanced Filters */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-14 gap-4 items-end">
                         <div className="md:col-span-2">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Search Req</label>
                             <input 
@@ -313,6 +315,19 @@ export default function CheckInOutManagement() {
                                 <option value="Interviewee">Interviewee</option>
                             </select>
                         </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Site</label>
+                            <select 
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
+                                value={filters.site}
+                                onChange={(e) => setFilters({ ...filters, site: e.target.value })}
+                            >
+                                <option value="">All Sites</option>
+                                <option value="SHTP">SHTP</option>
+                                <option value="DDK">DDK</option>
+                                <option value="SHTP/DDK">SHTP / DDK</option>
+                            </select>
+                        </div>
                         
                         {/* View Modes Toggle */}
                         <div className="md:col-span-2 flex bg-gray-200 p-1 rounded justify-between h-[38px]">
@@ -365,7 +380,7 @@ export default function CheckInOutManagement() {
                                     <div className="col-span-4">VISITOR(S)</div>
                                     <div className="col-span-2">CATEGORY</div>
                                     <div className="col-span-2">DATE</div>
-                                    <div className="col-span-2">DEPT</div>
+                                    <div className="col-span-2">SITE</div>
                                 </div>
                             )}
 

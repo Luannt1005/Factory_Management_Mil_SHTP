@@ -20,6 +20,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date'); // YYYY-MM-DD
         const category = searchParams.get('category');
+        const site = searchParams.get('site');
         const search = searchParams.get('search'); // Request ID or submitter name
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '15');
@@ -82,6 +83,20 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
             whereConditions.push(`r."visitorCategory" = $${paramCount}`);
             queryParams.push(category);
             paramCount += 1;
+        }
+
+        if (site) {
+            if (site === 'SHTP' || site === 'DDK') {
+                whereConditions.push(`(r."visitingSite" = $${paramCount} OR r."visitingSite" = 'SHTP/DDK' OR r."visitingSite" = 'Both')`);
+                queryParams.push(site);
+                paramCount += 1;
+            } else if (site === 'SHTP/DDK') {
+                whereConditions.push(`(r."visitingSite" = 'SHTP/DDK' OR r."visitingSite" = 'Both')`);
+            } else {
+                whereConditions.push(`r."visitingSite" = $${paramCount}`);
+                queryParams.push(site);
+                paramCount += 1;
+            }
         }
 
         if (search) {

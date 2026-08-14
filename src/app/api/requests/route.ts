@@ -196,7 +196,10 @@ export async function POST(request: Request) {
                                 submitterEmail: formatEmail((session.user as any).username || session.user.email),
                                 visitorCategory: visitorCategory,
                                 visitors_list: visitors,
-                                is_vp_approval: (isVPApproval && rooms.length > 0) ? true : false
+                                is_vp_approval: (isVPApproval && rooms.length > 0) ? true : false,
+                                visitingSite: visitingSite || null,
+                                mealRegistration: details?.mealRegistration || null,
+                                costCenter: details?.costCenter || null
                             },
                             rooms: roomsPayload
                         }),
@@ -235,7 +238,10 @@ export async function POST(request: Request) {
                                 submitterName: session.user.name || (session.user as any).username,
                                 visitorCategory: visitorCategory,
                                 submitterEmail: submitterEmail,
-                                visitors_list: visitors
+                                visitors_list: visitors,
+                                visitingSite: visitingSite || null,
+                                mealRegistration: details?.mealRegistration || null,
+                                costCenter: details?.costCenter || null
                             },
                             rooms: [
                                 {

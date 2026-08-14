@@ -314,9 +314,11 @@ export default function AdminRoomsPage() {
                                                             <option value="false">Inactive</option>
                                                         </select>
                                                     </td>
-                                                    <td className="p-4 text-right flex gap-2 justify-end">
-                                                        <button onClick={() => handleUpdateRoom(room.id, editingRoom)} className="text-white bg-green-500 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-600">Save</button>
-                                                        <button onClick={() => setEditingRoom(null)} className="text-gray-500 bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300">Cancel</button>
+                                                    <td className="p-4 text-right">
+                                                        <div className="flex gap-2 justify-end">
+                                                            <button onClick={() => handleUpdateRoom(room.id, editingRoom)} className="text-white bg-green-500 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-600">Save</button>
+                                                            <button onClick={() => setEditingRoom(null)} className="text-gray-500 bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300">Cancel</button>
+                                                        </div>
                                                     </td>
                                                 </>
                                             ) : (
@@ -334,9 +336,11 @@ export default function AdminRoomsPage() {
                                                     <td className="p-5 text-xs font-bold text-center">
                                                         <span className={room.is_active ? 'text-green-500' : 'text-gray-400'}>{room.is_active ? '● Active' : '○ Inactive'}</span>
                                                     </td>
-                                                    <td className="p-5 text-right flex gap-3 justify-end">
-                                                        <button onClick={() => setEditingRoom(room)} className="text-[#db011c] font-bold hover:underline text-xs">Edit</button>
-                                                        <button onClick={() => handleDeleteRoom(room.id)} className="text-red-500 font-bold hover:underline text-xs">Delete</button>
+                                                    <td className="p-5 text-right">
+                                                        <div className="flex gap-3 justify-end">
+                                                            <button onClick={() => setEditingRoom(room)} className="text-[#db011c] font-bold hover:underline text-xs">Edit</button>
+                                                            <button onClick={() => handleDeleteRoom(room.id)} className="text-red-500 font-bold hover:underline text-xs">Delete</button>
+                                                        </div>
                                                     </td>
                                                 </>
                                             )}
@@ -401,9 +405,11 @@ export default function AdminRoomsPage() {
                                                             <option value="Share Function">Share Function</option>
                                                         </select>
                                                     </td>
-                                                    <td className="p-4 text-right flex gap-2 justify-end">
-                                                        <button onClick={() => handleUpdateCategory(cat.id, editingCategory)} className="text-white bg-green-500 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-600">Save</button>
-                                                        <button onClick={() => setEditingCategory(null)} className="text-gray-500 bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300">Cancel</button>
+                                                    <td className="p-4 text-right">
+                                                        <div className="flex gap-2 justify-end">
+                                                            <button onClick={() => handleUpdateCategory(cat.id, editingCategory)} className="text-white bg-green-500 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-600">Save</button>
+                                                            <button onClick={() => setEditingCategory(null)} className="text-gray-500 bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300">Cancel</button>
+                                                        </div>
                                                     </td>
                                                 </>
                                             ) : (
@@ -421,9 +427,11 @@ export default function AdminRoomsPage() {
                                                             {cat.bu}
                                                         </span>
                                                     </td>
-                                                    <td className="p-5 text-right flex gap-3 justify-end">
-                                                        <button onClick={() => setEditingCategory(cat)} className="text-[#db011c] font-bold hover:underline text-xs">Edit</button>
-                                                        <button onClick={() => handleDeleteCategory(cat.id)} className="text-red-500 font-bold hover:underline text-xs">Delete</button>
+                                                    <td className="p-5 text-right">
+                                                        <div className="flex gap-3 justify-end">
+                                                            <button onClick={() => setEditingCategory(cat)} className="text-[#db011c] font-bold hover:underline text-xs">Edit</button>
+                                                            <button onClick={() => handleDeleteCategory(cat.id)} className="text-red-500 font-bold hover:underline text-xs">Delete</button>
+                                                        </div>
                                                     </td>
                                                 </>
                                             )}
