@@ -7,8 +7,8 @@ import PageTransition from "@/components/PageTransition";
 import { UserProvider } from "@/app/context/UserContext";
 
 export const metadata: Metadata = {
-  title: "OrgChart TTI SHTP",
-  description: "Organization Chart Management System",
+  title: "Factory Management",
+  description: "Factory Management System",
   icons: {
     icon: "/Milwaukee-logo-red.png",
     shortcut: "/Milwaukee-logo-red.png",

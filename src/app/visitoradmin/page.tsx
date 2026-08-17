@@ -259,11 +259,9 @@ export default function AdminDashboard() {
                             className="text-sm border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
                         >
                             <option value="">All</option>
-                            <option value="PENDING">PENDING</option>
                             <option value="IN PROCESS">IN PROCESS</option>
-                            <option value="APPROVED">APPROVED</option>
-                            <option value="REJECTED">REJECTED</option>
                             <option value="COMPLETE">COMPLETE</option>
+                            <option value="REJECTED">REJECTED</option>
                         </select>
                     </div>
                     {(startDate || endDate || category || code || statusFilter) && (

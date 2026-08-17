@@ -250,8 +250,8 @@ export default function CheckInOutManagement() {
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 {/* Advanced Filters */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-14 gap-4 items-end">
-                        <div className="md:col-span-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 items-end">
+                        <div className="w-full">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Search Req</label>
                             <input 
                                 type="text" 
@@ -261,7 +261,7 @@ export default function CheckInOutManagement() {
                                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                             />
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="w-full">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Visitor Name</label>
                             <input 
                                 type="text" 
@@ -271,7 +271,7 @@ export default function CheckInOutManagement() {
                                 onChange={(e) => setFilters({ ...filters, visitorName: e.target.value })}
                             />
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="w-full">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Date</label>
                             <div className="flex">
                                 <input 
@@ -288,7 +288,7 @@ export default function CheckInOutManagement() {
                                 </button>
                             </div>
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="w-full">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Status</label>
                             <select 
                                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
@@ -301,7 +301,7 @@ export default function CheckInOutManagement() {
                                 <option value="CHECKED_OUT">Checked Out</option>
                             </select>
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="w-full">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category</label>
                             <select 
                                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
@@ -315,7 +315,7 @@ export default function CheckInOutManagement() {
                                 <option value="Interviewee">Interviewee</option>
                             </select>
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="w-full">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Site</label>
                             <select 
                                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
@@ -330,7 +330,7 @@ export default function CheckInOutManagement() {
                         </div>
                         
                         {/* View Modes Toggle */}
-                        <div className="md:col-span-2 flex bg-gray-200 p-1 rounded justify-between h-[38px]">
+                        <div className="flex w-full bg-gray-200 p-1 rounded justify-between h-[38px]">
                             <button
                                 onClick={() => setViewMode('group')}
                                 className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'group' ? 'bg-white shadow-sm text-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
@@ -359,12 +359,13 @@ export default function CheckInOutManagement() {
                         <div className="flex flex-col">
                             
                             {viewMode === 'visitor' && (
-                                <div className="hidden md:grid grid-cols-[1fr_1.2fr_1.5fr_1fr_1.5fr_0.8fr_1fr_0.7fr_0.7fr_170px] gap-4 items-center bg-[#1a1a1a] text-white px-6 py-3 font-bold text-[9px] uppercase tracking-wider mb-2">
+                                <div className="hidden md:grid grid-cols-[1fr_1.2fr_1.5fr_1fr_1.2fr_0.8fr_0.8fr_1fr_0.7fr_0.7fr_170px] gap-4 items-center bg-[#1a1a1a] text-white px-6 py-3 font-bold text-[9px] uppercase tracking-wider mb-2">
                                     <div>REQUEST</div>
                                     <div>VISITOR CODE</div>
                                     <div>FULL NAME</div>
                                     <div>TITLE</div>
                                     <div>COMPANY</div>
+                                    <div className="text-center">CATEGORY</div>
                                     <div>DATE</div>
                                     <div className="text-center">CARD NUMBER</div>
                                     <div className="text-center">TIME IN</div>
@@ -388,12 +389,17 @@ export default function CheckInOutManagement() {
                             {viewMode === 'visitor' && allVisitors.map((v: any, idx: number) => {
                                 const req = v._requestInfo;
                                 return (
-                                    <div key={`${req.requestId}-${v.visitorIndex}`} className={`px-6 py-3 grid grid-cols-[1fr_1.2fr_1.5fr_1fr_1.5fr_0.8fr_1fr_0.7fr_0.7fr_170px] gap-4 items-center border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                                    <div key={`${req.requestId}-${v.visitorIndex}`} className={`px-6 py-3 grid grid-cols-[1fr_1.2fr_1.5fr_1fr_1.2fr_0.8fr_0.8fr_1fr_0.7fr_0.7fr_170px] gap-4 items-center border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                                         <div className="text-[11px] font-medium text-gray-900 truncate" title={req.requestCode || req.requestId}>{req.requestCode || req.requestId}</div>
                                         <div className="text-xs font-black text-[#db011c] truncate" title={v.visitorCode}>{v.visitorCode}</div>
                                         <div className="text-xs font-bold text-gray-900 truncate" title={v.visitorName}>{v.visitorName}</div>
                                         <div className="text-[10px] text-gray-500 truncate" title={v.visitorTitle || '-'}>{v.visitorTitle || '-'}</div>
                                         <div className="text-[11px] font-medium text-gray-600 truncate" title={v.visitorCompany || req.visitingSite}>{v.visitorCompany || req.visitingSite}</div>
+                                        <div className="text-[10px] text-center">
+                                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase ${getCategoryBadgeClass(req.visitorCategory)}`}>
+                                                {req.visitorCategory?.replace(/MIL\/TTI Expat \/ SHTP Business trip/i, 'MIL EXPAT')}
+                                            </span>
+                                        </div>
                                         <div className="text-[10px] font-medium text-gray-600 truncate">{formatDateShort(req.startDate)}</div>
                                         
                                         <div className="w-full">

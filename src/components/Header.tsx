@@ -39,7 +39,7 @@ export default function Header() {
     }
   };
 
-  if (["/", "/login", "/signup"].includes(pathname)) {
+  if (["/login", "/signup"].includes(pathname)) {
     return null;
   }
 
@@ -47,7 +47,10 @@ export default function Header() {
   let pageTitle = "DASHBOARD";
   let badgeTitle = "WORKSPACE";
 
-  if (pathname.includes("/about_shtp")) {
+  if (pathname === "/") {
+    pageTitle = "HOME";
+    badgeTitle = "FACTORY MANAGEMENT";
+  } else if (pathname.includes("/about_shtp")) {
     pageTitle = "ABOUT FACTORY";
     badgeTitle = "INTRODUCTION";
   } else if (pathname.includes("/about_vn")) {
