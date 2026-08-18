@@ -80,47 +80,134 @@ export default function AdminDashboard() {
             const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
-                const XLSX = await import('xlsx');
                 
-                const exportData = data.requests.map((r: any) => {
+                // Fetch host departments to map names
+                let hostDepts: any[] = [];
+                try {
+                    const hdRes = await fetch('/api/admin/host-departments');
+                    if (hdRes.ok) {
+                        const jsonRes = await hdRes.json();
+                        hostDepts = jsonRes.hostDepartments || [];
+                    }
+                } catch (e) {}
+
+                const ExcelJS = await import('exceljs');
+                
+                const exportData = data.requests.flatMap((r: any) => {
                     if (activeTab === 'general') {
                         const details = parseDetails(r.details);
-                        return {
-                            'Code': '#' + r.id.split('-')[0].toUpperCase(),
-                            'Visitor Name': r.visitors ? (function(){try{return JSON.parse(r.visitors).map((v:any) => `${v.name} (${v.title})`).join(', ');}catch(e){return r.visitor_name;}}()) : r.visitor_name,
-                            'Current Company': r.current_company,
-                            'Submitter Name': r.profiles?.name,
-                            'Submitter Department': r.profiles?.department,
-                            'Start Date': new Date(r.start_date).toLocaleDateString('vi-VN'),
-                            'End Date': new Date(r.end_date).toLocaleDateString('vi-VN'),
-                            'Visitor Category': r.visitor_category,
-                            'Purpose Of Visit': r.purpose_of_visit,
-                            'Visiting Site': r.visiting_site,
-                            'Cost Center': details.costCenter || '',
-                            'Status': r.status,
-                            'Created At': new Date(r.created_at).toLocaleString('vi-VN')
-                        };
+                        
+                        let visitorsArr = [];
+                        if (r.visitors) {
+                            try {
+                                visitorsArr = JSON.parse(r.visitors);
+                                if (!Array.isArray(visitorsArr) || visitorsArr.length === 0) {
+                                    visitorsArr = [{ name: r.visitor_name, title: r.visitor_title, company: r.current_company }];
+                                }
+                            } catch (e) {
+                                visitorsArr = [{ name: r.visitor_name, title: r.visitor_title, company: r.current_company }];
+                            }
+                        } else {
+                            visitorsArr = [{ name: r.visitor_name, title: r.visitor_title, company: r.current_company }];
+                        }
+
+                        return visitorsArr.map((v: any, index: number) => {
+                            const pendingApprovals = (r.request_approvals || []).filter((a: any) => a.status === 'PENDING');
+                            const approvalProgress = (r.request_approvals || []).map((a: any) => 
+                                `[${a.status}] ${a.room_areas?.name || 'Host'} (${a.approver_email})`
+                            ).join(' ; ');
+                            const isCompleted = r.status === 'COMPLETE' || r.status === 'APPROVED' || r.status === 'REJECTED';
+
+                            const hdObj = hostDepts.find((h: any) => h.functional_dept === details.functionalDept && h.department === details.department) || {};
+
+                            return {
+                                'Request Code': '#' + r.id.split('-')[0].toUpperCase(),
+                                'Visitor Code': '#' + r.id.split('-')[0].toUpperCase() + '-V' + (index + 1),
+                                'Visitor Name': v.name || r.visitor_name || '',
+                                'Visitor Title': v.title || r.visitor_title || '',
+                                'Visitor Company': v.company || r.current_company || '',
+                                'Submitter Name': r.profiles?.name || '',
+                                'Submitter Department': r.profiles?.department || '',
+                                'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : '',
+                                'End Date': r.end_date ? new Date(r.end_date).toLocaleDateString('vi-VN') : '',
+                                'Visitor Category': r.visitor_category || '',
+                                'Purpose Of Visit': r.purpose_of_visit || '',
+                                'Purpose Detail': r.purpose_detail || '',
+                                'Visiting Site': r.visiting_site || '',
+                                'Host Functional Dept': details.functionalDept || '',
+                                'Func Host Name': hdObj.functional_host_name || '',
+                                'Host Department': details.department || '',
+                                'Dept Host Name': hdObj.department_host_name || '',
+                                'Cost Center': details.costCenter || '',
+                                'Factory Tour': details.factoryTour || '',
+                                'Meal Registration': details.mealRegistration || '',
+                                'Status': r.status || '',
+                                'Approval Progress': approvalProgress,
+                                'Submit Date': r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '',
+                                'Completion Date': (isCompleted && r.updated_at) ? new Date(r.updated_at).toLocaleString('vi-VN') : ''
+                            };
+                        });
                     } else {
-                        return {
-                            'Code': '#' + r.id.split('-')[0].toUpperCase(),
-                            'Interviewee Name': r.interviewee_name,
-                            'Job Title': r.job_title,
-                            'Interview Department': r.interview_department,
-                            'Interviewer Name': r.interviewer_name,
-                            'Start Date': new Date(r.start_date).toLocaleDateString('vi-VN'),
-                            'Start Time': r.start_time,
-                            'Interview Area': r.interview_area,
-                            'Submitter Name': r.profiles?.name,
-                            'Status': r.status,
-                            'Created At': new Date(r.created_at).toLocaleString('vi-VN')
-                        };
+                        return [{
+                            'Code': r.visitor_code || ('#' + r.id.split('-')[0].toUpperCase()),
+                            'Interviewee Name': r.interviewee_name || '',
+                            'Submitter Name': r.os_name || '',
+                            'Job Title': r.job_title || '',
+                            'Interview Department': r.interview_department || '',
+                            'Interviewer Name': r.interviewer_name || '',
+                            'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : '',
+                            'Start Time': r.start_time || '',
+                            'Interview Area': r.interview_area || '',
+                            'Submitter Name': r.profiles?.name || '',
+                            'Status': r.status || '',
+                            'Created At': r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : ''
+                        }];
                     }
                 });
 
-                const worksheet = XLSX.utils.json_to_sheet(exportData);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Visitors");
-                XLSX.writeFile(workbook, `Visitor_Requests_${new Date().toISOString().split('T')[0]}.xlsx`);
+                if (exportData.length > 0) {
+                    const workbook = new ExcelJS.Workbook();
+                    const worksheet = workbook.addWorksheet('Visitors');
+
+                    const columns = Object.keys(exportData[0]).map(key => ({
+                        header: key,
+                        key: key,
+                        width: Math.max(20, key.length + 5)
+                    }));
+                    worksheet.columns = columns;
+
+                    exportData.forEach((dataRow: any) => {
+                        worksheet.addRow(dataRow);
+                    });
+
+                    // Style the header row
+                    const headerRow = worksheet.getRow(1);
+                    headerRow.eachCell((cell) => {
+                        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; // White text
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFDB011C' } // Red background
+                        };
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    });
+                    
+                    // Freeze the header
+                    worksheet.views = [
+                        { state: 'frozen', xSplit: 0, ySplit: 1 }
+                    ];
+
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = `Visitor_Requests_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(blobUrl);
+                }
             }
         } catch (err) {
             console.error('Export failed:', err);
@@ -339,6 +426,7 @@ export default function AdminDashboard() {
                                     </th>
                                     <th className="px-3 py-2">Code</th>
                                     <th className="px-3 py-2">Interviewee Name</th>
+                                    <th className="px-3 py-2">Submitter</th>
                                     <th className="px-3 py-2">Job Title</th>
                                     <th className="px-3 py-2">Interviewer</th>
                                     <th className="px-3 py-2 text-center">Start Date</th>
@@ -502,12 +590,17 @@ export default function AdminDashboard() {
                                         </td>
                                         <td className="px-3 py-2">
                                             <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                                                #{request.id.split('-')[0].toUpperCase()}
+                                                {request.visitor_code || ('#' + request.id.split('-')[0].toUpperCase())}
                                             </span>
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-extrabold text-[#0f172a] truncate max-w-[150px]">
                                                 {request.interviewee_name}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            <div className="font-bold text-[#0f172a] text-[11px] truncate max-w-[150px]">
+                                                {request.os_name || '-'}
                                             </div>
                                         </td>
                                         <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
@@ -700,8 +793,19 @@ export default function AdminDashboard() {
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" /></svg>
                                             <span className="text-sm font-medium">Request Ref</span>
                                         </div>
-                                        <div className="font-extrabold text-[#0f172a] text-sm tracking-tight">{selectedRequest.id.split('-')[0].toUpperCase()}</div>
+                                        <div className="font-extrabold text-[#0f172a] text-sm tracking-tight">{selectedRequest.visitor_code || selectedRequest.id.split('-')[0].toUpperCase()}</div>
                                     </div>
+                                    
+                                    {/* Submitter */}
+                                    {activeTab === 'interviewee' && (
+                                        <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                            <div className="flex items-center gap-3 text-gray-500">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                                                <span className="text-sm font-medium">Submitter</span>
+                                            </div>
+                                            <div className="font-extrabold text-[#0f172a] text-sm tracking-tight">{selectedRequest.os_name || '-'}</div>
+                                        </div>
+                                    )}
                                     
                                     {/* Status */}
                                     <div className="flex items-center justify-between py-4 border-b border-gray-50">

@@ -84,6 +84,7 @@ export async function GET(request: Request) {
                 r.details,
                 r.visitors,
                 r."createdAt" as created_at,
+                r."updatedAt" as updated_at,
                 p.name as profile_name,
                 p.department as profile_department,
                 (

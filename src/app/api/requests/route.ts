@@ -4,23 +4,33 @@ import { getVisitorDbConnection } from '@/lib/visitor-db';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
-async function getOrCreateVisitorProfile(user: any, visitorPool: any) {
+async function getOrCreateVisitorProfile(user: any, pool: any) {
     const email = formatEmail(user.email || user.username);
+    if (!email) return null;
+    
     const name = user.name || user.full_name || user.email || user.username || 'Unknown User';
+    const role = user.role || 'USER';
+    const department = user.department || 'Unknown';
 
-    const { rows: profiles } = await visitorPool.query(
+    const { rows } = await pool.query(
         'SELECT id FROM "User" WHERE email = $1',
         [email]
     );
 
-    if (profiles.length > 0) return profiles[0].id;
+    if (rows.length > 0) {
+        // Keep name and department in sync
+        await pool.query(
+            'UPDATE "User" SET department = $1, name = $2 WHERE id = $3',
+            [department, name, rows[0].id]
+        );
+        return rows[0].id;
+    }
 
-    const role = user.role === 'admin' ? 'ADMIN' : 'USER';
-    const { rows: newProfiles } = await visitorPool.query(
+    const { rows: newProfiles } = await pool.query(
         `INSERT INTO "User" (id, email, name, password, role, department, "updatedAt") 
-         VALUES (gen_random_uuid(), $1, $2, 'BRIDGE_AUTO_GENERATED', $3, 'AUTO_SYNC', NOW()) 
+         VALUES (gen_random_uuid(), $1, $2, 'BRIDGE_AUTO_GENERATED', $3, $4, NOW()) 
          RETURNING id`,
-        [email, name, role]
+        [email, name, role, department]
     );
 
     return newProfiles[0].id;

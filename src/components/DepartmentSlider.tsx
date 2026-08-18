@@ -72,6 +72,13 @@ const departments = [
     subtitle: 'Safety & Sustainability',
     desc: 'Ensures a safe and compliant workplace while driving sustainability and corporate responsibility initiatives aligned with global ESG standards.',
     img: '/landing_page/ehs_esg.png'
+  },
+  {
+    id: 'ddk',
+    title: 'DDK',
+    subtitle: 'DDK Facility',
+    desc: 'Focuses on ensuring operational excellence, manufacturing efficiency, and facility management across the DDK site.',
+    img: '/landing_page/DDK.png'
   }
 ];
 

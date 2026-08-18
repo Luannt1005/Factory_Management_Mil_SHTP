@@ -332,7 +332,7 @@ function DashboardContent() {
                                 >
                                     <td className="px-6 py-5">
                                         <span className="text-[11px] font-black text-gray-400 bg-gray-100 px-2 py-1 rounded">
-                                            #{request.id.split('-')[0].toUpperCase()}
+                                            {request.visitor_code}
                                         </span>
                                     </td>
                                     <td className="px-6 py-5">
