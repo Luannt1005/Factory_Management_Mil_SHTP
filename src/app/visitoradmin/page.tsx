@@ -158,7 +158,6 @@ export default function AdminDashboard() {
                             'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : '',
                             'Start Time': r.start_time || '',
                             'Interview Area': r.interview_area || '',
-                            'Submitter Name': r.profiles?.name || '',
                             'Status': r.status || '',
                             'Created At': r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : ''
                         }];
