@@ -54,7 +54,7 @@ export async function GET(request: Request) {
                 SELECT 
                     ir.id::text as id, 
                     ir."startDate", 
-                    ir."endDate",
+                    ir."startDate" as "endDate",
                     ir.status, 
                     ir."createdAt", 
                     'Interviewee' as category,

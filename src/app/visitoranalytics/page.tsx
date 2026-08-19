@@ -9,14 +9,33 @@ import {
 export default function VisitorAnalytics() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [periodFilter, setPeriodFilter] = useState('all');
     const [buFilter, setBuFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
 
     useEffect(() => {
         const fetchAnalytics = async () => {
             try {
+                
+                let startDate = '';
+                let endDate = '';
+                const now = new Date();
+                
+                if (periodFilter === 'today') {
+                    startDate = now.toISOString().split('T')[0];
+                    endDate = startDate;
+                } else if (periodFilter === 'week') {
+                    const first = now.getDate() - now.getDay() + 1;
+                    const start = new Date(now.setDate(first));
+                    startDate = start.toISOString().split('T')[0];
+                } else if (periodFilter === 'month') {
+                    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                    startDate = start.toISOString().split('T')[0];
+                } else if (periodFilter === 'year') {
+                    const start = new Date(now.getFullYear(), 0, 1);
+                    startDate = start.toISOString().split('T')[0];
+                }
+
                 const params = new URLSearchParams();
                 if (startDate) params.append('startDate', startDate);
                 if (endDate) params.append('endDate', endDate);
@@ -38,7 +57,7 @@ export default function VisitorAnalytics() {
         // Refresh every minute for the live feed
         const interval = setInterval(fetchAnalytics, 60000);
         return () => clearInterval(interval);
-    }, [startDate, endDate, buFilter, statusFilter]);
+    }, [periodFilter, buFilter, statusFilter]);
 
     if (loading) {
         return (
@@ -87,21 +106,17 @@ export default function VisitorAnalytics() {
             <div className="flex flex-wrap items-center gap-4 mb-4">
                 <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Filters:</span>
                 
-                <input 
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                <select 
+                    value={periodFilter}
+                    onChange={(e) => setPeriodFilter(e.target.value)}
                     className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
-                    title="Start Date"
-                />
-                
-                <input 
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
-                    title="End Date"
-                />
+                >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                </select>
 
                 <select 
                     value={buFilter}
@@ -119,12 +134,9 @@ export default function VisitorAnalytics() {
                     className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
                 >
                     <option value="all">All Status</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="APPROVED">Approved</option>
-                    <option value="CHECKED_IN">Checked In</option>
+                    <option value="IN PROCESS">In Process</option>
                     <option value="COMPLETE">Complete</option>
                     <option value="REJECTED">Rejected</option>
-                    <option value="CANCELLED">Cancelled</option>
                 </select>
             </div>
 
