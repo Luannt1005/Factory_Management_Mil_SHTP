@@ -34,15 +34,15 @@ export default function RootLayout({
       >
         <NextAuthProvider>
           <UserProvider>
-            <div className="flex w-full h-screen print:h-auto overflow-hidden print:overflow-visible">
+            <div className="print-root flex w-full h-screen overflow-hidden">
               <div className="print:hidden">
                 <Sidebar />
               </div>
-              <div className="flex-1 flex flex-col overflow-hidden print:overflow-visible print:block">
+              <div className="print-content flex-1 flex flex-col overflow-hidden">
                 <div className="print:hidden">
                   <Header />
                 </div>
-                <main className="flex-1 overflow-auto print:overflow-visible print:block bg-[var(--color-bg-page)] relative scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent transition-colors duration-300 flex flex-col">
+                <main className="print-main flex-1 overflow-auto bg-[var(--color-bg-page)] relative scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent transition-colors duration-300 flex flex-col">
                   <LayoutContentWrapper>
                     <PageTransition>
                       {children}
