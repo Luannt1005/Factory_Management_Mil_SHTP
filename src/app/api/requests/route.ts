@@ -207,9 +207,9 @@ export async function POST(request: Request) {
                                 visitorCategory: visitorCategory,
                                 visitors_list: visitors,
                                 is_vp_approval: (isVPApproval && rooms.length > 0) ? true : false,
-                                visitingSite: visitingSite || null,
-                                mealRegistration: details?.mealRegistration || null,
-                                costCenter: details?.costCenter || null
+                                visitingSite: visitingSite || "",
+                                mealRegistration: details?.mealRegistration || "",
+                                costCenter: details?.costCenter || ""
                             },
                             rooms: roomsPayload
                         }),
@@ -250,9 +250,9 @@ export async function POST(request: Request) {
                                 submitterEmail: submitterEmail,
                                 visitors_list: visitors,
                                 is_vp_approval: false,
-                                visitingSite: visitingSite || null,
-                                mealRegistration: details?.mealRegistration || null,
-                                costCenter: details?.costCenter || null
+                                visitingSite: visitingSite || "",
+                                mealRegistration: details?.mealRegistration || "",
+                                costCenter: details?.costCenter || ""
                             },
                             rooms: [
                                 {
