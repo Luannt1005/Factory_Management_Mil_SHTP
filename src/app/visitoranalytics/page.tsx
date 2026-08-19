@@ -9,15 +9,20 @@ import {
 export default function VisitorAnalytics() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [dateFilter, setDateFilter] = useState('today');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [buFilter, setBuFilter] = useState('all');
-    const [departmentFilter, setDepartmentFilter] = useState('all');
-    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
 
     useEffect(() => {
         const fetchAnalytics = async () => {
             try {
-                const res = await fetch('/api/visitor_admin/analytics');
+                const params = new URLSearchParams();
+                if (startDate) params.append('startDate', startDate);
+                if (endDate) params.append('endDate', endDate);
+                if (buFilter && buFilter !== 'all') params.append('bu', buFilter);
+                if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
+                const res = await fetch('/api/visitor_admin/analytics?' + params.toString());
                 if (res.ok) {
                     const json = await res.json();
                     setData(json);
@@ -33,7 +38,7 @@ export default function VisitorAnalytics() {
         // Refresh every minute for the live feed
         const interval = setInterval(fetchAnalytics, 60000);
         return () => clearInterval(interval);
-    }, []);
+    }, [startDate, endDate, buFilter, statusFilter]);
 
     if (loading) {
         return (
@@ -81,45 +86,45 @@ export default function VisitorAnalytics() {
             {/* Filters Row */}
             <div className="flex flex-wrap items-center gap-4 mb-4">
                 <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Filters:</span>
-                <select 
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
+                
+                <input 
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
                     className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
-                >
-                    <option value="today">Today</option>
-                    <option value="week">This week</option>
-                    <option value="month">This month</option>
-                    <option value="year">This year</option>
-                </select>
+                    title="Start Date"
+                />
+                
+                <input 
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                    title="End Date"
+                />
+
                 <select 
                     value={buFilter}
                     onChange={(e) => setBuFilter(e.target.value)}
                     className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
                 >
                     <option value="all">All BUs</option>
-                    {buDistribution?.map((b: any) => (
-                        <option key={b.name} value={b.name}>{b.name === 'MIL' ? 'Milwaukee (MIL)' : b.name === 'SF' ? 'Smart Factory (SF)' : b.name}</option>
-                    ))}
+                    <option value="MIL">Milwaukee (MIL)</option>
+                    <option value="SF">Share Function</option>
                 </select>
+
                 <select 
-                    value={departmentFilter}
-                    onChange={(e) => setDepartmentFilter(e.target.value)}
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
                     className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
                 >
-                    <option value="all">All Departments</option>
-                    {departmentData?.map((d: any) => (
-                        <option key={d.name} value={d.name}>{d.name}</option>
-                    ))}
-                </select>
-                <select 
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
-                >
-                    <option value="all">All Visitor Types</option>
-                    {categoryData?.map((c: any) => (
-                        <option key={c.name} value={c.name}>{c.name}</option>
-                    ))}
+                    <option value="all">All Status</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="CHECKED_IN">Checked In</option>
+                    <option value="COMPLETE">Complete</option>
+                    <option value="REJECTED">Rejected</option>
+                    <option value="CANCELLED">Cancelled</option>
                 </select>
             </div>
 
@@ -164,11 +169,7 @@ export default function VisitorAnalytics() {
                             <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">VISITORS OVER TIME</div>
                             <h3 className="text-sm font-black text-gray-900 uppercase">Visitor Trends</h3>
                         </div>
-                        <div className="flex bg-gray-100 p-1 rounded">
-                            <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">Day</button>
-                            <button className="px-3 py-1 text-xs font-bold text-white bg-[#db011c] rounded shadow-sm">Week</button>
-                            <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">Month</button>
-                        </div>
+                        
                     </div>
                     <div className="h-[200px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -191,7 +192,7 @@ export default function VisitorAnalytics() {
                 <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm flex flex-col">
                     <div>
                         <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">BU DISTRIBUTION</div>
-                        <h3 className="text-sm font-black text-gray-900 uppercase">MIL & SF</h3>
+                        <h3 className="text-sm font-black text-gray-900 uppercase">MIL & Share Function</h3>
                     </div>
                     <div className="flex-1 flex flex-col items-center justify-center relative -mt-4">
                         <ResponsiveContainer width="100%" height={180}>
@@ -218,7 +219,7 @@ export default function VisitorAnalytics() {
                                 <div className="w-2 h-2 bg-[#db011c]"></div> MIL — {buDistribution.find((b:any)=>b.name==='MIL')?.value || 0} visits
                             </div>
                             <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                                <div className="w-2 h-2 bg-[#2b2b2b]"></div> SF — {buDistribution.find((b:any)=>b.name==='SF')?.value || 0} visits
+                                <div className="w-2 h-2 bg-[#2b2b2b]"></div> Share Function — {buDistribution.find((b:any)=>b.name==='Share Function')?.value || 0} visits
                             </div>
                         </div>
                     </div>
@@ -232,11 +233,7 @@ export default function VisitorAnalytics() {
                         <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">PERIODIC REPORT</div>
                         <h3 className="text-sm font-black text-gray-900 uppercase">Report by week / month / year</h3>
                     </div>
-                    <div className="flex bg-gray-100 p-1 rounded">
-                        <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">By week</button>
-                        <button className="px-3 py-1 text-xs font-bold text-white bg-[#db011c] rounded shadow-sm">By month</button>
-                        <button className="px-3 py-1 text-xs font-bold text-gray-500 rounded">By year</button>
-                    </div>
+                    
                 </div>
                 <div className="flex items-end justify-between h-[180px] w-full px-4 pt-4 border-b border-gray-200 relative pb-6">
                     {/* Y-axis labels */}

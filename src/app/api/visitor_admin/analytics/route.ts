@@ -18,102 +18,112 @@ export async function GET(request: Request) {
         }
 
         const visitorPool = await getVisitorDbConnection();
+        const url = new URL(request.url);
+        const startDate = url.searchParams.get('startDate');
+        const endDate = url.searchParams.get('endDate');
+        const bu = url.searchParams.get('bu');
+        const status = url.searchParams.get('status');
+
+        let whereConditions = ["1=1"];
+        if (startDate) whereConditions.push(`"startDate" >= '${startDate}'`);
+        if (endDate) whereConditions.push(`"startDate" <= '${endDate}'`);
+        if (status && status !== 'all') whereConditions.push(`status = '${status}'`);
+        if (bu && bu !== 'all') whereConditions.push(`bu = '${bu}'`);
+        
+        const whereClause = whereConditions.join(" AND ");
+
+        // Common CTE
+        const cte = `
+            WITH BaseReqs AS (
+                SELECT 
+                    vr.id::text as id, 
+                    vr."startDate", 
+                    vr."endDate",
+                    vr.status, 
+                    vr."createdAt", 
+                    COALESCE(vr."visitorCategory", 'Other') as category,
+                    vr."visitorName" as name,
+                    CASE WHEN u.name LIKE '%VN.MIL%' OR u.name NOT LIKE '%(%)%' THEN 'MIL' ELSE 'SF' END as bu,
+                    COALESCE(u.department, 'Others') as department,
+                    'Visitor' as type
+                FROM "VisitorRequest" vr
+                LEFT JOIN "User" u ON u.id = vr."submitterId"
+                
+                UNION ALL
+                
+                SELECT 
+                    ir.id::text as id, 
+                    ir."startDate", 
+                    ir."endDate",
+                    ir.status, 
+                    ir."createdAt", 
+                    'Interviewee' as category,
+                    ir."intervieweeName" as name,
+                    CASE WHEN u.name LIKE '%VN.MIL%' OR u.name NOT LIKE '%(%)%' THEN 'MIL' ELSE 'SF' END as bu,
+                    COALESCE(u.department, 'Others') as department,
+                    'Interviewee' as type
+                FROM "IntervieweeRequest" ir
+                LEFT JOIN "User" u ON u.name = ir."osName"
+            )
+        `;
 
         // 1. STAT CARDS
-        // Visitors Today (Scheduled for today)
-        const todayRes = await visitorPool.query(`
-            SELECT COUNT(*) as count FROM (
-                SELECT id FROM "VisitorRequest" WHERE DATE("startDate") = CURRENT_DATE
-                UNION ALL
-                SELECT id::text FROM "IntervieweeRequest" WHERE DATE("startDate") = CURRENT_DATE
-            ) t
-        `);
-        const yesterdayRes = await visitorPool.query(`
-            SELECT COUNT(*) as count FROM (
-                SELECT id FROM "VisitorRequest" WHERE DATE("startDate") = CURRENT_DATE - 1
-                UNION ALL
-                SELECT id::text FROM "IntervieweeRequest" WHERE DATE("startDate") = CURRENT_DATE - 1
-            ) t
-        `);
+        // Visitors Today (Scheduled for today, filtered)
+        const todayRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs WHERE DATE("startDate") = CURRENT_DATE AND ${whereClause}`);
+        const yesterdayRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs WHERE DATE("startDate") = CURRENT_DATE - 1 AND ${whereClause}`);
+        
         const visitorsToday = parseInt(todayRes.rows[0]?.count || 0);
         const visitorsYesterday = parseInt(yesterdayRes.rows[0]?.count || 0);
         const visitorsTodayGrowth = visitorsYesterday === 0 ? 100 : Math.round(((visitorsToday - visitorsYesterday) / visitorsYesterday) * 100);
 
-        // Currently Present (Keep relying on CheckInOut for accuracy, but ensure request exists)
+        // Currently Present
+        // Note: For 'currently present', the date filters might not apply the same way, but we will apply the BU and status filters if applicable.
+        // Actually, we'll apply all filters to the base request, then join.
         const presentRes = await visitorPool.query(`
+            ${cte}
             SELECT COUNT(*) as count 
             FROM "VisitorCheckInOut" c
-            LEFT JOIN "VisitorRequest" vr ON c."requestId" = vr.id
-            LEFT JOIN "IntervieweeRequest" ir ON c."requestId" = ir.id::text
-            WHERE c.status = 'CHECKED_IN' AND (vr.id IS NOT NULL OR ir.id IS NOT NULL)
+            INNER JOIN BaseReqs req ON c."requestId" = req.id
+            WHERE c.status = 'CHECKED_IN' AND ${whereClause}
         `);
         const currentlyPresent = parseInt(presentRes.rows[0]?.count || 0);
 
-        // Total This Week (Scheduled for this week)
-        const thisWeekRes = await visitorPool.query(`
-            SELECT COUNT(*) as count FROM (
-                SELECT id FROM "VisitorRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE)
-                UNION ALL
-                SELECT id::text FROM "IntervieweeRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE)
-            ) t
-        `);
-        const lastWeekRes = await visitorPool.query(`
-            SELECT COUNT(*) as count FROM (
-                SELECT id FROM "VisitorRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND "startDate" < date_trunc('week', CURRENT_DATE)
-                UNION ALL
-                SELECT id::text FROM "IntervieweeRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND "startDate" < date_trunc('week', CURRENT_DATE)
-            ) t
-        `);
+        // Total This Week
+        const thisWeekRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs WHERE "startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
+        const lastWeekRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs WHERE "startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND "startDate" < date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
         const totalThisWeek = parseInt(thisWeekRes.rows[0]?.count || 0);
         const totalLastWeek = parseInt(lastWeekRes.rows[0]?.count || 0);
         const weekGrowth = totalLastWeek === 0 ? 100 : Math.round(((totalThisWeek - totalLastWeek) / totalLastWeek) * 100);
 
-        // Average Stay Duration this week (Planned duration)
-        const avgStayRes = await visitorPool.query(`
-            SELECT AVG(EXTRACT(EPOCH FROM ("endDate" - "startDate"))/60) as avg_minutes
-            FROM "VisitorRequest"
-            WHERE "endDate" IS NOT NULL AND "startDate" >= date_trunc('week', CURRENT_DATE)
-        `);
-        const lastWeekAvgRes = await visitorPool.query(`
-            SELECT AVG(EXTRACT(EPOCH FROM ("endDate" - "startDate"))/60) as avg_minutes
-            FROM "VisitorRequest"
-            WHERE "endDate" IS NOT NULL AND "startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND "startDate" < date_trunc('week', CURRENT_DATE)
-        `);
+        // Average Stay Duration this week
+        const avgStayRes = await visitorPool.query(`${cte} SELECT AVG(EXTRACT(EPOCH FROM ("endDate" - "startDate"))/60) as avg_minutes FROM BaseReqs WHERE "endDate" IS NOT NULL AND "startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
+        const lastWeekAvgRes = await visitorPool.query(`${cte} SELECT AVG(EXTRACT(EPOCH FROM ("endDate" - "startDate"))/60) as avg_minutes FROM BaseReqs WHERE "endDate" IS NOT NULL AND "startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND "startDate" < date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
         const avgStayMinutes = Math.round(parseFloat(avgStayRes.rows[0]?.avg_minutes || 0));
         const avgStayLastWeek = Math.round(parseFloat(lastWeekAvgRes.rows[0]?.avg_minutes || 0));
         const avgStayChange = avgStayMinutes - avgStayLastWeek;
 
         const summary = {
-            visitorsToday,
-            visitorsTodayGrowth,
+            visitorsToday, visitorsTodayGrowth,
             currentlyPresent,
-            totalThisWeek,
-            weekGrowth,
-            avgStayMinutes,
-            avgStayChange
+            totalThisWeek, weekGrowth,
+            avgStayMinutes, avgStayChange
         };
 
         // 2. TREND DATA
-        const trendRes = await visitorPool.query(`
+        const trendRes = await visitorPool.query(`${cte} 
             SELECT 'Tuần ' || ROW_NUMBER() OVER(ORDER BY date_trunc('week', "startDate")) as label, COUNT(*) as value
-            FROM (
-                SELECT "startDate" FROM "VisitorRequest" WHERE "startDate" >= CURRENT_DATE - interval '7 weeks'
-                UNION ALL
-                SELECT "startDate" FROM "IntervieweeRequest" WHERE "startDate" >= CURRENT_DATE - interval '7 weeks'
-            ) t
+            FROM BaseReqs 
+            WHERE "startDate" >= CURRENT_DATE - interval '7 weeks' AND ${whereClause}
             GROUP BY date_trunc('week', "startDate")
             ORDER BY date_trunc('week', "startDate")
         `);
         const trendData = trendRes.rows;
 
         // 3. PERIODIC DATA
-        const periodicRes = await visitorPool.query(`
+        const periodicRes = await visitorPool.query(`${cte}
             SELECT 'T' || EXTRACT(ISODOW FROM "startDate") + 1 as label, COUNT(*) as value
-            FROM (
-                SELECT "startDate" FROM "VisitorRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE)
-                UNION ALL
-                SELECT "startDate" FROM "IntervieweeRequest" WHERE "startDate" >= date_trunc('week', CURRENT_DATE)
-            ) t
+            FROM BaseReqs 
+            WHERE "startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}
             GROUP BY EXTRACT(ISODOW FROM "startDate")
             ORDER BY EXTRACT(ISODOW FROM "startDate")
         `);
@@ -126,12 +136,9 @@ export async function GET(request: Request) {
         }
 
         // 4. CATEGORY DISTRIBUTION
-        const categoryRes = await visitorPool.query(`
-            SELECT category, COUNT(*) as count FROM (
-                SELECT COALESCE("visitorCategory", 'Other') as category FROM "VisitorRequest"
-                UNION ALL
-                SELECT 'Interviewee' as category FROM "IntervieweeRequest"
-            ) t
+        const categoryRes = await visitorPool.query(`${cte}
+            SELECT category, COUNT(*) as count 
+            FROM BaseReqs WHERE ${whereClause}
             GROUP BY category
         `);
         let categoryData = categoryRes.rows.map(r => ({
@@ -153,20 +160,9 @@ export async function GET(request: Request) {
         }));
 
         // 5. DEPARTMENT & BU DISTRIBUTION
-        const deptRes = await visitorPool.query(`
-            SELECT 
-                COALESCE(u.department, 'Others') as department,
-                CASE 
-                    WHEN u.name LIKE '%VN.MIL%' OR u.name NOT LIKE '%(%)%' THEN 'MIL'
-                    ELSE 'SF'
-                END as bu,
-                COUNT(*) as count
-            FROM (
-                SELECT id, "submitterId", null as "osName" FROM "VisitorRequest"
-                UNION ALL
-                SELECT id::text as id, null as "submitterId", "osName" FROM "IntervieweeRequest"
-            ) req
-            LEFT JOIN "User" u ON u.id = req."submitterId" OR u.name = req."osName"
+        const deptRes = await visitorPool.query(`${cte}
+            SELECT department, bu, COUNT(*) as count
+            FROM BaseReqs WHERE ${whereClause}
             GROUP BY 1, 2
         `);
 
@@ -184,25 +180,12 @@ export async function GET(request: Request) {
 
         let totalMIL = 0, totalSF = 0;
         Object.values(deptMap).forEach((d: any) => { totalMIL += d.MIL; totalSF += d.SF; });
-        const buDistribution = [ { name: 'MIL', value: totalMIL }, { name: 'SF', value: totalSF } ];
+        const buDistribution = [ { name: 'MIL', value: totalMIL }, { name: 'Share Function', value: totalSF } ];
 
         // 6. RECENT ACTIVITY
-        const recentRes = await visitorPool.query(`
-            SELECT 
-                "visitorName" as name,
-                status,
-                "createdAt" as time,
-                COALESCE("visitorCategory", 'Other') as category,
-                'Visitor' as type
-            FROM "VisitorRequest"
-            UNION ALL
-            SELECT 
-                "intervieweeName" as name,
-                status,
-                "createdAt" as time,
-                'Interviewee' as category,
-                'Interviewee' as type
-            FROM "IntervieweeRequest"
+        const recentRes = await visitorPool.query(`${cte}
+            SELECT name, status, "createdAt" as time, category, type
+            FROM BaseReqs WHERE ${whereClause}
             ORDER BY time DESC
             LIMIT 20
         `);
@@ -218,7 +201,7 @@ export async function GET(request: Request) {
             summary, trendData, periodicData, categoryData, departmentData, buDistribution, recentActivity: uniqueRecent
         }, { status: 200 });
 
-    } catch (error: any) {
+} catch (error: any) {
         console.error('Fetch analytics error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

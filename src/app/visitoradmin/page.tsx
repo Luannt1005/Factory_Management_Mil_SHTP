@@ -10,7 +10,7 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 0 });
+    const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 15, totalPages: 0 });
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [category, setCategory] = useState('');
@@ -334,7 +334,6 @@ export default function AdminDashboard() {
                             <option value="Vendor">Vendor</option>
                             <option value="Contractor">Contractor</option>
                             <option value="MIL/TTI Expat / SHTP Business trip">MIL/TTI Expat / SHTP Business trip</option>
-                            <option value="Interviewee">Interviewee</option>
                         </select>
                     </div>
                     <div className="flex items-center gap-2">
