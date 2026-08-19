@@ -613,6 +613,17 @@ export default function NewRequestPage() {
                                                     </select>
                                                 </div>
                                             </div>
+                                            
+                                            {(() => {
+                                                const selectedHost = hostDepartments.find(h => h.functional_dept === formData.functionalDept && h.department === formData.department);
+                                                if (!selectedHost) return null;
+                                                return (
+                                                    <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+                                                        <div><span style={{ color: '#64748b', fontWeight: 600 }}>Func Host Name:</span> <span style={{ color: '#0f172a', fontWeight: 700, marginLeft: '4px' }}>{selectedHost.functional_host_name || 'N/A'}</span></div>
+                                                        <div><span style={{ color: '#64748b', fontWeight: 600 }}>Dept Host Name:</span> <span style={{ color: '#0f172a', fontWeight: 700, marginLeft: '4px' }}>{selectedHost.department_host_name || 'N/A'}</span></div>
+                                                    </div>
+                                                );
+                                            })()}
 
                                             <SectionHeader title="Select Rooms" />
                                             {rooms.length === 0 ? (
