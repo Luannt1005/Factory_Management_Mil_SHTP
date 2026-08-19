@@ -233,7 +233,7 @@ export async function POST(request: Request) {
 
             if (powerAutomateUrl) {
                 try {
-                    await fetch(powerAutomateUrl, {
+                    const paResponse = await fetch(powerAutomateUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -249,6 +249,7 @@ export async function POST(request: Request) {
                                 visitorCategory: visitorCategory,
                                 submitterEmail: submitterEmail,
                                 visitors_list: visitors,
+                                is_vp_approval: false,
                                 visitingSite: visitingSite || null,
                                 mealRegistration: details?.mealRegistration || null,
                                 costCenter: details?.costCenter || null
@@ -262,7 +263,12 @@ export async function POST(request: Request) {
                             ]
                         }),
                     });
-                    console.log(`Power Automate triggered successfully for supervisor approval: ${submitterEmail}`);
+                    if (!paResponse.ok) {
+                        const errText = await paResponse.text();
+                        console.error(`Power Automate returned error ${paResponse.status} for Vendor/Contractor:`, errText);
+                    } else {
+                        console.log(`Power Automate triggered successfully for supervisor approval: ${submitterEmail}`);
+                    }
                 } catch (paError) {
                     console.error(`Failed to trigger Power Automate for supervisor approval:`, paError);
                 }
