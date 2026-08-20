@@ -625,7 +625,21 @@ function DashboardContent() {
                                 </div>
                                 <div className="col-span-2">
                                     <InputLabel required>Interview Area</InputLabel>
-                                    <Input required value={editFormData.interviewArea || ''} onChange={(e: any) => setEditFormData({...editFormData, interviewArea: e.target.value})} placeholder="e.g. Meeting Room 1" />
+                                    
+                                    <select 
+                                        required 
+                                        className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer"
+                                        value={editFormData.interviewArea || ''} 
+                                        onChange={(e: any) => setEditFormData({...editFormData, interviewArea: e.target.value})}
+                                    >
+                                        <option value="" disabled>Select Meeting Room</option>
+                                        {meetingRooms.map(room => (
+                                            <option key={room.id} value={`${room.floorName} - ${room.roomName}`}>
+                                                {room.floorName} - {room.roomName}
+                                            </option>
+                                        ))}
+                                    </select>
+
                                 </div>
                             </div>
                         </div>

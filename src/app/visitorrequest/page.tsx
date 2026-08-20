@@ -49,6 +49,7 @@ export default function NewRequestPage() {
     const [activeTab, setActiveTab] = useState<'request' | 'dashboard'>('request');
     const [rooms, setRooms] = useState<any[]>([]);
     const [hostDepartments, setHostDepartments] = useState<any[]>([]);
+    const [meetingRooms, setMeetingRooms] = useState<any[]>([]);
     const [step, setStep] = useState(1);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -94,7 +95,19 @@ export default function NewRequestPage() {
                 console.error("Failed to fetch rooms", err);
             }
         };
-        const fetchHostDepartments = async () => {
+        const fetchMeetingRooms = async () => {
+        try {
+            const res = await fetch('/api/admin/meeting-rooms');
+            if (res.ok) {
+                const data = await res.json();
+                setMeetingRooms(data.meetingRooms || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch meeting rooms:', error);
+        }
+    };
+
+    const fetchHostDepartments = async () => {
             try {
                 const res = await fetch('/api/admin/host-departments?all=false');
                 if (res.ok) {
@@ -105,6 +118,7 @@ export default function NewRequestPage() {
         };
         fetchRooms();
         fetchHostDepartments();
+        fetchMeetingRooms();
     }, []);
 
     useEffect(() => {
@@ -522,7 +536,21 @@ export default function NewRequestPage() {
                                             </div>
                                             <div>
                                                 <InputLabel required>Interview Area</InputLabel>
-                                                <Input type="text" required placeholder="e.g. Meeting Room 4" value={formData.interviewArea} onChange={(e: any) => setFormData({...formData, interviewArea: e.target.value})} />
+                                                
+                                                <select 
+                                                    required 
+                                                    className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer"
+                                                    value={formData.interviewArea} 
+                                                    onChange={(e: any) => setFormData({...formData, interviewArea: e.target.value})}
+                                                >
+                                                    <option value="" disabled>Select Meeting Room</option>
+                                                    {meetingRooms.map(room => (
+                                                        <option key={room.id} value={`${room.floorName} - ${room.roomName}`}>
+                                                            {room.floorName} - {room.roomName}
+                                                        </option>
+                                                    ))}
+                                                </select>
+
                                             </div>
                                         </div>
                                     ) : (

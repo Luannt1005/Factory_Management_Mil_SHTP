@@ -8,12 +8,13 @@ export default function AdminRoomsPage() {
     const [mounted, setMounted] = useState(false);
     useEffect(() => { setMounted(true); }, []);
 
-    const [activeTab, setActiveTab] = useState<'rooms' | 'categories' | 'host-departments'>('rooms');
+    const [activeTab, setActiveTab] = useState<'rooms' | 'categories' | 'host-departments' | 'meeting-rooms'>('rooms');
     
     // Modal States
     const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isHostDeptModalOpen, setIsHostDeptModalOpen] = useState(false);
+    const [isMeetingRoomModalOpen, setIsMeetingRoomModalOpen] = useState(false);
 
     // Room State
     const [rooms, setRooms] = useState<any[]>([]);
@@ -28,6 +29,12 @@ export default function AdminRoomsPage() {
     const [newCategory, setNewCategory] = useState({ name: '', site_location: 'SHTP', bu: 'Milwaukee' });
 
     // Host Dept State
+    // Meeting Room State
+    const [meetingRooms, setMeetingRooms] = useState<any[]>([]);
+    const [loadingMeetingRooms, setLoadingMeetingRooms] = useState(true);
+    const [editingMeetingRoom, setEditingMeetingRoom] = useState<any>(null);
+    const [newMeetingRoom, setNewMeetingRoom] = useState({ floorName: '', roomName: '' });
+
     const [hostDepartments, setHostDepartments] = useState<any[]>([]);
     const [loadingHostDepartments, setLoadingHostDepartments] = useState(true);
     const [editingHostDept, setEditingHostDept] = useState<any>(null);
@@ -65,6 +72,16 @@ export default function AdminRoomsPage() {
         setLoadingCategories(false);
     };
 
+    const fetchMeetingRooms = async () => {
+        setLoadingMeetingRooms(true);
+        const res = await fetch('/api/admin/meeting-rooms');
+        if (res.ok) {
+            const data = await res.json();
+            setMeetingRooms(data.meetingRooms || []);
+        }
+        setLoadingMeetingRooms(false);
+    };
+
     const fetchHostDepartments = async () => {
         setLoadingHostDepartments(true);
         const res = await fetch('/api/admin/host-departments?all=true');
@@ -73,6 +90,44 @@ export default function AdminRoomsPage() {
             setHostDepartments(data.hostDepartments || []);
         }
         setLoadingHostDepartments(false);
+    };
+
+    // --- Meeting Room Handlers ---
+    const handleCreateMeetingRoom = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const res = await fetch('/api/admin/meeting-rooms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newMeetingRoom),
+        });
+        if (res.ok) {
+            fetchMeetingRooms();
+            setNewMeetingRoom({ floorName: '', roomName: '' });
+            setIsMeetingRoomModalOpen(false);
+        } else {
+            alert('Error creating meeting room');
+        }
+    };
+
+    const handleUpdateMeetingRoom = async (id: string, updates: any) => {
+        const res = await fetch('/api/admin/meeting-rooms', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ...updates }),
+        });
+        if (res.ok) {
+            fetchMeetingRooms();
+            setEditingMeetingRoom(null);
+        } else {
+            alert('Error updating meeting room');
+        }
+    };
+
+    const handleDeleteMeetingRoom = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this meeting room?')) return;
+        const res = await fetch(`/api/admin/meeting-rooms?id=${id}`, { method: 'DELETE' });
+        if (res.ok) fetchMeetingRooms();
+        else alert('Error deleting meeting room');
     };
 
     // --- Room Handlers ---
@@ -238,7 +293,99 @@ export default function AdminRoomsPage() {
                         + Add Category
                     </button>
                 )}
-                {activeTab === 'host-departments' && (
+    
+            {activeTab === 'meeting-rooms' && (
+                <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <div className="min-w-[800px]">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+                                        <th className="py-4 px-6 font-black text-gray-600 text-xs uppercase tracking-wider w-[40%]">Floor Name</th>
+                                        <th className="py-4 px-6 font-black text-gray-600 text-xs uppercase tracking-wider w-[40%]">Room Name</th>
+                                        <th className="py-4 px-6 font-black text-gray-600 text-xs uppercase tracking-wider text-right w-[20%]">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 text-sm">
+                                    {loadingMeetingRooms ? (
+                                        <tr>
+                                            <td colSpan={3} className="py-8 text-center text-gray-500">Loading meeting rooms...</td>
+                                        </tr>
+                                    ) : meetingRooms.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={3} className="py-8 text-center text-gray-500">No meeting rooms found. Create one to get started.</td>
+                                        </tr>
+                                    ) : (
+                                        meetingRooms.map((room) => (
+                                            <tr key={room.id} className="hover:bg-gray-50/80 transition-colors group">
+                                                <td className="py-4 px-6">
+                                                    {editingMeetingRoom?.id === room.id ? (
+                                                        <input 
+                                                            type="text" 
+                                                            className="w-full border rounded px-2 py-1"
+                                                            value={editingMeetingRoom.floorName}
+                                                            onChange={e => setEditingMeetingRoom({...editingMeetingRoom, floorName: e.target.value})}
+                                                        />
+                                                    ) : (
+                                                        <span className="font-semibold text-gray-900">{room.floorName}</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-4 px-6">
+                                                    {editingMeetingRoom?.id === room.id ? (
+                                                        <input 
+                                                            type="text" 
+                                                            className="w-full border rounded px-2 py-1"
+                                                            value={editingMeetingRoom.roomName}
+                                                            onChange={e => setEditingMeetingRoom({...editingMeetingRoom, roomName: e.target.value})}
+                                                        />
+                                                    ) : (
+                                                        <span className="text-gray-600">{room.roomName}</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-4 px-6 text-right">
+                                                    {editingMeetingRoom?.id === room.id ? (
+                                                        <div className="flex justify-end gap-2">
+                                                            <button 
+                                                                onClick={() => handleUpdateMeetingRoom(room.id, { floorName: editingMeetingRoom.floorName, roomName: editingMeetingRoom.roomName })}
+                                                                className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-1.5 rounded"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => setEditingMeetingRoom(null)}
+                                                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-1.5 rounded"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button 
+                                                                onClick={() => setEditingMeetingRoom(room)}
+                                                                className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-1.5 rounded transition-colors"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDeleteMeetingRoom(room.id)}
+                                                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'host-departments' && (
                     <button 
                         onClick={() => setIsHostDeptModalOpen(true)}
                         className="bg-[#db011c] text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-[#b90118] transition-colors"
