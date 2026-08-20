@@ -22,8 +22,24 @@ function DashboardContent() {
     const [editingInterviewee, setEditingInterviewee] = useState<any>(null);
     const [editFormData, setEditFormData] = useState<any>({});
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
+        const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
     const [mounted, setMounted] = useState(false);
+    const [meetingRooms, setMeetingRooms] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchMeetingRooms = async () => {
+            try {
+                const res = await fetch('/api/admin/meeting-rooms');
+                if (res.ok) {
+                    const data = await res.json();
+                    setMeetingRooms(data.meetingRooms || []);
+                }
+            } catch (error) {
+                console.error('Failed to fetch meeting rooms:', error);
+            }
+        };
+        fetchMeetingRooms();
+    }, []);
     const router = useRouter();
     const searchParams = useSearchParams();
     const tabParam = searchParams.get('tab');
