@@ -262,6 +262,19 @@ export async function POST(request: Request) {
             `, [visitorCode]);
 
             return NextResponse.json({ message: 'Reset status to PENDING successfully' });
+        } else if (action === 'UPDATE_CARD') {
+            await visitorPool.query(`
+                INSERT INTO "VisitorCheckInOut" 
+                    ("requestId", "visitorIndex", "visitorName", "visitorCode", status, "updatedAt", "cardNumber")
+                VALUES 
+                    ($1, $2, $3, $4, 'PENDING', NOW(), $5)
+                ON CONFLICT ("visitorCode") 
+                DO UPDATE SET 
+                    "updatedAt" = NOW(),
+                    "cardNumber" = EXCLUDED."cardNumber"
+            `, [requestId, visitorIndex, visitorName, visitorCode, cardNumber || null]);
+
+            return NextResponse.json({ message: 'Card updated successfully' });
         } else {
             return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
         }

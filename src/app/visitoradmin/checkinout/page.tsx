@@ -67,7 +67,7 @@ export default function CheckInOutManagement() {
         fetchHistory();
     }, [fetchHistory]);
 
-    const handleAction = async (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET') => {
+    const handleAction = async (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET' | 'UPDATE_CARD') => {
         setActionLoading(`${requestId}-${v.visitorIndex}`);
         try {
             const cardNumber = cardNumbers[`${requestId}-${v.visitorIndex}`] || v.cardNumber || '';
@@ -94,6 +94,9 @@ export default function CheckInOutManagement() {
                                 if (visitor.visitorIndex === v.visitorIndex) {
                                     if (action === 'RESET') {
                                         return { ...visitor, checkInOutStatus: 'PENDING', checkInTime: null, checkOutTime: null };
+                                    }
+                                    if (action === 'UPDATE_CARD') {
+                                        return { ...visitor, cardNumber };
                                     }
                                     return { 
                                         ...visitor, 
@@ -359,7 +362,7 @@ export default function CheckInOutManagement() {
                         <div className="flex flex-col">
                             
                             {viewMode === 'visitor' && (
-                                <div className="hidden md:grid grid-cols-[1fr_1.2fr_1.5fr_1fr_1.2fr_0.8fr_0.8fr_1fr_0.7fr_0.7fr_170px] gap-4 items-center bg-[#1a1a1a] text-white px-6 py-3 font-bold text-[9px] uppercase tracking-wider mb-2">
+                                <div className="hidden md:grid grid-cols-[1fr_1.2fr_1.5fr_1fr_1.2fr_0.8fr_1.3fr_1fr_0.7fr_0.7fr_170px] gap-4 items-center bg-[#1a1a1a] text-white px-6 py-3 font-bold text-[9px] uppercase tracking-wider mb-2">
                                     <div>REQUEST</div>
                                     <div>VISITOR CODE</div>
                                     <div>FULL NAME</div>
@@ -389,7 +392,7 @@ export default function CheckInOutManagement() {
                             {viewMode === 'visitor' && allVisitors.map((v: any, idx: number) => {
                                 const req = v._requestInfo;
                                 return (
-                                    <div key={`${req.requestId}-${v.visitorIndex}`} className={`px-6 py-3 grid grid-cols-[1fr_1.2fr_1.5fr_1fr_1.2fr_0.8fr_0.8fr_1fr_0.7fr_0.7fr_170px] gap-4 items-center border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                                    <div key={`${req.requestId}-${v.visitorIndex}`} className={`px-6 py-3 grid grid-cols-[1fr_1.2fr_1.5fr_1fr_1.2fr_0.8fr_1.3fr_1fr_0.7fr_0.7fr_170px] gap-4 items-center border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                                         <div className="text-[11px] font-medium text-gray-900 truncate" title={req.requestCode || req.requestId}>{req.requestCode || req.requestId}</div>
                                         <div className="text-xs font-black text-[#db011c] truncate" title={v.visitorCode}>{v.visitorCode}</div>
                                         <div className="text-xs font-bold text-gray-900 truncate" title={v.visitorName}>{v.visitorName}</div>
@@ -400,7 +403,7 @@ export default function CheckInOutManagement() {
                                                 {req.visitorCategory?.replace(/MIL\/TTI Expat \/ SHTP Business trip/i, 'MIL EXPAT')}
                                             </span>
                                         </div>
-                                        <div className="text-[10px] font-medium text-gray-600 truncate">{formatDateShort(req.startDate)}</div>
+                                        <div className="text-[10px] font-medium text-gray-600 truncate">{formatDateShort(req.startDate)} - {formatDateShort(req.endDate)}</div>
                                         
                                         <div className="w-full">
                                             <input 
@@ -463,11 +466,12 @@ export default function CheckInOutManagement() {
                                                         {req.filteredVisitors && req.filteredVisitors.length > 0 ? (
                                                             <>
                                                                 {/* Header for expanded visitors */}
-                                                                <div className="grid grid-cols-[130px_1.5fr_1.5fr_1.5fr_90px_60px_60px_170px] gap-4 items-center pb-2 border-b border-gray-300 mb-2">
+                                                                <div className="grid grid-cols-[130px_1.5fr_1.5fr_1.5fr_1fr_90px_60px_60px_170px] gap-4 items-center pb-2 border-b border-gray-300 mb-2">
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">VISITOR CODE</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">FULL NAME</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">TITLE</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">COMPANY</div>
+                                                                    <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">DATE</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">CARD NUMBER</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">TIME IN</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">TIME OUT</div>
@@ -475,12 +479,12 @@ export default function CheckInOutManagement() {
                                                                 </div>
 
                                                                 {req.filteredVisitors.map((v: any, vIdx: number) => (
-                                                                    <div key={vIdx} className={`py-3 grid grid-cols-[130px_1.5fr_1.5fr_1.5fr_90px_60px_60px_170px] gap-4 items-center ${vIdx !== req.filteredVisitors.length - 1 ? 'border-b border-dashed border-gray-200' : ''}`}>
+                                                                    <div key={vIdx} className={`py-3 grid grid-cols-[130px_1.5fr_1.5fr_1.5fr_1fr_90px_60px_60px_170px] gap-4 items-center ${vIdx !== req.filteredVisitors.length - 1 ? 'border-b border-dashed border-gray-200' : ''}`}>
                                                                         <div className="text-xs font-black text-[#db011c] truncate" title={v.visitorCode}>{v.visitorCode}</div>
                                                                         <div className="text-xs font-bold text-gray-900 truncate" title={v.visitorName}>{v.visitorName}</div>
                                                                         <div className="text-[11px] text-gray-600 truncate" title={v.visitorTitle || '-'}>{v.visitorTitle || '-'}</div>
                                                                         <div className="text-[11px] font-medium text-gray-600 truncate" title={v.visitorCompany || req.visitingSite}>{v.visitorCompany || req.visitingSite}</div>
-                                                                        
+                                                                        <div className="text-[10px] font-medium text-gray-600 truncate text-center">{formatDateShort(req.startDate)} - {formatDateShort(req.endDate)}</div>
                                                                         <div className="w-full">
                                                                             <input 
                                                                                 type="text" 
@@ -488,6 +492,11 @@ export default function CheckInOutManagement() {
                                                                                 className={`w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] ${isSecurity ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`} 
                                                                                 value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
                                                                                 onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
+                                                                                onBlur={(e) => {
+                                                                                    if (cardNumbers[`${req.requestId}-${v.visitorIndex}`] !== undefined) {
+                                                                                        handleAction(req.requestId, v, 'UPDATE_CARD');
+                                                                                    }
+                                                                                }}
                                                                                 onClick={(e) => e.stopPropagation()}
                                                                                 disabled={isSecurity}
                                                                                 readOnly={isSecurity}
