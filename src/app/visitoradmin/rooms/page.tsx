@@ -981,6 +981,66 @@ export default function AdminRoomsPage() {
                 </div>,
                 document.body
             )}
+
+            {/* Meeting Room Modal */}
+            {mounted && isMeetingRoomModalOpen && createPortal(
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div 
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setIsMeetingRoomModalOpen(false)}
+                    ></div>
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <h3 className="text-xl font-black text-gray-900">Create New Meeting Room</h3>
+                            <button onClick={() => setIsMeetingRoomModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <form onSubmit={handleCreateMeetingRoom} className="p-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Floor Name *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#db011c] focus:border-transparent outline-none transition-all"
+                                        value={newMeetingRoom.floorName}
+                                        onChange={e => setNewMeetingRoom({...newMeetingRoom, floorName: e.target.value})}
+                                        placeholder="e.g. Lầu 1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Room Name *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#db011c] focus:border-transparent outline-none transition-all"
+                                        value={newMeetingRoom.roomName}
+                                        onChange={e => setNewMeetingRoom({...newMeetingRoom, roomName: e.target.value})}
+                                        placeholder="e.g. Phòng họp A"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-8 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsMeetingRoomModalOpen(false)}
+                                    className="px-4 py-2 text-gray-600 font-semibold hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-6 py-2 bg-[#db011c] text-white font-bold rounded-lg hover:bg-[#b00116] transition-colors shadow-md"
+                                >
+                                    Create Meeting Room
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }
