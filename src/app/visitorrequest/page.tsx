@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import MeetingRoomCascader from '@/components/MeetingRoomCascader';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon, BuildingOffice2Icon, GlobeAsiaAustraliaIcon, UserGroupIcon, BuildingOfficeIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
@@ -534,38 +535,13 @@ export default function NewRequestPage() {
                                                 <InputLabel required>Start Time</InputLabel>
                                                 <Input type="time" required value={formData.startTime} onChange={(e: any) => setFormData({...formData, startTime: e.target.value})} />
                                             </div>
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                                                <div>
-                                                    <InputLabel required>Floor</InputLabel>
-                                                    <select 
-                                                        required 
-                                                        className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer"
-                                                        value={formData.interviewArea?.split(' - ')[0] || ''}
-                                                        onChange={(e: any) => setFormData({...formData, interviewArea: e.target.value + ' - '})}
-                                                    >
-                                                        <option value="" disabled>Select Floor</option>
-                                                        {Array.from(new Set(meetingRooms.map(r => r.floorName))).map((floor: any) => (
-                                                            <option key={floor} value={floor}>{floor}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <InputLabel required>Meeting Room</InputLabel>
-                                                    <select 
-                                                        required 
-                                                        disabled={!formData.interviewArea?.split(' - ')[0]}
-                                                        className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        value={formData.interviewArea?.includes(' - ') ? formData.interviewArea.split(' - ').slice(1).join(' - ') : ''} 
-                                                        onChange={(e: any) => setFormData({...formData, interviewArea: formData.interviewArea.split(' - ')[0] + ' - ' + e.target.value})}
-                                                    >
-                                                        <option value="" disabled>Select Room</option>
-                                                        {meetingRooms.filter(r => r.floorName === formData.interviewArea?.split(' - ')[0]).map(room => (
-                                                            <option key={room.id} value={room.roomName}>
-                                                                {room.roomName}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
+                                            <div>
+                                                <InputLabel required>Interview Area</InputLabel>
+                                                <MeetingRoomCascader 
+                                                    meetingRooms={meetingRooms} 
+                                                    value={formData.interviewArea || ''} 
+                                                    onChange={(val: string) => setFormData({...formData, interviewArea: val})}
+                                                />
                                             </div>
                                         </div>
                                     ) : (
