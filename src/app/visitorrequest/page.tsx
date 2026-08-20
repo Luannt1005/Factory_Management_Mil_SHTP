@@ -393,6 +393,9 @@ export default function NewRequestPage() {
                                     
                                     {/* VISITOR INFORMATION */}
                                     <SectionHeader title="Visitor Information" />
+                                    <div style={{ fontSize: '13px', color: '#ef4444', fontStyle: 'italic', marginBottom: '20px', marginTop: '-12px', fontWeight: 500 }}>
+                                        * Note: Please enter the name exactly as shown on the ID/Passport, including Vietnamese diacritics where applicable. We are not responsible for incorrect information.
+                                    </div>
                                     
                                     {formData.visitorCategory === 'Interviewee' ? (
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
