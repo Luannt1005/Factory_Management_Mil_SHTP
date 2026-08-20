@@ -649,10 +649,20 @@ function DashboardContent() {
                                         onChange={(e: any) => setEditFormData({...editFormData, interviewArea: e.target.value})}
                                     >
                                         <option value="" disabled>Select Meeting Room</option>
-                                        {meetingRooms.map(room => (
-                                            <option key={room.id} value={`${room.floorName} - ${room.roomName}`}>
-                                                {room.floorName} - {room.roomName}
-                                            </option>
+                                        {(Object.entries(
+                                            meetingRooms.reduce((acc, room) => {
+                                                if (!acc[room.floorName]) acc[room.floorName] = [];
+                                                acc[room.floorName].push(room);
+                                                return acc;
+                                            }, {} as Record<string, any[]>)
+                                        ) as Array<[string, any[]]>).map(([floor, rooms]) => (
+                                            <optgroup key={floor} label={floor}>
+                                                {rooms.map((room: any) => (
+                                                    <option key={room.id} value={`${room.floorName} - ${room.roomName}`}>
+                                                        {room.roomName}
+                                                    </option>
+                                                ))}
+                                            </optgroup>
                                         ))}
                                     </select>
 
