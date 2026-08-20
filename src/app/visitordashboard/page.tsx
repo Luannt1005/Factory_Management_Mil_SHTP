@@ -289,7 +289,7 @@ function DashboardContent() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-5 text-center text-gray-700 tabular-nums font-bold">
-                                        {new Date(request.start_date).toLocaleDateString('vi-VN')} - {new Date(request.end_date).toLocaleDateString('vi-VN')}
+                                        {new Date(request.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {new Date(request.end_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
                                     </td>
                                     <td className="px-6 py-5">
                                         <div className="flex gap-2 justify-center flex-wrap">
@@ -350,7 +350,7 @@ function DashboardContent() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-5 text-center text-gray-700 tabular-nums font-bold">
-                                        {new Date(request.start_date).toLocaleDateString('vi-VN')}
+                                        {new Date(request.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
                                     </td>
                                     <td className="px-6 py-5 text-center text-gray-700 tabular-nums font-bold">
                                         {request.start_time}
@@ -506,7 +506,7 @@ function DashboardContent() {
                                                 </span>
                                             </Row>
                                             <Row icon={UserGroupIcon} label="Visitor Category" value={selectedRequest.visitor_category} />
-                                            <Row icon={CalendarDaysIcon} label="Visit Dates" value={`${new Date(selectedRequest.start_date).toLocaleDateString()} — ${new Date(selectedRequest.end_date).toLocaleDateString()}`} />
+                                            <Row icon={CalendarDaysIcon} label="Visit Dates" value={`${new Date(selectedRequest.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} — ${new Date(selectedRequest.end_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`} />
                                             <Row icon={DocumentTextIcon} label="Purpose">
                                                 <div className="text-right">
                                                     <div>{selectedRequest.purpose_of_visit}</div>
@@ -566,7 +566,7 @@ function DashboardContent() {
                                             </Row>
                                             <Row icon={BuildingOfficeIcon} label="Department" value={selectedRequest.interview_department} />
                                             <Row icon={UserGroupIcon} label="Interviewer" value={selectedRequest.interviewer_name} />
-                                            <Row icon={CalendarDaysIcon} label="Schedule Date" value={new Date(selectedRequest.start_date).toLocaleDateString('vi-VN')} />
+                                            <Row icon={CalendarDaysIcon} label="Schedule Date" value={new Date(selectedRequest.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} />
                                             <Row icon={ClockIcon} label="Schedule Time" value={selectedRequest.start_time} />
                                             <Row icon={MapPinIcon} label="Interview Area" value={selectedRequest.interview_area} />
                                         </div>

@@ -128,8 +128,8 @@ export default function AdminDashboard() {
                                 'Visitor Company': v.company || r.current_company || '',
                                 'Submitter Name': r.profiles?.name || '',
                                 'Submitter Department': r.profiles?.department || '',
-                                'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : '',
-                                'End Date': r.end_date ? new Date(r.end_date).toLocaleDateString('vi-VN') : '',
+                                'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '',
+                                'End Date': r.end_date ? new Date(r.end_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '',
                                 'Visitor Category': r.visitor_category || '',
                                 'Purpose Of Visit': r.purpose_of_visit || '',
                                 'Purpose Detail': r.purpose_detail || '',
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
                             'Job Title': r.job_title || '',
                             'Interview Department': r.interview_department || '',
                             'Interviewer Name': r.interviewer_name || '',
-                            'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : '',
+                            'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '',
                             'Start Time': r.start_time || '',
                             'Interview Area': r.interview_area || '',
                             'Status': r.status || '',
@@ -482,10 +482,10 @@ export default function AdminDashboard() {
                                             <div className="font-bold text-[#0f172a] truncate max-w-[250px]" title={request.profiles?.name}>{request.profiles?.name}</div>
                                         </td>
                                         <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
-                                            {new Date(request.start_date).toLocaleDateString('vi-VN')}
+                                            {new Date(request.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
                                         </td>
                                         <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
-                                            {new Date(request.end_date).toLocaleDateString('vi-VN')}
+                                            {new Date(request.end_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
                                         </td>
                                         <td className="px-3 py-2 text-center font-bold text-[10px]">
                                             {(() => {
@@ -610,7 +610,7 @@ export default function AdminDashboard() {
                                             </div>
                                         </td>
                                         <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
-                                            {new Date(request.start_date).toLocaleDateString('vi-VN')}
+                                            {new Date(request.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
                                         </td>
                                         <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
                                             {request.start_time}
@@ -840,7 +840,7 @@ export default function AdminDashboard() {
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
                                                     <span className="text-sm font-medium">Visit Dates</span>
                                                 </div>
-                                                <div className="font-extrabold text-[#0f172a] text-sm">{new Date(selectedRequest.start_date).toLocaleDateString()} — {new Date(selectedRequest.end_date).toLocaleDateString()}</div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{new Date(selectedRequest.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} — {new Date(selectedRequest.end_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
                                             </div>
 
                                             {/* Purpose */}
@@ -938,7 +938,7 @@ export default function AdminDashboard() {
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
                                                     <span className="text-sm font-medium">Schedule</span>
                                                 </div>
-                                                <div className="font-extrabold text-[#0f172a] text-sm">{new Date(selectedRequest.start_date).toLocaleDateString()} @ {selectedRequest.start_time}</div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{new Date(selectedRequest.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} @ {selectedRequest.start_time}</div>
                                             </div>
 
                                             {/* Interview Area */}
