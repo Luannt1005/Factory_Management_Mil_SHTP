@@ -4,13 +4,6 @@ import Image from 'next/image';
 
 const departments = [
   {
-    id: 'management',
-    title: 'Management',
-    subtitle: 'Strategic Leadership',
-    desc: 'Oversees overall business strategy, organizational direction, and cross-departmental alignment to ensure company goals are met.',
-    img: '/landing_page/management.png'
-  },
-  {
     id: 'scm',
     title: 'Supply Chain Management',
     subtitle: 'SCM',
