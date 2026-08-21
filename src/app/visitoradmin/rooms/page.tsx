@@ -47,6 +47,7 @@ export default function AdminRoomsPage() {
         fetchRooms();
         fetchCategories();
         fetchHostDepartments();
+        fetchMeetingRooms();
     }, []);
 
     const fetchRooms = async () => {
