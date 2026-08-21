@@ -70,7 +70,8 @@ export default function CheckInOutManagement() {
     const handleAction = async (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET' | 'UPDATE_CARD') => {
         setActionLoading(`${requestId}-${v.visitorIndex}`);
         try {
-            const cardNumber = cardNumbers[`${requestId}-${v.visitorIndex}`] || v.cardNumber || '';
+            const rawCardNumber = cardNumbers[`${requestId}-${v.visitorIndex}`];
+            const cardNumber = rawCardNumber !== undefined ? rawCardNumber : (v.cardNumber ?? '');
             const res = await fetch('/api/visitor_admin/checkinout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -100,6 +101,7 @@ export default function CheckInOutManagement() {
                                     }
                                     return { 
                                         ...visitor, 
+                                        cardNumber,
                                         checkInOutStatus: updatedStatus, 
                                         [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: new Date().toISOString() 
                                     };
@@ -412,6 +414,12 @@ export default function CheckInOutManagement() {
                                                 className={`w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] ${isSecurity ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`} 
                                                 value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
                                                 onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
+                                                onBlur={(e) => {
+                                                    if (cardNumbers[`${req.requestId}-${v.visitorIndex}`] !== undefined) {
+                                                        handleAction(req.requestId, v, 'UPDATE_CARD');
+                                                    }
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
                                                 disabled={isSecurity}
                                                 readOnly={isSecurity}
                                             />

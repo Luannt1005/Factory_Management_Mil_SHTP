@@ -221,6 +221,7 @@ export async function POST(request: Request) {
         }
 
         const visitorPool = await getVisitorDbConnection();
+        const cleanCardNumber = (typeof cardNumber === 'string' && cardNumber.trim() !== '') ? cardNumber.trim() : null;
 
         if (action === 'CHECK_IN') {
             // Upsert with checkInTime = NOW()
@@ -235,7 +236,7 @@ export async function POST(request: Request) {
                     status = 'CHECKED_IN',
                     "updatedAt" = NOW(),
                     "cardNumber" = EXCLUDED."cardNumber"
-            `, [requestId, visitorIndex, visitorName, visitorCode, cardNumber || null]);
+            `, [requestId, visitorIndex, visitorName, visitorCode, cleanCardNumber]);
 
             return NextResponse.json({ message: 'Checked in successfully' });
         } else if (action === 'CHECK_OUT') {
@@ -251,7 +252,7 @@ export async function POST(request: Request) {
                     status = 'CHECKED_OUT',
                     "updatedAt" = NOW(),
                     "cardNumber" = EXCLUDED."cardNumber"
-            `, [requestId, visitorIndex, visitorName, visitorCode, cardNumber || null]);
+            `, [requestId, visitorIndex, visitorName, visitorCode, cleanCardNumber]);
 
             return NextResponse.json({ message: 'Checked out successfully' });
         } else if (action === 'RESET') {
@@ -272,7 +273,7 @@ export async function POST(request: Request) {
                 DO UPDATE SET 
                     "updatedAt" = NOW(),
                     "cardNumber" = EXCLUDED."cardNumber"
-            `, [requestId, visitorIndex, visitorName, visitorCode, cardNumber || null]);
+            `, [requestId, visitorIndex, visitorName, visitorCode, cleanCardNumber]);
 
             return NextResponse.json({ message: 'Card updated successfully' });
         } else {
