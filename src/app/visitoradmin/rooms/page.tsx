@@ -865,16 +865,29 @@ export default function AdminRoomsPage() {
                                     {/* If New Functional Dept is selected */}
                                     {selectedFuncDeptOption === '__NEW__' && (
                                         <div className="flex flex-col gap-3 mt-1 pt-3 border-t border-gray-200">
-                                            <div>
-                                                <label className="block text-xs font-bold text-gray-500 mb-1">New Functional Dept Name <span className="text-red-500">*</span></label>
-                                                <input 
-                                                    type="text" 
-                                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500" 
-                                                    value={newHostDept.functional_dept} 
-                                                    onChange={e => setNewHostDept({...newHostDept, functional_dept: e.target.value})} 
-                                                    required 
-                                                    placeholder="e.g. Operations" 
-                                                />
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 mb-1">BU <span className="text-red-500">*</span></label>
+                                                    <input 
+                                                        type="text" 
+                                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500" 
+                                                        value={newHostDept.bu || ''} 
+                                                        onChange={e => setNewHostDept({...newHostDept, bu: e.target.value})} 
+                                                        required 
+                                                        placeholder="e.g. Milwaukee" 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 mb-1">New Functional Dept Name <span className="text-red-500">*</span></label>
+                                                    <input 
+                                                        type="text" 
+                                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500" 
+                                                        value={newHostDept.functional_dept} 
+                                                        onChange={e => setNewHostDept({...newHostDept, functional_dept: e.target.value})} 
+                                                        required 
+                                                        placeholder="e.g. Operations" 
+                                                    />
+                                                </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
