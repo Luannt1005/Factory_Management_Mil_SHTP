@@ -87,7 +87,7 @@ export default function MeetingRoomCascader({
                                                     className="px-3 py-2.5 mx-2 rounded-lg text-sm text-gray-700 hover:bg-red-50 hover:text-[#db011c] cursor-pointer font-medium transition-colors truncate"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        onChange(`${hoveredFloor} - ${room.roomName}`);
+                                                        onChange(room.roomName);
                                                         setIsOpen(false);
                                                     }}
                                                 >
