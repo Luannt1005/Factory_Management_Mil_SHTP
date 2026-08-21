@@ -38,7 +38,7 @@ export default function AdminRoomsPage() {
     const [hostDepartments, setHostDepartments] = useState<any[]>([]);
     const [loadingHostDepartments, setLoadingHostDepartments] = useState(true);
     const [editingHostDept, setEditingHostDept] = useState<any>(null);
-    const [newHostDept, setNewHostDept] = useState({ functional_dept: '', functional_host_name: '', functional_host_email: '', department: '', department_host_name: '', department_host_email: '' });
+    const [newHostDept, setNewHostDept] = useState({ bu: '', functional_dept: '', functional_host_name: '', functional_host_email: '', department: '', department_host_name: '', department_host_email: '' });
     const [selectedFuncDeptOption, setSelectedFuncDeptOption] = useState<string>('');
 
     const uniqueFunctionalDepts = Array.from(new Set(hostDepartments.map((h: any) => h.functional_dept).filter(Boolean)));
@@ -225,7 +225,7 @@ export default function AdminRoomsPage() {
         if (res.ok) {
             fetchHostDepartments();
             setSelectedFuncDeptOption('');
-            setNewHostDept({ functional_dept: '', functional_host_name: '', functional_host_email: '', department: '', department_host_name: '', department_host_email: '' });
+            setNewHostDept({ bu: '', functional_dept: '', functional_host_name: '', functional_host_email: '', department: '', department_host_name: '', department_host_email: '' });
             setIsHostDeptModalOpen(false);
         } else {
             alert('Error creating Host Department');
@@ -617,6 +617,7 @@ export default function AdminRoomsPage() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
+                                        <th className="p-4">BU</th>
                                         <th className="p-4">Functional Dept</th>
                                         <th className="p-4">Func Host (Name / Email)</th>
                                         <th className="p-4">Department</th>
@@ -627,11 +628,12 @@ export default function AdminRoomsPage() {
                                 </thead>
                                 <tbody className="text-[0.875rem] font-medium bg-white">
                                     {loadingHostDepartments ? (
-                                        <tr><td colSpan={6} className="p-8 text-center text-gray-400">Loading...</td></tr>
+                                        <tr><td colSpan={7} className="p-8 text-center text-gray-400">Loading...</td></tr>
                                     ) : hostDepartments.map((h) => (
                                         <tr key={h.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                             {editingHostDept?.id === h.id ? (
                                                 <>
+                                                    <td className="p-2"><input type="text" className="w-full p-1 border rounded text-xs" value={editingHostDept.bu || ''} onChange={e => setEditingHostDept({...editingHostDept, bu: e.target.value})} placeholder="BU" /></td>
                                                     <td className="p-2"><input type="text" className="w-full p-1 border rounded text-xs" value={editingHostDept.functional_dept} onChange={e => setEditingHostDept({...editingHostDept, functional_dept: e.target.value})} /></td>
                                                     <td className="p-2">
                                                         <input type="text" className="w-full p-1 border rounded text-xs mb-1" value={editingHostDept.functional_host_name} onChange={e => setEditingHostDept({...editingHostDept, functional_host_name: e.target.value})} placeholder="Name" />
@@ -845,7 +847,8 @@ export default function AdminRoomsPage() {
                                                     ...newHostDept,
                                                     functional_dept: val,
                                                     functional_host_name: existing?.functional_host_name || '',
-                                                    functional_host_email: existing?.functional_host_email || ''
+                                                    functional_host_email: existing?.functional_host_email || '',
+                                                    bu: existing?.bu || ''
                                                 });
                                             }
                                         }}
@@ -889,6 +892,7 @@ export default function AdminRoomsPage() {
                                     {selectedFuncDeptOption && selectedFuncDeptOption !== '__NEW__' && (
                                         <div className="mt-1 p-3 bg-white rounded-lg border border-gray-200 text-xs flex justify-between items-center text-gray-600">
                                             <div>
+                                                <span className="font-bold text-gray-700 mr-2 border-r pr-2 border-gray-300">BU: <span className="text-[#db011c]">{newHostDept.bu || 'N/A'}</span></span>
                                                 <span className="font-bold text-gray-700">Functional Host: </span>
                                                 <span className="text-[#db011c] font-bold">{newHostDept.functional_host_name || 'N/A'}</span>
                                                 {newHostDept.functional_host_email && <span className="text-gray-400"> ({newHostDept.functional_host_email})</span>}
