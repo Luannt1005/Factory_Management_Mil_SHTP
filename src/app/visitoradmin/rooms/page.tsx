@@ -656,6 +656,7 @@ export default function AdminRoomsPage() {
                                                 </>
                                             ) : (
                                                 <>
+                                                    <td className="p-4 font-bold">{h.bu || ''}</td>
                                                     <td className="p-4">
                                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800 border border-gray-200">
                                                             {h.functional_dept}
