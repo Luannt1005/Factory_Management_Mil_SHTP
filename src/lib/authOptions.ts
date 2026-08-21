@@ -135,8 +135,9 @@ export const authOptions: NextAuthOptions = {
             const userVisitorId = roleMap.get('User Visitor');
             const adminOrgchartId = roleMap.get('Admin Orgchart');
             
+            const isExcludedFromDefaultUserVisitor = fullEmail?.toLowerCase().includes('outsourced.sec');
             let app_role_ids: string[] = [];
-            if (userVisitorId) app_role_ids.push(userVisitorId);
+            if (userVisitorId && !isExcludedFromDefaultUserVisitor) app_role_ids.push(userVisitorId);
             if ((department === 'IDM Control' || department === 'Management') && adminOrgchartId) {
                 app_role_ids.push(adminOrgchartId);
             }
@@ -165,9 +166,18 @@ export const authOptions: NextAuthOptions = {
             const userVisitorId = roleMap.get('User Visitor');
             const adminOrgchartId = roleMap.get('Admin Orgchart');
             
-            if (userVisitorId && !app_role_ids.includes(userVisitorId)) {
-                app_role_ids.push(userVisitorId);
-                updatedRoles = true;
+            const isExcludedFromDefaultUserVisitor = (fullEmail?.toLowerCase().includes('outsourced.sec') || existingUser.username?.toLowerCase().includes('outsourced.sec'));
+
+            if (userVisitorId) {
+                if (isExcludedFromDefaultUserVisitor) {
+                    if (app_role_ids.includes(userVisitorId)) {
+                        app_role_ids = app_role_ids.filter((id: string) => id !== userVisitorId);
+                        updatedRoles = true;
+                    }
+                } else if (!app_role_ids.includes(userVisitorId)) {
+                    app_role_ids.push(userVisitorId);
+                    updatedRoles = true;
+                }
             }
             if ((department === 'IDM Control' || department === 'Management' || existingUser.department === 'IDM Control' || existingUser.department === 'Management') && adminOrgchartId && !app_role_ids.includes(adminOrgchartId)) {
                 app_role_ids.push(adminOrgchartId);
@@ -186,7 +196,7 @@ export const authOptions: NextAuthOptions = {
             (user as any).role = existingUser.role || "user";
             (user as any).orgchart_role = existingUser.orgchart_role || "user";
             (user as any).visitor_role = existingUser.visitor_role || "user";
-            (user as any).app_role_ids = existingUser.app_role_ids || [];
+            (user as any).app_role_ids = app_role_ids;
             user.email = existingUser.username;
           }
 
