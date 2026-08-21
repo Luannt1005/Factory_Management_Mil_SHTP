@@ -80,6 +80,7 @@ export default function NewRequestPage() {
         interviewerName: '',
         startTime: '',
         interviewArea: '',
+        bu: '',
         functionalDept: '',
         department: ''
     });
@@ -178,6 +179,7 @@ export default function NewRequestPage() {
                     interviewerName: '',
                     startTime: '',
                     interviewArea: '',
+                    bu: '',
                     functionalDept: '',
                     department: ''
                 });
@@ -606,15 +608,30 @@ export default function NewRequestPage() {
                                             <SectionHeader title="Host Department" />
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                                                 <div>
+                                                    <InputLabel required>BU</InputLabel>
+                                                    <select 
+                                                        required
+                                                        value={formData.bu}
+                                                        onChange={e => setFormData({ ...formData, bu: e.target.value, functionalDept: '', department: '' })}
+                                                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none' }}
+                                                    >
+                                                        <option value="" disabled>Select BU</option>
+                                                        {[...new Set(hostDepartments.map(h => h.bu).filter(Boolean))].map(bu => (
+                                                            <option key={bu as string} value={bu as string}>{bu as string}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
                                                     <InputLabel required>Functional Dept</InputLabel>
                                                     <select 
                                                         required
                                                         value={formData.functionalDept}
                                                         onChange={e => setFormData({ ...formData, functionalDept: e.target.value, department: '' })}
-                                                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none' }}
+                                                        disabled={!formData.bu}
+                                                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none', opacity: formData.bu ? 1 : 0.5 }}
                                                     >
                                                         <option value="" disabled>Select Functional Dept</option>
-                                                        {[...new Set(hostDepartments.map(h => h.functional_dept))].map(dept => (
+                                                        {[...new Set(hostDepartments.filter(h => h.bu === formData.bu).map(h => h.functional_dept).filter(Boolean))].map(dept => (
                                                             <option key={dept as string} value={dept as string}>{dept as string}</option>
                                                         ))}
                                                     </select>

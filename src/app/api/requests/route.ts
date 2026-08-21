@@ -48,12 +48,13 @@ export async function POST(request: Request) {
         const {
             visitors, startDate, endDate,
             purposeOfVisit, visitorCategory, details, roomIds,
-            visitingSite, purposeDetail, functionalDept, department
+            visitingSite, purposeDetail, functionalDept, department, bu
         } = body;
 
         // Enhance details with host department info
         const enhancedDetails = {
             ...details,
+            bu: bu || null,
             functionalDept: functionalDept || null,
             department: department || null
         };
