@@ -391,7 +391,7 @@ export default function CheckInOutManagement() {
                         </div>
 
                         {/* Showing Count evenly placed in 8th column */}
-                        <div className="w-full text-right pb-2 text-sm font-medium text-gray-500 whitespace-nowrap">
+                        <div className="w-full text-right pb-2.5 text-[11px] font-medium text-gray-500 whitespace-nowrap">
                             {viewMode === 'group' ? (
                                 <>Showing <span className="text-gray-900 font-bold">{paginatedGroups.length}</span> of <span className="text-gray-900 font-bold">{processedHistory.length}</span> requests</>
                             ) : (
