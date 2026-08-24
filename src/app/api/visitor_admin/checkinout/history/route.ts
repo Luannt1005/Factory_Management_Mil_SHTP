@@ -100,7 +100,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
         }
 
         if (search) {
-            whereConditions.push(`(r."requestId" ILIKE $${paramCount} OR r."submitterName" ILIKE $${paramCount} OR r."visitorCode_override" ILIKE $${paramCount})`);
+            whereConditions.push(`(r."requestId" ILIKE $${paramCount} OR r."requestCode" ILIKE $${paramCount} OR r."submitterName" ILIKE $${paramCount} OR r."visitorCode_override" ILIKE $${paramCount} OR r."intervieweeName" ILIKE $${paramCount} OR r.visitors_json ILIKE $${paramCount})`);
             queryParams.push(`%${search}%`);
             paramCount += 1;
         }

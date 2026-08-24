@@ -30,6 +30,8 @@ export default function CheckInOutManagement() {
     });
     const [viewMode, setViewMode] = useState<ViewMode>('group');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 15;
     
     const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export default function CheckInOutManagement() {
             if (filters.category) query.append('category', filters.category);
             if (filters.search) query.append('search', filters.search);
             if (filters.site) query.append('site', filters.site);
-            query.append('limit', '200'); // Fetch more for flattened view
+            query.append('limit', '500'); // Fetch enough for client-side pagination & filtering
 
             const res = await fetch(`/api/visitor_admin/checkinout/history?${query.toString()}`);
             if (res.ok) {
@@ -66,6 +68,11 @@ export default function CheckInOutManagement() {
     useEffect(() => {
         fetchHistory();
     }, [fetchHistory]);
+
+    // Reset pagination to page 1 on filter or view mode changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters, statusFilter, viewMode]);
 
     const handleAction = async (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET' | 'UPDATE_CARD') => {
         setActionLoading(`${requestId}-${v.visitorIndex}`);
@@ -126,13 +133,21 @@ export default function CheckInOutManagement() {
     const formatDateTime = (timeString: string | null) => {
         if (!timeString) return '-';
         const d = new Date(timeString);
-        return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
     };
 
     const formatDateShort = (dateString: string | null) => {
         if (!dateString) return '';
         const d = new Date(dateString);
-        return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
     };
 
     const getCategoryBadgeClass = (category: string) => {
@@ -157,8 +172,8 @@ export default function CheckInOutManagement() {
     const processedHistory = history.map(req => {
         const filteredVisitors = req.visitors?.filter((v: any) => {
             if (statusFilter !== 'ALL' && v.checkInOutStatus !== statusFilter) return false;
-            if (filters.visitorName) {
-                const nameMatch = removeAccents(v.visitorName || '').includes(removeAccents(filters.visitorName));
+            if (filters.visitorName && filters.visitorName.trim()) {
+                const nameMatch = removeAccents(v.visitorName || '').includes(removeAccents(filters.visitorName.trim()));
                 if (!nameMatch) return false;
             }
             return true;
@@ -168,7 +183,15 @@ export default function CheckInOutManagement() {
             ...req,
             filteredVisitors
         };
-    }).filter(req => req.filteredVisitors.length > 0 || (viewMode === 'group' && statusFilter === 'ALL'));
+    }).filter(req => {
+        if (filters.visitorName && filters.visitorName.trim()) {
+            return req.filteredVisitors.length > 0;
+        }
+        if (statusFilter !== 'ALL') {
+            return req.filteredVisitors.length > 0;
+        }
+        return true;
+    });
 
     // Flatten visitors for Visitor View
     const allVisitors = processedHistory.flatMap(req => 
@@ -176,6 +199,20 @@ export default function CheckInOutManagement() {
             ...v,
             _requestInfo: req
         }))
+    );
+
+    const totalPages = viewMode === 'group' 
+        ? Math.ceil(processedHistory.length / ITEMS_PER_PAGE) || 1
+        : Math.ceil(allVisitors.length / ITEMS_PER_PAGE) || 1;
+
+    const paginatedGroups = processedHistory.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const paginatedVisitors = allVisitors.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
     );
 
     // Summary stats
@@ -364,7 +401,7 @@ export default function CheckInOutManagement() {
                         <div className="flex flex-col">
                             
                             {viewMode === 'visitor' && (
-                                <div className="hidden md:grid grid-cols-[1fr_1.2fr_1.5fr_1fr_1.2fr_0.8fr_1.3fr_1fr_0.7fr_0.7fr_170px] gap-4 items-center bg-[#1a1a1a] text-white px-6 py-3 font-bold text-[9px] uppercase tracking-wider mb-2">
+                                <div className="hidden md:grid grid-cols-[100px_120px_1.4fr_1fr_1.2fr_85px_120px_95px_125px_125px_160px] gap-3 items-center bg-[#1a1a1a] text-white px-6 py-3 font-bold text-[9px] uppercase tracking-wider mb-2">
                                     <div>REQUEST</div>
                                     <div>VISITOR CODE</div>
                                     <div>FULL NAME</div>
@@ -391,10 +428,10 @@ export default function CheckInOutManagement() {
                             )}
 
                             {/* Visitor View Rows */}
-                            {viewMode === 'visitor' && allVisitors.map((v: any, idx: number) => {
+                            {viewMode === 'visitor' && paginatedVisitors.map((v: any, idx: number) => {
                                 const req = v._requestInfo;
                                 return (
-                                    <div key={`${req.requestId}-${v.visitorIndex}`} className={`px-6 py-3 grid grid-cols-[1fr_1.2fr_1.5fr_1fr_1.2fr_0.8fr_1.3fr_1fr_0.7fr_0.7fr_170px] gap-4 items-center border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                                    <div key={`${req.requestId}-${v.visitorIndex}`} className={`px-6 py-3 grid grid-cols-[100px_120px_1.4fr_1fr_1.2fr_85px_120px_95px_125px_125px_160px] gap-3 items-center border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                                         <div className="text-[11px] font-medium text-gray-900 truncate" title={req.requestCode || req.requestId}>{req.requestCode || req.requestId}</div>
                                         <div className="text-xs font-black text-[#db011c] truncate" title={v.visitorCode}>{v.visitorCode}</div>
                                         <div className="text-xs font-bold text-gray-900 truncate" title={v.visitorName}>{v.visitorName}</div>
@@ -424,8 +461,8 @@ export default function CheckInOutManagement() {
                                                 readOnly={isSecurity}
                                             />
                                         </div>
-                                        <div className={`text-[11px] font-bold text-center ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatTime(v.checkInTime)}</div>
-                                        <div className={`text-[11px] font-bold text-center ${v.checkOutTime ? 'text-gray-600' : 'text-gray-400'}`}>{formatTime(v.checkOutTime)}</div>
+                                        <div className={`text-[10px] font-bold text-center ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatDateTime(v.checkInTime)}</div>
+                                        <div className={`text-[10px] font-bold text-center ${v.checkOutTime ? 'text-gray-600' : 'text-gray-400'}`}>{formatDateTime(v.checkOutTime)}</div>
                                         
                                         <div className="flex justify-end min-w-0">
                                             {renderActionButtons(req, v)}
@@ -435,7 +472,7 @@ export default function CheckInOutManagement() {
                             })}
 
                             {/* Group View Rows */}
-                            {viewMode === 'group' && processedHistory.map((req, idx) => (
+                            {viewMode === 'group' && paginatedGroups.map((req, idx) => (
                                 <div key={req.requestId} className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-[#fff5f5]/30'}`}>
                                     {/* Request Row */}
                                     <div 
@@ -474,7 +511,7 @@ export default function CheckInOutManagement() {
                                                         {req.filteredVisitors && req.filteredVisitors.length > 0 ? (
                                                             <>
                                                                 {/* Header for expanded visitors */}
-                                                                <div className="grid grid-cols-[130px_1.5fr_1.5fr_1.5fr_1fr_90px_60px_60px_170px] gap-4 items-center pb-2 border-b border-gray-300 mb-2">
+                                                                <div className="grid grid-cols-[120px_1.4fr_1fr_1.2fr_120px_90px_125px_125px_160px] gap-3 items-center pb-2 border-b border-gray-300 mb-2">
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">VISITOR CODE</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">FULL NAME</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">TITLE</div>
@@ -487,7 +524,7 @@ export default function CheckInOutManagement() {
                                                                 </div>
 
                                                                 {req.filteredVisitors.map((v: any, vIdx: number) => (
-                                                                    <div key={vIdx} className={`py-3 grid grid-cols-[130px_1.5fr_1.5fr_1.5fr_1fr_90px_60px_60px_170px] gap-4 items-center ${vIdx !== req.filteredVisitors.length - 1 ? 'border-b border-dashed border-gray-200' : ''}`}>
+                                                                    <div key={vIdx} className={`py-3 grid grid-cols-[120px_1.4fr_1fr_1.2fr_120px_90px_125px_125px_160px] gap-3 items-center ${vIdx !== req.filteredVisitors.length - 1 ? 'border-b border-dashed border-gray-200' : ''}`}>
                                                                         <div className="text-xs font-black text-[#db011c] truncate" title={v.visitorCode}>{v.visitorCode}</div>
                                                                         <div className="text-xs font-bold text-gray-900 truncate" title={v.visitorName}>{v.visitorName}</div>
                                                                         <div className="text-[11px] text-gray-600 truncate" title={v.visitorTitle || '-'}>{v.visitorTitle || '-'}</div>
@@ -510,8 +547,8 @@ export default function CheckInOutManagement() {
                                                                                 readOnly={isSecurity}
                                                                             />
                                                                         </div>
-                                                                        <div className={`text-[11px] font-bold text-center ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatTime(v.checkInTime)}</div>
-                                                                        <div className={`text-[11px] font-bold text-center ${v.checkOutTime ? 'text-gray-600' : 'text-gray-400'}`}>{formatTime(v.checkOutTime)}</div>
+                                                                        <div className={`text-[10px] font-bold text-center ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatDateTime(v.checkInTime)}</div>
+                                                                        <div className={`text-[10px] font-bold text-center ${v.checkOutTime ? 'text-gray-600' : 'text-gray-400'}`}>{formatDateTime(v.checkOutTime)}</div>
                                                                         
                                                                         <div className="flex justify-end min-w-0">
                                                                             {renderActionButtons(req, v)}
@@ -531,14 +568,62 @@ export default function CheckInOutManagement() {
                         </div>
                     )}
                 </div>
+
+                {/* Pagination Controls */}
+                {((viewMode === 'group' && processedHistory.length > 0) || (viewMode === 'visitor' && allVisitors.length > 0)) && (
+                    <div className="px-6 py-3.5 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600 rounded-b-lg">
+                        <div>
+                            {viewMode === 'group' ? (
+                                <span>
+                                    Showing <span className="font-bold text-gray-900">{Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, processedHistory.length)}</span> to <span className="font-bold text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, processedHistory.length)}</span> of <span className="font-bold text-gray-900">{processedHistory.length}</span> requests
+                                </span>
+                            ) : (
+                                <span>
+                                    Showing <span className="font-bold text-gray-900">{Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, allVisitors.length)}</span> to <span className="font-bold text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, allVisitors.length)}</span> of <span className="font-bold text-gray-900">{allVisitors.length}</span> visitors
+                                </span>
+                            )}
+                        </div>
+                        
+                        {totalPages > 1 && (
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-2.5 py-1 text-xs border border-gray-300 rounded font-medium text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Previous
+                                </button>
+                                
+                                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                    .filter(p => p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1))
+                                    .map((p, idx, arr) => {
+                                        const prev = arr[idx - 1];
+                                        return (
+                                            <div key={p} className="flex items-center">
+                                                {prev && p - prev > 1 && <span className="px-1 text-gray-400">...</span>}
+                                                <button
+                                                    onClick={() => setCurrentPage(p)}
+                                                    className={`px-2.5 py-1 text-xs rounded font-bold transition-colors ${currentPage === p ? 'bg-[#db011c] text-white shadow-sm' : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-100'}`}
+                                                >
+                                                    {p}
+                                                </button>
+                                            </div>
+                                        );
+                                    })
+                                }
+                                
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="px-2.5 py-1 text-xs border border-gray-300 rounded font-medium text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
-}
-
-// Helper function
-function formatTime(timeString: string | null) {
-    if (!timeString) return '-';
-    const d = new Date(timeString);
-    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
