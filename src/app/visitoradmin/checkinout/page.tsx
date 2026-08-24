@@ -292,7 +292,7 @@ export default function CheckInOutManagement() {
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 {/* Advanced Filters */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 items-end">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-[repeat(7,1fr)_auto] gap-4 items-end">
                         <div className="w-full">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Search Req</label>
                             <input 
@@ -390,8 +390,8 @@ export default function CheckInOutManagement() {
                             </div>
                         </div>
 
-                        {/* Showing Count evenly placed in 8th column */}
-                        <div className="w-full text-right pb-2.5 text-[11px] font-medium text-gray-500 whitespace-nowrap">
+                        {/* Showing Count placed with natural auto width */}
+                        <div className="w-auto whitespace-nowrap pb-2.5 text-[11px] font-medium text-gray-500">
                             {viewMode === 'group' ? (
                                 <>Showing <span className="text-gray-900 font-bold">{paginatedGroups.length}</span> of <span className="text-gray-900 font-bold">{processedHistory.length}</span> requests</>
                             ) : (
