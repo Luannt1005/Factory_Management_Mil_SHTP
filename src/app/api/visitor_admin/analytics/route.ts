@@ -23,12 +23,20 @@ export async function GET(request: Request) {
         const endDate = url.searchParams.get('endDate');
         const bu = url.searchParams.get('bu');
         const status = url.searchParams.get('status');
+        const category = url.searchParams.get('category');
 
         let whereConditions = ["1=1"];
-        if (startDate) whereConditions.push(`"startDate" >= '${startDate}'`);
-        if (endDate) whereConditions.push(`"startDate" <= '${endDate}'`);
-        if (status && status !== 'all') whereConditions.push(`status = '${status}'`);
-        if (bu && bu !== 'all') whereConditions.push(`bu = '${bu}'`);
+        if (startDate) whereConditions.push(`req."startDate" >= '${startDate}'`);
+        if (endDate) whereConditions.push(`req."startDate" <= '${endDate}'`);
+        if (status && status !== 'all') whereConditions.push(`req.status = '${status}'`);
+        if (bu && bu !== 'all') whereConditions.push(`req.bu = '${bu}'`);
+        if (category && category !== 'all') {
+            if (category.toLowerCase().includes('expat')) {
+                whereConditions.push(`req.category ILIKE '%Expat%'`);
+            } else {
+                whereConditions.push(`req.category ILIKE '${category}'`);
+            }
+        }
         
         const whereClause = whereConditions.join(" AND ");
 
@@ -69,8 +77,8 @@ export async function GET(request: Request) {
 
         // 1. STAT CARDS
         // Visitors Today (Scheduled for today, filtered)
-        const todayRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs WHERE DATE("startDate") = CURRENT_DATE AND ${whereClause}`);
-        const yesterdayRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs WHERE DATE("startDate") = CURRENT_DATE - 1 AND ${whereClause}`);
+        const todayRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE DATE(req."startDate") = CURRENT_DATE AND ${whereClause}`);
+        const yesterdayRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE DATE(req."startDate") = CURRENT_DATE - 1 AND ${whereClause}`);
         
         const visitorsToday = parseInt(todayRes.rows[0]?.count || 0);
         const visitorsYesterday = parseInt(yesterdayRes.rows[0]?.count || 0);
@@ -89,15 +97,15 @@ export async function GET(request: Request) {
         const currentlyPresent = parseInt(presentRes.rows[0]?.count || 0);
 
         // Total This Week
-        const thisWeekRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs WHERE "startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
-        const lastWeekRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs WHERE "startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND "startDate" < date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
+        const thisWeekRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE req."startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
+        const lastWeekRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE req."startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND req."startDate" < date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
         const totalThisWeek = parseInt(thisWeekRes.rows[0]?.count || 0);
         const totalLastWeek = parseInt(lastWeekRes.rows[0]?.count || 0);
         const weekGrowth = totalLastWeek === 0 ? 100 : Math.round(((totalThisWeek - totalLastWeek) / totalLastWeek) * 100);
 
         // Average Stay Duration this week
-        const avgStayRes = await visitorPool.query(`${cte} SELECT AVG(EXTRACT(EPOCH FROM ("endDate" - "startDate"))/60) as avg_minutes FROM BaseReqs WHERE "endDate" IS NOT NULL AND "startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
-        const lastWeekAvgRes = await visitorPool.query(`${cte} SELECT AVG(EXTRACT(EPOCH FROM ("endDate" - "startDate"))/60) as avg_minutes FROM BaseReqs WHERE "endDate" IS NOT NULL AND "startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND "startDate" < date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
+        const avgStayRes = await visitorPool.query(`${cte} SELECT AVG(EXTRACT(EPOCH FROM (req."endDate" - req."startDate"))/60) as avg_minutes FROM BaseReqs req WHERE req."endDate" IS NOT NULL AND req."startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
+        const lastWeekAvgRes = await visitorPool.query(`${cte} SELECT AVG(EXTRACT(EPOCH FROM (req."endDate" - req."startDate"))/60) as avg_minutes FROM BaseReqs req WHERE req."endDate" IS NOT NULL AND req."startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND req."startDate" < date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
         const avgStayMinutes = Math.round(parseFloat(avgStayRes.rows[0]?.avg_minutes || 0));
         const avgStayLastWeek = Math.round(parseFloat(lastWeekAvgRes.rows[0]?.avg_minutes || 0));
         const avgStayChange = avgStayMinutes - avgStayLastWeek;
@@ -111,21 +119,21 @@ export async function GET(request: Request) {
 
         // 2. TREND DATA
         const trendRes = await visitorPool.query(`${cte} 
-            SELECT 'Tuần ' || ROW_NUMBER() OVER(ORDER BY date_trunc('week', "startDate")) as label, COUNT(*) as value
-            FROM BaseReqs 
-            WHERE "startDate" >= CURRENT_DATE - interval '7 weeks' AND ${whereClause}
-            GROUP BY date_trunc('week', "startDate")
-            ORDER BY date_trunc('week', "startDate")
+            SELECT 'Tuần ' || ROW_NUMBER() OVER(ORDER BY date_trunc('week', req."startDate")) as label, COUNT(*) as value
+            FROM BaseReqs req
+            WHERE req."startDate" >= CURRENT_DATE - interval '7 weeks' AND ${whereClause}
+            GROUP BY date_trunc('week', req."startDate")
+            ORDER BY date_trunc('week', req."startDate")
         `);
         const trendData = trendRes.rows;
 
         // 3. PERIODIC DATA
         const periodicRes = await visitorPool.query(`${cte}
-            SELECT 'T' || EXTRACT(ISODOW FROM "startDate") + 1 as label, COUNT(*) as value
-            FROM BaseReqs 
-            WHERE "startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}
-            GROUP BY EXTRACT(ISODOW FROM "startDate")
-            ORDER BY EXTRACT(ISODOW FROM "startDate")
+            SELECT 'T' || EXTRACT(ISODOW FROM req."startDate") + 1 as label, COUNT(*) as value
+            FROM BaseReqs req
+            WHERE req."startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}
+            GROUP BY EXTRACT(ISODOW FROM req."startDate")
+            ORDER BY EXTRACT(ISODOW FROM req."startDate")
         `);
         
         const periodicData = [];
@@ -137,9 +145,9 @@ export async function GET(request: Request) {
 
         // 4. CATEGORY DISTRIBUTION
         const categoryRes = await visitorPool.query(`${cte}
-            SELECT category, COUNT(*) as count 
-            FROM BaseReqs WHERE ${whereClause}
-            GROUP BY category
+            SELECT req.category, COUNT(*) as count 
+            FROM BaseReqs req WHERE ${whereClause}
+            GROUP BY req.category
         `);
         let categoryData = categoryRes.rows.map(r => ({
             name: r.category,
@@ -161,8 +169,8 @@ export async function GET(request: Request) {
 
         // 5. DEPARTMENT & BU DISTRIBUTION
         const deptRes = await visitorPool.query(`${cte}
-            SELECT department, bu, COUNT(*) as count
-            FROM BaseReqs WHERE ${whereClause}
+            SELECT req.department, req.bu, COUNT(*) as count
+            FROM BaseReqs req WHERE ${whereClause}
             GROUP BY 1, 2
         `);
 
@@ -184,8 +192,8 @@ export async function GET(request: Request) {
 
         // 6. RECENT ACTIVITY
         const recentRes = await visitorPool.query(`${cte}
-            SELECT name, status, "createdAt" as time, category, type
-            FROM BaseReqs WHERE ${whereClause}
+            SELECT req.name, req.status, req."createdAt" as time, req.category, req.type
+            FROM BaseReqs req WHERE ${whereClause}
             ORDER BY time DESC
             LIMIT 20
         `);

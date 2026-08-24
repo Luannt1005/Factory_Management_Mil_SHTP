@@ -12,6 +12,7 @@ export default function VisitorAnalytics() {
     const [periodFilter, setPeriodFilter] = useState('all');
     const [buFilter, setBuFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -41,6 +42,7 @@ export default function VisitorAnalytics() {
                 if (endDate) params.append('endDate', endDate);
                 if (buFilter && buFilter !== 'all') params.append('bu', buFilter);
                 if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
+                if (categoryFilter && categoryFilter !== 'all') params.append('category', categoryFilter);
                 const res = await fetch('/api/visitor_admin/analytics?' + params.toString());
                 if (res.ok) {
                     const json = await res.json();
@@ -57,7 +59,7 @@ export default function VisitorAnalytics() {
         // Refresh every minute for the live feed
         const interval = setInterval(fetchAnalytics, 60000);
         return () => clearInterval(interval);
-    }, [periodFilter, buFilter, statusFilter]);
+    }, [periodFilter, buFilter, statusFilter, categoryFilter]);
 
     if (loading) {
         return (
@@ -137,6 +139,18 @@ export default function VisitorAnalytics() {
                     <option value="IN PROCESS">In Process</option>
                     <option value="COMPLETE">Complete</option>
                     <option value="REJECTED">Rejected</option>
+                </select>
+
+                <select 
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                >
+                    <option value="all">All Categories</option>
+                    <option value="MIL/TTI Expat / SHTP Business trip">MIL / TTI EXPAT</option>
+                    <option value="Vendor">Vendor</option>
+                    <option value="Contractor">Contractor</option>
+                    <option value="Interviewee">Interviewee</option>
                 </select>
             </div>
 
