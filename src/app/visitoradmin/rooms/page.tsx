@@ -41,6 +41,84 @@ export default function AdminRoomsPage() {
     const [newHostDept, setNewHostDept] = useState({ bu: '', functional_dept: '', functional_host_name: '', functional_host_email: '', department: '', department_host_name: '', department_host_email: '' });
     const [selectedFuncDeptOption, setSelectedFuncDeptOption] = useState<string>('');
 
+    // --- Column Filter States for All Tabs ---
+    const [roomFilters, setRoomFilters] = useState({
+        category: '',
+        name: '',
+        description: '',
+        approver_email: '',
+        is_active: ''
+    });
+
+    const [categoryFilters, setCategoryFilters] = useState({
+        name: '',
+        site_location: '',
+        bu: ''
+    });
+
+    const [hostDeptFilters, setHostDeptFilters] = useState({
+        bu: '',
+        functional_dept: '',
+        functional_host: '',
+        department: '',
+        department_host: '',
+        is_active: ''
+    });
+
+    const [meetingRoomFilters, setMeetingRoomFilters] = useState({
+        floorName: '',
+        roomName: ''
+    });
+
+    // Filtered lists
+    const filteredMeetingRooms = meetingRooms.filter(room => {
+        if (meetingRoomFilters.floorName && !room.floorName?.toLowerCase().includes(meetingRoomFilters.floorName.toLowerCase())) return false;
+        if (meetingRoomFilters.roomName && !room.roomName?.toLowerCase().includes(meetingRoomFilters.roomName.toLowerCase())) return false;
+        return true;
+    });
+
+    const filteredRooms = rooms.filter(room => {
+        if (roomFilters.category && !room.category?.toLowerCase().includes(roomFilters.category.toLowerCase())) return false;
+        if (roomFilters.name && !room.name?.toLowerCase().includes(roomFilters.name.toLowerCase())) return false;
+        if (roomFilters.description && !room.description?.toLowerCase().includes(roomFilters.description.toLowerCase())) return false;
+        if (roomFilters.approver_email && !room.approver_email?.toLowerCase().includes(roomFilters.approver_email.toLowerCase())) return false;
+        if (roomFilters.is_active !== '') {
+            const activeBool = roomFilters.is_active === 'true';
+            if (Boolean(room.is_active) !== activeBool) return false;
+        }
+        return true;
+    });
+
+    const filteredCategories = categories.filter(cat => {
+        if (categoryFilters.name && !cat.name?.toLowerCase().includes(categoryFilters.name.toLowerCase())) return false;
+        if (categoryFilters.site_location && cat.site_location !== categoryFilters.site_location) return false;
+        if (categoryFilters.bu && cat.bu !== categoryFilters.bu) return false;
+        return true;
+    });
+
+    const filteredHostDepartments = hostDepartments.filter(h => {
+        if (hostDeptFilters.bu && !h.bu?.toLowerCase().includes(hostDeptFilters.bu.toLowerCase())) return false;
+        if (hostDeptFilters.functional_dept && !h.functional_dept?.toLowerCase().includes(hostDeptFilters.functional_dept.toLowerCase())) return false;
+        if (hostDeptFilters.functional_host) {
+            const q = hostDeptFilters.functional_host.toLowerCase();
+            const matchName = h.functional_host_name?.toLowerCase().includes(q);
+            const matchEmail = h.functional_host_email?.toLowerCase().includes(q);
+            if (!matchName && !matchEmail) return false;
+        }
+        if (hostDeptFilters.department && !h.department?.toLowerCase().includes(hostDeptFilters.department.toLowerCase())) return false;
+        if (hostDeptFilters.department_host) {
+            const q = hostDeptFilters.department_host.toLowerCase();
+            const matchName = h.department_host_name?.toLowerCase().includes(q);
+            const matchEmail = h.department_host_email?.toLowerCase().includes(q);
+            if (!matchName && !matchEmail) return false;
+        }
+        if (hostDeptFilters.is_active !== '') {
+            const activeBool = hostDeptFilters.is_active === 'true';
+            if (Boolean(h.is_active) !== activeBool) return false;
+        }
+        return true;
+    });
+
     const uniqueFunctionalDepts = Array.from(new Set(hostDepartments.map((h: any) => h.functional_dept).filter(Boolean)));
 
     useEffect(() => {
@@ -325,9 +403,37 @@ export default function AdminRoomsPage() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-                                        <th className="py-4 px-6 font-black text-gray-600 text-xs uppercase tracking-wider w-[40%]">Floor Name</th>
-                                        <th className="py-4 px-6 font-black text-gray-600 text-xs uppercase tracking-wider w-[40%]">Room Name</th>
-                                        <th className="py-4 px-6 font-black text-gray-600 text-xs uppercase tracking-wider text-right w-[20%]">Actions</th>
+                                        <th className="py-3 px-6 font-black text-gray-600 text-xs uppercase tracking-wider w-[40%] align-top">
+                                            <div className="mb-1.5">Floor Name</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter floor..."
+                                                value={meetingRoomFilters.floorName}
+                                                onChange={e => setMeetingRoomFilters({ ...meetingRoomFilters, floorName: e.target.value })}
+                                                className="w-full px-2.5 py-1 bg-white border border-gray-300 rounded-md text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="py-3 px-6 font-black text-gray-600 text-xs uppercase tracking-wider w-[40%] align-top">
+                                            <div className="mb-1.5">Room Name</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter room..."
+                                                value={meetingRoomFilters.roomName}
+                                                onChange={e => setMeetingRoomFilters({ ...meetingRoomFilters, roomName: e.target.value })}
+                                                className="w-full px-2.5 py-1 bg-white border border-gray-300 rounded-md text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="py-3 px-6 font-black text-gray-600 text-xs uppercase tracking-wider text-right w-[20%] align-top">
+                                            <div className="mb-1.5">Actions</div>
+                                            {(meetingRoomFilters.floorName || meetingRoomFilters.roomName) && (
+                                                <button
+                                                    onClick={() => setMeetingRoomFilters({ floorName: '', roomName: '' })}
+                                                    className="text-[11px] font-bold text-red-600 hover:text-red-800 underline"
+                                                >
+                                                    Clear filter
+                                                </button>
+                                            )}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-sm">
@@ -335,12 +441,12 @@ export default function AdminRoomsPage() {
                                         <tr>
                                             <td colSpan={3} className="py-8 text-center text-gray-500">Loading meeting rooms...</td>
                                         </tr>
-                                    ) : meetingRooms.length === 0 ? (
+                                    ) : filteredMeetingRooms.length === 0 ? (
                                         <tr>
-                                            <td colSpan={3} className="py-8 text-center text-gray-500">No meeting rooms found. Create one to get started.</td>
+                                            <td colSpan={3} className="py-8 text-center text-gray-500">No meeting rooms found.</td>
                                         </tr>
                                     ) : (
-                                        meetingRooms.map((room) => (
+                                        filteredMeetingRooms.map((room) => (
                                             <tr key={room.id} className="hover:bg-gray-50/80 transition-colors group">
                                                 <td className="py-4 px-6">
                                                     {editingMeetingRoom?.id === room.id ? (
@@ -418,18 +524,75 @@ export default function AdminRoomsPage() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                        <th className="p-5">Category</th>
-                                        <th className="p-5">Room Name</th>
-                                        <th className="p-5">Description</th>
-                                        <th className="p-5">Approver Email</th>
-                                        <th className="p-5 text-center">Status</th>
-                                        <th className="p-5 text-right">Action</th>
+                                        <th className="p-4 align-top w-[18%]">
+                                            <div className="mb-1.5 text-gray-600">Category</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter category..."
+                                                value={roomFilters.category}
+                                                onChange={e => setRoomFilters({ ...roomFilters, category: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="p-4 align-top w-[22%]">
+                                            <div className="mb-1.5 text-gray-600">Room Name</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter name..."
+                                                value={roomFilters.name}
+                                                onChange={e => setRoomFilters({ ...roomFilters, name: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="p-4 align-top w-[22%]">
+                                            <div className="mb-1.5 text-gray-600">Description</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter description..."
+                                                value={roomFilters.description}
+                                                onChange={e => setRoomFilters({ ...roomFilters, description: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="p-4 align-top w-[20%]">
+                                            <div className="mb-1.5 text-gray-600">Approver Email</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter email..."
+                                                value={roomFilters.approver_email}
+                                                onChange={e => setRoomFilters({ ...roomFilters, approver_email: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="p-4 text-center align-top w-[10%]">
+                                            <div className="mb-1.5 text-gray-600">Status</div>
+                                            <select
+                                                value={roomFilters.is_active}
+                                                onChange={e => setRoomFilters({ ...roomFilters, is_active: e.target.value })}
+                                                className="w-full px-1.5 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            >
+                                                <option value="">All</option>
+                                                <option value="true">Active</option>
+                                                <option value="false">Inactive</option>
+                                            </select>
+                                        </th>
+                                        <th className="p-4 text-right align-top w-[8%]">
+                                            <div className="mb-1.5 text-gray-600">Action</div>
+                                            {(roomFilters.category || roomFilters.name || roomFilters.description || roomFilters.approver_email || roomFilters.is_active) && (
+                                                <button
+                                                    onClick={() => setRoomFilters({ category: '', name: '', description: '', approver_email: '', is_active: '' })}
+                                                    className="text-[11px] font-bold text-red-600 hover:text-red-800 underline whitespace-nowrap"
+                                                >
+                                                    Clear
+                                                </button>
+                                            )}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-[0.875rem] font-medium bg-white">
                                     {loadingRooms ? (
                                         <tr><td colSpan={6} className="p-8 text-center text-gray-400">Loading rooms...</td></tr>
-                                    ) : rooms.map((room) => (
+                                    ) : filteredRooms.map((room) => (
                                         <tr key={room.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                             {editingRoom?.id === room.id ? (
                                                 <>
@@ -508,8 +671,8 @@ export default function AdminRoomsPage() {
                                             )}
                                         </tr>
                                     ))}
-                                    {rooms.length === 0 && !loadingRooms && (
-                                        <tr><td colSpan={6} className="p-16 text-center text-gray-400 font-medium">No rooms found. Add your first room area.</td></tr>
+                                    {filteredRooms.length === 0 && !loadingRooms && (
+                                        <tr><td colSpan={6} className="p-16 text-center text-gray-400 font-medium">No rooms found matching the filter.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -526,16 +689,57 @@ export default function AdminRoomsPage() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                        <th className="p-5">Category Name</th>
-                                        <th className="p-5 text-center">Site Location</th>
-                                        <th className="p-5 text-center">BU</th>
-                                        <th className="p-5 text-right">Action</th>
+                                        <th className="p-4 align-top w-[45%]">
+                                            <div className="mb-1.5 text-gray-600">Category Name</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter category..."
+                                                value={categoryFilters.name}
+                                                onChange={e => setCategoryFilters({ ...categoryFilters, name: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="p-4 text-center align-top w-[25%]">
+                                            <div className="mb-1.5 text-gray-600">Site Location</div>
+                                            <select
+                                                value={categoryFilters.site_location}
+                                                onChange={e => setCategoryFilters({ ...categoryFilters, site_location: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            >
+                                                <option value="">All Sites</option>
+                                                <option value="SHTP">SHTP</option>
+                                                <option value="DDK">DDK</option>
+                                            </select>
+                                        </th>
+                                        <th className="p-4 text-center align-top w-[20%]">
+                                            <div className="mb-1.5 text-gray-600">BU</div>
+                                            <select
+                                                value={categoryFilters.bu}
+                                                onChange={e => setCategoryFilters({ ...categoryFilters, bu: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            >
+                                                <option value="">All BUs</option>
+                                                <option value="Milwaukee">Milwaukee</option>
+                                                <option value="Share Function">Share Function</option>
+                                            </select>
+                                        </th>
+                                        <th className="p-4 text-right align-top w-[10%]">
+                                            <div className="mb-1.5 text-gray-600">Action</div>
+                                            {(categoryFilters.name || categoryFilters.site_location || categoryFilters.bu) && (
+                                                <button
+                                                    onClick={() => setCategoryFilters({ name: '', site_location: '', bu: '' })}
+                                                    className="text-[11px] font-bold text-red-600 hover:text-red-800 underline whitespace-nowrap"
+                                                >
+                                                    Clear
+                                                </button>
+                                            )}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-[0.875rem] font-medium bg-white">
                                     {loadingCategories ? (
                                         <tr><td colSpan={4} className="p-8 text-center text-gray-400">Loading categories...</td></tr>
-                                    ) : categories.map((cat) => (
+                                    ) : filteredCategories.map((cat) => (
                                         <tr key={cat.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                             {editingCategory?.id === cat.id ? (
                                                 <>
@@ -599,8 +803,8 @@ export default function AdminRoomsPage() {
                                             )}
                                         </tr>
                                     ))}
-                                    {categories.length === 0 && !loadingCategories && (
-                                        <tr><td colSpan={4} className="p-16 text-center text-gray-400 font-medium">No categories found. Add your first category.</td></tr>
+                                    {filteredCategories.length === 0 && !loadingCategories && (
+                                        <tr><td colSpan={4} className="p-16 text-center text-gray-400 font-medium">No categories found matching the filter.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -617,19 +821,85 @@ export default function AdminRoomsPage() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                        <th className="p-4">BU</th>
-                                        <th className="p-4">Functional Dept</th>
-                                        <th className="p-4">Func Host (Name / Email)</th>
-                                        <th className="p-4">Department</th>
-                                        <th className="p-4">Dept Host (Name / Email)</th>
-                                        <th className="p-4 text-center">Status</th>
-                                        <th className="p-4 text-right">Action</th>
+                                        <th className="p-3 align-top w-[12%]">
+                                            <div className="mb-1.5 text-gray-600">BU</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter BU..."
+                                                value={hostDeptFilters.bu}
+                                                onChange={e => setHostDeptFilters({ ...hostDeptFilters, bu: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="p-3 align-top w-[18%]">
+                                            <div className="mb-1.5 text-gray-600">Functional Dept</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter func dept..."
+                                                value={hostDeptFilters.functional_dept}
+                                                onChange={e => setHostDeptFilters({ ...hostDeptFilters, functional_dept: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="p-3 align-top w-[22%]">
+                                            <div className="mb-1.5 text-gray-600">Func Host (Name/Email)</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter host..."
+                                                value={hostDeptFilters.functional_host}
+                                                onChange={e => setHostDeptFilters({ ...hostDeptFilters, functional_host: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="p-3 align-top w-[18%]">
+                                            <div className="mb-1.5 text-gray-600">Department</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter dept..."
+                                                value={hostDeptFilters.department}
+                                                onChange={e => setHostDeptFilters({ ...hostDeptFilters, department: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="p-3 align-top w-[20%]">
+                                            <div className="mb-1.5 text-gray-600">Dept Host (Name/Email)</div>
+                                            <input
+                                                type="text"
+                                                placeholder="Filter host..."
+                                                value={hostDeptFilters.department_host}
+                                                onChange={e => setHostDeptFilters({ ...hostDeptFilters, department_host: e.target.value })}
+                                                className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            />
+                                        </th>
+                                        <th className="p-3 text-center align-top w-[10%]">
+                                            <div className="mb-1.5 text-gray-600">Status</div>
+                                            <select
+                                                value={hostDeptFilters.is_active}
+                                                onChange={e => setHostDeptFilters({ ...hostDeptFilters, is_active: e.target.value })}
+                                                className="w-full px-1.5 py-1 bg-white border border-gray-300 rounded text-xs font-normal text-gray-700 focus:outline-none focus:border-[#db011c]"
+                                            >
+                                                <option value="">All</option>
+                                                <option value="true">Active</option>
+                                                <option value="false">Inactive</option>
+                                            </select>
+                                        </th>
+                                        <th className="p-3 text-right align-top w-[10%]">
+                                            <div className="mb-1.5 text-gray-600">Action</div>
+                                            {(hostDeptFilters.bu || hostDeptFilters.functional_dept || hostDeptFilters.functional_host || hostDeptFilters.department || hostDeptFilters.department_host || hostDeptFilters.is_active) && (
+                                                <button
+                                                    onClick={() => setHostDeptFilters({ bu: '', functional_dept: '', functional_host: '', department: '', department_host: '', is_active: '' })}
+                                                    className="text-[11px] font-bold text-red-600 hover:text-red-800 underline whitespace-nowrap"
+                                                >
+                                                    Clear
+                                                </button>
+                                            )}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-[0.875rem] font-medium bg-white">
                                     {loadingHostDepartments ? (
                                         <tr><td colSpan={7} className="p-8 text-center text-gray-400">Loading...</td></tr>
-                                    ) : hostDepartments.map((h) => (
+                                    ) : filteredHostDepartments.map((h) => (
                                         <tr key={h.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                             {editingHostDept?.id === h.id ? (
                                                 <>
@@ -680,8 +950,8 @@ export default function AdminRoomsPage() {
                                             )}
                                         </tr>
                                     ))}
-                                    {hostDepartments.length === 0 && !loadingHostDepartments && (
-                                        <tr><td colSpan={6} className="p-16 text-center text-gray-400 font-medium">No host departments found.</td></tr>
+                                    {filteredHostDepartments.length === 0 && !loadingHostDepartments && (
+                                        <tr><td colSpan={7} className="p-16 text-center text-gray-400 font-medium">No host departments found matching the filter.</td></tr>
                                     )}
                                 </tbody>
                             </table>
