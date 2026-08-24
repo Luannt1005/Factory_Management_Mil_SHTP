@@ -292,108 +292,106 @@ export default function CheckInOutManagement() {
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 {/* Advanced Filters */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <div className="flex flex-wrap items-end justify-between gap-4">
-                        <div className="flex flex-wrap items-end gap-3 flex-1">
-                            <div className="w-full sm:w-[130px]">
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Search Req</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 items-end">
+                        <div className="w-full">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Search Req</label>
+                            <input 
+                                type="text" 
+                                placeholder="ID, Submitter..." 
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
+                                value={filters.search}
+                                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                            />
+                        </div>
+                        <div className="w-full">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Visitor Name</label>
+                            <input 
+                                type="text" 
+                                placeholder="Name..." 
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
+                                value={filters.visitorName}
+                                onChange={(e) => setFilters({ ...filters, visitorName: e.target.value })}
+                            />
+                        </div>
+                        <div className="w-full">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Date</label>
+                            <div className="flex w-full">
                                 <input 
-                                    type="text" 
-                                    placeholder="ID, Submitter..." 
-                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
-                                    value={filters.search}
-                                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                                    type="date" 
+                                    className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded-l text-sm focus:outline-none focus:border-[#db011c]"
+                                    value={filters.date}
+                                    onChange={(e) => setFilters({ ...filters, date: e.target.value })}
                                 />
-                            </div>
-                            <div className="w-full sm:w-[130px]">
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Visitor Name</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="Name..." 
-                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
-                                    value={filters.visitorName}
-                                    onChange={(e) => setFilters({ ...filters, visitorName: e.target.value })}
-                                />
-                            </div>
-                            <div className="w-full sm:w-[200px]">
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Date</label>
-                                <div className="flex">
-                                    <input 
-                                        type="date" 
-                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-l text-sm focus:outline-none focus:border-[#db011c]"
-                                        value={filters.date}
-                                        onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-                                    />
-                                    <button 
-                                        onClick={() => setFilters({ ...filters, date: new Date().toISOString().split('T')[0] })}
-                                        className={`px-3 text-xs font-bold uppercase rounded-r transition-colors border border-l-0 ${filters.date === new Date().toISOString().split('T')[0] ? 'bg-[#db011c] text-white border-[#db011c]' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 border-gray-300'}`}
-                                    >
-                                        Today
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="w-full sm:w-[135px]">
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Status</label>
-                                <select 
-                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                                <button 
+                                    onClick={() => setFilters({ ...filters, date: new Date().toISOString().split('T')[0] })}
+                                    className={`px-2.5 text-xs font-bold uppercase rounded-r transition-colors border border-l-0 ${filters.date === new Date().toISOString().split('T')[0] ? 'bg-[#db011c] text-white border-[#db011c]' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 border-gray-300'}`}
                                 >
-                                    <option value="ALL">All Status</option>
-                                    <option value="PENDING">Expected Arrival</option>
-                                    <option value="CHECKED_IN">Checked In</option>
-                                    <option value="CHECKED_OUT">Checked Out</option>
-                                </select>
+                                    Today
+                                </button>
                             </div>
-                            <div className="w-full sm:w-[150px]">
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category</label>
-                                <select 
-                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
-                                    value={filters.category}
-                                    onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                        </div>
+                        <div className="w-full">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Status</label>
+                            <select 
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                            >
+                                <option value="ALL">All Status</option>
+                                <option value="PENDING">Expected Arrival</option>
+                                <option value="CHECKED_IN">Checked In</option>
+                                <option value="CHECKED_OUT">Checked Out</option>
+                            </select>
+                        </div>
+                        <div className="w-full">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category</label>
+                            <select 
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
+                                value={filters.category}
+                                onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                            >
+                                <option value="">All Categories</option>
+                                <option value="Vendor">Vendor</option>
+                                <option value="Contractor">Contractor</option>
+                                <option value="MIL/TTI Expat / SHTP Business trip">MIL / TTI EXPAT</option>
+                                <option value="Interviewee">Interviewee</option>
+                            </select>
+                        </div>
+                        <div className="w-full">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Site</label>
+                            <select 
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
+                                value={filters.site}
+                                onChange={(e) => setFilters({ ...filters, site: e.target.value })}
+                            >
+                                <option value="">All Sites</option>
+                                <option value="SHTP">SHTP</option>
+                                <option value="DDK">DDK</option>
+                                <option value="SHTP/DDK">SHTP / DDK</option>
+                            </select>
+                        </div>
+                        
+                        {/* View Modes Toggle */}
+                        <div className="w-full">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">View</label>
+                            <div className="flex w-full bg-gray-200 p-1 rounded justify-between h-[38px]">
+                                <button
+                                    onClick={() => setViewMode('group')}
+                                    className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'group' ? 'bg-white shadow-sm text-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
                                 >
-                                    <option value="">All Categories</option>
-                                    <option value="Vendor">Vendor</option>
-                                    <option value="Contractor">Contractor</option>
-                                    <option value="MIL/TTI Expat / SHTP Business trip">MIL / TTI EXPAT</option>
-                                    <option value="Interviewee">Interviewee</option>
-                                </select>
-                            </div>
-                            <div className="w-full sm:w-[120px]">
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Site</label>
-                                <select 
-                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
-                                    value={filters.site}
-                                    onChange={(e) => setFilters({ ...filters, site: e.target.value })}
+                                    Group
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('visitor')}
+                                    className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'visitor' ? 'bg-white shadow-sm text-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
                                 >
-                                    <option value="">All Sites</option>
-                                    <option value="SHTP">SHTP</option>
-                                    <option value="DDK">DDK</option>
-                                    <option value="SHTP/DDK">SHTP / DDK</option>
-                                </select>
-                            </div>
-                            
-                            {/* View Modes Toggle */}
-                            <div className="w-full sm:w-[130px]">
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">View</label>
-                                <div className="flex w-full bg-gray-200 p-1 rounded justify-between h-[38px]">
-                                    <button
-                                        onClick={() => setViewMode('group')}
-                                        className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'group' ? 'bg-white shadow-sm text-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
-                                    >
-                                        Group
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode('visitor')}
-                                        className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'visitor' ? 'bg-white shadow-sm text-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
-                                    >
-                                        Visitor
-                                    </button>
-                                </div>
+                                    Visitor
+                                </button>
                             </div>
                         </div>
 
-                        {/* Showing Count in the same horizontal row at the end */}
-                        <div className="text-sm font-medium text-gray-500 pb-2 whitespace-nowrap self-end ml-auto">
+                        {/* Showing Count evenly placed in 8th column */}
+                        <div className="w-full text-right pb-2 text-sm font-medium text-gray-500 whitespace-nowrap">
                             {viewMode === 'group' ? (
                                 <>Showing <span className="text-gray-900 font-bold">{paginatedGroups.length}</span> of <span className="text-gray-900 font-bold">{processedHistory.length}</span> requests</>
                             ) : (
