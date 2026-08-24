@@ -289,6 +289,17 @@ export default function CheckInOutManagement() {
     return (
         <div className="w-full pb-10 px-6 mx-auto pt-6">
 
+            {/* Top Summary Bar above filters */}
+            <div className="flex items-center justify-end mb-3">
+                <div className="text-sm font-medium text-gray-500">
+                    {viewMode === 'group' ? (
+                        <>Showing <span className="text-gray-900 font-bold">{processedHistory.length}</span> of <span className="text-gray-900 font-bold">{history.length}</span> requests</>
+                    ) : (
+                        <>Showing <span className="text-gray-900 font-bold">{allVisitors.length}</span> of <span className="text-gray-900 font-bold">{totalVisitors}</span> visitors</>
+                    )}
+                </div>
+            </div>
+
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 {/* Advanced Filters */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
@@ -570,57 +581,47 @@ export default function CheckInOutManagement() {
                 </div>
 
                 {/* Pagination Controls */}
-                {((viewMode === 'group' && processedHistory.length > 0) || (viewMode === 'visitor' && allVisitors.length > 0)) && (
-                    <div className="px-6 py-3.5 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600 rounded-b-lg">
-                        <div>
-                            {viewMode === 'group' ? (
-                                <span>
-                                    Showing <span className="font-bold text-gray-900">{Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, processedHistory.length)}</span> to <span className="font-bold text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, processedHistory.length)}</span> of <span className="font-bold text-gray-900">{processedHistory.length}</span> requests
-                                </span>
-                            ) : (
-                                <span>
-                                    Showing <span className="font-bold text-gray-900">{Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, allVisitors.length)}</span> to <span className="font-bold text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, allVisitors.length)}</span> of <span className="font-bold text-gray-900">{allVisitors.length}</span> visitors
-                                </span>
-                            )}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-6 py-4 bg-gray-50/50 border-t border-gray-200 rounded-b-lg">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                            className="px-4 py-2 text-xs font-bold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors shadow-sm"
+                        >
+                            Previous
+                        </button>
+                        
+                        <div className="flex items-center gap-1.5">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(p => p === 1 || p === totalPages || (p >= currentPage - 2 && p <= currentPage + 2))
+                                .map((p, idx, arr) => {
+                                    const prev = arr[idx - 1];
+                                    return (
+                                        <div key={p} className="flex items-center gap-1.5">
+                                            {prev && p - prev > 1 && <span className="px-1 text-gray-400 font-bold">...</span>}
+                                            <button
+                                                onClick={() => setCurrentPage(p)}
+                                                className={`w-8 h-8 text-xs font-black rounded-lg transition-all flex items-center justify-center ${
+                                                    currentPage === p
+                                                        ? 'bg-[#db011c] text-white shadow-md'
+                                                        : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
+                                                }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        </div>
+                                    );
+                                })
+                            }
                         </div>
                         
-                        {totalPages > 1 && (
-                            <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className="px-2.5 py-1 text-xs border border-gray-300 rounded font-medium text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    Previous
-                                </button>
-                                
-                                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                    .filter(p => p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1))
-                                    .map((p, idx, arr) => {
-                                        const prev = arr[idx - 1];
-                                        return (
-                                            <div key={p} className="flex items-center">
-                                                {prev && p - prev > 1 && <span className="px-1 text-gray-400">...</span>}
-                                                <button
-                                                    onClick={() => setCurrentPage(p)}
-                                                    className={`px-2.5 py-1 text-xs rounded font-bold transition-colors ${currentPage === p ? 'bg-[#db011c] text-white shadow-sm' : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-100'}`}
-                                                >
-                                                    {p}
-                                                </button>
-                                            </div>
-                                        );
-                                    })
-                                }
-                                
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
-                                    className="px-2.5 py-1 text-xs border border-gray-300 rounded font-medium text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        )}
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                            className="px-4 py-2 text-xs font-bold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors shadow-sm"
+                        >
+                            Next
+                        </button>
                     </div>
                 )}
             </div>
