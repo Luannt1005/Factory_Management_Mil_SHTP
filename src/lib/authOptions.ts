@@ -129,17 +129,21 @@ export const authOptions: NextAuthOptions = {
             const dummyPassword = "sso_user_no_password_" + Math.random().toString(36).substring(7);
             
             // Get role IDs for default assignment
-            const defaultRolesResult = await pool.query("SELECT id, name FROM app_roles WHERE name = 'User Visitor' OR name = 'Admin Orgchart'");
+            const defaultRolesResult = await pool.query("SELECT id, name FROM app_roles WHERE name IN ('User Visitor', 'Admin Orgchart', 'Hr Visitor')");
             const roleMap = new Map();
             defaultRolesResult.rows.forEach((r: any) => roleMap.set(r.name, r.id));
             const userVisitorId = roleMap.get('User Visitor');
             const adminOrgchartId = roleMap.get('Admin Orgchart');
+            const hrVisitorId = roleMap.get('Hr Visitor');
             
             const isExcludedFromDefaultUserVisitor = fullEmail?.toLowerCase().includes('outsourced.sec');
             let app_role_ids: string[] = [];
             if (userVisitorId && !isExcludedFromDefaultUserVisitor) app_role_ids.push(userVisitorId);
             if ((department === 'IDM Control' || department === 'Management') && adminOrgchartId) {
                 app_role_ids.push(adminOrgchartId);
+            }
+            if ((department === 'HR-TA' || department?.toUpperCase()?.includes('HR-TA')) && hrVisitorId) {
+                app_role_ids.push(hrVisitorId);
             }
 
             const insertResult = await pool.query(
@@ -160,11 +164,12 @@ export const authOptions: NextAuthOptions = {
             let updatedRoles = false;
             
             // Get role IDs for default assignment
-            const defaultRolesResult = await pool.query("SELECT id, name FROM app_roles WHERE name = 'User Visitor' OR name = 'Admin Orgchart'");
+            const defaultRolesResult = await pool.query("SELECT id, name FROM app_roles WHERE name IN ('User Visitor', 'Admin Orgchart', 'Hr Visitor')");
             const roleMap = new Map();
             defaultRolesResult.rows.forEach((r: any) => roleMap.set(r.name, r.id));
             const userVisitorId = roleMap.get('User Visitor');
             const adminOrgchartId = roleMap.get('Admin Orgchart');
+            const hrVisitorId = roleMap.get('Hr Visitor');
             
             const isExcludedFromDefaultUserVisitor = (fullEmail?.toLowerCase().includes('outsourced.sec') || existingUser.username?.toLowerCase().includes('outsourced.sec'));
 
@@ -181,6 +186,10 @@ export const authOptions: NextAuthOptions = {
             }
             if ((department === 'IDM Control' || department === 'Management' || existingUser.department === 'IDM Control' || existingUser.department === 'Management') && adminOrgchartId && !app_role_ids.includes(adminOrgchartId)) {
                 app_role_ids.push(adminOrgchartId);
+                updatedRoles = true;
+            }
+            if ((department === 'HR-TA' || department?.toUpperCase()?.includes('HR-TA') || existingUser.department === 'HR-TA' || existingUser.department?.toUpperCase()?.includes('HR-TA')) && hrVisitorId && !app_role_ids.includes(hrVisitorId)) {
+                app_role_ids.push(hrVisitorId);
                 updatedRoles = true;
             }
             
