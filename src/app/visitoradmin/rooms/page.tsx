@@ -19,7 +19,7 @@ function ExcelColumnFilter({
     align?: 'left' | 'right';
 }) {
     const [isOpen, setIsOpen] = useState(false);
-    const [coords, setCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+    const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -42,9 +42,9 @@ function ExcelColumnFilter({
 
     const isFiltered = selectedValues.length > 0;
 
-    // Position popover directly below button without clipping
-    useEffect(() => {
-        if (isOpen && buttonRef.current) {
+    const handleToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!isOpen && buttonRef.current) {
             const rect = buttonRef.current.getBoundingClientRect();
             let left = rect.left;
             if (align === 'right' || left + 230 > window.innerWidth) {
@@ -55,8 +55,11 @@ function ExcelColumnFilter({
                 top = Math.max(10, rect.top - 280);
             }
             setCoords({ top, left });
+            setIsOpen(true);
+        } else {
+            setIsOpen(false);
         }
-    }, [isOpen, align]);
+    };
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -117,10 +120,7 @@ function ExcelColumnFilter({
             <button
                 ref={buttonRef}
                 type="button"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setIsOpen(!isOpen);
-                }}
+                onClick={handleToggle}
                 className={`p-1 rounded transition-all inline-flex items-center justify-center flex-shrink-0 ${
                     isFiltered
                         ? 'bg-[#db011c] text-white shadow-sm ring-2 ring-red-200'
@@ -133,11 +133,11 @@ function ExcelColumnFilter({
                 </svg>
             </button>
 
-            {isOpen && typeof document !== 'undefined' && createPortal(
+            {isOpen && coords && typeof document !== 'undefined' && createPortal(
                 <div 
                     ref={popoverRef}
                     style={{ position: 'fixed', top: `${coords.top}px`, left: `${coords.left}px`, zIndex: 99999 }}
-                    className="w-56 bg-white rounded-xl shadow-2xl border border-gray-200 p-3 text-xs text-gray-700 font-normal animate-in fade-in zoom-in-95 duration-100"
+                    className="w-56 bg-white rounded-xl shadow-2xl border border-gray-200 p-3 text-xs text-gray-700 font-normal select-none"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header in popover */}
