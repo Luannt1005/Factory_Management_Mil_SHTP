@@ -19,8 +19,9 @@ function ExcelColumnFilter({
     align?: 'left' | 'right';
 }) {
     const [isOpen, setIsOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [coords, setCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const popoverRef = useRef<HTMLDivElement>(null);
 
     // Extract unique values
     const uniqueValues = useMemo(() => {
@@ -39,16 +40,32 @@ function ExcelColumnFilter({
         });
     }, [allValues]);
 
-    const visibleValues = useMemo(() => {
-        if (!searchTerm) return uniqueValues;
-        return uniqueValues.filter(v => v.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [uniqueValues, searchTerm]);
-
     const isFiltered = selectedValues.length > 0;
+
+    // Position popover directly below button without clipping
+    useEffect(() => {
+        if (isOpen && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            let left = rect.left;
+            if (align === 'right' || left + 230 > window.innerWidth) {
+                left = Math.max(10, rect.right - 230);
+            }
+            let top = rect.bottom + 4;
+            if (top + 280 > window.innerHeight) {
+                top = Math.max(10, rect.top - 280);
+            }
+            setCoords({ top, left });
+        }
+    }, [isOpen, align]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            if (
+                popoverRef.current && 
+                !popoverRef.current.contains(event.target as Node) &&
+                buttonRef.current &&
+                !buttonRef.current.contains(event.target as Node)
+            ) {
                 setIsOpen(false);
             }
         }
@@ -93,47 +110,46 @@ function ExcelColumnFilter({
     const isAllSelected = !isFiltered;
 
     return (
-        <div className="relative inline-flex items-center gap-1.5 text-left" ref={dropdownRef}>
-            <span className="font-bold text-gray-700 text-xs uppercase tracking-wider select-none">{title}</span>
+        <div className="inline-flex items-center gap-1.5 text-left">
+            <span className="font-bold text-gray-700 text-xs uppercase tracking-wider select-none truncate" title={title}>
+                {title}
+            </span>
             <button
+                ref={buttonRef}
                 type="button"
                 onClick={(e) => {
                     e.stopPropagation();
                     setIsOpen(!isOpen);
                 }}
-                className={`p-1 rounded-md transition-all flex items-center justify-center ${
+                className={`p-1 rounded transition-all inline-flex items-center justify-center flex-shrink-0 ${
                     isFiltered
                         ? 'bg-[#db011c] text-white shadow-sm ring-2 ring-red-200'
-                        : 'text-gray-400 hover:text-gray-700 hover:bg-gray-200/70'
+                        : 'text-gray-400 hover:text-gray-700 hover:bg-gray-200/80'
                 }`}
                 title={`Filter ${title}`}
             >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 6.707A1 1 0 013 6.586V4z" />
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
             </button>
 
-            {isOpen && (
+            {isOpen && typeof document !== 'undefined' && createPortal(
                 <div 
-                    className={`absolute z-50 top-full mt-1.5 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 p-3 text-xs text-gray-700 font-normal ${
-                        align === 'right' ? 'right-0' : 'left-0'
-                    }`}
+                    ref={popoverRef}
+                    style={{ position: 'fixed', top: `${coords.top}px`, left: `${coords.left}px`, zIndex: 99999 }}
+                    className="w-56 bg-white rounded-xl shadow-2xl border border-gray-200 p-3 text-xs text-gray-700 font-normal animate-in fade-in zoom-in-95 duration-100"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* Search inside filter */}
-                    <div className="mb-2">
-                        <input
-                            type="text"
-                            placeholder={`Search ${title}...`}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                            autoFocus
-                        />
+                    {/* Header in popover */}
+                    <div className="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-2 flex items-center justify-between">
+                        <span className="truncate">Filter: {title}</span>
+                        {isFiltered && (
+                            <span className="text-[10px] bg-red-100 text-[#db011c] px-1.5 py-0.5 rounded font-bold">Active</span>
+                        )}
                     </div>
 
-                    {/* Options list */}
-                    <div className="max-h-48 overflow-y-auto space-y-1 mb-2.5 pr-1 border-t border-b border-gray-100 py-1.5">
+                    {/* Options list without search */}
+                    <div className="max-h-56 overflow-y-auto space-y-1 mb-2 pr-1 py-0.5">
                         <label className="flex items-center gap-2 px-1.5 py-1 hover:bg-gray-50 rounded-md cursor-pointer font-bold text-gray-900 select-none">
                             <input
                                 type="checkbox"
@@ -144,7 +160,7 @@ function ExcelColumnFilter({
                             <span>(Select All)</span>
                         </label>
 
-                        {visibleValues.map((val) => {
+                        {uniqueValues.map((val) => {
                             const checked = isAllSelected || selectedValues.includes(val);
                             return (
                                 <label key={val} className="flex items-center gap-2 px-1.5 py-1 hover:bg-gray-50 rounded-md cursor-pointer select-none">
@@ -159,22 +175,22 @@ function ExcelColumnFilter({
                             );
                         })}
 
-                        {visibleValues.length === 0 && (
-                            <div className="text-center py-3 text-gray-400">No matching items</div>
+                        {uniqueValues.length === 0 && (
+                            <div className="text-center py-3 text-gray-400">No items available</div>
                         )}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                         <button
                             type="button"
                             onClick={() => {
                                 onFilterChange([]);
                                 setIsOpen(false);
                             }}
-                            className="text-[11px] font-bold text-red-600 hover:text-red-800"
+                            className="text-[11px] font-bold text-red-600 hover:text-red-800 underline"
                         >
-                            Reset
+                            Clear Filter
                         </button>
                         <button
                             type="button"
@@ -184,7 +200,8 @@ function ExcelColumnFilter({
                             OK
                         </button>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
@@ -625,117 +642,115 @@ export default function AdminRoomsPage() {
             {activeTab === 'meeting-rooms' && (
                 <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
-                        <div className="min-w-[800px]">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-                                        <th className="py-3.5 px-6 w-[40%]">
-                                            <ExcelColumnFilter
-                                                title="Floor Name"
-                                                allValues={meetingRooms.map(r => r.floorName)}
-                                                selectedValues={meetingRoomFilters.floorName}
-                                                onFilterChange={(selected) => setMeetingRoomFilters(prev => ({ ...prev, floorName: selected }))}
-                                            />
-                                        </th>
-                                        <th className="py-3.5 px-6 w-[40%]">
-                                            <ExcelColumnFilter
-                                                title="Room Name"
-                                                allValues={meetingRooms.map(r => r.roomName)}
-                                                selectedValues={meetingRoomFilters.roomName}
-                                                onFilterChange={(selected) => setMeetingRoomFilters(prev => ({ ...prev, roomName: selected }))}
-                                            />
-                                        </th>
-                                        <th className="py-3.5 px-6 text-right w-[20%]">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <span className="font-bold text-gray-700 text-xs uppercase tracking-wider">Actions</span>
-                                                {(meetingRoomFilters.floorName.length > 0 || meetingRoomFilters.roomName.length > 0) && (
-                                                    <button
-                                                        onClick={() => setMeetingRoomFilters({ floorName: [], roomName: [] })}
-                                                        className="text-[11px] font-bold text-red-600 hover:text-red-800 underline ml-2"
-                                                        title="Reset all filters"
-                                                    >
-                                                        Clear
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </th>
+                        <table className="w-full text-left border-collapse table-fixed min-w-[700px]">
+                            <thead>
+                                <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+                                    <th className="py-3.5 px-6 w-[45%]">
+                                        <ExcelColumnFilter
+                                            title="Floor Name"
+                                            allValues={meetingRooms.map(r => r.floorName)}
+                                            selectedValues={meetingRoomFilters.floorName}
+                                            onFilterChange={(selected) => setMeetingRoomFilters(prev => ({ ...prev, floorName: selected }))}
+                                        />
+                                    </th>
+                                    <th className="py-3.5 px-6 w-[40%]">
+                                        <ExcelColumnFilter
+                                            title="Room Name"
+                                            allValues={meetingRooms.map(r => r.roomName)}
+                                            selectedValues={meetingRoomFilters.roomName}
+                                            onFilterChange={(selected) => setMeetingRoomFilters(prev => ({ ...prev, roomName: selected }))}
+                                        />
+                                    </th>
+                                    <th className="py-3.5 px-6 text-right w-[15%]">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <span className="font-bold text-gray-700 text-xs uppercase tracking-wider">Actions</span>
+                                            {(meetingRoomFilters.floorName.length > 0 || meetingRoomFilters.roomName.length > 0) && (
+                                                <button
+                                                    onClick={() => setMeetingRoomFilters({ floorName: [], roomName: [] })}
+                                                    className="text-[11px] font-bold text-red-600 hover:text-red-800 underline ml-2"
+                                                    title="Reset all filters"
+                                                >
+                                                    Clear
+                                                </button>
+                                            )}
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 text-sm">
+                                {loadingMeetingRooms ? (
+                                    <tr>
+                                        <td colSpan={3} className="py-8 text-center text-gray-500">Loading meeting rooms...</td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 text-sm">
-                                    {loadingMeetingRooms ? (
-                                        <tr>
-                                            <td colSpan={3} className="py-8 text-center text-gray-500">Loading meeting rooms...</td>
+                                ) : filteredMeetingRooms.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={3} className="py-8 text-center text-gray-500">No meeting rooms found matching filter.</td>
+                                    </tr>
+                                ) : (
+                                    filteredMeetingRooms.map((room) => (
+                                        <tr key={room.id} className="hover:bg-gray-50/80 transition-colors group">
+                                            <td className="py-4 px-6 truncate">
+                                                {editingMeetingRoom?.id === room.id ? (
+                                                    <input 
+                                                        type="text" 
+                                                        className="w-full border rounded px-2 py-1"
+                                                        value={editingMeetingRoom.floorName}
+                                                        onChange={e => setEditingMeetingRoom({...editingMeetingRoom, floorName: e.target.value})}
+                                                    />
+                                                ) : (
+                                                    <span className="font-semibold text-gray-900">{room.floorName}</span>
+                                                )}
+                                            </td>
+                                            <td className="py-4 px-6 truncate">
+                                                {editingMeetingRoom?.id === room.id ? (
+                                                    <input 
+                                                        type="text" 
+                                                        className="w-full border rounded px-2 py-1"
+                                                        value={editingMeetingRoom.roomName}
+                                                        onChange={e => setEditingMeetingRoom({...editingMeetingRoom, roomName: e.target.value})}
+                                                    />
+                                                ) : (
+                                                    <span className="text-gray-600">{room.roomName}</span>
+                                                )}
+                                            </td>
+                                            <td className="py-4 px-6 text-right">
+                                                {editingMeetingRoom?.id === room.id ? (
+                                                    <div className="flex justify-end gap-2">
+                                                        <button 
+                                                            onClick={() => handleUpdateMeetingRoom(room.id, { floorName: editingMeetingRoom.floorName, roomName: editingMeetingRoom.roomName })}
+                                                            className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-1.5 rounded"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => setEditingMeetingRoom(null)}
+                                                            className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-1.5 rounded"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button 
+                                                            onClick={() => setEditingMeetingRoom(room)}
+                                                            className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-1.5 rounded transition-colors"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDeleteMeetingRoom(room.id)}
+                                                            className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
                                         </tr>
-                                    ) : filteredMeetingRooms.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={3} className="py-8 text-center text-gray-500">No meeting rooms found matching filter.</td>
-                                        </tr>
-                                    ) : (
-                                        filteredMeetingRooms.map((room) => (
-                                            <tr key={room.id} className="hover:bg-gray-50/80 transition-colors group">
-                                                <td className="py-4 px-6">
-                                                    {editingMeetingRoom?.id === room.id ? (
-                                                        <input 
-                                                            type="text" 
-                                                            className="w-full border rounded px-2 py-1"
-                                                            value={editingMeetingRoom.floorName}
-                                                            onChange={e => setEditingMeetingRoom({...editingMeetingRoom, floorName: e.target.value})}
-                                                        />
-                                                    ) : (
-                                                        <span className="font-semibold text-gray-900">{room.floorName}</span>
-                                                    )}
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    {editingMeetingRoom?.id === room.id ? (
-                                                        <input 
-                                                            type="text" 
-                                                            className="w-full border rounded px-2 py-1"
-                                                            value={editingMeetingRoom.roomName}
-                                                            onChange={e => setEditingMeetingRoom({...editingMeetingRoom, roomName: e.target.value})}
-                                                        />
-                                                    ) : (
-                                                        <span className="text-gray-600">{room.roomName}</span>
-                                                    )}
-                                                </td>
-                                                <td className="py-4 px-6 text-right">
-                                                    {editingMeetingRoom?.id === room.id ? (
-                                                        <div className="flex justify-end gap-2">
-                                                            <button 
-                                                                onClick={() => handleUpdateMeetingRoom(room.id, { floorName: editingMeetingRoom.floorName, roomName: editingMeetingRoom.roomName })}
-                                                                className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-1.5 rounded"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => setEditingMeetingRoom(null)}
-                                                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-1.5 rounded"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button 
-                                                                onClick={() => setEditingMeetingRoom(room)}
-                                                                className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-1.5 rounded transition-colors"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => handleDeleteMeetingRoom(room.id)}
-                                                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}
@@ -746,10 +761,10 @@ export default function AdminRoomsPage() {
                 <div className="animate-in fade-in duration-300">
                     <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                            <table className="w-full text-left border-collapse table-fixed min-w-[900px]">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                        <th className="p-4">
+                                        <th className="p-4 w-[18%]">
                                             <ExcelColumnFilter
                                                 title="Category"
                                                 allValues={rooms.map(r => r.category)}
@@ -757,7 +772,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setRoomFilters(prev => ({ ...prev, category: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4">
+                                        <th className="p-4 w-[22%]">
                                             <ExcelColumnFilter
                                                 title="Room Name"
                                                 allValues={rooms.map(r => r.name)}
@@ -765,7 +780,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setRoomFilters(prev => ({ ...prev, name: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4">
+                                        <th className="p-4 w-[22%]">
                                             <ExcelColumnFilter
                                                 title="Description"
                                                 allValues={rooms.map(r => r.description)}
@@ -773,7 +788,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setRoomFilters(prev => ({ ...prev, description: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4">
+                                        <th className="p-4 w-[20%]">
                                             <ExcelColumnFilter
                                                 title="Approver Email"
                                                 allValues={rooms.map(r => r.approver_email)}
@@ -781,7 +796,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setRoomFilters(prev => ({ ...prev, approver_email: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4 text-center">
+                                        <th className="p-4 text-center w-[10%]">
                                             <ExcelColumnFilter
                                                 title="Status"
                                                 allValues={rooms.map(r => r.is_active ? 'Active' : 'Inactive')}
@@ -789,7 +804,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setRoomFilters(prev => ({ ...prev, is_active: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4 text-right">
+                                        <th className="p-4 text-right w-[8%]">
                                             <div className="flex items-center justify-end gap-2">
                                                 <span>Action</span>
                                                 {(roomFilters.category.length > 0 || roomFilters.name.length > 0 || roomFilters.description.length > 0 || roomFilters.approver_email.length > 0 || roomFilters.is_active.length > 0) && (
@@ -869,10 +884,10 @@ export default function AdminRoomsPage() {
                                                             {room.category}
                                                         </span>
                                                     </td>
-                                                    <td className="p-5 font-bold text-gray-800">{room.name}</td>
-                                                    <td className="p-5 text-gray-600 text-xs">{room.description || '-'}</td>
-                                                    <td className="p-5 text-gray-600">
-                                                        <span className={room.approver_email ? 'font-medium' : 'text-gray-400 italic'}>{room.approver_email || 'No email'}</span>
+                                                    <td className="p-5 font-bold text-gray-800 truncate" title={room.name}>{room.name}</td>
+                                                    <td className="p-5 text-gray-600 text-xs truncate" title={room.description || ''}>{room.description || '-'}</td>
+                                                    <td className="p-5 text-gray-600 truncate">
+                                                        <span className={room.approver_email ? 'font-medium' : 'text-gray-400 italic'} title={room.approver_email || ''}>{room.approver_email || 'No email'}</span>
                                                     </td>
                                                     <td className="p-5 text-xs font-bold text-center">
                                                         <span className={room.is_active ? 'text-green-500' : 'text-gray-400'}>{room.is_active ? '● Active' : '○ Inactive'}</span>
@@ -902,10 +917,10 @@ export default function AdminRoomsPage() {
                 <div className="animate-in fade-in duration-300">
                     <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                            <table className="w-full text-left border-collapse table-fixed min-w-[700px]">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                        <th className="p-4">
+                                        <th className="p-4 w-[45%]">
                                             <ExcelColumnFilter
                                                 title="Category Name"
                                                 allValues={categories.map(c => c.name)}
@@ -913,7 +928,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setCategoryFilters(prev => ({ ...prev, name: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4 text-center">
+                                        <th className="p-4 text-center w-[25%]">
                                             <ExcelColumnFilter
                                                 title="Site Location"
                                                 allValues={categories.map(c => c.site_location)}
@@ -921,7 +936,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setCategoryFilters(prev => ({ ...prev, site_location: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4 text-center">
+                                        <th className="p-4 text-center w-[20%]">
                                             <ExcelColumnFilter
                                                 title="BU"
                                                 allValues={categories.map(c => c.bu)}
@@ -929,7 +944,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setCategoryFilters(prev => ({ ...prev, bu: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4 text-right">
+                                        <th className="p-4 text-right w-[10%]">
                                             <div className="flex items-center justify-end gap-2">
                                                 <span>Action</span>
                                                 {(categoryFilters.name.length > 0 || categoryFilters.site_location.length > 0 || categoryFilters.bu.length > 0) && (
@@ -989,7 +1004,7 @@ export default function AdminRoomsPage() {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <td className="p-5 font-bold text-gray-800">
+                                                    <td className="p-5 font-bold text-gray-800 truncate" title={cat.name}>
                                                         {cat.name}
                                                     </td>
                                                     <td className="p-5 text-center">
@@ -1027,10 +1042,10 @@ export default function AdminRoomsPage() {
                 <div className="animate-in fade-in duration-300">
                     <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                            <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                        <th className="p-4">
+                                        <th className="p-4 w-[11%]">
                                             <ExcelColumnFilter
                                                 title="BU"
                                                 allValues={hostDepartments.map(h => h.bu)}
@@ -1038,7 +1053,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, bu: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4">
+                                        <th className="p-4 w-[17%]">
                                             <ExcelColumnFilter
                                                 title="Functional Dept"
                                                 allValues={hostDepartments.map(h => h.functional_dept)}
@@ -1046,7 +1061,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, functional_dept: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4">
+                                        <th className="p-4 w-[20%]">
                                             <ExcelColumnFilter
                                                 title="Func Host"
                                                 allValues={hostDepartments.map(h => h.functional_host_name ? `${h.functional_host_name}${h.functional_host_email ? ` (${h.functional_host_email})` : ''}` : (h.functional_host_email || ''))}
@@ -1054,7 +1069,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, functional_host: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4">
+                                        <th className="p-4 w-[17%]">
                                             <ExcelColumnFilter
                                                 title="Department"
                                                 allValues={hostDepartments.map(h => h.department)}
@@ -1062,7 +1077,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, department: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4">
+                                        <th className="p-4 w-[20%]">
                                             <ExcelColumnFilter
                                                 title="Dept Host"
                                                 allValues={hostDepartments.map(h => h.department_host_name ? `${h.department_host_name}${h.department_host_email ? ` (${h.department_host_email})` : ''}` : (h.department_host_email || ''))}
@@ -1070,7 +1085,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, department_host: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4 text-center">
+                                        <th className="p-4 text-center w-[8%]">
                                             <ExcelColumnFilter
                                                 title="Status"
                                                 allValues={hostDepartments.map(h => h.is_active ? 'Active' : 'Inactive')}
@@ -1078,7 +1093,7 @@ export default function AdminRoomsPage() {
                                                 onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, is_active: selected }))}
                                             />
                                         </th>
-                                        <th className="p-4 text-right">
+                                        <th className="p-4 text-right w-[7%]">
                                             <div className="flex items-center justify-end gap-2">
                                                 <span>Action</span>
                                                 {(hostDeptFilters.bu.length > 0 || hostDeptFilters.functional_dept.length > 0 || hostDeptFilters.functional_host.length > 0 || hostDeptFilters.department.length > 0 || hostDeptFilters.department_host.length > 0 || hostDeptFilters.is_active.length > 0) && (
