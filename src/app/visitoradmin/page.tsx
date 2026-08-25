@@ -134,6 +134,7 @@ export default function AdminDashboard() {
                                 'Purpose Of Visit': r.purpose_of_visit || '',
                                 'Purpose Detail': r.purpose_detail || '',
                                 'Visiting Site': r.visiting_site || '',
+                                'BU': details.bu || hdObj.bu || '',
                                 'Host Functional Dept': details.functionalDept || '',
                                 'Func Host Name': hdObj.functional_host_name || '',
                                 'Host Department': details.department || '',
