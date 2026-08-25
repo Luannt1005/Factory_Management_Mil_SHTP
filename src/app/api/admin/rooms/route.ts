@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!(await hasPageAccess('/visitoradmin'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        if (!(await hasPageAccess('/visitoradmin/rooms'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const body = await request.json();
         const { category, name, description, approver_email } = body;
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!(await hasPageAccess('/visitoradmin'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        if (!(await hasPageAccess('/visitoradmin/rooms'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const body = await request.json();
         const { id, category, name, description, approver_email, is_active } = body;
@@ -69,7 +69,7 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!(await hasPageAccess('/visitoradmin'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        if (!(await hasPageAccess('/visitoradmin/rooms'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');

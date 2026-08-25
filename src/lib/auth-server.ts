@@ -43,6 +43,21 @@ export async function getCurrentUser(): Promise<string | null> {
     }
 }
 
+const ALL_DISTINCT_PAGES = [
+    '/visitoradmin/rooms',
+    '/visitoradmin/checkinout',
+    '/visitoradmin',
+    '/visitoranalytics',
+    '/systemadmin',
+    '/dashboard',
+    '/orgchart',
+    '/headcount_open',
+    '/import_hr_data',
+    '/sheetmanager',
+    '/visitordashboard',
+    '/visitorrequest'
+];
+
 /**
  * Checks if the user has access to a specific page path.
  */
@@ -60,13 +75,26 @@ export async function hasPageAccess(pagePath: string): Promise<boolean> {
             'view:visitors': ['/visitordashboard', '/visitorrequest']
         };
 
-        const expandedAllowedPages = new Set(user.allowedPages);
+        const expandedAllowedPages = new Set<string>();
         user.allowedPages.forEach((p: string) => {
+            expandedAllowedPages.add(p);
             if (legacyMap[p]) {
                 legacyMap[p].forEach(mappedPath => expandedAllowedPages.add(mappedPath));
             }
         });
-        return Array.from(expandedAllowedPages).some((p: any) => p === pagePath || p.startsWith(pagePath + '/'));
+
+        if (expandedAllowedPages.has(pagePath)) return true;
+        if (ALL_DISTINCT_PAGES.includes(pagePath)) return false;
+
+        const matchingDistinctPage = ALL_DISTINCT_PAGES
+            .filter(dp => pagePath === dp || pagePath.startsWith(dp + '/'))
+            .sort((a, b) => b.length - a.length)[0];
+
+        if (matchingDistinctPage) {
+            return expandedAllowedPages.has(matchingDistinctPage);
+        }
+
+        return Array.from(expandedAllowedPages).some((p: any) => pagePath.startsWith(p + '/'));
     }
     
     return false;

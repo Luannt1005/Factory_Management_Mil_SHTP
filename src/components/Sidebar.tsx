@@ -117,6 +117,21 @@ export default function Sidebar() {
     [router]
   );
 
+  const ALL_DISTINCT_PAGES = [
+    '/visitoradmin/rooms',
+    '/visitoradmin/checkinout',
+    '/visitoradmin',
+    '/visitoranalytics',
+    '/systemadmin',
+    '/dashboard',
+    '/orgchart',
+    '/headcount_open',
+    '/import_hr_data',
+    '/sheetmanager',
+    '/visitordashboard',
+    '/visitorrequest'
+  ];
+
   const checkRole = (itemPath: string, requiredRole?: string) => {
     // Global admin always has access to everything
     if (userRole === "admin") return true;
@@ -132,16 +147,26 @@ export default function Sidebar() {
       'view:visitors': ['/visitordashboard', '/visitorrequest']
     };
 
-    const expandedAllowedPages = new Set(allowedPages);
+    const expandedAllowedPages = new Set<string>();
     allowedPages.forEach((p: string) => {
+      expandedAllowedPages.add(p);
       if (legacyMap[p]) {
         legacyMap[p].forEach(mappedPath => expandedAllowedPages.add(mappedPath));
       }
     });
 
-    // Check if the user's expanded allowedPages array contains this itemPath
-    // or if the itemPath starts with any of the allowed pages
-    return Array.from(expandedAllowedPages).some((p: any) => itemPath === p || itemPath.startsWith(p + '/'));
+    if (expandedAllowedPages.has(itemPath)) return true;
+    if (ALL_DISTINCT_PAGES.includes(itemPath)) return false;
+
+    const matchingDistinctPage = ALL_DISTINCT_PAGES
+      .filter(dp => itemPath === dp || itemPath.startsWith(dp + '/'))
+      .sort((a, b) => b.length - a.length)[0];
+
+    if (matchingDistinctPage) {
+      return expandedAllowedPages.has(matchingDistinctPage);
+    }
+
+    return Array.from(expandedAllowedPages).some((p: any) => itemPath.startsWith(p + '/'));
   };
 
   const getRenderItems = (items: NavItem[]): NavItem[] => {

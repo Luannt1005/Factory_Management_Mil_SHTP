@@ -36,6 +36,21 @@ export async function middleware(request: NextRequest) {
   // Check RBAC from token
   const allowedPages = (token.allowedPages as string[]) || [];
   
+  const ALL_DISTINCT_PAGES = [
+    '/visitoradmin/rooms',
+    '/visitoradmin/checkinout',
+    '/visitoradmin',
+    '/visitoranalytics',
+    '/systemadmin',
+    '/dashboard',
+    '/orgchart',
+    '/headcount_open',
+    '/import_hr_data',
+    '/sheetmanager',
+    '/visitordashboard',
+    '/visitorrequest'
+  ];
+
   // Map legacy permission strings to actual paths
   const legacyMap: Record<string, string[]> = {
     'manage:visitors': ['/visitoradmin'],
@@ -43,16 +58,30 @@ export async function middleware(request: NextRequest) {
   };
 
   // Expand allowed pages with legacy mappings
-  const expandedAllowedPages = new Set(allowedPages);
+  const expandedAllowedPages = new Set<string>();
   allowedPages.forEach(p => {
+    expandedAllowedPages.add(p);
     if (legacyMap[p]) {
       legacyMap[p].forEach(mappedPath => expandedAllowedPages.add(mappedPath));
     }
   });
   
-  // If the user's allowedPages array contains this pathname
-  // or if the pathname starts with any of the allowed pages
-  const isAllowed = Array.from(expandedAllowedPages).some((p: string) => pathname === p || pathname.startsWith(p + '/'));
+  let isAllowed = false;
+  if (expandedAllowedPages.has(pathname)) {
+    isAllowed = true;
+  } else if (ALL_DISTINCT_PAGES.includes(pathname)) {
+    isAllowed = false;
+  } else {
+    const matchingDistinctPage = ALL_DISTINCT_PAGES
+      .filter(dp => pathname === dp || pathname.startsWith(dp + '/'))
+      .sort((a, b) => b.length - a.length)[0];
+    
+    if (matchingDistinctPage) {
+      isAllowed = expandedAllowedPages.has(matchingDistinctPage);
+    } else {
+      isAllowed = Array.from(expandedAllowedPages).some((p: string) => pathname.startsWith(p + '/'));
+    }
+  }
 
   if (!isAllowed) {
     // Redirect to an access denied page or home page
