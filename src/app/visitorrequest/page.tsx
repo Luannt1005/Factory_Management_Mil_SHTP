@@ -55,6 +55,7 @@ export default function NewRequestPage() {
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [mounted, setMounted] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const intervieweeFileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -62,6 +63,7 @@ export default function NewRequestPage() {
 
     const [formData, setFormData] = useState({
         visitors: [{ name: '', title: '', company: '' }],
+        interviewees: [{ name: '', jobTitle: '' }],
         startDate: '',
         endDate: '',
         purposeOfVisit: 'Business / Meeting',
@@ -165,6 +167,7 @@ export default function NewRequestPage() {
                 setStep(1);
                 setFormData({
                     visitors: [{ name: '', title: '', company: '' }],
+                    interviewees: [{ name: '', jobTitle: '' }],
                     startDate: '',
                     endDate: '',
                     purposeOfVisit: 'Business / Meeting',
@@ -217,6 +220,33 @@ export default function NewRequestPage() {
         }
     };
 
+    const addInterviewee = () => {
+        if (formData.interviewees.length < 50) {
+            setFormData(prev => ({
+                ...prev,
+                interviewees: [...prev.interviewees, { name: '', jobTitle: '' }]
+            }));
+        }
+    };
+
+    const removeInterviewee = (index: number) => {
+        if (formData.interviewees.length > 1) {
+            setFormData(prev => ({
+                ...prev,
+                interviewees: prev.interviewees.filter((_, i) => i !== index)
+            }));
+        }
+    };
+
+    const updateInterviewee = (index: number, field: string, value: string) => {
+        setFormData(prev => {
+            const newInterviewees = [...prev.interviewees];
+            const capitalizedValue = typeof value === 'string' ? capitalizeWords(value) : value;
+            newInterviewees[index] = { ...newInterviewees[index], [field]: capitalizedValue };
+            return { ...prev, interviewees: newInterviewees };
+        });
+    };
+
     const downloadTemplate = () => {
         const worksheet = XLSX.utils.json_to_sheet([
             { 'Full Name': 'Nguyen Van A', 'Company': 'TTI VN', 'Title': 'Software Engineer' },
@@ -225,6 +255,17 @@ export default function NewRequestPage() {
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Visitors');
         XLSX.writeFile(workbook, 'Visitor_Information_Template.xlsx');
+    };
+
+    const downloadIntervieweeTemplate = () => {
+        const worksheet = XLSX.utils.json_to_sheet([
+            { 'Candidate Name': 'Nguyen Van A', 'Applied Job Title': 'Operator' },
+            { 'Candidate Name': 'Tran Thi B', 'Applied Job Title': 'Technician' },
+            { 'Candidate Name': 'Le Van C', 'Applied Job Title': 'Quality Inspector' }
+        ]);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Interviewees');
+        XLSX.writeFile(workbook, 'Interviewee_Registration_Template.xlsx');
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,6 +306,44 @@ export default function NewRequestPage() {
         // Reset file input so the same file can be uploaded again if needed
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
+        }
+    };
+
+    const handleIntervieweeFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = new Uint8Array(event.target?.result as ArrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+
+                const newInterviewees = jsonData.map(row => ({
+                    name: capitalizeWords(row['Candidate Name'] || row['Full Name'] || row['Interviewee Name'] || row['Name'] || ''),
+                    jobTitle: capitalizeWords(row['Applied Job Title'] || row['Job Title'] || row['Position'] || row['Title'] || '')
+                })).filter(v => v.name);
+
+                if (newInterviewees.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        interviewees: newInterviewees.slice(0, 50)
+                    }));
+                    alert(`Successfully imported ${Math.min(newInterviewees.length, 50)} candidates from Excel.`);
+                } else {
+                    alert('No valid candidate data found in the Excel file. Please use the provided template.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error parsing Excel file. Please ensure you are using the correct template format.');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+        if (intervieweeFileInputRef.current) {
+            intervieweeFileInputRef.current.value = '';
         }
     };
 
@@ -415,24 +494,74 @@ export default function NewRequestPage() {
                                     </div>
                                     
                                     {formData.visitorCategory === 'Interviewee' ? (
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
-                                            <div>
-                                                <InputLabel required>Interviewee Name</InputLabel>
-                                                <Input type="text" required placeholder="Enter interviewee full name" value={formData.intervieweeName} onChange={(e: any) => setFormData({...formData, intervieweeName: capitalizeWords(e.target.value)})} />
+                                        <>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px', marginBottom: '24px' }}>
+                                                <div>
+                                                    <InputLabel required>Interview Department</InputLabel>
+                                                    <Input type="text" required placeholder="e.g. Assembly / QA / IT" value={formData.interviewDepartment} onChange={(e: any) => setFormData({...formData, interviewDepartment: capitalizeWords(e.target.value)})} />
+                                                </div>
+                                                <div>
+                                                    <InputLabel required>Interviewer Name</InputLabel>
+                                                    <Input type="text" required placeholder="Enter interviewer name" value={formData.interviewerName} onChange={(e: any) => setFormData({...formData, interviewerName: capitalizeWords(e.target.value)})} />
+                                                </div>
                                             </div>
-                                            <div>
-                                                <InputLabel required>Job Title</InputLabel>
-                                                <Input type="text" required placeholder="e.g. Software Engineer" value={formData.jobTitle} onChange={(e: any) => setFormData({...formData, jobTitle: capitalizeWords(e.target.value)})} />
+
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                                {formData.interviewees.length < 50 ? (
+                                                    <button type="button" onClick={addInterviewee} style={{ backgroundColor: 'transparent', color: '#db011c', border: '1px solid #db011c', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
+                                                        + ADD ANOTHER CANDIDATE
+                                                    </button>
+                                                ) : (
+                                                    <div style={{ fontSize: '11px', color: '#db011c', fontWeight: 700 }}>MAX 50 CANDIDATES REACHED</div>
+                                                )}
+                                                
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    <button type="button" onClick={downloadIntervieweeTemplate} style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                                        </svg>
+                                                        DOWNLOAD TEMPLATE
+                                                    </button>
+                                                    
+                                                    <input 
+                                                        type="file" 
+                                                        accept=".xlsx, .xls" 
+                                                        ref={intervieweeFileInputRef} 
+                                                        onChange={handleIntervieweeFileUpload} 
+                                                        style={{ display: 'none' }} 
+                                                    />
+                                                    <button type="button" onClick={() => intervieweeFileInputRef.current?.click()} style={{ backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                                        </svg>
+                                                        UPLOAD EXCEL
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <InputLabel required>Interview Department</InputLabel>
-                                                <Input type="text" required placeholder="e.g. IT" value={formData.interviewDepartment} onChange={(e: any) => setFormData({...formData, interviewDepartment: capitalizeWords(e.target.value)})} />
-                                            </div>
-                                            <div>
-                                                <InputLabel required>Interviewer Name</InputLabel>
-                                                <Input type="text" required placeholder="Enter interviewer name" value={formData.interviewerName} onChange={(e: any) => setFormData({...formData, interviewerName: capitalizeWords(e.target.value)})} />
-                                            </div>
-                                        </div>
+                                            
+                                            {formData.interviewees.map((candidate, idx) => (
+                                                <div key={idx} style={{ position: 'relative', marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center', borderBottom: formData.interviewees.length > 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '16px' }}>
+                                                    <div style={{ width: '90px', flexShrink: 0 }}>
+                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>CANDIDATE {idx + 1}</span>
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Candidate Name <span style={{ color: '#db011c' }}>*</span></label>
+                                                        <Input type="text" required placeholder="e.g. Nguyen Van A" value={candidate.name} onChange={(e: any) => updateInterviewee(idx, 'name', e.target.value)} />
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Applied Job Title <span style={{ color: '#db011c' }}>*</span></label>
+                                                        <Input type="text" required placeholder="e.g. Operator / Engineer" value={candidate.jobTitle} onChange={(e: any) => updateInterviewee(idx, 'jobTitle', e.target.value)} />
+                                                    </div>
+                                                    {formData.interviewees.length > 1 ? (
+                                                        <div style={{ width: '60px', flexShrink: 0, textAlign: 'right' }}>
+                                                            <button type="button" onClick={() => removeInterviewee(idx)} style={{ color: '#ef4444', background: 'none', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>REMOVE</button>
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ width: '60px', flexShrink: 0 }}></div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </>
                                     ) : (
                                         <>
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -789,24 +918,42 @@ export default function NewRequestPage() {
                         <h2 className="text-2xl font-bold mb-4 text-[#0f172a]">Review Registration</h2>
                         <div className="space-y-4 text-sm text-gray-700">
                             {formData.visitorCategory === 'Interviewee' ? (
-                                <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-200">
-                                    <div>
-                                        <span className="block text-xs font-bold text-gray-400 uppercase">Interviewee Name</span>
-                                        <span className="font-semibold text-gray-900">{formData.intervieweeName}</span>
+                                <>
+                                    <div className="pb-4 border-b border-gray-200">
+                                        <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Candidates / Interviewees ({formData.interviewees.length})</span>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr className="border-b border-gray-200">
+                                                        <th className="py-2 text-[10px] uppercase font-bold text-gray-400">#</th>
+                                                        <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Candidate Name</th>
+                                                        <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Applied Job Title</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {formData.interviewees.map((candidate, i) => (
+                                                        <tr key={i} className="border-b border-gray-100 last:border-0">
+                                                            <td className="py-2 text-xs font-bold text-gray-400">{i + 1}</td>
+                                                            <td className="py-2 font-bold text-[#0f172a]">{candidate.name || '—'}</td>
+                                                            <td className="py-2 text-gray-700 font-medium">{candidate.jobTitle || '—'}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <span className="block text-xs font-bold text-gray-400 uppercase">Job Title</span>
-                                        <span className="font-semibold text-gray-900">{formData.jobTitle}</span>
+
+                                    <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-200">
+                                        <div>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Department</span>
+                                            <span className="font-semibold text-gray-900">{formData.interviewDepartment}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-xs font-bold text-gray-400 uppercase">Interviewer Name</span>
+                                            <span className="font-semibold text-gray-900">{formData.interviewerName}</span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <span className="block text-xs font-bold text-gray-400 uppercase">Department</span>
-                                        <span className="font-semibold text-gray-900">{formData.interviewDepartment}</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-xs font-bold text-gray-400 uppercase">Interviewer Name</span>
-                                        <span className="font-semibold text-gray-900">{formData.interviewerName}</span>
-                                    </div>
-                                </div>
+                                </>
                             ) : (
                                 <div className="pb-4 border-b border-gray-200">
                                     <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Visitors ({formData.visitors.length})</span>

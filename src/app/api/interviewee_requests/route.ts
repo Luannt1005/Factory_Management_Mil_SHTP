@@ -16,9 +16,22 @@ export async function POST(request: Request) {
 
         const body = await request.json();
         const {
-            intervieweeName, jobTitle, interviewDepartment, interviewerName,
+            interviewees, intervieweeName, jobTitle, interviewDepartment, interviewerName,
             startDate, startTime, interviewArea
         } = body;
+
+        // Build list of candidates
+        let candidateList: Array<{ name: string; jobTitle: string }> = [];
+        if (Array.isArray(interviewees) && interviewees.length > 0) {
+            candidateList = interviewees.filter((c: any) => c.name && typeof c.name === 'string' && c.name.trim() !== '');
+        }
+        if (candidateList.length === 0 && intervieweeName && typeof intervieweeName === 'string' && intervieweeName.trim() !== '') {
+            candidateList = [{ name: intervieweeName, jobTitle: jobTitle || '' }];
+        }
+
+        if (candidateList.length === 0) {
+            return NextResponse.json({ error: 'At least one candidate name is required' }, { status: 400 });
+        }
 
         visitorPool = await getVisitorDbConnection();
 
@@ -40,37 +53,49 @@ export async function POST(request: Request) {
         let sequence = 1;
         if (lastReq.length > 0) {
             const lastId = lastReq[0].visitorCode;
-            const lastSeqStr = lastId.split('_')[1]; // Fixed from [2] to [1]
+            const lastSeqStr = lastId.split('_')[1];
             if (lastSeqStr) {
-                sequence = parseInt(lastSeqStr) + 1;
+                sequence = parseInt(lastSeqStr, 10) + 1;
             }
         }
-        
-        const newVisitorCode = `${datePrefix}_${String(sequence).padStart(2, '0')}`;
 
         const osName = session.user.name || (session.user as any).full_name || (session.user as any).username || session.user.email;
+        const createdIds: string[] = [];
+        const createdCodes: string[] = [];
 
-        const { rows: intervieweeRequests } = await visitorPool.query(
-            `INSERT INTO "IntervieweeRequest" 
-             ("visitorCode", "osName", "intervieweeName", "jobTitle", "interviewDepartment", "interviewerName", "startDate", "startTime", "interviewArea", status, "updatedAt")
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'COMPLETE', NOW())
-             RETURNING id`,
-            [newVisitorCode, osName, intervieweeName, jobTitle, interviewDepartment, interviewerName, new Date(startDate), startTime, interviewArea]
-        );
+        for (const candidate of candidateList) {
+            const newVisitorCode = `${datePrefix}_${String(sequence).padStart(2, '0')}`;
+            sequence++;
+
+            const { rows: inserted } = await visitorPool.query(
+                `INSERT INTO "IntervieweeRequest" 
+                 ("visitorCode", "osName", "intervieweeName", "jobTitle", "interviewDepartment", "interviewerName", "startDate", "startTime", "interviewArea", status, "updatedAt")
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'COMPLETE', NOW())
+                 RETURNING id, "visitorCode"`,
+                [newVisitorCode, osName, candidate.name.trim(), (candidate.jobTitle || '').trim(), interviewDepartment, interviewerName, new Date(startDate), startTime, interviewArea]
+            );
+
+            if (inserted.length > 0) {
+                createdIds.push(inserted[0].id);
+                createdCodes.push(inserted[0].visitorCode);
+            }
+        }
 
         await visitorPool.query('COMMIT');
 
         // Trigger email notification webhook if configured
         if (powerAutomateNotificationUrl) {
             try {
+                const namesList = candidateList.map(c => c.name.trim()).join(', ');
+                const titlesList = candidateList.map(c => `${c.name.trim()} (${c.jobTitle ? c.jobTitle.trim() : 'Candidate'})`).join('; ');
                 const paResponse = await fetch(powerAutomateNotificationUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         requestDetails: {
-                            id: newVisitorCode,
-                            visitor_name: intervieweeName,
-                            visitorTitle: jobTitle,
+                            id: createdCodes.join(', '),
+                            visitor_name: namesList,
+                            visitorTitle: titlesList,
                             currentCompany: "", // Not applicable for interviewee
                             startDate: startDate,
                             endDate: startDate,
@@ -96,7 +121,13 @@ export async function POST(request: Request) {
             }
         }
 
-        return NextResponse.json({ message: 'Request created successfully', id: intervieweeRequests[0].id }, { status: 201 });
+        return NextResponse.json({ 
+            message: 'Requests created successfully', 
+            id: createdIds[0],
+            ids: createdIds,
+            codes: createdCodes,
+            count: createdIds.length
+        }, { status: 201 });
 
     } catch (error: any) {
         if (visitorPool) await visitorPool.query('ROLLBACK');
