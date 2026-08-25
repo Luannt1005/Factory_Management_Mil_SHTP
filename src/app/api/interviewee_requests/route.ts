@@ -21,12 +21,17 @@ export async function POST(request: Request) {
         } = body;
 
         // Build list of candidates
-        let candidateList: Array<{ name: string; jobTitle: string }> = [];
+        let candidateList: Array<{ name: string; jobTitle: string; interviewDepartment?: string; interviewerName?: string }> = [];
         if (Array.isArray(interviewees) && interviewees.length > 0) {
             candidateList = interviewees.filter((c: any) => c.name && typeof c.name === 'string' && c.name.trim() !== '');
         }
         if (candidateList.length === 0 && intervieweeName && typeof intervieweeName === 'string' && intervieweeName.trim() !== '') {
-            candidateList = [{ name: intervieweeName, jobTitle: jobTitle || '' }];
+            candidateList = [{ 
+                name: intervieweeName, 
+                jobTitle: jobTitle || '',
+                interviewDepartment: interviewDepartment || '',
+                interviewerName: interviewerName || ''
+            }];
         }
 
         if (candidateList.length === 0) {
@@ -67,12 +72,15 @@ export async function POST(request: Request) {
             const newVisitorCode = `${datePrefix}_${String(sequence).padStart(2, '0')}`;
             sequence++;
 
+            const candDept = (candidate.interviewDepartment || interviewDepartment || '').trim();
+            const candInterviewer = (candidate.interviewerName || interviewerName || '').trim();
+
             const { rows: inserted } = await visitorPool.query(
                 `INSERT INTO "IntervieweeRequest" 
                  ("visitorCode", "osName", "intervieweeName", "jobTitle", "interviewDepartment", "interviewerName", "startDate", "startTime", "interviewArea", status, "updatedAt")
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'COMPLETE', NOW())
                  RETURNING id, "visitorCode"`,
-                [newVisitorCode, osName, candidate.name.trim(), (candidate.jobTitle || '').trim(), interviewDepartment, interviewerName, new Date(startDate), startTime, interviewArea]
+                [newVisitorCode, osName, candidate.name.trim(), (candidate.jobTitle || '').trim(), candDept, candInterviewer, new Date(startDate), startTime, interviewArea]
             );
 
             if (inserted.length > 0) {
@@ -87,7 +95,7 @@ export async function POST(request: Request) {
         if (powerAutomateNotificationUrl) {
             try {
                 const namesList = candidateList.map(c => c.name.trim()).join(', ');
-                const titlesList = candidateList.map(c => `${c.name.trim()} (${c.jobTitle ? c.jobTitle.trim() : 'Candidate'})`).join('; ');
+                const titlesList = candidateList.map(c => `${c.name.trim()} (${c.jobTitle ? c.jobTitle.trim() : 'Candidate'} - ${c.interviewDepartment || interviewDepartment || 'Interview'})`).join('; ');
                 const paResponse = await fetch(powerAutomateNotificationUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -103,10 +111,10 @@ export async function POST(request: Request) {
                             submitterName: osName,
                             submitterEmail: formatEmail(session.user.email || (session.user as any).username),
                             visitorCategory: 'Interviewee',
-                            interviewerName: interviewerName,
+                            interviewerName: candidateList[0]?.interviewerName || interviewerName || '',
                             startTime: startTime,
                             interviewArea: interviewArea,
-                            interviewDepartment: interviewDepartment
+                            interviewDepartment: candidateList[0]?.interviewDepartment || interviewDepartment || ''
                         },
                         rooms: [] // No approvals needed for interviewee
                     })

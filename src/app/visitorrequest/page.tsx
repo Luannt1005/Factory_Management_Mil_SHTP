@@ -63,7 +63,7 @@ export default function NewRequestPage() {
 
     const [formData, setFormData] = useState({
         visitors: [{ name: '', title: '', company: '' }],
-        interviewees: [{ name: '', jobTitle: '' }],
+        interviewees: [{ name: '', jobTitle: '', interviewDepartment: '', interviewerName: '' }],
         startDate: '',
         endDate: '',
         purposeOfVisit: 'Business / Meeting',
@@ -167,7 +167,7 @@ export default function NewRequestPage() {
                 setStep(1);
                 setFormData({
                     visitors: [{ name: '', title: '', company: '' }],
-                    interviewees: [{ name: '', jobTitle: '' }],
+                    interviewees: [{ name: '', jobTitle: '', interviewDepartment: '', interviewerName: '' }],
                     startDate: '',
                     endDate: '',
                     purposeOfVisit: 'Business / Meeting',
@@ -224,7 +224,7 @@ export default function NewRequestPage() {
         if (formData.interviewees.length < 50) {
             setFormData(prev => ({
                 ...prev,
-                interviewees: [...prev.interviewees, { name: '', jobTitle: '' }]
+                interviewees: [...prev.interviewees, { name: '', jobTitle: '', interviewDepartment: '', interviewerName: '' }]
             }));
         }
     };
@@ -259,9 +259,8 @@ export default function NewRequestPage() {
 
     const downloadIntervieweeTemplate = () => {
         const worksheet = XLSX.utils.json_to_sheet([
-            { 'Candidate Name': 'Nguyen Van A', 'Applied Job Title': 'Operator' },
-            { 'Candidate Name': 'Tran Thi B', 'Applied Job Title': 'Technician' },
-            { 'Candidate Name': 'Le Van C', 'Applied Job Title': 'Quality Inspector' }
+            { 'Interviewee Name': 'Nguyen Van A', 'Job Title': 'Software Engineer', 'Department': 'IT', 'Interviewer Name': 'Le Van C' },
+            { 'Interviewee Name': 'Tran Thi B', 'Job Title': 'Quality Inspector', 'Department': 'QA', 'Interviewer Name': 'Pham Van D' }
         ]);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Interviewees');
@@ -323,8 +322,10 @@ export default function NewRequestPage() {
                 const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
 
                 const newInterviewees = jsonData.map(row => ({
-                    name: capitalizeWords(row['Candidate Name'] || row['Full Name'] || row['Interviewee Name'] || row['Name'] || ''),
-                    jobTitle: capitalizeWords(row['Applied Job Title'] || row['Job Title'] || row['Position'] || row['Title'] || '')
+                    name: capitalizeWords(row['Interviewee Name'] || row['Candidate Name'] || row['Full Name'] || row['Name'] || ''),
+                    jobTitle: capitalizeWords(row['Job Title'] || row['Applied Job Title'] || row['Position'] || row['Title'] || ''),
+                    interviewDepartment: capitalizeWords(row['Department'] || row['Interview Department'] || row['Dept'] || ''),
+                    interviewerName: capitalizeWords(row['Interviewer Name'] || row['Interviewer'] || '')
                 })).filter(v => v.name);
 
                 if (newInterviewees.length > 0) {
@@ -495,17 +496,6 @@ export default function NewRequestPage() {
                                     
                                     {formData.visitorCategory === 'Interviewee' ? (
                                         <>
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px', marginBottom: '24px' }}>
-                                                <div>
-                                                    <InputLabel required>Interview Department</InputLabel>
-                                                    <Input type="text" required placeholder="e.g. Assembly / QA / IT" value={formData.interviewDepartment} onChange={(e: any) => setFormData({...formData, interviewDepartment: capitalizeWords(e.target.value)})} />
-                                                </div>
-                                                <div>
-                                                    <InputLabel required>Interviewer Name</InputLabel>
-                                                    <Input type="text" required placeholder="Enter interviewer name" value={formData.interviewerName} onChange={(e: any) => setFormData({...formData, interviewerName: capitalizeWords(e.target.value)})} />
-                                                </div>
-                                            </div>
-
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                                 {formData.interviewees.length < 50 ? (
                                                     <button type="button" onClick={addInterviewee} style={{ backgroundColor: 'transparent', color: '#db011c', border: '1px solid #db011c', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
@@ -540,24 +530,32 @@ export default function NewRequestPage() {
                                             </div>
                                             
                                             {formData.interviewees.map((candidate, idx) => (
-                                                <div key={idx} style={{ position: 'relative', marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center', borderBottom: formData.interviewees.length > 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '16px' }}>
-                                                    <div style={{ width: '90px', flexShrink: 0 }}>
+                                                <div key={idx} style={{ position: 'relative', marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', borderBottom: formData.interviewees.length > 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '16px' }}>
+                                                    <div style={{ width: '75px', flexShrink: 0 }}>
                                                         <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>CANDIDATE {idx + 1}</span>
                                                     </div>
-                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Candidate Name <span style={{ color: '#db011c' }}>*</span></label>
-                                                        <Input type="text" required placeholder="e.g. Nguyen Van A" value={candidate.name} onChange={(e: any) => updateInterviewee(idx, 'name', e.target.value)} />
+                                                    <div style={{ flex: 1.2, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Name <span style={{ color: '#db011c' }}>*</span></label>
+                                                        <Input type="text" required placeholder="Candidate name" value={candidate.name} onChange={(e: any) => updateInterviewee(idx, 'name', e.target.value)} />
                                                     </div>
-                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Applied Job Title <span style={{ color: '#db011c' }}>*</span></label>
-                                                        <Input type="text" required placeholder="e.g. Operator / Engineer" value={candidate.jobTitle} onChange={(e: any) => updateInterviewee(idx, 'jobTitle', e.target.value)} />
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Job Title <span style={{ color: '#db011c' }}>*</span></label>
+                                                        <Input type="text" required placeholder="e.g. Engineer" value={candidate.jobTitle} onChange={(e: any) => updateInterviewee(idx, 'jobTitle', e.target.value)} />
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Department <span style={{ color: '#db011c' }}>*</span></label>
+                                                        <Input type="text" required placeholder="e.g. IT / QA" value={candidate.interviewDepartment} onChange={(e: any) => updateInterviewee(idx, 'interviewDepartment', e.target.value)} />
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Interviewer <span style={{ color: '#db011c' }}>*</span></label>
+                                                        <Input type="text" required placeholder="Interviewer name" value={candidate.interviewerName} onChange={(e: any) => updateInterviewee(idx, 'interviewerName', e.target.value)} />
                                                     </div>
                                                     {formData.interviewees.length > 1 ? (
-                                                        <div style={{ width: '60px', flexShrink: 0, textAlign: 'right' }}>
+                                                        <div style={{ width: '55px', flexShrink: 0, textAlign: 'right' }}>
                                                             <button type="button" onClick={() => removeInterviewee(idx)} style={{ color: '#ef4444', background: 'none', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>REMOVE</button>
                                                         </div>
                                                     ) : (
-                                                        <div style={{ width: '60px', flexShrink: 0 }}></div>
+                                                        <div style={{ width: '55px', flexShrink: 0 }}></div>
                                                     )}
                                                 </div>
                                             ))}
@@ -918,42 +916,35 @@ export default function NewRequestPage() {
                         <h2 className="text-2xl font-bold mb-4 text-[#0f172a]">Review Registration</h2>
                         <div className="space-y-4 text-sm text-gray-700">
                             {formData.visitorCategory === 'Interviewee' ? (
-                                <>
-                                    <div className="pb-4 border-b border-gray-200">
-                                        <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Candidates / Interviewees ({formData.interviewees.length})</span>
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-left border-collapse">
-                                                <thead>
-                                                    <tr className="border-b border-gray-200">
-                                                        <th className="py-2 text-[10px] uppercase font-bold text-gray-400">#</th>
-                                                        <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Candidate Name</th>
-                                                        <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Applied Job Title</th>
+                                <div className="pb-4 border-b border-gray-200">
+                                    <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Candidates / Interviewees ({formData.interviewees.length})</span>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="border-b border-gray-200">
+                                                    <th className="py-2 text-[10px] uppercase font-bold text-gray-400">#</th>
+                                                    <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Interviewee Name</th>
+                                                    <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Job Title</th>
+                                                    <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Department</th>
+                                                    <th className="py-2 text-[10px] uppercase font-bold text-gray-400">Interviewer Name</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {formData.interviewees.map((candidate, i) => (
+                                                    <tr key={i} className="border-b border-gray-100 last:border-0">
+                                                        <td className="py-2 text-xs font-bold text-gray-400">{i + 1}</td>
+                                                        <td className="py-2 font-bold text-[#0f172a]">{candidate.name || '—'}</td>
+                                                        <td className="py-2 text-gray-700 font-medium">{candidate.jobTitle || '—'}</td>
+                                                        <td className="py-2 text-gray-700 font-medium">
+                                                            <span className="text-gray-700 text-xs font-bold bg-gray-100 px-2 py-1 rounded inline-block">{candidate.interviewDepartment || '—'}</span>
+                                                        </td>
+                                                        <td className="py-2 text-gray-700 font-medium">{candidate.interviewerName || '—'}</td>
                                                     </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {formData.interviewees.map((candidate, i) => (
-                                                        <tr key={i} className="border-b border-gray-100 last:border-0">
-                                                            <td className="py-2 text-xs font-bold text-gray-400">{i + 1}</td>
-                                                            <td className="py-2 font-bold text-[#0f172a]">{candidate.name || '—'}</td>
-                                                            <td className="py-2 text-gray-700 font-medium">{candidate.jobTitle || '—'}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
-
-                                    <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-200">
-                                        <div>
-                                            <span className="block text-xs font-bold text-gray-400 uppercase">Department</span>
-                                            <span className="font-semibold text-gray-900">{formData.interviewDepartment}</span>
-                                        </div>
-                                        <div>
-                                            <span className="block text-xs font-bold text-gray-400 uppercase">Interviewer Name</span>
-                                            <span className="font-semibold text-gray-900">{formData.interviewerName}</span>
-                                        </div>
-                                    </div>
-                                </>
+                                </div>
                             ) : (
                                 <div className="pb-4 border-b border-gray-200">
                                     <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Visitors ({formData.visitors.length})</span>
