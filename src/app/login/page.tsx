@@ -21,7 +21,8 @@ function LoginContent() {
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
+  const rawRedirect = searchParams.get("redirect") || "/";
+  const redirect = (rawRedirect.startsWith("/access-denied") || rawRedirect.startsWith("/login")) ? "/" : rawRedirect;
   const { setUser } = useUser();
 
   useEffect(() => {
