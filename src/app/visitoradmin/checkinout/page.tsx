@@ -28,7 +28,7 @@ export default function CheckInOutManagement() {
         visitorName: '',
         site: ''
     });
-    const [viewMode, setViewMode] = useState<ViewMode>('group');
+    const [viewMode, setViewMode] = useState<ViewMode>('visitor');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 15;
