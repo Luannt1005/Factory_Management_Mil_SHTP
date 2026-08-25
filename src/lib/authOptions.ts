@@ -112,14 +112,6 @@ export const authOptions: NextAuthOptions = {
           }
 
           let userStatus = "Active";
-          const isAutoApproveLocation = location && (
-            location.toUpperCase().includes('SHTP') || 
-            location.toUpperCase().includes('DDK')
-          );
-          const isHrTaDepartment = Boolean(
-            department && department.toUpperCase().includes('HR-TA')
-          );
-          const isAutoApprove = Boolean(isAutoApproveLocation || isHrTaDepartment);
 
           if (result.rows.length === 0) {
             console.log("[SSO DB Lookup] User not found, creating new account for:", fullEmail);
@@ -129,7 +121,7 @@ export const authOptions: NextAuthOptions = {
               return false; 
             }
 
-            userStatus = isAutoApprove ? "Active" : "Pending Approval";
+            userStatus = "Active";
             const dummyPassword = "sso_user_no_password_" + Math.random().toString(36).substring(7);
             
             // Get role IDs for default assignment
@@ -162,11 +154,10 @@ export const authOptions: NextAuthOptions = {
             (user as any).app_role_ids = newUser.app_role_ids || [];
           } else {
             const existingUser = result.rows[0];
-            const isExistingHrTa = isHrTaDepartment || Boolean(existingUser.department && existingUser.department.toUpperCase().includes('HR-TA'));
-            const isExistingAutoApprove = isAutoApproveLocation || isExistingHrTa;
 
             userStatus = existingUser.status || "Active";
-            if (userStatus === "Pending Approval" && isExistingAutoApprove) {
+            // Auto-activate any previously pending approval accounts
+            if (userStatus === "Pending Approval") {
               userStatus = "Active";
               await pool.query("UPDATE users SET status = 'Active' WHERE id = $1", [existingUser.id]);
             }
@@ -218,11 +209,6 @@ export const authOptions: NextAuthOptions = {
             (user as any).visitor_role = existingUser.visitor_role || "user";
             (user as any).app_role_ids = app_role_ids;
             user.email = existingUser.username;
-          }
-
-          if (userStatus === "Pending Approval") {
-             console.log("[SSO Login Blocked] User is Pending Approval due to non-SHTP location and non-HR-TA department:", fullEmail);
-             return `/access-denied?email=${encodeURIComponent(fullEmail)}&name=${encodeURIComponent(name)}&username=${encodeURIComponent(usernamePart || '')}`;
           }
           
           if (userStatus === "Inactive") {
