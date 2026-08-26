@@ -32,7 +32,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
     SELECT 
         r.id::text AS "requestId",
         r.id::text AS "requestCode",
-        p.name AS "submitterName",
+        COALESCE(p.name, p.email, r.details->>'submitterName', 'Unknown') AS "submitterName",
         r."visitorCategory",
         r."visitingSite",
         r."purposeOfVisit",
@@ -53,7 +53,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
     SELECT 
         i.id::text AS "requestId",
         i."visitorCode" AS "requestCode",
-        i."osName" AS "submitterName",
+        COALESCE(i."osName", 'HR / TA') AS "submitterName",
         'Interviewee' AS "visitorCategory",
         i."interviewArea" AS "visitingSite",
         'Interview for ' || i."jobTitle" AS "purposeOfVisit",
@@ -139,6 +139,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
                                         'visitorName', COALESCE(v.elem->>'name', r."intervieweeName", 'Unknown'),
                                         'visitorTitle', COALESCE(v.elem->>'title', r."jobTitle", ''),
                                         'visitorCompany', COALESCE(v.elem->>'company', (r.visitors_json::json)->0->>'company', 'Candidate'),
+                                        'submitterName', r."submitterName",
                                         'interviewDepartment', v.elem->>'interviewDepartment',
                                         'interviewerName', v.elem->>'interviewerName',
                                         'visitorCode', r."requestId" || '-V' || v.idx,
@@ -159,6 +160,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
                                         'visitorName', COALESCE(r."intervieweeName", 'Unknown'),
                                         'visitorTitle', COALESCE(r."jobTitle", ''),
                                         'visitorCompany', 'Candidate',
+                                        'submitterName', r."submitterName",
                                         'interviewDepartment', '',
                                         'interviewerName', '',
                                         'visitorCode', COALESCE(r."visitorCode_override", r."requestId"),

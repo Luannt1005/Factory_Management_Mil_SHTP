@@ -411,8 +411,9 @@ export default function CheckInOutManagement() {
                         <div className="flex flex-col">
                             
                             {viewMode === 'visitor' && (
-                                <div className="hidden md:grid grid-cols-[100px_120px_1.4fr_1fr_1.2fr_85px_120px_95px_125px_125px_160px] gap-3 items-center bg-[#1a1a1a] text-white px-6 py-3 font-bold text-[9px] uppercase tracking-wider mb-2">
+                                <div className="hidden md:grid grid-cols-[100px_1.1fr_115px_1.2fr_1fr_1.1fr_85px_110px_95px_115px_115px_150px] gap-3 items-center bg-[#1a1a1a] text-white px-6 py-3 font-bold text-[9px] uppercase tracking-wider mb-2">
                                     <div>REQUEST</div>
+                                    <div>SUBMITTER</div>
                                     <div>VISITOR CODE</div>
                                     <div>FULL NAME</div>
                                     <div>TITLE</div>
@@ -430,10 +431,11 @@ export default function CheckInOutManagement() {
                             {viewMode === 'group' && (
                                 <div className="hidden md:grid grid-cols-12 gap-4 bg-[#1a1a1a] text-white px-6 py-3 font-bold text-xs uppercase tracking-wider items-center">
                                     <div className="col-span-2">REQUEST CODE</div>
-                                    <div className="col-span-4">VISITOR(S)</div>
+                                    <div className="col-span-2">SUBMITTER</div>
+                                    <div className="col-span-3">VISITOR(S)</div>
                                     <div className="col-span-2">CATEGORY</div>
                                     <div className="col-span-2">DATE</div>
-                                    <div className="col-span-2">SITE</div>
+                                    <div className="col-span-1">SITE</div>
                                 </div>
                             )}
 
@@ -441,8 +443,9 @@ export default function CheckInOutManagement() {
                             {viewMode === 'visitor' && paginatedVisitors.map((v: any, idx: number) => {
                                 const req = v._requestInfo;
                                 return (
-                                    <div key={`${req.requestId}-${v.visitorIndex}`} className={`px-6 py-3 grid grid-cols-[100px_120px_1.4fr_1fr_1.2fr_85px_120px_95px_125px_125px_160px] gap-3 items-center border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                                    <div key={`${req.requestId}-${v.visitorIndex}`} className={`px-6 py-3 grid grid-cols-[100px_1.1fr_115px_1.2fr_1fr_1.1fr_85px_110px_95px_115px_115px_150px] gap-3 items-center border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                                         <div className="text-[11px] font-medium text-gray-900 truncate" title={req.requestCode || req.requestId}>{req.requestCode || req.requestId}</div>
+                                        <div className="text-[11px] font-bold text-gray-700 truncate" title={req.submitterName || '-'}>{req.submitterName || '-'}</div>
                                         <div className="text-xs font-black text-[#db011c] truncate" title={v.visitorCode}>{v.visitorCode}</div>
                                         <div className="text-xs font-bold text-gray-900 truncate" title={v.visitorName}>{v.visitorName}</div>
                                         <div className="text-[10px] text-gray-500 truncate" title={v.visitorTitle || '-'}>{v.visitorTitle || '-'}</div>
@@ -487,11 +490,14 @@ export default function CheckInOutManagement() {
                                         className="px-6 py-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center cursor-pointer hover:bg-gray-50 transition-colors"
                                         onClick={() => setExpandedRequest(expandedRequest === req.requestId ? null : req.requestId)}
                                     >
-                                        <div className="col-span-2 font-bold text-sm text-gray-900">
+                                        <div className="col-span-2 font-bold text-sm text-gray-900 truncate" title={req.requestCode || req.requestId}>
                                             {req.requestCode || req.requestId}
                                         </div>
-                                        <div className="col-span-4 text-sm text-gray-900 font-semibold truncate" title={req.visitors?.[0]?.visitorName || req.submitterName}>
-                                            {req.visitors?.[0]?.visitorName || req.submitterName} {req.filteredVisitors && req.filteredVisitors.length > 0 && <span className="text-[11px] text-gray-500 font-bold ml-2">({req.filteredVisitors.length} {req.visitorCategory === 'Interviewee' ? 'Candidate(s)' : 'Visitor(s)'})</span>}
+                                        <div className="col-span-2 text-xs font-bold text-gray-700 truncate" title={req.submitterName || '-'}>
+                                            {req.submitterName || '-'}
+                                        </div>
+                                        <div className="col-span-3 text-sm text-gray-900 font-semibold truncate" title={req.visitors?.[0]?.visitorName || req.submitterName}>
+                                            {req.visitors?.[0]?.visitorName || '-'} {req.filteredVisitors && req.filteredVisitors.length > 0 && <span className="text-[11px] text-gray-500 font-bold ml-2">({req.filteredVisitors.length} {req.visitorCategory === 'Interviewee' ? 'Candidate(s)' : 'Visitor(s)'})</span>}
                                         </div>
                                         <div className="col-span-2">
                                             <span className={`text-[10px] font-black px-2 py-1 rounded uppercase ${getCategoryBadgeClass(req.visitorCategory)}`}>
@@ -501,9 +507,9 @@ export default function CheckInOutManagement() {
                                         <div className="col-span-2 text-sm text-gray-700 font-medium">
                                             {formatDateShort(req.startDate)} - {formatDateShort(req.endDate)}
                                         </div>
-                                        <div className="col-span-2 flex justify-between items-center text-sm text-gray-700">
-                                            <span>{req.visitingSite}</span>
-                                            <div className="text-gray-400">
+                                        <div className="col-span-1 flex justify-between items-center text-sm text-gray-700">
+                                            <span className="truncate" title={req.visitingSite}>{req.visitingSite}</span>
+                                            <div className="text-gray-400 ml-1">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${expandedRequest === req.requestId ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                                                 </svg>
@@ -519,9 +525,10 @@ export default function CheckInOutManagement() {
                                                         {req.filteredVisitors && req.filteredVisitors.length > 0 ? (
                                                             <>
                                                                 {/* Header for expanded visitors */}
-                                                                <div className="grid grid-cols-[120px_1.4fr_1fr_1.2fr_120px_90px_125px_125px_160px] gap-3 items-center pb-2 border-b border-gray-300 mb-2">
+                                                                <div className="grid grid-cols-[115px_1.2fr_1.1fr_1fr_1.1fr_110px_90px_115px_115px_150px] gap-3 items-center pb-2 border-b border-gray-300 mb-2">
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">VISITOR CODE</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">FULL NAME</div>
+                                                                    <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">SUBMITTER</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">TITLE</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">COMPANY</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">DATE</div>
@@ -532,9 +539,10 @@ export default function CheckInOutManagement() {
                                                                 </div>
 
                                                                 {req.filteredVisitors.map((v: any, vIdx: number) => (
-                                                                    <div key={vIdx} className={`py-3 grid grid-cols-[120px_1.4fr_1fr_1.2fr_120px_90px_125px_125px_160px] gap-3 items-center ${vIdx !== req.filteredVisitors.length - 1 ? 'border-b border-dashed border-gray-200' : ''}`}>
+                                                                    <div key={vIdx} className={`py-3 grid grid-cols-[115px_1.2fr_1.1fr_1fr_1.1fr_110px_90px_115px_115px_150px] gap-3 items-center ${vIdx !== req.filteredVisitors.length - 1 ? 'border-b border-dashed border-gray-200' : ''}`}>
                                                                         <div className="text-xs font-black text-[#db011c] truncate" title={v.visitorCode}>{v.visitorCode}</div>
                                                                         <div className="text-xs font-bold text-gray-900 truncate" title={v.visitorName}>{v.visitorName}</div>
+                                                                        <div className="text-[11px] font-bold text-gray-700 truncate" title={req.submitterName || '-'}>{req.submitterName || '-'}</div>
                                                                         <div className="text-[11px] text-gray-600 truncate" title={v.visitorTitle || '-'}>{v.visitorTitle || '-'}</div>
                                                                         <div className="text-[11px] font-medium text-gray-600 truncate" title={v.visitorCompany || req.visitingSite}>{v.visitorCompany || req.visitingSite}</div>
                                                                         <div className="text-[10px] font-medium text-gray-600 truncate text-center">{formatDateShort(req.startDate)} - {formatDateShort(req.endDate)}</div>
