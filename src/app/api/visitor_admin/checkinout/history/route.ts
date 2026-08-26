@@ -32,7 +32,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
     SELECT 
         r.id::text AS "requestId",
         r.id::text AS "requestCode",
-        COALESCE(p.name, p.email, r.details->>'submitterName', 'Unknown') AS "submitterName",
+        COALESCE(p.name, p.email, 'Unknown') AS "submitterName",
         r."visitorCategory",
         r."visitingSite",
         r."purposeOfVisit",
