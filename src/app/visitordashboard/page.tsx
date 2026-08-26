@@ -723,11 +723,14 @@ function DashboardContent() {
                             </button>
                         </div>
                         <div className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6">
-                            {/* Candidates List */}
-                            <div className="flex flex-col gap-3 bg-gray-50/50 p-4 rounded-xl border border-gray-200">
+                            {/* Candidates Table */}
+                            <div className="flex flex-col gap-3">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                        Candidates ({(editFormData.visitors || []).length})
+                                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+                                        <span>Candidate List</span>
+                                        <span className="bg-red-50 text-[#db011c] border border-red-200 px-2 py-0.5 rounded-full text-[11px] font-black">
+                                            {(editFormData.visitors || []).length}
+                                        </span>
                                     </h3>
                                     <button
                                         type="button"
@@ -742,90 +745,110 @@ function DashboardContent() {
                                             });
                                             setEditFormData({ ...editFormData, visitors: updated });
                                         }}
-                                        className="px-3 py-1 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+                                        className="px-3 py-1.5 bg-white border border-[#db011c] text-[#db011c] hover:bg-red-50 text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
                                     >
-                                        <span className="text-[#db011c] font-black">+</span> Add Candidate
+                                        <span className="text-[#db011c] font-black text-sm">+</span> Add Candidate
                                     </button>
                                 </div>
 
-                                <div className="flex flex-col gap-3">
-                                    {(editFormData.visitors || []).map((cand: any, idx: number) => (
-                                        <div key={idx} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative flex flex-col gap-3">
-                                            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                                                <span className="text-xs font-black text-gray-500 uppercase">
-                                                    Candidate #{idx + 1}
-                                                </span>
-                                                {(editFormData.visitors || []).length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const updated = editFormData.visitors.filter((_: any, i: number) => i !== idx);
-                                                            setEditFormData({ ...editFormData, visitors: updated });
-                                                        }}
-                                                        className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                                                <div>
-                                                    <InputLabel required>Full Name</InputLabel>
-                                                    <Input 
-                                                        required 
-                                                        value={cand.name || ''} 
-                                                        onChange={(e: any) => {
-                                                            const updated = [...editFormData.visitors];
-                                                            updated[idx].name = e.target.value;
-                                                            setEditFormData({ ...editFormData, visitors: updated });
-                                                        }} 
-                                                        placeholder="Candidate Name" 
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <InputLabel required>Job Title</InputLabel>
-                                                    <Input 
-                                                        required 
-                                                        value={cand.title || ''} 
-                                                        onChange={(e: any) => {
-                                                            const updated = [...editFormData.visitors];
-                                                            updated[idx].title = e.target.value;
-                                                            setEditFormData({ ...editFormData, visitors: updated });
-                                                        }} 
-                                                        placeholder="e.g. Software Engineer" 
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <InputLabel required>Interview Department</InputLabel>
-                                                    <Input 
-                                                        required 
-                                                        value={cand.interviewDepartment || cand.company || ''} 
-                                                        onChange={(e: any) => {
-                                                            const updated = [...editFormData.visitors];
-                                                            updated[idx].interviewDepartment = e.target.value;
-                                                            updated[idx].company = e.target.value;
-                                                            setEditFormData({ ...editFormData, visitors: updated });
-                                                        }} 
-                                                        placeholder="e.g. IT Department" 
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <InputLabel required>Interviewer Name</InputLabel>
-                                                    <Input 
-                                                        required 
-                                                        value={cand.interviewerName || ''} 
-                                                        onChange={(e: any) => {
-                                                            const updated = [...editFormData.visitors];
-                                                            updated[idx].interviewerName = e.target.value;
-                                                            setEditFormData({ ...editFormData, visitors: updated });
-                                                        }} 
-                                                        placeholder="e.g. Tran Thi B" 
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
+                                <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
+                                    <table className="w-full text-left text-xs border-collapse">
+                                        <thead className="bg-gray-100/80 text-gray-600 font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
+                                            <tr>
+                                                <th className="py-2.5 px-3 w-10 text-center">#</th>
+                                                <th className="py-2.5 px-3 min-w-[160px]">Full Name <span className="text-red-500">*</span></th>
+                                                <th className="py-2.5 px-3 min-w-[140px]">Job Title <span className="text-red-500">*</span></th>
+                                                <th className="py-2.5 px-3 min-w-[140px]">Department <span className="text-red-500">*</span></th>
+                                                <th className="py-2.5 px-3 min-w-[140px]">Interviewer <span className="text-red-500">*</span></th>
+                                                <th className="py-2.5 px-3 w-16 text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {(editFormData.visitors || []).map((cand: any, idx: number) => (
+                                                <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                                                    <td className="py-2 px-3 text-center font-bold text-gray-400">
+                                                        {idx + 1}
+                                                    </td>
+                                                    <td className="py-1.5 px-2">
+                                                        <input
+                                                            required
+                                                            type="text"
+                                                            placeholder="Candidate Name"
+                                                            value={cand.name || ''}
+                                                            onChange={(e) => {
+                                                                const updated = [...editFormData.visitors];
+                                                                updated[idx].name = e.target.value;
+                                                                setEditFormData({ ...editFormData, visitors: updated });
+                                                            }}
+                                                            className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
+                                                        />
+                                                    </td>
+                                                    <td className="py-1.5 px-2">
+                                                        <input
+                                                            required
+                                                            type="text"
+                                                            placeholder="e.g. Software Engineer"
+                                                            value={cand.title || ''}
+                                                            onChange={(e) => {
+                                                                const updated = [...editFormData.visitors];
+                                                                updated[idx].title = e.target.value;
+                                                                setEditFormData({ ...editFormData, visitors: updated });
+                                                            }}
+                                                            className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
+                                                        />
+                                                    </td>
+                                                    <td className="py-1.5 px-2">
+                                                        <input
+                                                            required
+                                                            type="text"
+                                                            placeholder="e.g. IT Department"
+                                                            value={cand.interviewDepartment || cand.company || ''}
+                                                            onChange={(e) => {
+                                                                const updated = [...editFormData.visitors];
+                                                                updated[idx].interviewDepartment = e.target.value;
+                                                                updated[idx].company = e.target.value;
+                                                                setEditFormData({ ...editFormData, visitors: updated });
+                                                            }}
+                                                            className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
+                                                        />
+                                                    </td>
+                                                    <td className="py-1.5 px-2">
+                                                        <input
+                                                            required
+                                                            type="text"
+                                                            placeholder="e.g. Tran Thi B"
+                                                            value={cand.interviewerName || ''}
+                                                            onChange={(e) => {
+                                                                const updated = [...editFormData.visitors];
+                                                                updated[idx].interviewerName = e.target.value;
+                                                                setEditFormData({ ...editFormData, visitors: updated });
+                                                            }}
+                                                            className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
+                                                        />
+                                                    </td>
+                                                    <td className="py-1.5 px-3 text-center">
+                                                        {(editFormData.visitors || []).length > 1 ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const updated = editFormData.visitors.filter((_: any, i: number) => i !== idx);
+                                                                    setEditFormData({ ...editFormData, visitors: updated });
+                                                                }}
+                                                                className="p-1 hover:bg-red-50 text-red-500 hover:text-red-700 rounded transition-colors"
+                                                                title="Remove candidate"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                </svg>
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-gray-300">—</span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
 
