@@ -73,14 +73,16 @@ function DashboardContent() {
 
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    const fetchMyRequests = async (page: number, tabOverride?: string) => {
+    const fetchMyRequests = async (page: number, tabOverride?: string, isSilent = false) => {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
         abortControllerRef.current = new AbortController();
         const { signal } = abortControllerRef.current;
 
-        setLoading(true);
+        if (!isSilent) {
+            setLoading(true);
+        }
         try {
             const currentTab = tabOverride || activeTab;
             const apiEndpoint = `/api/requests?tab=${currentTab}`;
@@ -97,6 +99,12 @@ function DashboardContent() {
                 if (!signal.aborted) {
                     setRequests(data.requests);
                     setPagination(data.pagination);
+                    // Update selectedRequest if currently viewed in modal
+                    setSelectedRequest((currentSelected: any) => {
+                        if (!currentSelected) return null;
+                        const updated = data.requests.find((r: any) => r.id === currentSelected.id);
+                        return updated || currentSelected;
+                    });
                 }
             } else if (res.status === 401 && !signal.aborted) {
                 router.push('/login?redirect=' + window.location.pathname);
@@ -105,12 +113,30 @@ function DashboardContent() {
             if (err.name === 'AbortError') return;
             console.error(err);
         } finally {
-            // Only stop loading if we haven't started a new request
-            if (!signal.aborted) {
+            if (!signal.aborted && !isSilent) {
                 setLoading(false);
             }
         }
     };
+
+    // Auto-poll in background when any request is pending manager assignment or approvals
+    useEffect(() => {
+        if (!session) return;
+        const hasPending = requests.some((r: any) => 
+            r.status === 'IN PROCESS' || 
+            r.request_approvals?.some((a: any) => 
+                a.status === 'PENDING' || a.approver_email === 'Pending Manager Assignment'
+            )
+        );
+
+        if (!hasPending) return;
+
+        const intervalId = setInterval(() => {
+            fetchMyRequests(pagination.page, activeTab, true);
+        }, 3000);
+
+        return () => clearInterval(intervalId);
+    }, [requests, session, pagination.page, activeTab]);
 
     const parseDetails = (details: any) => {
         if (!details) return {};
@@ -356,17 +382,31 @@ function DashboardContent() {
                                     </td>
                                     <td className="px-6 py-5">
                                         <div className="flex gap-2 justify-center flex-wrap">
-                                            {request.request_approvals?.map((app: any) => (
-                                                <div
-                                                    key={app.id}
-                                                    title={`${app.room_areas?.name || (request.visitor_category !== 'MIL/TTI Expat / SHTP Business trip' ? 'Manager Approval' : 'VP Approval')}: ${app.status}`}
-                                                    className="w-2.5 h-2.5 rounded-full border border-white shadow-sm"
-                                                    style={{
-                                                        background: getStatusColor(app.status),
-                                                        boxShadow: `0 0 4px ${getStatusColor(app.status)}55`
-                                                    }}
-                                                />
-                                            ))}
+                                            {request.request_approvals?.map((app: any) => {
+                                                const submitterEmail = session?.user?.email || (session?.user as any)?.username;
+                                                const isPendingManager = 
+                                                    (app.approver_email === 'Pending Manager Assignment' || 
+                                                     app.approver_email === 'Manager Approval' || 
+                                                     app.approver_email === null || 
+                                                     (app.approver_email === submitterEmail && !app.room_areas?.name)) && 
+                                                    app.status === 'PENDING';
+                                                const areaName = app.room_areas?.name || (request.visitor_category !== 'MIL/TTI Expat / SHTP Business trip' ? 'Manager Approval' : 'VP Approval');
+                                                const tooltip = isPendingManager 
+                                                    ? `${areaName}: Routing to Line Manager...` 
+                                                    : `${areaName} (${app.approver_email || 'Approver'}): ${app.status}`;
+
+                                                return (
+                                                    <div
+                                                        key={app.id}
+                                                        title={tooltip}
+                                                        className="w-2.5 h-2.5 rounded-full border border-white shadow-sm cursor-pointer"
+                                                        style={{
+                                                            background: getStatusColor(app.status),
+                                                            boxShadow: `0 0 4px ${getStatusColor(app.status)}55`
+                                                        }}
+                                                    />
+                                                );
+                                            })}
                                             {(!request.request_approvals || request.request_approvals.length === 0) && (
                                                 <span className="text-[10px] text-gray-400 italic">No areas</span>
                                             )}
@@ -623,19 +663,35 @@ function DashboardContent() {
                                             {selectedRequest.request_approvals && selectedRequest.request_approvals.length > 0 && (
                                                 <Row icon={ShieldCheckIcon} label="Area Approvals">
                                                     <div className="flex flex-col gap-2 w-full items-end">
-                                                        {selectedRequest.request_approvals.map((app: any) => (
-                                                            <div key={app.id} className="flex flex-col items-end gap-0.5">
-                                                                <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100" style={{ color: getStatusColor(app.status) }}>
-                                                                    {app.room_areas?.name || 'Area'}
-                                                                    <span className="w-1.5 h-1.5 rounded-full ml-1" style={{ background: getStatusColor(app.status) }}></span>
-                                                                </span>
-                                                                {app.approver_email && (
-                                                                    <span className="text-[10px] text-gray-500 font-medium break-all">
-                                                                        {app.status === 'PENDING' ? 'Pending at:' : (app.status === 'APPROVED' ? 'Approved by:' : 'Rejected by:')} {app.approver_email}
+                                                        {selectedRequest.request_approvals.map((app: any) => {
+                                                            const submitterEmail = session?.user?.email || (session?.user as any)?.username;
+                                                            const isPendingManagerRouting = 
+                                                                (app.approver_email === 'Pending Manager Assignment' || 
+                                                                 app.approver_email === 'Manager Approval' || 
+                                                                 app.approver_email === null || 
+                                                                 (app.approver_email === submitterEmail && !app.room_areas?.name)) && 
+                                                                app.status === 'PENDING';
+
+                                                            return (
+                                                                <div key={app.id} className="flex flex-col items-end gap-0.5">
+                                                                    <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100" style={{ color: getStatusColor(app.status) }}>
+                                                                        {app.room_areas?.name || (selectedRequest.visitor_category !== 'MIL/TTI Expat / SHTP Business trip' ? 'Manager Approval' : 'VP Approval')}
+                                                                        <span className="w-1.5 h-1.5 rounded-full ml-1" style={{ background: getStatusColor(app.status) }}></span>
                                                                     </span>
-                                                                )}
-                                                            </div>
-                                                        ))}
+                                                                    {isPendingManagerRouting ? (
+                                                                        <span className="text-[10px] text-amber-600 font-bold inline-flex items-center gap-1.5 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 animate-pulse mt-0.5">
+                                                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                                                                            Pending: Routing to Line Manager...
+                                                                        </span>
+                                                                    ) : app.approver_email ? (
+                                                                        <span className="text-[10px] text-gray-500 font-medium break-all mt-0.5">
+                                                                            {app.status === 'PENDING' ? 'Pending at:' : (app.status === 'APPROVED' ? 'Approved by:' : 'Rejected by:')}{' '}
+                                                                            <span className="font-bold text-gray-700">{app.approver_email}</span>
+                                                                        </span>
+                                                                    ) : null}
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </Row>
                                             )}

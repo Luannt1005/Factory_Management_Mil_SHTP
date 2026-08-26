@@ -285,7 +285,7 @@ export async function POST(request: Request) {
                 `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
                  VALUES (gen_random_uuid(), $1, NULL, $2, 'PENDING', NOW())
                  RETURNING id`,
-                [visitorRequestId, submitterEmail] // Initially set to submitter's email, will be routed to manager in Power Automate
+                [visitorRequestId, 'Pending Manager Assignment'] // Initially marked as Pending Manager Assignment until Power Automate updates with actual manager email
             );
 
             const approvalId = approvalRows[0].id;
