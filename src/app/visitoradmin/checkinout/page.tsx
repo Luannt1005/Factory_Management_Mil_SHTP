@@ -494,8 +494,8 @@ export default function CheckInOutManagement() {
                                         <div className="col-span-2 font-bold text-sm text-gray-900">
                                             {req.requestCode || req.requestId}
                                         </div>
-                                        <div className="col-span-4 text-sm text-gray-700 font-medium">
-                                            {req.submitterName} {req.filteredVisitors && req.filteredVisitors.length > 0 && <span className="text-[11px] text-gray-400 font-bold ml-2">({req.filteredVisitors.length} Visitors)</span>}
+                                        <div className="col-span-4 text-sm text-gray-900 font-semibold truncate" title={req.visitors?.[0]?.visitorName || req.submitterName}>
+                                            {req.visitors?.[0]?.visitorName || req.submitterName} {req.filteredVisitors && req.filteredVisitors.length > 0 && <span className="text-[11px] text-gray-500 font-bold ml-2">({req.filteredVisitors.length} {req.visitorCategory === 'Interviewee' ? 'Candidate(s)' : 'Visitor(s)'})</span>}
                                         </div>
                                         <div className="col-span-2">
                                             <span className={`text-[10px] font-black px-2 py-1 rounded uppercase ${getCategoryBadgeClass(req.visitorCategory)}`}>

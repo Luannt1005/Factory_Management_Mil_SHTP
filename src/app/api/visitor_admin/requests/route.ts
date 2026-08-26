@@ -24,6 +24,7 @@ export async function GET(request: Request) {
         const limit = parseInt(searchParams.get('limit') || '20');
         const offset = (page - 1) * limit;
         const category = searchParams.get('category');
+        const tab = searchParams.get('tab');
         const code = searchParams.get('code');
         const status = searchParams.get('status');
         const isExport = limit > 1000; // if limit is very high, it's likely an export
@@ -41,7 +42,11 @@ export async function GET(request: Request) {
             paramCount += 2;
         }
 
-        if (category) {
+        if (tab === 'interviewee' || category === 'Interviewee') {
+            conditions.push(`r."visitorCategory" = 'Interviewee'`);
+        } else if (tab === 'general' && !category) {
+            conditions.push(`r."visitorCategory" != 'Interviewee'`);
+        } else if (category) {
             conditions.push(`r."visitorCategory" = $${paramCount}`);
             queryParams.push(category);
             paramCount += 1;

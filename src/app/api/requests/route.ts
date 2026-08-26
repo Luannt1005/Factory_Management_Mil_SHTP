@@ -74,6 +74,8 @@ export async function POST(request: Request) {
             catPrefix = 'VV';
         } else if (visitorCategory === 'Contractor') {
             catPrefix = 'VC';
+        } else if (visitorCategory === 'Interviewee') {
+            catPrefix = 'VI';
         }
 
         const now = new Date();
@@ -100,13 +102,15 @@ export async function POST(request: Request) {
         const newRequestId = `${datePrefix}_${String(sequence).padStart(2, '0')}`;
 
         const submitterId = await getOrCreateVisitorProfile(session.user, visitorPool);
+        const isInterviewee = visitorCategory === 'Interviewee';
+        const initialStatus = isInterviewee ? 'COMPLETE' : 'IN PROCESS';
 
         const { rows: visitorRequests } = await visitorPool.query(
             `INSERT INTO "VisitorRequest" 
              (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt", "visitingSite", "purposeDetail", visitors)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'IN PROCESS', NOW(), $11, $12, $13)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12, $13, $14)
              RETURNING id`,
-            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate), purposeOfVisit, visitorCategory, JSON.stringify(enhancedDetails), visitingSite, purposeDetail, JSON.stringify(visitors || [])]
+            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate || startDate), purposeOfVisit || (isInterviewee ? 'Interview' : ''), visitorCategory, JSON.stringify(enhancedDetails), initialStatus, visitingSite, purposeDetail || '', JSON.stringify(visitors || [])]
         );
 
         const visitorRequestId = visitorRequests[0].id;
@@ -220,6 +224,51 @@ export async function POST(request: Request) {
                     console.error(`Failed to trigger unified Power Automate:`, paError);
                 }
             }
+        } else if (isInterviewee) {
+            // Direct notification for Interviewee (No approval required)
+            const hookUrl = powerAutomateUrl || powerAutomateNotificationUrl;
+            if (hookUrl) {
+                try {
+                    const namesList = (visitors && visitors.length > 0) ? visitors.map((v: any) => v.name).join(', ') : visitorName;
+                    const titlesList = (visitors && visitors.length > 0) ? visitors.map((v: any) => `${v.name} (${v.title || 'Candidate'} - ${v.interviewDepartment || v.company || ''})`).join('; ') : `${visitorName} (${visitorTitle})`;
+                    const paResponse = await fetch(hookUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            requestDetails: {
+                                id: visitorRequestId,
+                                visitor_name: namesList,
+                                visitorTitle: titlesList,
+                                currentCompany: currentCompany || "Candidate",
+                                startDate: startDate,
+                                endDate: endDate || startDate,
+                                purposeOfVisit: "Interview",
+                                submitterName: session.user.name || (session.user as any).username,
+                                submitterEmail: formatEmail(session.user.email || (session.user as any).username),
+                                visitorCategory: 'Interviewee',
+                                visitors_list: visitors,
+                                is_vp_approval: false,
+                                visitingSite: visitingSite || "",
+                                mealRegistration: enhancedDetails?.mealRegistration || "",
+                                costCenter: enhancedDetails?.costCenter || "",
+                                interviewerName: visitors?.[0]?.interviewerName || '',
+                                startTime: enhancedDetails?.startTime || '',
+                                interviewArea: purposeDetail || enhancedDetails?.interviewArea || '',
+                                interviewDepartment: visitors?.[0]?.interviewDepartment || ''
+                            },
+                            rooms: []
+                        })
+                    });
+                    if (!paResponse.ok) {
+                        const errText = await paResponse.text();
+                        console.error(`Power Automate returned error ${paResponse.status} for Interviewee:`, errText);
+                    } else {
+                        console.log(`Power Automate triggered successfully for Interviewee: ${visitorRequestId}`);
+                    }
+                } catch (e) {
+                    console.error('Failed to notify Power Automate for interviewee group request:', e);
+                }
+            }
         } else if (!isExpat) {
             // For Vendor, Contractor, etc., insert a single approval record for Supervisor Approval
             const submitterEmail = formatEmail((session.user as any).username || session.user.email);
@@ -326,6 +375,8 @@ export async function GET(request: Request) {
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
         const search = searchParams.get('search');
+        const tab = searchParams.get('tab');
+        const category = searchParams.get('category');
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
         const offset = (page - 1) * limit;
@@ -336,6 +387,12 @@ export async function GET(request: Request) {
         let whereClause = 'WHERE r."submitterId" = $1';
         const queryParams: any[] = [submitterId];
         let paramCount = 2;
+
+        if (tab === 'interviewee' || category === 'Interviewee') {
+            whereClause += ` AND r."visitorCategory" = 'Interviewee'`;
+        } else if (tab === 'general') {
+            whereClause += ` AND r."visitorCategory" != 'Interviewee'`;
+        }
 
         if (startDate && endDate) {
             whereClause += ` AND (r."startDate" <= $${paramCount+1} AND r."endDate" >= $${paramCount})`;

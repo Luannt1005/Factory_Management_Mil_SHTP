@@ -151,15 +151,37 @@ export default function NewRequestPage() {
     const handleSubmit = async () => {
         setLoading(true);
         try {
-            let apiUrl = '/api/requests';
-            if (formData.visitorCategory === 'Interviewee') {
-                apiUrl = '/api/interviewee_requests';
-            }
+            const isInterviewee = formData.visitorCategory === 'Interviewee';
+            const visitorsList = isInterviewee
+                ? formData.interviewees.map(c => ({
+                    name: c.name,
+                    title: c.jobTitle,
+                    company: c.interviewDepartment || 'Candidate',
+                    interviewDepartment: c.interviewDepartment,
+                    interviewerName: c.interviewerName
+                }))
+                : formData.visitors;
 
-            const res = await fetch(apiUrl, {
+            const payload = {
+                ...formData,
+                visitors: visitorsList,
+                visitorName: visitorsList[0]?.name || '',
+                visitorTitle: visitorsList[0]?.title || '',
+                currentCompany: isInterviewee ? 'Candidate' : (visitorsList[0]?.company || ''),
+                purposeOfVisit: isInterviewee ? 'Interview' : formData.purposeOfVisit,
+                purposeDetail: isInterviewee ? formData.interviewArea : formData.purposeDetail,
+                endDate: isInterviewee ? formData.startDate : formData.endDate,
+                details: {
+                    ...formData.details,
+                    startTime: formData.startTime,
+                    interviewArea: formData.interviewArea
+                }
+            };
+
+            const res = await fetch('/api/requests', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(payload),
             });
 
             if (res.ok) {
@@ -186,7 +208,7 @@ export default function NewRequestPage() {
                     functionalDept: '',
                     department: ''
                 });
-                if (formData.visitorCategory === 'Interviewee') {
+                if (isInterviewee) {
                     router.push('/visitordashboard?tab=interviewee');
                 } else {
                     router.push('/visitordashboard?tab=general');
@@ -531,8 +553,8 @@ export default function NewRequestPage() {
                                             
                                             {formData.interviewees.map((candidate, idx) => (
                                                 <div key={idx} style={{ position: 'relative', marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', borderBottom: formData.interviewees.length > 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '16px' }}>
-                                                    <div style={{ width: '75px', flexShrink: 0 }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>CANDIDATE {idx + 1}</span>
+                                                    <div style={{ width: '95px', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', whiteSpace: 'nowrap' }}>CANDIDATE {idx + 1}</span>
                                                     </div>
                                                     <div style={{ flex: 1.2, display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                         <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Name <span style={{ color: '#db011c' }}>*</span></label>
@@ -597,8 +619,8 @@ export default function NewRequestPage() {
                                             
                                             {formData.visitors.map((visitor, idx) => (
                                                 <div key={idx} style={{ position: 'relative', marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center', borderBottom: formData.visitors.length > 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '16px' }}>
-                                                    <div style={{ width: '70px', flexShrink: 0 }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>VISITOR {idx + 1}</span>
+                                                    <div style={{ width: '80px', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', whiteSpace: 'nowrap' }}>VISITOR {idx + 1}</span>
                                                     </div>
                                                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Full Name <span style={{ color: '#db011c' }}>*</span></label>

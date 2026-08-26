@@ -132,14 +132,36 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
                 r."createdAt",
                 (
                     CASE 
-                        WHEN r."visitorCategory" = 'Interviewee' THEN
+                        WHEN r.visitors_json IS NOT NULL AND r.visitors_json != '' AND r.visitors_json != '[]' THEN
+                            (
+                                SELECT COALESCE(json_agg(
+                                    json_build_object(
+                                        'visitorName', COALESCE(v.elem->>'name', r."intervieweeName", 'Unknown'),
+                                        'visitorTitle', COALESCE(v.elem->>'title', r."jobTitle", ''),
+                                        'visitorCompany', COALESCE(v.elem->>'company', (r.visitors_json::json)->0->>'company', 'Candidate'),
+                                        'interviewDepartment', v.elem->>'interviewDepartment',
+                                        'interviewerName', v.elem->>'interviewerName',
+                                        'visitorCode', r."requestId" || '-V' || v.idx,
+                                        'checkInOutStatus', COALESCE(c.status, 'PENDING'),
+                                        'cardNumber', c."cardNumber",
+                                        'checkInTime', c."checkInTime",
+                                        'checkOutTime', c."checkOutTime",
+                                        'visitorIndex', (v.idx::int - 1)
+                                    ) ORDER BY v.idx ASC
+                                ), '[]'::json)
+                                FROM json_array_elements(r.visitors_json::json) WITH ORDINALITY v(elem, idx)
+                                LEFT JOIN "VisitorCheckInOut" c ON r."requestId" = c."requestId" AND (v.idx::int - 1) = c."visitorIndex"
+                            )
+                        ELSE
                             (
                                 SELECT json_build_array(
                                     json_build_object(
-                                        'visitorName', r."intervieweeName",
-                                        'visitorTitle', r."jobTitle",
+                                        'visitorName', COALESCE(r."intervieweeName", 'Unknown'),
+                                        'visitorTitle', COALESCE(r."jobTitle", ''),
                                         'visitorCompany', 'Candidate',
-                                        'visitorCode', r."visitorCode_override",
+                                        'interviewDepartment', '',
+                                        'interviewerName', '',
+                                        'visitorCode', COALESCE(r."visitorCode_override", r."requestId"),
                                         'checkInOutStatus', COALESCE(c.status, 'PENDING'),
                                         'cardNumber', c."cardNumber",
                                         'checkInTime', c."checkInTime",
@@ -149,29 +171,6 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
                                 )
                                 FROM (SELECT 1) dummy
                                 LEFT JOIN "VisitorCheckInOut" c ON r."requestId" = c."requestId" AND c."visitorIndex" = 0
-                            )
-                        ELSE
-                            (
-                                SELECT COALESCE(json_agg(
-                                    json_build_object(
-                                        'visitorName', v.elem->>'name',
-                                        'visitorTitle', v.elem->>'title',
-                                        'visitorCompany', COALESCE(v.elem->>'company', (r.visitors_json::json)->0->>'company'),
-                                        'visitorCode', r."requestId" || '-V' || v.idx,
-                                        'checkInOutStatus', COALESCE(c.status, 'PENDING'),
-                                        'cardNumber', c."cardNumber",
-                                        'checkInTime', c."checkInTime",
-                                        'checkOutTime', c."checkOutTime",
-                                        'visitorIndex', (v.idx::int - 1)
-                                    ) ORDER BY v.idx ASC
-                                ), '[]'::json)
-                                FROM json_array_elements(
-                                    CASE 
-                                        WHEN r.visitors_json IS NULL OR r.visitors_json = '' THEN '[]'::json 
-                                        ELSE r.visitors_json::json 
-                                    END
-                                ) WITH ORDINALITY v(elem, idx)
-                                LEFT JOIN "VisitorCheckInOut" c ON r."requestId" = c."requestId" AND (v.idx::int - 1) = c."visitorIndex"
                             )
                     END
                 ) AS visitors

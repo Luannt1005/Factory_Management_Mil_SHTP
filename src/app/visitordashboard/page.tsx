@@ -76,8 +76,8 @@ function DashboardContent() {
         setLoading(true);
         try {
             const currentTab = tabOverride || activeTab;
-            const apiEndpoint = currentTab === 'general' ? '/api/requests' : '/api/interviewee_requests/my';
-            let url = `${apiEndpoint}?page=${page}&limit=${pagination.limit}`;
+            const apiEndpoint = `/api/requests?tab=${currentTab}`;
+            let url = `${apiEndpoint}&page=${page}&limit=${pagination.limit}`;
             if (startDate && endDate) {
                 url += `&startDate=${startDate}&endDate=${endDate}`;
             }
@@ -348,50 +348,66 @@ function DashboardContent() {
                                 >
                                     <td className="px-6 py-5">
                                         <span className="text-[11px] font-black text-gray-400 bg-gray-100 px-2 py-1 rounded">
-                                            {request.visitor_code}
+                                            #{request.id.split('-')[0].toUpperCase()}
                                         </span>
                                     </td>
                                     <td className="px-6 py-5">
                                         <div className="font-extrabold text-[#0f172a] text-[14px]">
-                                            {request.interviewee_name}
+                                            {request.visitor_name}
+                                            {request.visitors && (() => {
+                                                try {
+                                                    const parsed = JSON.parse(request.visitors);
+                                                    if (parsed && parsed.length > 1) {
+                                                        return ` (+ ${parsed.length - 1})`;
+                                                    }
+                                                } catch (e) { }
+                                                return '';
+                                            })()}
                                         </div>
-                                        <div className="text-[11px] text-gray-500 mt-0.5 tracking-tight">{request.job_title}</div>
+                                        <div className="text-[11px] text-gray-500 mt-0.5 tracking-tight">{request.visitor_title || 'Candidate'}</div>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <div className="font-bold text-[#0f172a] text-[12px]">
-                                            Dept: {request.interview_department}
-                                        </div>
-                                        <div className="text-[11px] text-gray-500 mt-0.5 tracking-tight">
-                                            By: {request.interviewer_name}
-                                        </div>
+                                        {(() => {
+                                            let dept = '';
+                                            let interviewer = '';
+                                            try {
+                                                const parsed = request.visitors ? JSON.parse(request.visitors) : [];
+                                                if (parsed.length > 0) {
+                                                    dept = parsed[0].interviewDepartment || parsed[0].company || '';
+                                                    interviewer = parsed[0].interviewerName || '';
+                                                }
+                                            } catch (e) { }
+                                            return (
+                                                <>
+                                                    <div className="font-bold text-[#0f172a] text-[12px]">
+                                                        Dept: {dept || request.current_company || '—'}
+                                                    </div>
+                                                    <div className="text-[11px] text-gray-500 mt-0.5 tracking-tight">
+                                                        By: {interviewer || '—'}
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
                                     </td>
                                     <td className="px-6 py-5 text-center text-gray-700 tabular-nums font-bold">
                                         {new Date(request.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
                                     </td>
                                     <td className="px-6 py-5 text-center text-gray-700 tabular-nums font-bold">
-                                        {request.start_time}
+                                        {(() => {
+                                            const dt = parseDetails(request.details);
+                                            return dt?.startTime || '—';
+                                        })()}
                                     </td>
                                     <td className="px-6 py-5 text-center text-[11px] text-gray-600">
-                                        {request.interview_area}
+                                        {request.purpose_detail || (() => {
+                                            const dt = parseDetails(request.details);
+                                            return dt?.interviewArea || '—';
+                                        })()}
                                     </td>
                                     <td className="px-6 py-5 text-right pr-8">
-                                        <div className="flex gap-4 justify-end">
-                                            {(!request.edit_count || request.edit_count < 3) && (
-                                                <button 
-                                                    className="text-[11px] font-black text-amber-600 uppercase tracking-tighter hover:underline"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setEditingInterviewee(request);
-                                                    }}
-                                                    title={`You have ${3 - (request.edit_count || 0)} edit(s) remaining`}
-                                                >
-                                                    Edit ({3 - (request.edit_count || 0)})
-                                                </button>
-                                            )}
-                                            <button className="text-[11px] font-black text-[#db011c] uppercase tracking-tighter hover:underline">
-                                                View Details &rarr;
-                                            </button>
-                                        </div>
+                                        <button className="text-[11px] font-black text-[#db011c] uppercase tracking-tighter hover:underline">
+                                            View Details &rarr;
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -557,20 +573,26 @@ function DashboardContent() {
                                 ) : (
                                     <>
                                         <div className="flex flex-col gap-4 mb-6 pb-6 border-b border-gray-100">
-                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Interviewee Details</h3>
-                                            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl shrink-0">
-                                                    {selectedRequest.interviewee_name?.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <h2 className="text-lg font-bold text-[#0f172a]">{selectedRequest.interviewee_name}</h2>
-                                                    <p className="text-sm text-gray-500 font-medium">{selectedRequest.job_title}</p>
-                                                </div>
+                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Candidates ({visitorsList.length})</h3>
+                                            <div className="flex flex-col gap-2 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
+                                                {visitorsList.map((v: any, idx: number) => (
+                                                    <div key={idx} className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+                                                        <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                                        <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-1 overflow-hidden">
+                                                            <h2 className="text-sm font-bold text-[#0f172a] truncate">{v.name || selectedRequest.interviewee_name || 'Candidate'}</h2>
+                                                            <p className="text-xs text-gray-500 truncate font-medium">
+                                                                {v.title || selectedRequest.job_title ? `${v.title || selectedRequest.job_title} ` : ''}
+                                                                {v.interviewDepartment ? `• ${v.interviewDepartment} ` : v.company ? `@ ${v.company} ` : ''}
+                                                                {v.interviewerName ? `(Interviewer: ${v.interviewerName})` : ''}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
 
                                         <div className="space-y-1">
-                                            <Row icon={IdentificationIcon} label="Visitor Code" value={selectedRequest.visitor_code} />
+                                            <Row icon={IdentificationIcon} label="Request Ref" value={(selectedRequest.id || selectedRequest.visitor_code)?.split('-')[0]?.toUpperCase()} />
                                             <Row icon={TagIcon} label="Status">
                                                 <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5" style={{
                                                     background: getStatusColor(selectedRequest.status) + '15',
@@ -580,11 +602,11 @@ function DashboardContent() {
                                                     {selectedRequest.status}
                                                 </span>
                                             </Row>
-                                            <Row icon={BuildingOfficeIcon} label="Department" value={selectedRequest.interview_department} />
-                                            <Row icon={UserGroupIcon} label="Interviewer" value={selectedRequest.interviewer_name} />
+                                            <Row icon={UserGroupIcon} label="Category" value="Interviewee" />
                                             <Row icon={CalendarDaysIcon} label="Schedule Date" value={new Date(selectedRequest.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} />
-                                            <Row icon={ClockIcon} label="Schedule Time" value={selectedRequest.start_time} />
-                                            <Row icon={MapPinIcon} label="Interview Area" value={selectedRequest.interview_area} />
+                                            <Row icon={ClockIcon} label="Schedule Time" value={details.startTime || selectedRequest.start_time || '—'} />
+                                            <Row icon={MapPinIcon} label="Interview Area" value={selectedRequest.purpose_detail || details.interviewArea || selectedRequest.interview_area || '—'} />
+                                            <Row icon={BuildingOfficeIcon} label="Visiting Site" value={selectedRequest.visiting_site || 'SHTP'} />
                                         </div>
                                     </>
                                 )}
