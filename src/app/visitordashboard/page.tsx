@@ -119,19 +119,27 @@ function DashboardContent() {
         }
     };
 
-    // Auto-poll in background when any request is pending manager assignment or approvals
+    // Auto-poll in background ONLY while waiting for Power Automate to assign Manager email
     useEffect(() => {
         if (!session) return;
-        const hasPending = requests.some((r: any) => 
-            r.status === 'IN PROCESS' || 
+        
+        // Only run if there is at least one request still waiting for manager routing
+        const hasUnassignedManager = requests.some((r: any) => 
             r.request_approvals?.some((a: any) => 
-                a.status === 'PENDING' || a.approver_email === 'Pending Manager Assignment'
+                a.approver_email === 'Pending Manager Assignment' || a.approver_email === null
             )
         );
 
-        if (!hasPending) return;
+        if (!hasUnassignedManager) return;
+
+        let pollCount = 0;
+        const maxPolls = 6; // Safety limit: max 6 times (18 seconds) then stops completely
 
         const intervalId = setInterval(() => {
+            pollCount++;
+            if (pollCount >= maxPolls) {
+                clearInterval(intervalId);
+            }
             fetchMyRequests(pagination.page, activeTab, true);
         }, 3000);
 
