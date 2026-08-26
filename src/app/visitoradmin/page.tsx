@@ -781,7 +781,7 @@ export default function AdminDashboard() {
                                         {/* Visitors List */}
                                         <div className="flex flex-col gap-1.5 mb-8">
                                             {visitorsList.map((v: any, i: number) => (
-                                                <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 bg-gray-50/50 px-4 py-2 rounded-lg border border-gray-100 transition-colors hover:bg-gray-50">
+                                                <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 bg-gray-50/50 px-4 py-2.5 rounded-lg border border-gray-100 transition-colors hover:bg-gray-50">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
                                                         <h3 className="text-sm font-extrabold text-[#0f172a] truncate">{v.name || 'Unnamed'}</h3>
@@ -796,16 +796,25 @@ export default function AdminDashboard() {
                                     </>
                                 ) : (
                                     <>
-                                        {/* Interviewee Info */}
-                                        <div className="flex flex-col gap-3 mb-8">
-                                            <div className="flex flex-col gap-2 bg-gray-50/50 px-5 py-4 rounded-xl border border-gray-100">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
-                                                    <h3 className="text-sm font-extrabold text-[#0f172a]">{selectedRequest.interviewee_name || 'Unnamed'}</h3>
-                                                </div>
-                                                <p className="text-xs text-gray-500 font-medium ml-5">
-                                                    {selectedRequest.job_title || 'N/A'}
-                                                </p>
+                                        {/* Candidates List */}
+                                        <div className="flex flex-col gap-2 mb-8">
+                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Candidates ({visitorsList.length})</h3>
+                                            <div className="flex flex-col gap-2 max-h-[30vh] overflow-y-auto pr-1 custom-scrollbar">
+                                                {visitorsList.map((v: any, i: number) => (
+                                                    <div key={i} className="flex items-center justify-between gap-2 bg-gray-50/50 px-4 py-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                                                        <div className="flex items-center gap-3 overflow-hidden">
+                                                            <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                                            <div className="overflow-hidden">
+                                                                <h3 className="text-sm font-extrabold text-[#0f172a] truncate">{v.name || selectedRequest.visitor_name || selectedRequest.interviewee_name || 'Candidate'}</h3>
+                                                                <p className="text-xs text-gray-500 font-medium truncate">
+                                                                    {v.title || selectedRequest.visitor_title || selectedRequest.job_title || 'Candidate'}
+                                                                    {v.interviewDepartment ? ` • ${v.interviewDepartment}` : ''}
+                                                                    {v.interviewerName ? ` (Interviewer: ${v.interviewerName})` : ''}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     </>
@@ -819,19 +828,17 @@ export default function AdminDashboard() {
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" /></svg>
                                             <span className="text-sm font-medium">Request Ref</span>
                                         </div>
-                                        <div className="font-extrabold text-[#0f172a] text-sm tracking-tight">{selectedRequest.visitor_code || selectedRequest.id.split('-')[0].toUpperCase()}</div>
+                                        <div className="font-extrabold text-[#0f172a] text-sm tracking-tight">#{selectedRequest.id.split('-')[0].toUpperCase()}</div>
                                     </div>
                                     
                                     {/* Submitter */}
-                                    {activeTab === 'interviewee' && (
-                                        <div className="flex items-center justify-between py-4 border-b border-gray-50">
-                                            <div className="flex items-center gap-3 text-gray-500">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
-                                                <span className="text-sm font-medium">Submitter</span>
-                                            </div>
-                                            <div className="font-extrabold text-[#0f172a] text-sm tracking-tight">{selectedRequest.os_name || '-'}</div>
+                                    <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                        <div className="flex items-center gap-3 text-gray-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                                            <span className="text-sm font-medium">Submitter</span>
                                         </div>
-                                    )}
+                                        <div className="font-extrabold text-[#0f172a] text-sm tracking-tight">{selectedRequest.profile_name || selectedRequest.profiles?.name || selectedRequest.os_name || '-'}</div>
+                                    </div>
                                     
                                     {/* Status */}
                                     <div className="flex items-center justify-between py-4 border-b border-gray-50">
@@ -939,15 +946,16 @@ export default function AdminDashboard() {
                                                     )}
                                                 </div>
                                             </div>
-                                        </>                                    ) : (
+                                        </>
+                                    ) : (
                                         <>
-                                            {/* Submitter */}
+                                            {/* Category */}
                                             <div className="flex items-center justify-between py-4 border-b border-gray-50">
                                                 <div className="flex items-center gap-3 text-gray-500">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
-                                                    <span className="text-sm font-medium">Submitter</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>
+                                                    <span className="text-sm font-medium">Category</span>
                                                 </div>
-                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.profile_name || selectedRequest.profiles?.name || selectedRequest.os_name || '-'}</div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">Interviewee</div>
                                             </div>
 
                                             {/* Schedule Date & Time */}
