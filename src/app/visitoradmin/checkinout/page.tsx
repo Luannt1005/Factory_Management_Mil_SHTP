@@ -246,22 +246,20 @@ export default function CheckInOutManagement() {
                 Check In
             </button>
             
-            {!isSecurity && (
-                <button
-                    disabled={actionLoading === `${req.requestId}-${v.visitorIndex}` || v.checkInOutStatus !== 'CHECKED_IN'}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleAction(req.requestId, v, 'CHECK_OUT');
-                    }}
-                    className={`whitespace-nowrap text-[9px] font-bold uppercase px-2 py-1.5 rounded shadow-sm transition-colors ${
-                        v.checkInOutStatus !== 'CHECKED_IN'
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            : 'bg-gray-800 hover:bg-gray-700 text-white'
-                    }`}
-                >
-                    Check Out
-                </button>
-            )}
+            <button
+                disabled={actionLoading === `${req.requestId}-${v.visitorIndex}` || v.checkInOutStatus !== 'CHECKED_IN'}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleAction(req.requestId, v, 'CHECK_OUT');
+                }}
+                className={`whitespace-nowrap text-[9px] font-bold uppercase px-2 py-1.5 rounded shadow-sm transition-colors ${
+                    v.checkInOutStatus !== 'CHECKED_IN'
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-800 hover:bg-gray-700 text-white'
+                }`}
+            >
+                Check Out
+            </button>
             
             {/* Reset/Refresh button */}
             {!isSecurity && !isReceptionist && (
@@ -460,7 +458,7 @@ export default function CheckInOutManagement() {
                                             <input 
                                                 type="text" 
                                                 placeholder="Card No." 
-                                                className={`w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] ${isSecurity ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`} 
+                                                className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c]" 
                                                 value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
                                                 onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
                                                 onBlur={(e) => {
@@ -469,8 +467,6 @@ export default function CheckInOutManagement() {
                                                     }
                                                 }}
                                                 onClick={(e) => e.stopPropagation()}
-                                                disabled={isSecurity}
-                                                readOnly={isSecurity}
                                             />
                                         </div>
                                         <div className={`text-[10px] font-bold text-center ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatDateTime(v.checkInTime)}</div>
@@ -546,7 +542,7 @@ export default function CheckInOutManagement() {
                                                                             <input 
                                                                                 type="text" 
                                                                                 placeholder="Card No." 
-                                                                                className={`w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] ${isSecurity ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`} 
+                                                                                className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c]" 
                                                                                 value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
                                                                                 onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
                                                                                 onBlur={(e) => {
@@ -555,8 +551,6 @@ export default function CheckInOutManagement() {
                                                                                     }
                                                                                 }}
                                                                                 onClick={(e) => e.stopPropagation()}
-                                                                                disabled={isSecurity}
-                                                                                readOnly={isSecurity}
                                                                             />
                                                                         </div>
                                                                         <div className={`text-[10px] font-bold text-center ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatDateTime(v.checkInTime)}</div>
