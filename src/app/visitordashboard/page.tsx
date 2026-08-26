@@ -674,16 +674,16 @@ function DashboardContent() {
                                 )}
                             </div>
                             
-                            <div className="p-4 px-8 bg-gray-50 rounded-b-xl border-t border-gray-100 flex justify-between items-center">
+                            <div className="p-4 px-8 bg-gray-50 rounded-b-xl border-t border-gray-100 flex justify-end items-center">
                                 {activeTab === 'interviewee' ? (
-                                    <div className="flex items-center gap-2">
+                                    <div>
                                         {(selectedRequest.edit_count || selectedRequest.editCount || 0) < 3 ? (
                                             <button 
                                                 onClick={() => {
                                                     setEditingInterviewee(selectedRequest);
                                                     setSelectedRequest(null);
                                                 }}
-                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-2"
+                                                className="px-6 py-2.5 bg-[#db011c] hover:bg-[#b00116] text-white text-sm font-bold rounded-lg shadow-md transition-all flex items-center gap-2"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
@@ -691,18 +691,16 @@ function DashboardContent() {
                                                 Edit Request ({3 - (selectedRequest.edit_count || selectedRequest.editCount || 0)} edits left)
                                             </button>
                                         ) : (
-                                            <div className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                                            <div className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-4 py-2 rounded-lg flex items-center gap-1.5">
                                                 <span>⚠️ Max edit limit reached (3/3)</span>
                                             </div>
                                         )}
                                     </div>
-                                ) : <div />}
-                                <button onClick={() => setSelectedRequest(null)} className="px-6 py-2 bg-[#db011c] hover:bg-[#b00116] text-white text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                                        <path d="M2.695 14.763l-1.262 3.155a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
-                                    </svg>
-                                    Close
-                                </button>
+                                ) : (
+                                    <button onClick={() => setSelectedRequest(null)} className="px-6 py-2 bg-[#db011c] hover:bg-[#b00116] text-white text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                                        Close
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -712,7 +710,7 @@ function DashboardContent() {
             {mounted && editingInterviewee && createPortal((
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setEditingInterviewee(null)}></div>
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 max-h-[90vh] flex flex-col overflow-hidden border-t-[6px] border-[#db011c]">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl relative z-10 max-h-[90vh] flex flex-col overflow-hidden border-t-[6px] border-[#db011c]">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <div>
                                 <h2 className="text-lg font-black text-[#0f172a] uppercase tracking-tight">Edit Interviewee Request</h2>
@@ -771,7 +769,7 @@ function DashboardContent() {
                                                 )}
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                                                 <div>
                                                     <InputLabel required>Full Name</InputLabel>
                                                     <Input 
@@ -832,7 +830,7 @@ function DashboardContent() {
                             </div>
 
                             {/* Schedule & Area Details */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
                                     <InputLabel required>Schedule Date</InputLabel>
                                     <Input required type="date" value={editFormData.startDate || ''} onChange={(e: any) => setEditFormData({...editFormData, startDate: e.target.value})} />
@@ -841,7 +839,29 @@ function DashboardContent() {
                                     <InputLabel required>Schedule Time</InputLabel>
                                     <Input required type="time" value={editFormData.startTime || ''} onChange={(e: any) => setEditFormData({...editFormData, startTime: e.target.value})} />
                                 </div>
-                                <div className="col-span-2">
+                                <div>
+                                    <InputLabel>Meal Registration</InputLabel>
+                                    <select 
+                                        className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer"
+                                        value={editFormData.mealRegistration || 'No'} 
+                                        onChange={(e: any) => setEditFormData({...editFormData, mealRegistration: e.target.value})}
+                                    >
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <InputLabel>Factory Tour</InputLabel>
+                                    <select 
+                                        className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer"
+                                        value={editFormData.factoryTour || 'No'} 
+                                        onChange={(e: any) => setEditFormData({...editFormData, factoryTour: e.target.value})}
+                                    >
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                                <div className="md:col-span-4">
                                     <InputLabel required>Interview Area (Meeting Room)</InputLabel>
                                     <select 
                                         required 
@@ -865,28 +885,6 @@ function DashboardContent() {
                                                 ))}
                                             </optgroup>
                                         ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <InputLabel>Meal Registration</InputLabel>
-                                    <select 
-                                        className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer"
-                                        value={editFormData.mealRegistration || 'No'} 
-                                        onChange={(e: any) => setEditFormData({...editFormData, mealRegistration: e.target.value})}
-                                    >
-                                        <option value="No">No</option>
-                                        <option value="Yes">Yes</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <InputLabel>Factory Tour</InputLabel>
-                                    <select 
-                                        className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer"
-                                        value={editFormData.factoryTour || 'No'} 
-                                        onChange={(e: any) => setEditFormData({...editFormData, factoryTour: e.target.value})}
-                                    >
-                                        <option value="No">No</option>
-                                        <option value="Yes">Yes</option>
                                     </select>
                                 </div>
                             </div>
