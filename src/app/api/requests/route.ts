@@ -397,7 +397,12 @@ export async function GET(request: Request) {
         const queryParams: any[] = [submitterId];
         let paramCount = 2;
 
-        if (tab === 'interviewee' || category === 'Interviewee') {
+        const userAppRoles = (session.user as any)?.app_role_names || [];
+        const userIsAdmin = (session.user as any)?.role === 'admin';
+        const userIsHrVisitor = userAppRoles.includes('Hr Visitor') || userIsAdmin;
+        const userIsSecurityOnly = userAppRoles.includes('Security') && !userIsAdmin && !userIsHrVisitor;
+
+        if (userIsSecurityOnly || tab === 'interviewee' || category === 'Interviewee') {
             whereClause += ` AND r."visitorCategory" = 'Interviewee'`;
         } else if (tab === 'general') {
             whereClause += ` AND r."visitorCategory" != 'Interviewee'`;

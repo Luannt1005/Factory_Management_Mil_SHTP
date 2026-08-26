@@ -11,7 +11,12 @@ import { Suspense } from 'react';
 
 function DashboardContent() {
     const { data: session } = useSession();
-    const isHrVisitor = (session?.user as any)?.app_role_names?.includes('Hr Visitor') || (session?.user as any)?.role === 'admin';
+    const appRoleNames = (session?.user as any)?.app_role_names || [];
+    const isAdmin = (session?.user as any)?.role === 'admin';
+    const isHrVisitor = appRoleNames.includes('Hr Visitor') || isAdmin;
+    const isSecurity = appRoleNames.includes('Security') && !isAdmin && !isHrVisitor;
+    const canAccessInterviewee = isHrVisitor || isSecurity;
+
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 0 });
@@ -22,7 +27,7 @@ function DashboardContent() {
     const [editingInterviewee, setEditingInterviewee] = useState<any>(null);
     const [editFormData, setEditFormData] = useState<any>({});
     const [saving, setSaving] = useState(false);
-        const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
     const [mounted, setMounted] = useState(false);
     const [meetingRooms, setMeetingRooms] = useState<any[]>([]);
 
@@ -44,15 +49,17 @@ function DashboardContent() {
     const searchParams = useSearchParams();
     const tabParam = searchParams.get('tab');
     
-    // Set initial activeTab based on searchParams, but only once on mount
+    // Set initial activeTab based on searchParams and user roles
     useEffect(() => {
         setMounted(true);
-        if (tabParam === 'interviewee') {
+        if (isSecurity) {
+            setActiveTab('interviewee');
+        } else if (tabParam === 'interviewee' && canAccessInterviewee) {
             setActiveTab('interviewee');
         } else if (tabParam === 'general') {
             setActiveTab('general');
         }
-    }, [tabParam]);
+    }, [tabParam, isSecurity, canAccessInterviewee]);
 
     useEffect(() => {
         if (session) {
@@ -204,19 +211,21 @@ function DashboardContent() {
         <div className="flex flex-col gap-6">
             {/* TABS */}
             <div className="flex bg-white/50 backdrop-blur-sm p-1 rounded-xl border border-gray-200 shadow-sm w-fit">
-                <button
-                    onClick={() => { setActiveTab('general'); resetPage(); }}
-                    className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'general'
-                        ? 'bg-white text-[#db011c] shadow-sm ring-1 ring-gray-200/50'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
-                        }`}
-                >
-                    General Visitors
-                </button>
+                {!isSecurity && (
+                    <button
+                        onClick={() => { setActiveTab('general'); resetPage(); }}
+                        className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'general'
+                            ? 'bg-white text-[#db011c] shadow-sm ring-1 ring-gray-200/50'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
+                            }`}
+                    >
+                        General Visitors
+                    </button>
+                )}
                 <button
                     onClick={() => { 
-                        if (!isHrVisitor) {
-                            alert("You need Hr Visitor role to view Interviewee requests.");
+                        if (!canAccessInterviewee) {
+                            alert("You need Hr Visitor or Security role to view Interviewee requests.");
                             return;
                         }
                         setActiveTab('interviewee'); 
@@ -225,7 +234,7 @@ function DashboardContent() {
                     className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'interviewee'
                         ? 'bg-white text-[#db011c] shadow-sm ring-1 ring-gray-200/50'
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
-                        } ${!isHrVisitor ? 'opacity-50 cursor-not-allowed hover:bg-transparent hover:text-gray-500' : ''}`}
+                        } ${!canAccessInterviewee ? 'opacity-50 cursor-not-allowed hover:bg-transparent hover:text-gray-500' : ''}`}
                 >
                     Interviewee
                 </button>
