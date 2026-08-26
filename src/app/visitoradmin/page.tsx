@@ -32,7 +32,7 @@ export default function AdminDashboard() {
         setLoading(true);
         setSelectedRowIds([]);
         try {
-            let url = activeTab === 'general' ? `/api/visitor_admin/requests?page=${page}&limit=${pagination.limit}` : `/api/visitor_admin/interviewee_requests?page=${page}&limit=${pagination.limit}`;
+            let url = `/api/visitor_admin/requests?tab=${activeTab}&page=${page}&limit=${pagination.limit}`;
             if (startDate && endDate) {
                 url += `&startDate=${startDate}&endDate=${endDate}`;
             }
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
     const handleExportExcel = async () => {
         setExporting(true);
         try {
-            let url = activeTab === 'general' ? `/api/visitor_admin/requests?page=1&limit=999999` : `/api/visitor_admin/interviewee_requests?page=1&limit=999999`;
+            let url = `/api/visitor_admin/requests?tab=${activeTab}&page=1&limit=999999`;
             if (startDate && endDate) {
                 url += `&startDate=${startDate}&endDate=${endDate}`;
             }
@@ -218,7 +218,7 @@ export default function AdminDashboard() {
 
     const handleUpdateStatus = async (id: string, status: string) => {
         try {
-            const endpoint = activeTab === 'general' ? '/api/visitor_admin/requests' : '/api/visitor_admin/interviewee_requests';
+            const endpoint = '/api/visitor_admin/requests';
             const res = await fetch(endpoint, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
         if (!confirm('Are you sure you want to delete the selected requests?')) return;
         
         try {
-            const endpoint = activeTab === 'general' ? '/api/visitor_admin/requests' : '/api/visitor_admin/interviewee_requests';
+            const endpoint = '/api/visitor_admin/requests';
             const res = await fetch(endpoint, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
@@ -589,35 +589,62 @@ export default function AdminDashboard() {
                                         </td>
                                         <td className="px-3 py-2">
                                             <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                                                {request.visitor_code || ('#' + request.id.split('-')[0].toUpperCase())}
+                                                #{request.id.split('-')[0].toUpperCase()}
                                             </span>
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-extrabold text-[#0f172a] truncate max-w-[150px]">
-                                                {request.interviewee_name}
+                                                {request.visitor_name || request.interviewee_name}
+                                                {request.visitors && (() => {
+                                                    try {
+                                                        const parsed = JSON.parse(request.visitors);
+                                                        if (parsed && parsed.length > 1) {
+                                                            return ` (+ ${parsed.length - 1})`;
+                                                        }
+                                                    } catch (e) {}
+                                                    return '';
+                                                })()}
                                             </div>
                                         </td>
                                         <td className="px-3 py-2">
-                                            <div className="font-bold text-[#0f172a] text-[11px] truncate max-w-[150px]">
-                                                {request.os_name || '-'}
+                                            <div className="font-bold text-[#0f172a] text-[11px] truncate max-w-[150px]" title={request.profile_name || request.profiles?.name || request.os_name}>
+                                                {request.profile_name || request.profiles?.name || request.os_name || '-'}
                                             </div>
                                         </td>
                                         <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
-                                            {request.job_title || '-'}
+                                            {request.visitor_title || request.job_title || '-'}
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-bold text-[#0f172a] text-[11px] truncate max-w-[120px]">
-                                                {request.interviewer_name || '-'}
+                                                {(() => {
+                                                    try {
+                                                        const v = JSON.parse(request.visitors);
+                                                        return v[0]?.interviewerName;
+                                                    } catch(e) {}
+                                                    return request.interviewer_name || '-';
+                                                })()}
                                             </div>
                                         </td>
                                         <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
                                             {new Date(request.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
                                         </td>
                                         <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
-                                            {request.start_time}
+                                            {(() => {
+                                                try {
+                                                    const d = JSON.parse(request.details);
+                                                    return d.startTime;
+                                                } catch(e) {}
+                                                return request.start_time || '-';
+                                            })()}
                                         </td>
                                         <td className="px-3 py-2 text-center text-[10px] text-gray-600 truncate max-w-[100px]">
-                                            {request.interview_area}
+                                            {request.purpose_detail || (() => {
+                                                try {
+                                                    const d = JSON.parse(request.details);
+                                                    return d.interviewArea;
+                                                } catch(e) {}
+                                                return request.interview_area || '-';
+                                            })()}
                                         </td>
                                         <td className="px-3 py-2 text-center">
                                             <span className="inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase" style={{
@@ -912,34 +939,26 @@ export default function AdminDashboard() {
                                                     )}
                                                 </div>
                                             </div>
-                                        </>
-                                    ) : (
+                                        </>                                    ) : (
                                         <>
-                                            {/* Department */}
+                                            {/* Submitter */}
                                             <div className="flex items-center justify-between py-4 border-b border-gray-50">
                                                 <div className="flex items-center gap-3 text-gray-500">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>
-                                                    <span className="text-sm font-medium">Department</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                                                    <span className="text-sm font-medium">Submitter</span>
                                                 </div>
-                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.interview_department}</div>
-                                            </div>
-                                            
-                                            {/* Interviewer */}
-                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
-                                                <div className="flex items-center gap-3 text-gray-500">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
-                                                    <span className="text-sm font-medium">Interviewer</span>
-                                                </div>
-                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.interviewer_name}</div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.profile_name || selectedRequest.profiles?.name || selectedRequest.os_name || '-'}</div>
                                             </div>
 
-                                            {/* Schedule */}
+                                            {/* Schedule Date & Time */}
                                             <div className="flex items-center justify-between py-4 border-b border-gray-50">
                                                 <div className="flex items-center gap-3 text-gray-500">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
                                                     <span className="text-sm font-medium">Schedule</span>
                                                 </div>
-                                                <div className="font-extrabold text-[#0f172a] text-sm">{new Date(selectedRequest.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} @ {selectedRequest.start_time}</div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">
+                                                    {new Date(selectedRequest.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} @ {details.startTime || selectedRequest.start_time || '—'}
+                                                </div>
                                             </div>
 
                                             {/* Interview Area */}
@@ -948,7 +967,16 @@ export default function AdminDashboard() {
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
                                                     <span className="text-sm font-medium">Interview Area</span>
                                                 </div>
-                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.interview_area}</div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.purpose_detail || details.interviewArea || selectedRequest.interview_area || '—'}</div>
+                                            </div>
+
+                                            {/* Visiting Site */}
+                                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3 text-gray-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" /></svg>
+                                                    <span className="text-sm font-medium">Visiting Site</span>
+                                                </div>
+                                                <div className="font-extrabold text-[#0f172a] text-sm">{selectedRequest.visiting_site || 'SHTP'}</div>
                                             </div>
                                         </>
                                     )}

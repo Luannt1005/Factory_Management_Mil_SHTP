@@ -44,12 +44,13 @@ export async function GET(request: Request) {
 
         if (tab === 'interviewee' || category === 'Interviewee') {
             conditions.push(`r."visitorCategory" = 'Interviewee'`);
-        } else if (tab === 'general' && !category) {
-            conditions.push(`r."visitorCategory" != 'Interviewee'`);
         } else if (category) {
             conditions.push(`r."visitorCategory" = $${paramCount}`);
             queryParams.push(category);
             paramCount += 1;
+        } else {
+            // Default (tab=general or unspecified): filter out Interviewee
+            conditions.push(`r."visitorCategory" != 'Interviewee'`);
         }
 
         if (code) {
