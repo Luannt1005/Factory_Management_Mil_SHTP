@@ -427,6 +427,7 @@ export async function GET(request: Request) {
                 r."purposeDetail" as purpose_detail,
                 r.details,
                 r.visitors,
+                r."editCount" as edit_count,
                 r."createdAt" as created_at,
                 (
                     SELECT COALESCE(json_agg(

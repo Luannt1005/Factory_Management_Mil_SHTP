@@ -127,19 +127,57 @@ function DashboardContent() {
 
     useEffect(() => {
         if (editingInterviewee) {
+            let initialVisitors: any[] = [];
+            try {
+                initialVisitors = editingInterviewee.visitors ? JSON.parse(editingInterviewee.visitors) : [];
+            } catch (e) {}
+            if (!initialVisitors || initialVisitors.length === 0) {
+                initialVisitors = [{
+                    name: editingInterviewee.visitor_name || editingInterviewee.interviewee_name || '',
+                    title: editingInterviewee.visitor_title || editingInterviewee.job_title || '',
+                    company: editingInterviewee.current_company || '',
+                    interviewDepartment: editingInterviewee.interview_department || editingInterviewee.current_company || '',
+                    interviewerName: editingInterviewee.interviewer_name || ''
+                }];
+            }
+            const dt = parseDetails(editingInterviewee.details);
             setEditFormData({
-                intervieweeName: editingInterviewee.interviewee_name || '',
-                jobTitle: editingInterviewee.job_title || '',
-                interviewDepartment: editingInterviewee.interview_department || '',
-                interviewerName: editingInterviewee.interviewer_name || '',
+                visitors: initialVisitors,
                 startDate: editingInterviewee.start_date ? new Date(editingInterviewee.start_date).toISOString().split('T')[0] : '',
-                startTime: editingInterviewee.start_time || '',
-                interviewArea: editingInterviewee.interview_area || '',
+                startTime: dt.startTime || editingInterviewee.start_time || '',
+                interviewArea: editingInterviewee.purpose_detail || dt.interviewArea || editingInterviewee.interview_area || '',
+                mealRegistration: dt.mealRegistration || 'No',
+                factoryTour: dt.factoryTour || 'No',
+                visitingSite: editingInterviewee.visiting_site || 'SHTP'
             });
         }
     }, [editingInterviewee]);
 
     const submitEditInterviewee = async () => {
+        if (!editFormData.visitors || editFormData.visitors.length === 0) {
+            alert('Please add at least one candidate.');
+            return;
+        }
+        for (let i = 0; i < editFormData.visitors.length; i++) {
+            const v = editFormData.visitors[i];
+            if (!v.name || !v.name.trim()) {
+                alert(`Please enter Candidate #${i + 1} Name.`);
+                return;
+            }
+        }
+        if (!editFormData.startDate) {
+            alert('Please select Schedule Date.');
+            return;
+        }
+        if (!editFormData.startTime) {
+            alert('Please select Schedule Time.');
+            return;
+        }
+        if (!editFormData.interviewArea) {
+            alert('Please select Interview Area.');
+            return;
+        }
+
         setSaving(true);
         try {
             const res = await fetch(`/api/interviewee_requests/${editingInterviewee.id}`, {
@@ -153,7 +191,7 @@ function DashboardContent() {
                 fetchMyRequests(pagination.page);
             } else {
                 const data = await res.json();
-                alert(`Error: ${data.error}`);
+                alert(`Error: ${data.error || 'Failed to update request'}`);
             }
         } catch (e) {
             alert('Internal server error');
@@ -405,9 +443,33 @@ function DashboardContent() {
                                         })()}
                                     </td>
                                     <td className="px-6 py-5 text-right pr-8">
-                                        <button className="text-[11px] font-black text-[#db011c] uppercase tracking-tighter hover:underline">
-                                            View Details &rarr;
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            {(request.edit_count || request.editCount || 0) < 3 ? (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingInterviewee(request);
+                                                    }}
+                                                    className="px-2.5 py-1 text-[11px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                                                    title={`Edit Request (${3 - (request.edit_count || request.editCount || 0)} edits remaining)`}
+                                                >
+                                                    Edit ({request.edit_count || request.editCount || 0}/3)
+                                                </button>
+                                            ) : (
+                                                <span 
+                                                    className="px-2.5 py-1 text-[10px] font-bold text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed"
+                                                    title="Maximum 3 edits reached"
+                                                >
+                                                    Max Edits (3/3)
+                                                </span>
+                                            )}
+                                            <button 
+                                                onClick={() => setSelectedRequest(request)}
+                                                className="text-[11px] font-black text-[#db011c] uppercase tracking-tighter hover:underline ml-1"
+                                            >
+                                                View Details &rarr;
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -612,7 +674,29 @@ function DashboardContent() {
                                 )}
                             </div>
                             
-                            <div className="p-4 px-8 bg-gray-50 rounded-b-xl border-t border-gray-100 flex justify-end">
+                            <div className="p-4 px-8 bg-gray-50 rounded-b-xl border-t border-gray-100 flex justify-between items-center">
+                                {activeTab === 'interviewee' ? (
+                                    <div className="flex items-center gap-2">
+                                        {(selectedRequest.edit_count || selectedRequest.editCount || 0) < 3 ? (
+                                            <button 
+                                                onClick={() => {
+                                                    setEditingInterviewee(selectedRequest);
+                                                    setSelectedRequest(null);
+                                                }}
+                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-2"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                                                </svg>
+                                                Edit Request ({3 - (selectedRequest.edit_count || selectedRequest.editCount || 0)} edits left)
+                                            </button>
+                                        ) : (
+                                            <div className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                                                <span>⚠️ Max edit limit reached (3/3)</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : <div />}
                                 <button onClick={() => setSelectedRequest(null)} className="px-6 py-2 bg-[#db011c] hover:bg-[#b00116] text-white text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                                         <path d="M2.695 14.763l-1.262 3.155a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
@@ -628,31 +712,127 @@ function DashboardContent() {
             {mounted && editingInterviewee && createPortal((
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setEditingInterviewee(null)}></div>
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 max-h-[90vh] flex flex-col overflow-hidden">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 max-h-[90vh] flex flex-col overflow-hidden border-t-[6px] border-[#db011c]">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h2 className="text-xl font-black text-[#0f172a] uppercase tracking-tight">Edit Interviewee Request</h2>
+                            <div>
+                                <h2 className="text-lg font-black text-[#0f172a] uppercase tracking-tight">Edit Interviewee Request</h2>
+                                <p className="text-xs text-gray-500 font-medium">
+                                    Request #{editingInterviewee.id?.split('-')[0]?.toUpperCase()} • Edit count: <span className="font-bold text-blue-600">{editingInterviewee.edit_count || editingInterviewee.editCount || 0}/3</span>
+                                </p>
+                            </div>
                             <button onClick={() => setEditingInterviewee(null)} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
-                        <div className="p-8 overflow-y-auto custom-scrollbar">
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <InputLabel required>Interviewee Name</InputLabel>
-                                    <Input required value={editFormData.intervieweeName || ''} onChange={(e: any) => setEditFormData({...editFormData, intervieweeName: e.target.value})} placeholder="e.g. Nguyen Van A" />
+                        <div className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6">
+                            {/* Candidates List */}
+                            <div className="flex flex-col gap-3 bg-gray-50/50 p-4 rounded-xl border border-gray-200">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                        Candidates ({(editFormData.visitors || []).length})
+                                    </h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const updated = [...(editFormData.visitors || [])];
+                                            updated.push({
+                                                name: '',
+                                                title: '',
+                                                company: '',
+                                                interviewDepartment: '',
+                                                interviewerName: ''
+                                            });
+                                            setEditFormData({ ...editFormData, visitors: updated });
+                                        }}
+                                        className="px-3 py-1 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+                                    >
+                                        <span className="text-[#db011c] font-black">+</span> Add Candidate
+                                    </button>
                                 </div>
-                                <div>
-                                    <InputLabel required>Job Title</InputLabel>
-                                    <Input required value={editFormData.jobTitle || ''} onChange={(e: any) => setEditFormData({...editFormData, jobTitle: e.target.value})} placeholder="e.g. Software Engineer" />
+
+                                <div className="flex flex-col gap-3">
+                                    {(editFormData.visitors || []).map((cand: any, idx: number) => (
+                                        <div key={idx} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative flex flex-col gap-3">
+                                            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                                                <span className="text-xs font-black text-gray-500 uppercase">
+                                                    Candidate #{idx + 1}
+                                                </span>
+                                                {(editFormData.visitors || []).length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const updated = editFormData.visitors.filter((_: any, i: number) => i !== idx);
+                                                            setEditFormData({ ...editFormData, visitors: updated });
+                                                        }}
+                                                        className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <InputLabel required>Full Name</InputLabel>
+                                                    <Input 
+                                                        required 
+                                                        value={cand.name || ''} 
+                                                        onChange={(e: any) => {
+                                                            const updated = [...editFormData.visitors];
+                                                            updated[idx].name = e.target.value;
+                                                            setEditFormData({ ...editFormData, visitors: updated });
+                                                        }} 
+                                                        placeholder="Candidate Name" 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <InputLabel required>Job Title</InputLabel>
+                                                    <Input 
+                                                        required 
+                                                        value={cand.title || ''} 
+                                                        onChange={(e: any) => {
+                                                            const updated = [...editFormData.visitors];
+                                                            updated[idx].title = e.target.value;
+                                                            setEditFormData({ ...editFormData, visitors: updated });
+                                                        }} 
+                                                        placeholder="e.g. Software Engineer" 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <InputLabel required>Interview Department</InputLabel>
+                                                    <Input 
+                                                        required 
+                                                        value={cand.interviewDepartment || cand.company || ''} 
+                                                        onChange={(e: any) => {
+                                                            const updated = [...editFormData.visitors];
+                                                            updated[idx].interviewDepartment = e.target.value;
+                                                            updated[idx].company = e.target.value;
+                                                            setEditFormData({ ...editFormData, visitors: updated });
+                                                        }} 
+                                                        placeholder="e.g. IT Department" 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <InputLabel required>Interviewer Name</InputLabel>
+                                                    <Input 
+                                                        required 
+                                                        value={cand.interviewerName || ''} 
+                                                        onChange={(e: any) => {
+                                                            const updated = [...editFormData.visitors];
+                                                            updated[idx].interviewerName = e.target.value;
+                                                            setEditFormData({ ...editFormData, visitors: updated });
+                                                        }} 
+                                                        placeholder="e.g. Tran Thi B" 
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div>
-                                    <InputLabel required>Interview Department</InputLabel>
-                                    <Input required value={editFormData.interviewDepartment || ''} onChange={(e: any) => setEditFormData({...editFormData, interviewDepartment: e.target.value})} placeholder="e.g. IT Department" />
-                                </div>
-                                <div>
-                                    <InputLabel required>Interviewer Name</InputLabel>
-                                    <Input required value={editFormData.interviewerName || ''} onChange={(e: any) => setEditFormData({...editFormData, interviewerName: e.target.value})} placeholder="e.g. Tran Thi B" />
-                                </div>
+                            </div>
+
+                            {/* Schedule & Area Details */}
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <InputLabel required>Schedule Date</InputLabel>
                                     <Input required type="date" value={editFormData.startDate || ''} onChange={(e: any) => setEditFormData({...editFormData, startDate: e.target.value})} />
@@ -662,8 +842,7 @@ function DashboardContent() {
                                     <Input required type="time" value={editFormData.startTime || ''} onChange={(e: any) => setEditFormData({...editFormData, startTime: e.target.value})} />
                                 </div>
                                 <div className="col-span-2">
-                                    <InputLabel required>Interview Area</InputLabel>
-                                    
+                                    <InputLabel required>Interview Area (Meeting Room)</InputLabel>
                                     <select 
                                         required 
                                         className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer"
@@ -687,13 +866,34 @@ function DashboardContent() {
                                             </optgroup>
                                         ))}
                                     </select>
-
+                                </div>
+                                <div>
+                                    <InputLabel>Meal Registration</InputLabel>
+                                    <select 
+                                        className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer"
+                                        value={editFormData.mealRegistration || 'No'} 
+                                        onChange={(e: any) => setEditFormData({...editFormData, mealRegistration: e.target.value})}
+                                    >
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <InputLabel>Factory Tour</InputLabel>
+                                    <select 
+                                        className="w-full h-[40px] px-3 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors cursor-pointer"
+                                        value={editFormData.factoryTour || 'No'} 
+                                        onChange={(e: any) => setEditFormData({...editFormData, factoryTour: e.target.value})}
+                                    >
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
                         <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-4">
                             <button onClick={() => setEditingInterviewee(null)} className="px-6 py-2 rounded-lg font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
-                            <button onClick={submitEditInterviewee} disabled={saving} className="px-6 py-2 rounded-lg font-bold text-white bg-[#db011c] hover:bg-[#b00116] shadow-md transition-colors disabled:opacity-50">
+                            <button onClick={submitEditInterviewee} disabled={saving} className="px-6 py-2 rounded-lg font-bold text-white bg-[#db011c] hover:bg-[#b00116] shadow-md transition-colors disabled:opacity-50 flex items-center gap-2">
                                 {saving ? 'Saving...' : 'Save Changes'}
                             </button>
                         </div>
