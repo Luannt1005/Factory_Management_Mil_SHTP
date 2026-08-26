@@ -107,46 +107,6 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
             await visitorPool.query('COMMIT');
 
-            // Trigger Power Automate notification for update if webhook URL exists
-            const powerAutomateIntervieweeUrl = process.env.POWER_AUTOMATE_FOR_INTERVIEWEE_URL || process.env.POWER_AUTOMATE_FOR_LEAVE_URL;
-            if (powerAutomateIntervieweeUrl) {
-                try {
-                    const submitterEmail = session.user.email || `${(session.user as any).username}@ttigroup.com.vn`;
-                    await fetch(powerAutomateIntervieweeUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            requestDetails: {
-                                id: id,
-                                visitor_name: visitorName + (finalVisitors.length > 1 ? ` (+ ${finalVisitors.length - 1} others)` : ''),
-                                visitorTitle: visitorTitle,
-                                currentCompany: currentCompany,
-                                startDate: startDate,
-                                endDate: startDate,
-                                purposeOfVisit: 'Interview (Updated)',
-                                submitterName: session.user.name || (session.user as any).username,
-                                visitorCategory: 'Interviewee',
-                                submitterEmail: submitterEmail,
-                                visitors_list: finalVisitors,
-                                is_vp_approval: false,
-                                is_updated: true,
-                                edit_count: currentEditCount + 1,
-                                visitingSite: visitingSite || "SHTP",
-                                mealRegistration: updatedDetails.mealRegistration || "No",
-                                costCenter: updatedDetails.costCenter || "",
-                                interviewerName: primaryVisitor.interviewerName || interviewerName || '',
-                                startTime: updatedDetails.startTime || '',
-                                interviewArea: interviewArea || updatedDetails.interviewArea || '',
-                                interviewDepartment: primaryVisitor.interviewDepartment || interviewDepartment || ''
-                            },
-                            rooms: []
-                        })
-                    });
-                } catch (paErr) {
-                    console.error('Failed to notify Power Automate of interviewee update:', paErr);
-                }
-            }
-
             return NextResponse.json({ message: 'Request updated successfully', editCount: currentEditCount + 1 }, { status: 200 });
         }
 
