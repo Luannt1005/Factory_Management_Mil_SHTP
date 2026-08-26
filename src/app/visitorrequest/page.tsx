@@ -44,7 +44,10 @@ const SectionHeader = ({ title }: { title: string }) => (
 
 export default function NewRequestPage() {
     const { data: session } = useSession();
-    const isHrVisitor = (session?.user as any)?.app_role_names?.includes('Hr Visitor') || (session?.user as any)?.role === 'admin';
+    const appRoleNames = (session?.user as any)?.app_role_names || [];
+    const isAdmin = (session?.user as any)?.role === 'admin';
+    const isHrVisitor = appRoleNames.includes('Hr Visitor') || isAdmin;
+    const isSecurity = appRoleNames.includes('Security') && !isAdmin && !isHrVisitor;
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'request' | 'dashboard'>('request');
@@ -148,7 +151,17 @@ export default function NewRequestPage() {
         }
     }, [formData.visitingSite, rooms]);
 
+    useEffect(() => {
+        if (isSecurity && !formData.visitorCategory) {
+            setFormData(prev => ({ ...prev, visitorCategory: 'Interviewee' }));
+        }
+    }, [isSecurity, formData.visitorCategory]);
+
     const handleSubmit = async () => {
+        if (isSecurity && formData.visitorCategory !== 'Interviewee') {
+            alert("Security role is only authorized to submit Interviewee requests.");
+            return;
+        }
         setLoading(true);
         try {
             const isInterviewee = formData.visitorCategory === 'Interviewee';
@@ -466,14 +479,20 @@ export default function NewRequestPage() {
                                 { id: 'Interviewee', label: 'INTERVIEWEE', desc: 'Job candidates visiting for interview' }
                             ].map(cat => {
                                 const isActive = formData.visitorCategory === cat.id || (cat.id === 'Vendor/Contractor' && (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor'));
-                                const isDisabled = cat.id === 'Interviewee' && !isHrVisitor;
+                                const isDisabled = cat.id === 'Interviewee'
+                                    ? (!isHrVisitor && !isSecurity)
+                                    : isSecurity;
                                 
                                 return (
                                     <div 
                                         key={cat.id}
                                         onClick={() => {
                                             if (isDisabled) {
-                                                alert("You need Hr Visitor role to create an Interviewee request.");
+                                                if (isSecurity) {
+                                                    alert("Security role is only authorized to create Interviewee requests.");
+                                                } else if (cat.id === 'Interviewee') {
+                                                    alert("You need Hr Visitor or Security role to create an Interviewee request.");
+                                                }
                                                 return;
                                             }
                                             if (cat.id === 'Vendor/Contractor') {
@@ -483,17 +502,17 @@ export default function NewRequestPage() {
                                             }
                                         }}
                                         style={{
-                                            cursor: isDisabled ? 'not-allowed' : 'pointer', padding: '20px', borderRadius: '8px', backgroundColor: isActive ? '#fff5f5' : 'white', 
+                                            cursor: isDisabled ? 'not-allowed' : 'pointer', padding: '20px', borderRadius: '8px', backgroundColor: isActive ? '#fff5f5' : (isDisabled ? '#f8fafc' : 'white'), 
                                             border: isActive ? '1px solid #db011c' : '1px solid #e2e8f0',
-                                            textAlign: 'center', transition: 'all 0.2s', opacity: isDisabled ? 0.5 : 1,
+                                            textAlign: 'center', transition: 'all 0.2s', opacity: isDisabled ? 0.45 : 1,
                                             boxShadow: isActive ? '0 4px 12px rgba(219,1,28,0.1)' : '0 2px 4px rgba(0,0,0,0.02)'
                                         }}
                                     >
-                                        <div style={{ fontWeight: 700, fontSize: '13px', marginBottom: '6px', letterSpacing: '0.02em', color: isActive ? '#db011c' : '#334155' }}>
+                                        <div style={{ fontWeight: 700, fontSize: '13px', marginBottom: '6px', letterSpacing: '0.02em', color: isActive ? '#db011c' : (isDisabled ? '#94a3b8' : '#334155') }}>
                                             {cat.label}
                                         </div>
                                         <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                                            {cat.desc}
+                                            {isSecurity && cat.id !== 'Interviewee' ? 'Not permitted for Security' : cat.desc}
                                         </div>
                                     </div>
                                 );

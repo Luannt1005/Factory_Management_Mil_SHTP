@@ -51,6 +51,15 @@ export async function POST(request: Request) {
             visitingSite, purposeDetail, functionalDept, department, bu
         } = body;
 
+        const userAppRoles = (session.user as any)?.app_role_names || [];
+        const userIsAdmin = (session.user as any)?.role === 'admin';
+        const userIsHrVisitor = userAppRoles.includes('Hr Visitor') || userIsAdmin;
+        const userIsSecurityOnly = userAppRoles.includes('Security') && !userIsAdmin && !userIsHrVisitor;
+
+        if (userIsSecurityOnly && visitorCategory !== 'Interviewee') {
+            return NextResponse.json({ error: 'Security role is only authorized to submit Interviewee requests.' }, { status: 403 });
+        }
+
         // Enhance details with host department info
         const enhancedDetails = {
             ...details,
