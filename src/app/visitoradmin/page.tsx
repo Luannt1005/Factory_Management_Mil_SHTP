@@ -271,8 +271,9 @@ export default function AdminDashboard() {
             case 'COMPLETE':
             case 'APPROVED': return '#10b981';
             case 'REJECTED': return '#ef4444';
-            case 'IN PROCESS': return '#f59e0b';
-            default: return '#94a3b8';
+            case 'PENDING':
+            case 'IN PROCESS':
+            default: return '#f59e0b';
         }
     };
 
@@ -927,9 +928,9 @@ export default function AdminDashboard() {
                                                     {selectedRequest.request_approvals?.map((app: any) => (
                                                         <div key={app.id} className="flex flex-col items-end gap-0.5">
                                                             <span className="px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-2" style={{
-                                                                background: getStatusColor(app.status) + '08',
+                                                                background: getStatusColor(app.status) + '15',
                                                                 color: getStatusColor(app.status),
-                                                                border: `1px solid ${getStatusColor(app.status)}20`
+                                                                border: `1px solid ${getStatusColor(app.status)}35`
                                                             }}>
                                                                 {app.room_areas?.name || (selectedRequest.visitor_category === 'MIL/TTI Expat / SHTP Business trip' ? 'VP Approval (All Rooms)' : 'Manager Approval')}
                                                                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>

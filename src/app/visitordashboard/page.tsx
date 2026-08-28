@@ -686,7 +686,11 @@ function DashboardContent() {
 
                                                             return (
                                                                 <div key={app.id} className="flex flex-col items-end gap-0.5">
-                                                                    <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100" style={{ color: getStatusColor(app.status) }}>
+                                                                    <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5" style={{ 
+                                                                        color: getStatusColor(app.status),
+                                                                        background: getStatusColor(app.status) + '15',
+                                                                        border: `1px solid ${getStatusColor(app.status)}30`
+                                                                    }}>
                                                                         {app.room_areas?.name || (selectedRequest.visitor_category !== 'MIL/TTI Expat / SHTP Business trip' ? 'Manager Approval' : 'VP Approval')}
                                                                         <span className="w-1.5 h-1.5 rounded-full ml-1" style={{ background: getStatusColor(app.status) }}></span>
                                                                     </span>
