@@ -60,6 +60,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Security role is only authorized to submit Interviewee requests.' }, { status: 403 });
         }
 
+        if (visitorCategory === 'Interviewee' && Array.isArray(visitors) && visitors.length > 20) {
+            return NextResponse.json({ error: 'Maximum 20 candidates allowed per request.' }, { status: 400 });
+        }
+
+        if (visitorCategory !== 'Interviewee' && Array.isArray(visitors) && visitors.length > 15) {
+            return NextResponse.json({ error: 'Maximum 15 visitors allowed per request.' }, { status: 400 });
+        }
+
         // Enhance details with host department info
         const enhancedDetails = {
             ...details,

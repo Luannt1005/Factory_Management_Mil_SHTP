@@ -57,6 +57,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
                 }
             }
 
+            if (finalVisitors && finalVisitors.length > 20) {
+                return NextResponse.json({ error: 'Maximum 20 candidates allowed per request.' }, { status: 400 });
+            }
+
             const primaryVisitor = finalVisitors.length > 0 ? finalVisitors[0] : { name: '', title: '', company: '' };
             const visitorName = primaryVisitor.name || '';
             const visitorTitle = primaryVisitor.title || '';

@@ -199,6 +199,10 @@ function DashboardContent() {
             alert('Please add at least one candidate.');
             return;
         }
+        if (editFormData.visitors.length > 20) {
+            alert('Maximum 20 candidates allowed.');
+            return;
+        }
         for (let i = 0; i < editFormData.visitors.length; i++) {
             const v = editFormData.visitors[i];
             if (!v.name || !v.name.trim()) {
@@ -805,23 +809,27 @@ function DashboardContent() {
                                             {(editFormData.visitors || []).length}
                                         </span>
                                     </h3>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const updated = [...(editFormData.visitors || [])];
-                                            updated.push({
-                                                name: '',
-                                                title: '',
-                                                company: '',
-                                                interviewDepartment: '',
-                                                interviewerName: ''
-                                            });
-                                            setEditFormData({ ...editFormData, visitors: updated });
-                                        }}
-                                        className="px-3 py-1.5 bg-white border border-[#db011c] text-[#db011c] hover:bg-red-50 text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
-                                    >
-                                        <span className="text-[#db011c] font-black text-sm">+</span> Add Candidate
-                                    </button>
+                                    {(editFormData.visitors || []).length < 20 ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const updated = [...(editFormData.visitors || [])];
+                                                updated.push({
+                                                    name: '',
+                                                    title: '',
+                                                    company: '',
+                                                    interviewDepartment: '',
+                                                    interviewerName: ''
+                                                });
+                                                setEditFormData({ ...editFormData, visitors: updated });
+                                            }}
+                                            className="px-3 py-1.5 bg-white border border-[#db011c] text-[#db011c] hover:bg-red-50 text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                                        >
+                                            <span className="text-[#db011c] font-black text-sm">+</span> Add Candidate
+                                        </button>
+                                    ) : (
+                                        <span className="text-xs text-[#db011c] font-bold">Max 20 Candidates Reached</span>
+                                    )}
                                 </div>
 
                                 <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">

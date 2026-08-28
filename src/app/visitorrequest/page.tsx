@@ -238,7 +238,7 @@ export default function NewRequestPage() {
     };
 
     const addVisitor = () => {
-        if (formData.visitors.length < 10) {
+        if (formData.visitors.length < 15) {
             setFormData(prev => ({
                 ...prev,
                 visitors: [...prev.visitors, { name: '', title: '', company: '' }]
@@ -256,7 +256,7 @@ export default function NewRequestPage() {
     };
 
     const addInterviewee = () => {
-        if (formData.interviewees.length < 50) {
+        if (formData.interviewees.length < 20) {
             setFormData(prev => ({
                 ...prev,
                 interviewees: [...prev.interviewees, { name: '', jobTitle: '', interviewDepartment: '', interviewerName: '' }]
@@ -324,9 +324,9 @@ export default function NewRequestPage() {
                 if (newVisitors.length > 0) {
                     setFormData(prev => ({
                         ...prev,
-                        visitors: newVisitors.slice(0, 10) // Limit to max 10
+                        visitors: newVisitors.slice(0, 15) // Limit to max 15
                     }));
-                    alert(`Successfully imported ${Math.min(newVisitors.length, 10)} visitors from Excel.`);
+                    alert(`Successfully imported ${Math.min(newVisitors.length, 15)} visitors from Excel.`);
                 } else {
                     alert('No valid visitor data found in the Excel file. Please use the provided template.');
                 }
@@ -366,9 +366,9 @@ export default function NewRequestPage() {
                 if (newInterviewees.length > 0) {
                     setFormData(prev => ({
                         ...prev,
-                        interviewees: newInterviewees.slice(0, 50)
+                        interviewees: newInterviewees.slice(0, 20) // Limit to max 20
                     }));
-                    alert(`Successfully imported ${Math.min(newInterviewees.length, 50)} candidates from Excel.`);
+                    alert(`Successfully imported ${Math.min(newInterviewees.length, 20)} candidates from Excel.`);
                 } else {
                     alert('No valid candidate data found in the Excel file. Please use the provided template.');
                 }
@@ -538,12 +538,12 @@ export default function NewRequestPage() {
                                     {formData.visitorCategory === 'Interviewee' ? (
                                         <>
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                                {formData.interviewees.length < 50 ? (
+                                                {formData.interviewees.length < 20 ? (
                                                     <button type="button" onClick={addInterviewee} style={{ backgroundColor: 'transparent', color: '#db011c', border: '1px solid #db011c', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
                                                         + ADD ANOTHER CANDIDATE
                                                     </button>
                                                 ) : (
-                                                    <div style={{ fontSize: '11px', color: '#db011c', fontWeight: 700 }}>MAX 50 CANDIDATES REACHED</div>
+                                                    <div style={{ fontSize: '11px', color: '#db011c', fontWeight: 700 }}>MAX 20 CANDIDATES REACHED</div>
                                                 )}
                                                 
                                                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -560,7 +560,7 @@ export default function NewRequestPage() {
                                                         ref={intervieweeFileInputRef} 
                                                         onChange={handleIntervieweeFileUpload} 
                                                         style={{ display: 'none' }} 
-                                                    />
+                                                        />
                                                     <button type="button" onClick={() => intervieweeFileInputRef.current?.click()} style={{ backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
@@ -604,12 +604,12 @@ export default function NewRequestPage() {
                                     ) : (
                                         <>
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                                {formData.visitors.length < 10 ? (
+                                                {formData.visitors.length < 15 ? (
                                                     <button type="button" onClick={addVisitor} style={{ backgroundColor: 'transparent', color: '#db011c', border: '1px solid #db011c', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
                                                         + ADD ANOTHER VISITOR
                                                     </button>
                                                 ) : (
-                                                    <div style={{ fontSize: '11px', color: '#db011c', fontWeight: 700 }}>MAX 10 VISITORS REACHED</div>
+                                                    <div style={{ fontSize: '11px', color: '#db011c', fontWeight: 700 }}>MAX 15 VISITORS REACHED</div>
                                                 )}
                                                 
                                                 <div style={{ display: 'flex', gap: '10px' }}>
