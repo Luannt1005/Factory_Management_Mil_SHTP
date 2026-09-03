@@ -273,11 +273,35 @@ export default function NewRequestPage() {
         }
     };
 
+    const formatName = (str: string) => {
+        if (!str) return '';
+        // Remove special characters, numbers, symbols, keeping only letters and spaces
+        const clean = str.replace(/[^\p{L}\s]/gu, '');
+        // Capitalize first letter of each word and lowercase the rest
+        return clean.replace(/(\p{L}+)/gu, (match) => {
+            return match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
+        });
+    };
+
+    const capitalizeWords = (str: string) => {
+        if (!str) return str;
+        return str.replace(/(\p{L}+)/gu, (match) => {
+            return match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
+        });
+    };
+
     const updateInterviewee = (index: number, field: string, value: string) => {
         setFormData(prev => {
             const newInterviewees = [...prev.interviewees];
-            const capitalizedValue = typeof value === 'string' ? capitalizeWords(value) : value;
-            newInterviewees[index] = { ...newInterviewees[index], [field]: capitalizedValue };
+            let processedValue = value;
+            if (typeof value === 'string') {
+                if (field === 'name' || field === 'interviewerName') {
+                    processedValue = formatName(value);
+                } else {
+                    processedValue = capitalizeWords(value);
+                }
+            }
+            newInterviewees[index] = { ...newInterviewees[index], [field]: processedValue };
             return { ...prev, interviewees: newInterviewees };
         });
     };
@@ -316,9 +340,9 @@ export default function NewRequestPage() {
                 const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
 
                 const newVisitors = jsonData.map(row => ({
-                    name: row['Full Name'] || '',
-                    company: row['Company'] || '',
-                    title: row['Title'] || ''
+                    name: formatName(row['Full Name'] || ''),
+                    company: capitalizeWords(row['Company'] || ''),
+                    title: capitalizeWords(row['Title'] || '')
                 })).filter(v => v.name);
 
                 if (newVisitors.length > 0) {
@@ -357,10 +381,10 @@ export default function NewRequestPage() {
                 const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
 
                 const newInterviewees = jsonData.map(row => ({
-                    name: capitalizeWords(row['Interviewee Name'] || row['Candidate Name'] || row['Full Name'] || row['Name'] || ''),
+                    name: formatName(row['Interviewee Name'] || row['Candidate Name'] || row['Full Name'] || row['Name'] || ''),
                     jobTitle: capitalizeWords(row['Job Title'] || row['Applied Job Title'] || row['Position'] || row['Title'] || ''),
                     interviewDepartment: capitalizeWords(row['Department'] || row['Interview Department'] || row['Dept'] || ''),
-                    interviewerName: capitalizeWords(row['Interviewer Name'] || row['Interviewer'] || '')
+                    interviewerName: formatName(row['Interviewer Name'] || row['Interviewer'] || '')
                 })).filter(v => v.name);
 
                 if (newInterviewees.length > 0) {
@@ -383,17 +407,18 @@ export default function NewRequestPage() {
         }
     };
 
-    const capitalizeWords = (str: string) => {
-        if (!str) return str;
-        // capitalize after space, hyphen, or at start
-        return str.replace(/(^\w|\s\w|-\w)/g, m => m.toUpperCase());
-    };
-
     const updateVisitor = (index: number, field: string, value: string) => {
         setFormData(prev => {
             const newVisitors = [...prev.visitors];
-            const capitalizedValue = typeof value === 'string' ? capitalizeWords(value) : value;
-            newVisitors[index] = { ...newVisitors[index], [field]: capitalizedValue };
+            let processedValue = value;
+            if (typeof value === 'string') {
+                if (field === 'name') {
+                    processedValue = formatName(value);
+                } else {
+                    processedValue = capitalizeWords(value);
+                }
+            }
+            newVisitors[index] = { ...newVisitors[index], [field]: processedValue };
             return { ...prev, visitors: newVisitors };
         });
     };

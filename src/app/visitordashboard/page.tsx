@@ -166,6 +166,14 @@ function DashboardContent() {
         }
     };
 
+    const formatName = (str: string) => {
+        if (!str) return '';
+        const clean = str.replace(/[^\p{L}\s]/gu, '');
+        return clean.replace(/(\p{L}+)/gu, (match) => {
+            return match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
+        });
+    };
+
     useEffect(() => {
         if (editingInterviewee) {
             let initialVisitors: any[] = [];
@@ -862,7 +870,7 @@ function DashboardContent() {
                                                             value={cand.name || ''}
                                                             onChange={(e) => {
                                                                 const updated = [...editFormData.visitors];
-                                                                updated[idx].name = e.target.value;
+                                                                updated[idx].name = formatName(e.target.value);
                                                                 setEditFormData({ ...editFormData, visitors: updated });
                                                             }}
                                                             className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
@@ -905,7 +913,7 @@ function DashboardContent() {
                                                             value={cand.interviewerName || ''}
                                                             onChange={(e) => {
                                                                 const updated = [...editFormData.visitors];
-                                                                updated[idx].interviewerName = e.target.value;
+                                                                updated[idx].interviewerName = formatName(e.target.value);
                                                                 setEditFormData({ ...editFormData, visitors: updated });
                                                             }}
                                                             className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"

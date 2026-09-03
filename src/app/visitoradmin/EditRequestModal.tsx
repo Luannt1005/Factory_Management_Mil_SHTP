@@ -85,9 +85,18 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
         }
     };
 
+    const formatName = (str: string) => {
+        if (!str) return '';
+        const clean = str.replace(/[^\p{L}\s]/gu, '');
+        return clean.replace(/(\p{L}+)/gu, (match) => {
+            return match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
+        });
+    };
+
     const handleVisitorChange = (index: number, field: string, value: string) => {
         const newVisitors = [...formData.visitors];
-        newVisitors[index] = { ...newVisitors[index], [field]: value };
+        const val = field === 'name' ? formatName(value) : value;
+        newVisitors[index] = { ...newVisitors[index], [field]: val };
         setFormData({ ...formData, visitors: newVisitors });
     };
 
@@ -148,7 +157,7 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
                             <>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Interviewee Name</label>
-                                    <input type="text" value={formData.interviewee_name} onChange={e => setFormData({...formData, interviewee_name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                                    <input type="text" value={formData.interviewee_name} onChange={e => setFormData({...formData, interviewee_name: formatName(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Job Title</label>
