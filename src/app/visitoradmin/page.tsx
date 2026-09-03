@@ -121,8 +121,8 @@ export default function AdminDashboard() {
                             const hdObj = hostDepts.find((h: any) => h.functional_dept === details.functionalDept && h.department === details.department) || {};
 
                             return {
-                                'Request Code': '#' + r.id.split('-')[0].toUpperCase(),
-                                'Visitor Code': '#' + r.id.split('-')[0].toUpperCase() + '-V' + (index + 1),
+                                'Request Code': (r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase(),
+                                'Visitor Code': (r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase() + '-V' + (index + 1),
                                 'Visitor Name': v.name || r.visitor_name || '',
                                 'Visitor Title': v.title || r.visitor_title || '',
                                 'Visitor Company': v.company || r.current_company || '',
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
                         });
                     } else {
                         return [{
-                            'Code': r.visitor_code || ('#' + r.id.split('-')[0].toUpperCase()),
+                            'Code': (r.visitor_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase(),
                             'Interviewee Name': r.interviewee_name || '',
                             'Submitter Name': r.os_name || '',
                             'Job Title': r.job_title || '',
