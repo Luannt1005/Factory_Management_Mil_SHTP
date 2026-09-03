@@ -230,7 +230,7 @@ export default function CheckInOutManagement() {
     });
 
     const renderActionButtons = (req: any, v: any) => (
-        <div className="flex gap-1.5 w-full justify-end items-center">
+        <div className="flex gap-1.5 items-center justify-center">
             <button
                 disabled={actionLoading === `${req.requestId}-${v.visitorIndex}` || v.checkInOutStatus !== 'PENDING'}
                 onClick={(e) => {
@@ -263,7 +263,7 @@ export default function CheckInOutManagement() {
             
             {/* Reset/Refresh button */}
             {!isSecurity && !isReceptionist && (
-                <div className={`ml-1 ${v.checkInOutStatus === 'CHECKED_IN' || v.checkInOutStatus === 'CHECKED_OUT' ? 'visible' : 'invisible'}`}>
+                <div className={`ml-0.5 ${v.checkInOutStatus === 'CHECKED_IN' || v.checkInOutStatus === 'CHECKED_OUT' ? 'visible' : 'invisible'}`}>
                     <button
                         disabled={actionLoading === `${req.requestId}-${v.visitorIndex}`}
                         onClick={(e) => {
@@ -273,9 +273,9 @@ export default function CheckInOutManagement() {
                             }
                         }}
                         title="Reset Status"
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                     </button>
@@ -423,7 +423,7 @@ export default function CheckInOutManagement() {
                                     <div className="text-center">CARD NUMBER</div>
                                     <div className="text-center">TIME IN</div>
                                     <div className="text-center">TIME OUT</div>
-                                    <div className="text-right">ACTION</div>
+                                    <div className="text-center">ACTION</div>
                                 </div>
                             )}
 
@@ -475,7 +475,7 @@ export default function CheckInOutManagement() {
                                         <div className={`text-[10px] font-bold text-center ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatDateTime(v.checkInTime)}</div>
                                         <div className={`text-[10px] font-bold text-center ${v.checkOutTime ? 'text-gray-600' : 'text-gray-400'}`}>{formatDateTime(v.checkOutTime)}</div>
                                         
-                                        <div className="flex justify-end min-w-0">
+                                        <div className="flex justify-center items-center min-w-0">
                                             {renderActionButtons(req, v)}
                                         </div>
                                     </div>
@@ -535,7 +535,7 @@ export default function CheckInOutManagement() {
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">CARD NUMBER</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">TIME IN</div>
                                                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">TIME OUT</div>
-                                                                    <div></div>
+                                                                    <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">ACTION</div>
                                                                 </div>
 
                                                                 {req.filteredVisitors.map((v: any, vIdx: number) => (
@@ -564,7 +564,7 @@ export default function CheckInOutManagement() {
                                                                         <div className={`text-[10px] font-bold text-center ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>{formatDateTime(v.checkInTime)}</div>
                                                                         <div className={`text-[10px] font-bold text-center ${v.checkOutTime ? 'text-gray-600' : 'text-gray-400'}`}>{formatDateTime(v.checkOutTime)}</div>
                                                                         
-                                                                        <div className="flex justify-end min-w-0">
+                                                                        <div className="flex justify-center items-center min-w-0">
                                                                             {renderActionButtons(req, v)}
                                                                         </div>
                                                                     </div>
