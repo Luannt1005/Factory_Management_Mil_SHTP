@@ -74,7 +74,7 @@ export default function CheckInOutManagement() {
         setCurrentPage(1);
     }, [filters, statusFilter, viewMode]);
 
-    const handleAction = async (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET' | 'UPDATE_CARD') => {
+    const handleAction = async (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET' | 'UPDATE_CARD', requestCode?: string) => {
         setActionLoading(`${requestId}-${v.visitorIndex}`);
         try {
             const rawCardNumber = cardNumbers[`${requestId}-${v.visitorIndex}`];
@@ -85,6 +85,7 @@ export default function CheckInOutManagement() {
                 body: JSON.stringify({ 
                     action, 
                     requestId, 
+                    requestCode: requestCode || v._requestInfo?.requestCode || v.requestCode || requestId,
                     visitorIndex: v.visitorIndex,
                     visitorName: v.visitorName,
                     visitorCode: v.visitorCode,
@@ -235,7 +236,7 @@ export default function CheckInOutManagement() {
                 disabled={actionLoading === `${req.requestId}-${v.visitorIndex}` || v.checkInOutStatus !== 'PENDING'}
                 onClick={(e) => {
                     e.stopPropagation();
-                    handleAction(req.requestId, v, 'CHECK_IN');
+                    handleAction(req.requestId, v, 'CHECK_IN', req.requestCode);
                 }}
                 className={`whitespace-nowrap text-[9px] font-bold uppercase px-2 py-1.5 rounded shadow-sm transition-colors ${
                     v.checkInOutStatus !== 'PENDING'
@@ -250,7 +251,7 @@ export default function CheckInOutManagement() {
                 disabled={actionLoading === `${req.requestId}-${v.visitorIndex}` || v.checkInOutStatus !== 'CHECKED_IN'}
                 onClick={(e) => {
                     e.stopPropagation();
-                    handleAction(req.requestId, v, 'CHECK_OUT');
+                    handleAction(req.requestId, v, 'CHECK_OUT', req.requestCode);
                 }}
                 className={`whitespace-nowrap text-[9px] font-bold uppercase px-2 py-1.5 rounded shadow-sm transition-colors ${
                     v.checkInOutStatus !== 'CHECKED_IN'
@@ -269,7 +270,7 @@ export default function CheckInOutManagement() {
                         onClick={(e) => {
                             e.stopPropagation();
                             if (window.confirm(`Reset check-in/out status for ${v.visitorName}?`)) {
-                                handleAction(req.requestId, v, 'RESET');
+                                handleAction(req.requestId, v, 'RESET', req.requestCode);
                             }
                         }}
                         title="Reset Status"
@@ -466,7 +467,7 @@ export default function CheckInOutManagement() {
                                                 onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
                                                 onBlur={(e) => {
                                                     if (cardNumbers[`${req.requestId}-${v.visitorIndex}`] !== undefined) {
-                                                        handleAction(req.requestId, v, 'UPDATE_CARD');
+                                                        handleAction(req.requestId, v, 'UPDATE_CARD', req.requestCode);
                                                     }
                                                 }}
                                                 onClick={(e) => e.stopPropagation()}
@@ -555,7 +556,7 @@ export default function CheckInOutManagement() {
                                                                                 onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
                                                                                 onBlur={(e) => {
                                                                                     if (cardNumbers[`${req.requestId}-${v.visitorIndex}`] !== undefined) {
-                                                                                        handleAction(req.requestId, v, 'UPDATE_CARD');
+                                                                                        handleAction(req.requestId, v, 'UPDATE_CARD', req.requestCode);
                                                                                     }
                                                                                 }}
                                                                                 onClick={(e) => e.stopPropagation()}

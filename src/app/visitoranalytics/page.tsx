@@ -5,8 +5,10 @@ import {
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
 } from 'recharts';
+import CheckInOutLogs from './components/CheckInOutLogs';
 
 export default function VisitorAnalytics() {
+    const [activeTab, setActiveTab] = useState<'analytics' | 'checkinout_logs'>('analytics');
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [periodFilter, setPeriodFilter] = useState('all');
@@ -17,7 +19,6 @@ export default function VisitorAnalytics() {
     useEffect(() => {
         const fetchAnalytics = async () => {
             try {
-                
                 let startDate = '';
                 let endDate = '';
                 const now = new Date();
@@ -104,55 +105,92 @@ export default function VisitorAnalytics() {
     return (
         <div className="w-full pb-10 px-4 sm:px-6 bg-transparent min-h-screen pt-4 font-sans">
             
-            {/* Filters Row */}
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Filters:</span>
-                
-                <select 
-                    value={periodFilter}
-                    onChange={(e) => setPeriodFilter(e.target.value)}
-                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+            {/* Top Navigation Tabs */}
+            <div className="flex items-center gap-2 mb-5 border-b border-gray-200">
+                <button
+                    onClick={() => setActiveTab('analytics')}
+                    className={`flex items-center gap-2 pb-3 px-4 text-sm font-bold border-b-2 transition-all ${
+                        activeTab === 'analytics'
+                            ? 'border-[#db011c] text-[#db011c]'
+                            : 'border-transparent text-gray-500 hover:text-gray-800'
+                    }`}
                 >
-                    <option value="all">All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                    <option value="year">This Year</option>
-                </select>
-
-                <select 
-                    value={buFilter}
-                    onChange={(e) => setBuFilter(e.target.value)}
-                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Overview Analytics
+                </button>
+                <button
+                    onClick={() => setActiveTab('checkinout_logs')}
+                    className={`flex items-center gap-2 pb-3 px-4 text-sm font-bold border-b-2 transition-all ${
+                        activeTab === 'checkinout_logs'
+                            ? 'border-[#db011c] text-[#db011c]'
+                            : 'border-transparent text-gray-500 hover:text-gray-800'
+                    }`}
                 >
-                    <option value="all">All BUs</option>
-                    <option value="MIL">Milwaukee (MIL)</option>
-                    <option value="SF">Share Function</option>
-                </select>
-
-                <select 
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
-                >
-                    <option value="all">All Status</option>
-                    <option value="IN PROCESS">In Process</option>
-                    <option value="COMPLETE">Complete</option>
-                    <option value="REJECTED">Rejected</option>
-                </select>
-
-                <select 
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
-                >
-                    <option value="all">All Categories</option>
-                    <option value="MIL/TTI Expat / SHTP Business trip">MIL / TTI EXPAT</option>
-                    <option value="Vendor">Vendor</option>
-                    <option value="Contractor">Contractor</option>
-                    <option value="Interviewee">Interviewee</option>
-                </select>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Check-in/Out History Logs
+                    <span className="ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-red-100 text-[#db011c]">
+                        Audit Logs
+                    </span>
+                </button>
             </div>
+
+            {activeTab === 'checkinout_logs' ? (
+                <CheckInOutLogs />
+            ) : (
+                <>
+                    {/* Filters Row */}
+                    <div className="flex flex-wrap items-center gap-4 mb-4">
+                        <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Filters:</span>
+                        
+                        <select 
+                            value={periodFilter}
+                            onChange={(e) => setPeriodFilter(e.target.value)}
+                            className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                        >
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                        </select>
+
+                        <select 
+                            value={buFilter}
+                            onChange={(e) => setBuFilter(e.target.value)}
+                            className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                        >
+                            <option value="all">All BUs</option>
+                            <option value="MIL">Milwaukee (MIL)</option>
+                            <option value="SF">Share Function</option>
+                        </select>
+
+                        <select 
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                        >
+                            <option value="all">All Status</option>
+                            <option value="IN PROCESS">In Process</option>
+                            <option value="COMPLETE">Complete</option>
+                            <option value="REJECTED">Rejected</option>
+                        </select>
+
+                        <select 
+                            value={categoryFilter}
+                            onChange={(e) => setCategoryFilter(e.target.value)}
+                            className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                        >
+                            <option value="all">All Categories</option>
+                            <option value="MIL/TTI Expat / SHTP Business trip">MIL / TTI EXPAT</option>
+                            <option value="Vendor">Vendor</option>
+                            <option value="Contractor">Contractor</option>
+                            <option value="Interviewee">Interviewee</option>
+                        </select>
+                    </div>
 
             {/* ROW 1: Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -416,6 +454,8 @@ export default function VisitorAnalytics() {
                     </div>
                 </div>
             </div>
+            </>
+            )}
 
         </div>
     );

@@ -214,7 +214,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { action, requestId, visitorIndex, visitorName, visitorCode, cardNumber } = body;
+        const { action, requestId, requestCode, visitorIndex, visitorName, visitorCode, cardNumber } = body;
 
         if (!action || !requestId || visitorIndex === undefined || !visitorName || !visitorCode) {
             return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -222,6 +222,27 @@ export async function POST(request: Request) {
 
         const visitorPool = await getVisitorDbConnection();
         const cleanCardNumber = (typeof cardNumber === 'string' && cardNumber.trim() !== '') ? cardNumber.trim() : null;
+        const effectiveRequestCode = requestCode || requestId;
+        const performedBy = (session.user as any)?.username || session.user?.email || (session.user as any)?.id || 'Unknown';
+        const performedByName = session.user?.name || (session.user as any)?.full_name || (session.user as any)?.username || session.user?.email || 'Unknown';
+
+        // Ensure history table exists safely
+        await visitorPool.query(`
+            CREATE TABLE IF NOT EXISTS checkinout_action_history (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                request_id VARCHAR(100) NOT NULL,
+                request_code VARCHAR(100),
+                visitor_index INT DEFAULT 0,
+                visitor_code VARCHAR(100),
+                visitor_name VARCHAR(255),
+                action VARCHAR(50) NOT NULL,
+                card_number VARCHAR(100),
+                performed_by VARCHAR(255) NOT NULL,
+                performed_by_name VARCHAR(255),
+                details JSONB,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
 
         if (action === 'CHECK_IN') {
             // Upsert with checkInTime = NOW()
@@ -237,6 +258,17 @@ export async function POST(request: Request) {
                     "updatedAt" = NOW(),
                     "cardNumber" = EXCLUDED."cardNumber"
             `, [requestId, visitorIndex, visitorName, visitorCode, cleanCardNumber]);
+
+            try {
+                await visitorPool.query(`
+                    INSERT INTO checkinout_action_history
+                        (request_id, request_code, visitor_index, visitor_code, visitor_name, action, card_number, performed_by, performed_by_name, details, created_at)
+                    VALUES
+                        ($1, $2, $3, $4, $5, 'CHECK_IN', $6, $7, $8, $9, NOW())
+                `, [requestId, effectiveRequestCode, visitorIndex, visitorCode, visitorName, cleanCardNumber, performedBy, performedByName, JSON.stringify({ action: 'CHECK_IN' })]);
+            } catch (logErr) {
+                console.error('Failed to insert checkinout_action_history for CHECK_IN:', logErr);
+            }
 
             return NextResponse.json({ message: 'Checked in successfully' });
         } else if (action === 'CHECK_OUT') {
@@ -254,16 +286,38 @@ export async function POST(request: Request) {
                     "cardNumber" = EXCLUDED."cardNumber"
             `, [requestId, visitorIndex, visitorName, visitorCode, cleanCardNumber]);
 
+            try {
+                await visitorPool.query(`
+                    INSERT INTO checkinout_action_history
+                        (request_id, request_code, visitor_index, visitor_code, visitor_name, action, card_number, performed_by, performed_by_name, details, created_at)
+                    VALUES
+                        ($1, $2, $3, $4, $5, 'CHECK_OUT', $6, $7, $8, $9, NOW())
+                `, [requestId, effectiveRequestCode, visitorIndex, visitorCode, visitorName, cleanCardNumber, performedBy, performedByName, JSON.stringify({ action: 'CHECK_OUT' })]);
+            } catch (logErr) {
+                console.error('Failed to insert checkinout_action_history for CHECK_OUT:', logErr);
+            }
+
             return NextResponse.json({ message: 'Checked out successfully' });
-        } else if (action === 'RESET') {
+        } else if (action === 'RESET' || action === 'REVERSE') {
             // Remove check in/out record or set to PENDING
             await visitorPool.query(`
                 DELETE FROM "VisitorCheckInOut" 
                 WHERE "visitorCode" = $1
             `, [visitorCode]);
 
+            try {
+                await visitorPool.query(`
+                    INSERT INTO checkinout_action_history
+                        (request_id, request_code, visitor_index, visitor_code, visitor_name, action, card_number, performed_by, performed_by_name, details, created_at)
+                    VALUES
+                        ($1, $2, $3, $4, $5, 'REVERSE', $6, $7, $8, $9, NOW())
+                `, [requestId, effectiveRequestCode, visitorIndex, visitorCode, visitorName, cleanCardNumber, performedBy, performedByName, JSON.stringify({ action: 'REVERSE', note: 'Reset status to PENDING' })]);
+            } catch (logErr) {
+                console.error('Failed to insert checkinout_action_history for REVERSE:', logErr);
+            }
+
             return NextResponse.json({ message: 'Reset status to PENDING successfully' });
-        } else if (action === 'UPDATE_CARD') {
+        } else if (action === 'UPDATE_CARD' || action === 'INPUT_CARD') {
             await visitorPool.query(`
                 INSERT INTO "VisitorCheckInOut" 
                     ("requestId", "visitorIndex", "visitorName", "visitorCode", status, "updatedAt", "cardNumber")
@@ -274,6 +328,17 @@ export async function POST(request: Request) {
                     "updatedAt" = NOW(),
                     "cardNumber" = EXCLUDED."cardNumber"
             `, [requestId, visitorIndex, visitorName, visitorCode, cleanCardNumber]);
+
+            try {
+                await visitorPool.query(`
+                    INSERT INTO checkinout_action_history
+                        (request_id, request_code, visitor_index, visitor_code, visitor_name, action, card_number, performed_by, performed_by_name, details, created_at)
+                    VALUES
+                        ($1, $2, $3, $4, $5, 'INPUT_CARD', $6, $7, $8, $9, NOW())
+                `, [requestId, effectiveRequestCode, visitorIndex, visitorCode, visitorName, cleanCardNumber, performedBy, performedByName, JSON.stringify({ action: 'INPUT_CARD', cardNumber: cleanCardNumber })]);
+            } catch (logErr) {
+                console.error('Failed to insert checkinout_action_history for INPUT_CARD:', logErr);
+            }
 
             return NextResponse.json({ message: 'Card updated successfully' });
         } else {
