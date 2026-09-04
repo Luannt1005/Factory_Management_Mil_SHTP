@@ -18,15 +18,6 @@ interface LogEntry {
     createdAt: string;
 }
 
-interface SummaryStats {
-    total: number;
-    totalCheckIn: number;
-    totalCheckOut: number;
-    totalInputCard: number;
-    totalReverse: number;
-    totalOperators: number;
-}
-
 interface OperatorItem {
     username: string;
     name: string;
@@ -36,14 +27,6 @@ interface OperatorItem {
 export default function CheckInOutLogs() {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [loading, setLoading] = useState(true);
-    const [summary, setSummary] = useState<SummaryStats>({
-        total: 0,
-        totalCheckIn: 0,
-        totalCheckOut: 0,
-        totalInputCard: 0,
-        totalReverse: 0,
-        totalOperators: 0
-    });
     const [operators, setOperators] = useState<OperatorItem[]>([]);
 
     // Filters
@@ -52,7 +35,10 @@ export default function CheckInOutLogs() {
     const [operatorFilter, setOperatorFilter] = useState('ALL');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [startTime, setStartTime] = useState('');
+    const [endTime, setEndTime] = useState('');
     const [quickDatePreset, setQuickDatePreset] = useState<'all' | 'today' | 'week' | 'month'>('all');
+    const [quickTimePreset, setQuickTimePreset] = useState<'all' | 'morning' | 'afternoon' | 'night'>('all');
 
     // Pagination
     const [page, setPage] = useState(1);
@@ -86,6 +72,24 @@ export default function CheckInOutLogs() {
         }
     };
 
+    const handleTimePreset = (preset: 'all' | 'morning' | 'afternoon' | 'night') => {
+        setQuickTimePreset(preset);
+        setPage(1);
+        if (preset === 'all') {
+            setStartTime('');
+            setEndTime('');
+        } else if (preset === 'morning') {
+            setStartTime('06:00');
+            setEndTime('12:00');
+        } else if (preset === 'afternoon') {
+            setStartTime('12:00');
+            setEndTime('18:00');
+        } else if (preset === 'night') {
+            setStartTime('18:00');
+            setEndTime('23:59');
+        }
+    };
+
     const fetchLogs = useCallback(async () => {
         setLoading(true);
         try {
@@ -95,6 +99,8 @@ export default function CheckInOutLogs() {
             if (operatorFilter !== 'ALL') params.append('performedBy', operatorFilter);
             if (startDate) params.append('startDate', startDate);
             if (endDate) params.append('endDate', endDate);
+            if (startTime) params.append('startTime', startTime);
+            if (endTime) params.append('endTime', endTime);
             params.append('page', page.toString());
             params.append('limit', limit.toString());
 
@@ -102,14 +108,6 @@ export default function CheckInOutLogs() {
             if (res.ok) {
                 const data = await res.json();
                 setLogs(data.logs || []);
-                setSummary(data.summary || {
-                    total: 0,
-                    totalCheckIn: 0,
-                    totalCheckOut: 0,
-                    totalInputCard: 0,
-                    totalReverse: 0,
-                    totalOperators: 0
-                });
                 setOperators(data.operators || []);
                 if (data.pagination) {
                     setTotalPages(data.pagination.totalPages || 1);
@@ -121,7 +119,7 @@ export default function CheckInOutLogs() {
         } finally {
             setLoading(false);
         }
-    }, [search, actionFilter, operatorFilter, startDate, endDate, page, limit]);
+    }, [search, actionFilter, operatorFilter, startDate, endDate, startTime, endTime, page, limit]);
 
     useEffect(() => {
         fetchLogs();
@@ -217,103 +215,40 @@ export default function CheckInOutLogs() {
         XLSX.writeFile(wb, `CheckInOut_Audit_Logs_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
+    const resetAllFilters = () => {
+        setSearch('');
+        setActionFilter('ALL');
+        setOperatorFilter('ALL');
+        setStartDate('');
+        setEndDate('');
+        setStartTime('');
+        setEndTime('');
+        setQuickDatePreset('all');
+        setQuickTimePreset('all');
+        setPage(1);
+    };
+
+    const hasActiveFilters = Boolean(
+        search || actionFilter !== 'ALL' || operatorFilter !== 'ALL' || 
+        startDate || endDate || startTime || endTime
+    );
+
     return (
-        <div className="w-full flex flex-col gap-5">
-            {/* KPI STAT CARDS */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-                <div className="bg-white rounded-xl border border-gray-200/80 p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-                    <div className="flex items-center justify-between text-gray-500 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total Actions</span>
-                        <div className="p-1.5 bg-gray-100 rounded-lg text-gray-700">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-2xl font-black text-gray-900 tracking-tight">{summary.total}</div>
-                        <div className="text-[11px] text-gray-500 font-medium mt-0.5">Total audit records</div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl border border-emerald-100 p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-                    <div className="flex items-center justify-between text-emerald-600 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80">Check In</span>
-                        <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-2xl font-black text-emerald-700 tracking-tight">{summary.totalCheckIn}</div>
-                        <div className="text-[11px] text-emerald-600/90 font-medium mt-0.5">Checked-in visitors</div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl border border-gray-200/80 p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-                    <div className="flex items-center justify-between text-gray-700 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Check Out</span>
-                        <div className="p-1.5 bg-gray-100 rounded-lg text-gray-700">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-2xl font-black text-gray-900 tracking-tight">{summary.totalCheckOut}</div>
-                        <div className="text-[11px] text-gray-500 font-medium mt-0.5">Checked-out visitors</div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl border border-blue-100 p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-                    <div className="flex items-center justify-between text-blue-600 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600/80">Input Card</span>
-                        <div className="p-1.5 bg-blue-50 rounded-lg text-blue-600">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-2xl font-black text-blue-700 tracking-tight">{summary.totalInputCard}</div>
-                        <div className="text-[11px] text-blue-600/90 font-medium mt-0.5">Card assignments</div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl border border-rose-100 p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-                    <div className="flex items-center justify-between text-rose-600 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600/80">Reverse</span>
-                        <div className="p-1.5 bg-rose-50 rounded-lg text-rose-600">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-2xl font-black text-rose-700 tracking-tight">{summary.totalReverse}</div>
-                        <div className="text-[11px] text-rose-600/90 font-medium mt-0.5">Reversed/Reset logs</div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl border border-purple-100 p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-                    <div className="flex items-center justify-between text-purple-600 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600/80">Operators</span>
-                        <div className="p-1.5 bg-purple-50 rounded-lg text-purple-600">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-2xl font-black text-purple-700 tracking-tight">{summary.totalOperators}</div>
-                        <div className="text-[11px] text-purple-600/90 font-medium mt-0.5">Active SSO users</div>
-                    </div>
-                </div>
-            </div>
-
+        <div className="w-full flex flex-col gap-4">
             {/* FILTER TOOLBAR CONTAINER */}
             <div className="bg-white rounded-xl border border-gray-200/80 shadow-sm p-4">
                 <div className="flex flex-col gap-3.5">
-                    {/* TOP ROW: Search, Action, Operator, Date Presets */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                    {/* ROW 1: Search, Action, Operator */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-3 items-end">
                         {/* Search */}
-                        <div className="lg:col-span-3">
+                        <div className="lg:col-span-4">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                                Search Log
+                                Search Logs
                             </label>
                             <div className="relative">
                                 <input
                                     type="text"
-                                    placeholder="Visitor, Card, SSO account..."
+                                    placeholder="Visitor name, code, card, SSO account..."
                                     value={search}
                                     onChange={(e) => {
                                         setSearch(e.target.value);
@@ -328,7 +263,7 @@ export default function CheckInOutLogs() {
                         </div>
 
                         {/* Action Filter */}
-                        <div className="lg:col-span-2">
+                        <div className="lg:col-span-3">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                                 Action Type
                             </label>
@@ -349,7 +284,7 @@ export default function CheckInOutLogs() {
                         </div>
 
                         {/* SSO Operator Filter */}
-                        <div className="lg:col-span-3">
+                        <div className="lg:col-span-5">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                                 Operator (SSO Account)
                             </label>
@@ -361,7 +296,7 @@ export default function CheckInOutLogs() {
                                 }}
                                 className="w-full px-3 py-2 bg-gray-50/50 border border-gray-300 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#db011c] focus:bg-white transition-colors truncate"
                             >
-                                <option value="ALL">All Operators ({operators.length})</option>
+                                <option value="ALL">All SSO Operators ({operators.length})</option>
                                 {operators.map((op) => (
                                     <option key={op.username} value={op.username}>
                                         {op.name ? `${op.name} (${op.username})` : op.username} — {op.count} actions
@@ -369,16 +304,19 @@ export default function CheckInOutLogs() {
                                 ))}
                             </select>
                         </div>
+                    </div>
 
-                        {/* Date Range Presets */}
+                    {/* ROW 2: Date Filters & Hourly Time Filters */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-end pt-2 border-t border-gray-100">
+                        {/* Quick Date Presets */}
                         <div className="lg:col-span-4 flex flex-col">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                                Quick Date Filter
+                                Date Filter Preset
                             </label>
                             <div className="flex bg-gray-100 p-1 rounded-lg gap-1 h-[38px] items-center">
                                 <button
                                     onClick={() => handleDatePreset('all')}
-                                    className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${quickDatePreset === 'all' ? 'bg-white shadow-xs text-[#db011c]' : 'text-gray-600 hover:text-gray-900'}`}
+                                    className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${quickDatePreset === 'all' && !startDate && !endDate ? 'bg-white shadow-xs text-[#db011c]' : 'text-gray-600 hover:text-gray-900'}`}
                                 >
                                     All Time
                                 </button>
@@ -402,49 +340,132 @@ export default function CheckInOutLogs() {
                                 </button>
                             </div>
                         </div>
-                    </div>
 
-                    {/* BOTTOM ROW: Custom Date Pickers, Export, Refresh */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Custom Date:</span>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => {
-                                    setStartDate(e.target.value);
-                                    setQuickDatePreset('all');
-                                    setPage(1);
-                                }}
-                                className="px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs text-gray-700 font-medium focus:outline-none focus:border-[#db011c]"
-                            />
-                            <span className="text-gray-400 text-xs">to</span>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => {
-                                    setEndDate(e.target.value);
-                                    setQuickDatePreset('all');
-                                    setPage(1);
-                                }}
-                                className="px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs text-gray-700 font-medium focus:outline-none focus:border-[#db011c]"
-                            />
-                            {(startDate || endDate || search || actionFilter !== 'ALL' || operatorFilter !== 'ALL') && (
-                                <button
-                                    onClick={() => {
-                                        setSearch('');
-                                        setActionFilter('ALL');
-                                        setOperatorFilter('ALL');
-                                        setStartDate('');
-                                        setEndDate('');
+                        {/* Custom Date Pickers */}
+                        <div className="lg:col-span-4 flex flex-col">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                Custom Date Range
+                            </label>
+                            <div className="flex items-center gap-1.5 h-[38px]">
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => {
+                                        setStartDate(e.target.value);
                                         setQuickDatePreset('all');
                                         setPage(1);
                                     }}
-                                    className="text-[11px] text-[#db011c] hover:underline font-bold ml-2"
+                                    className="flex-1 px-2.5 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-[#db011c]"
+                                />
+                                <span className="text-gray-400 text-xs font-bold">to</span>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => {
+                                        setEndDate(e.target.value);
+                                        setQuickDatePreset('all');
+                                        setPage(1);
+                                    }}
+                                    className="flex-1 px-2.5 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-[#db011c]"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Hourly Time Filter (Time Range HH:mm) */}
+                        <div className="lg:col-span-4 flex flex-col">
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Time Filter (Lọc theo giờ)
+                                </label>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleTimePreset('morning')}
+                                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${quickTimePreset === 'morning' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-800'}`}
+                                        title="06:00 - 12:00"
+                                    >
+                                        Morning
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleTimePreset('afternoon')}
+                                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${quickTimePreset === 'afternoon' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-800'}`}
+                                        title="12:00 - 18:00"
+                                    >
+                                        Afternoon
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleTimePreset('night')}
+                                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${quickTimePreset === 'night' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-800'}`}
+                                        title="18:00 - 23:59"
+                                    >
+                                        Night
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 h-[38px]">
+                                <input
+                                    type="time"
+                                    value={startTime}
+                                    onChange={(e) => {
+                                        setStartTime(e.target.value);
+                                        setQuickTimePreset('all');
+                                        setPage(1);
+                                    }}
+                                    className="flex-1 px-2 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-[#db011c]"
+                                    title="Start Hour (Giờ bắt đầu)"
+                                />
+                                <span className="text-gray-400 text-xs font-bold">to</span>
+                                <input
+                                    type="time"
+                                    value={endTime}
+                                    onChange={(e) => {
+                                        setEndTime(e.target.value);
+                                        setQuickTimePreset('all');
+                                        setPage(1);
+                                    }}
+                                    className="flex-1 px-2 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-[#db011c]"
+                                    title="End Hour (Giờ kết thúc)"
+                                />
+                                {(startTime || endTime) && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setStartTime('');
+                                            setEndTime('');
+                                            setQuickTimePreset('all');
+                                            setPage(1);
+                                        }}
+                                        className="p-1 text-gray-400 hover:text-red-600 rounded"
+                                        title="Clear time filter"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ROW 3: Action Buttons & Filter Summary */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                            {hasActiveFilters && (
+                                <button
+                                    onClick={resetAllFilters}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-[#db011c] bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                                 >
-                                    Reset Filters
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Reset All Filters
                                 </button>
                             )}
+                            <span className="text-xs text-gray-500 font-medium">
+                                Total <span className="font-bold text-gray-900">{totalCount}</span> log entries found
+                            </span>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -491,13 +512,13 @@ export default function CheckInOutLogs() {
                     <table className="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr className="bg-[#1a1a1a] text-white font-bold text-[10px] uppercase tracking-wider border-b border-gray-200">
-                                <th className="py-3.5 px-4 w-[160px]">TIMESTAMP</th>
-                                <th className="py-3.5 px-4 w-[220px]">OPERATOR (SSO ACCOUNT)</th>
+                                <th className="py-3.5 px-4 w-[165px]">TIMESTAMP</th>
+                                <th className="py-3.5 px-4 w-[240px]">OPERATOR (SSO ACCOUNT)</th>
                                 <th className="py-3.5 px-4 w-[140px] text-center">ACTION</th>
                                 <th className="py-3.5 px-4 w-[120px] text-center">CARD NO.</th>
                                 <th className="py-3.5 px-4 min-w-[200px]">VISITOR INFO</th>
                                 <th className="py-3.5 px-4 w-[140px]">REQUEST CODE</th>
-                                <th className="py-3.5 px-4 min-w-[150px]">DETAILS</th>
+                                <th className="py-3.5 px-4 min-w-[160px]">DETAILS</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">

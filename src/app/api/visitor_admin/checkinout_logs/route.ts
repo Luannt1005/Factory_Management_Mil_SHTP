@@ -22,6 +22,8 @@ export async function GET(request: Request) {
         const action = searchParams.get('action'); // ALL, INPUT_CARD, CHECK_IN, CHECK_OUT, REVERSE
         const startDate = searchParams.get('startDate'); // YYYY-MM-DD
         const endDate = searchParams.get('endDate'); // YYYY-MM-DD
+        const startTime = searchParams.get('startTime'); // HH:mm or HH:mm:ss
+        const endTime = searchParams.get('endTime'); // HH:mm or HH:mm:ss
         const performedBy = searchParams.get('performedBy');
         const page = parseInt(searchParams.get('page') || '1', 10);
         const limit = parseInt(searchParams.get('limit') || '15', 10);
@@ -51,18 +53,57 @@ export async function GET(request: Request) {
         const queryParams: any[] = [];
         let paramCount = 1;
 
+        // Date and Time range filtering
+        const cleanStartTime = startTime && startTime.trim() !== '' ? (startTime.length === 5 ? `${startTime}:00` : startTime) : null;
+        const cleanEndTime = endTime && endTime.trim() !== '' ? (endTime.length === 5 ? `${endTime}:59` : endTime) : null;
+
         if (startDate && endDate) {
-            whereConditions.push(`created_at >= $${paramCount}::date AND created_at < ($${paramCount + 1}::date + INTERVAL '1 day')`);
-            queryParams.push(startDate, endDate);
+            const startTs = cleanStartTime ? `${startDate} ${cleanStartTime}` : `${startDate} 00:00:00`;
+            const endTs = cleanEndTime ? `${endDate} ${cleanEndTime}` : `${endDate} 23:59:59.999`;
+            whereConditions.push(`created_at >= $${paramCount}::timestamp AND created_at <= $${paramCount + 1}::timestamp`);
+            queryParams.push(startTs, endTs);
             paramCount += 2;
         } else if (startDate) {
-            whereConditions.push(`created_at >= $${paramCount}::date`);
-            queryParams.push(startDate);
+            const startTs = cleanStartTime ? `${startDate} ${cleanStartTime}` : `${startDate} 00:00:00`;
+            whereConditions.push(`created_at >= $${paramCount}::timestamp`);
+            queryParams.push(startTs);
             paramCount += 1;
+            if (cleanEndTime) {
+                const endTs = `${startDate} ${cleanEndTime}`;
+                whereConditions.push(`created_at <= $${paramCount}::timestamp`);
+                queryParams.push(endTs);
+                paramCount += 1;
+            } else {
+                whereConditions.push(`created_at < ($${paramCount}::date + INTERVAL '1 day')`);
+                queryParams.push(startDate);
+                paramCount += 1;
+            }
         } else if (endDate) {
-            whereConditions.push(`created_at < ($${paramCount}::date + INTERVAL '1 day')`);
-            queryParams.push(endDate);
+            const endTs = cleanEndTime ? `${endDate} ${cleanEndTime}` : `${endDate} 23:59:59.999`;
+            whereConditions.push(`created_at <= $${paramCount}::timestamp`);
+            queryParams.push(endTs);
             paramCount += 1;
+            if (cleanStartTime) {
+                const startTs = `${endDate} ${cleanStartTime}`;
+                whereConditions.push(`created_at >= $${paramCount}::timestamp`);
+                queryParams.push(startTs);
+                paramCount += 1;
+            }
+        } else {
+            // Intra-day time of day filter when no date is explicitly selected
+            if (cleanStartTime && cleanEndTime) {
+                whereConditions.push(`created_at::time >= $${paramCount}::time AND created_at::time <= $${paramCount + 1}::time`);
+                queryParams.push(cleanStartTime, cleanEndTime);
+                paramCount += 2;
+            } else if (cleanStartTime) {
+                whereConditions.push(`created_at::time >= $${paramCount}::time`);
+                queryParams.push(cleanStartTime);
+                paramCount += 1;
+            } else if (cleanEndTime) {
+                whereConditions.push(`created_at::time <= $${paramCount}::time`);
+                queryParams.push(cleanEndTime);
+                paramCount += 1;
+            }
         }
 
         if (action && action !== 'ALL') {
@@ -125,21 +166,6 @@ export async function GET(request: Request) {
         const dataParams = [...queryParams, limit, offset];
         const { rows: logs } = await visitorPool.query(dataQuery, dataParams);
 
-        // Fetch Summary Statistics
-        const statsQuery = `
-            SELECT 
-                COUNT(*) AS total,
-                COUNT(CASE WHEN action = 'CHECK_IN' THEN 1 END) AS total_check_in,
-                COUNT(CASE WHEN action = 'CHECK_OUT' THEN 1 END) AS total_check_out,
-                COUNT(CASE WHEN action = 'INPUT_CARD' THEN 1 END) AS total_input_card,
-                COUNT(CASE WHEN action = 'REVERSE' THEN 1 END) AS total_reverse,
-                COUNT(DISTINCT performed_by) AS total_operators
-            FROM checkinout_action_history
-            ${whereClause}
-        `;
-        const { rows: statsRows } = await visitorPool.query(statsQuery, queryParams);
-        const stats = statsRows[0] || {};
-
         // Fetch distinct operators for filter dropdown
         const operatorsQuery = `
             SELECT 
@@ -160,14 +186,6 @@ export async function GET(request: Request) {
                 page,
                 limit,
                 totalPages: Math.ceil(total / limit) || 1
-            },
-            summary: {
-                total: parseInt(stats.total || '0', 10),
-                totalCheckIn: parseInt(stats.total_check_in || '0', 10),
-                totalCheckOut: parseInt(stats.total_check_out || '0', 10),
-                totalInputCard: parseInt(stats.total_input_card || '0', 10),
-                totalReverse: parseInt(stats.total_reverse || '0', 10),
-                totalOperators: parseInt(stats.total_operators || '0', 10)
             },
             operators
         }, { status: 200 });
