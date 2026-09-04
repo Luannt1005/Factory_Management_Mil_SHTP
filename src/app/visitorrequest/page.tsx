@@ -458,33 +458,84 @@ export default function NewRequestPage() {
     };
 
     const isExpatCategory = formData.visitorCategory === 'MIL/TTI Expat / SHTP Business trip';
+    const isVendorOrContractor = formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor';
 
-    // Calculate date limits
-    const today = new Date();
-    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-    
-    // Vendor/Contractor max end date (7 working days from today)
+    // Safe local date parser to avoid UTC shift
+    const parseLocalDate = (dateStr: string) => {
+        if (!dateStr) return new Date();
+        const parts = dateStr.split('-').map(Number);
+        if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+        return new Date(dateStr);
+    };
+
+    const formatDateISO = (d: Date) => {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    };
+
+    // Calculate max working days from a starting date (skipping Saturday & Sunday)
+    // The start date itself counts as the 1st working day (if it falls on a weekday)
     const addWorkingDays = (startDate: Date, days: number) => {
         let date = new Date(startDate);
-        let addedDays = 0;
-        while (addedDays < days) {
+        let count = (date.getDay() !== 0 && date.getDay() !== 6) ? 1 : 0;
+        while (count < days) {
             date.setDate(date.getDate() + 1);
             if (date.getDay() !== 0 && date.getDay() !== 6) {
-                addedDays++;
+                count++;
             }
         }
         return date;
     };
-    
-    let maxEndDateStr = undefined;
-    if (formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') {
-        const maxDate = addWorkingDays(today, 7);
-        maxEndDateStr = maxDate.getFullYear() + '-' + String(maxDate.getMonth() + 1).padStart(2, '0') + '-' + String(maxDate.getDate()).padStart(2, '0');
+
+    // Calculate date limits
+    const today = new Date();
+    const todayStr = formatDateISO(today);
+
+    // Calculate max end date dynamically based on formData.startDate (or today if not selected yet)
+    const baseStartDate = formData.startDate ? parseLocalDate(formData.startDate) : today;
+    let maxEndDateStr: string | undefined = undefined;
+
+    if (isVendorOrContractor) {
+        const maxDate = addWorkingDays(baseStartDate, 7);
+        maxEndDateStr = formatDateISO(maxDate);
     } else if (isExpatCategory) {
-        const maxDate = new Date(today);
+        const maxDate = new Date(baseStartDate);
         maxDate.setMonth(maxDate.getMonth() + 6);
-        maxEndDateStr = maxDate.getFullYear() + '-' + String(maxDate.getMonth() + 1).padStart(2, '0') + '-' + String(maxDate.getDate()).padStart(2, '0');
+        maxEndDateStr = formatDateISO(maxDate);
     }
+
+    const handleStartDateChange = (newStartDate: string) => {
+        let newEndDate = formData.endDate;
+        if (newStartDate) {
+            const baseDate = parseLocalDate(newStartDate);
+            let limitStr: string | undefined = undefined;
+            if (isVendorOrContractor) {
+                limitStr = formatDateISO(addWorkingDays(baseDate, 7));
+            } else if (isExpatCategory) {
+                const maxDate = new Date(baseDate);
+                maxDate.setMonth(maxDate.getMonth() + 6);
+                limitStr = formatDateISO(maxDate);
+            }
+
+            if (newEndDate) {
+                if (newEndDate < newStartDate) {
+                    newEndDate = newStartDate;
+                } else if (limitStr && newEndDate > limitStr) {
+                    newEndDate = limitStr;
+                }
+            }
+        }
+        setFormData(prev => ({ ...prev, startDate: newStartDate, endDate: newEndDate }));
+    };
+
+    useEffect(() => {
+        if (formData.endDate && maxEndDateStr && formData.endDate > maxEndDateStr) {
+            setFormData(prev => ({ ...prev, endDate: maxEndDateStr }));
+        } else if (formData.endDate && formData.startDate && formData.endDate < formData.startDate) {
+            setFormData(prev => ({ ...prev, endDate: formData.startDate }));
+        }
+    }, [formData.startDate, formData.endDate, maxEndDateStr]);
 
     return (
         <div className="w-full">
@@ -774,11 +825,21 @@ export default function NewRequestPage() {
                                             </div>
                                             <div>
                                                 <InputLabel required>Start Date</InputLabel>
-                                                <Input type="date" required min={todayStr} value={formData.startDate} onChange={(e: any) => setFormData({...formData, startDate: e.target.value})} />
+                                                <Input type="date" required min={todayStr} value={formData.startDate} onChange={(e: any) => handleStartDateChange(e.target.value)} />
                                             </div>
                                             <div>
                                                 <InputLabel required>End Date</InputLabel>
                                                 <Input type="date" required min={formData.startDate || todayStr} max={maxEndDateStr} value={formData.endDate} onChange={(e: any) => setFormData({...formData, endDate: e.target.value})} />
+                                                {isVendorOrContractor && (
+                                                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                                                        * Tối đa 7 ngày làm việc tính từ Start Date (Max 7 working days)
+                                                    </div>
+                                                )}
+                                                {isExpatCategory && (
+                                                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                                                        * Tối đa 6 tháng tính từ Start Date (Max 6 months)
+                                                    </div>
+                                                )}
                                             </div>
                                             {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor') && (
                                                 <div style={{ gridColumn: '1 / -1' }}>
