@@ -33,8 +33,11 @@ export default function AdminDashboard() {
         setSelectedRowIds([]);
         try {
             let url = `/api/visitor_admin/requests?tab=${activeTab}&page=${page}&limit=${pagination.limit}`;
-            if (startDate && endDate) {
-                url += `&startDate=${startDate}&endDate=${endDate}`;
+            if (startDate) {
+                url += `&startDate=${encodeURIComponent(startDate)}`;
+            }
+            if (endDate) {
+                url += `&endDate=${encodeURIComponent(endDate)}`;
             }
             if (category) {
                 url += `&category=${encodeURIComponent(category)}`;
@@ -64,8 +67,11 @@ export default function AdminDashboard() {
         setExporting(true);
         try {
             let url = `/api/visitor_admin/requests?tab=${activeTab}&page=1&limit=999999`;
-            if (startDate && endDate) {
-                url += `&startDate=${startDate}&endDate=${endDate}`;
+            if (startDate) {
+                url += `&startDate=${encodeURIComponent(startDate)}`;
+            }
+            if (endDate) {
+                url += `&endDate=${encodeURIComponent(endDate)}`;
             }
             if (category) {
                 url += `&category=${encodeURIComponent(category)}`;

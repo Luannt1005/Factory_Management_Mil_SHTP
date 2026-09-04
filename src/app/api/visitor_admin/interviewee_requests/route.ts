@@ -26,9 +26,17 @@ export async function GET(request: Request) {
         let paramCount = 0;
 
         if (startDate && endDate) {
-            whereClause += ` AND r."startDate" >= $${paramCount+1} AND r."startDate" <= $${paramCount+2}`;
+            whereClause += ` AND r."startDate"::date >= $${paramCount+1}::date AND r."startDate"::date <= $${paramCount+2}::date`;
             queryParams.push(startDate, endDate);
             paramCount += 2;
+        } else if (startDate) {
+            whereClause += ` AND r."startDate"::date >= $${paramCount+1}::date`;
+            queryParams.push(startDate);
+            paramCount += 1;
+        } else if (endDate) {
+            whereClause += ` AND r."startDate"::date <= $${paramCount+1}::date`;
+            queryParams.push(endDate);
+            paramCount += 1;
         }
 
         if (code) {

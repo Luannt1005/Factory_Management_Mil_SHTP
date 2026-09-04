@@ -37,9 +37,17 @@ export async function GET(request: Request) {
         let paramCount = 1;
 
         if (startDate && endDate) {
-            conditions.push(`(r."startDate" <= $${paramCount+1} AND r."endDate" >= $${paramCount})`);
+            conditions.push(`(r."startDate"::date <= $${paramCount+1}::date AND r."endDate"::date >= $${paramCount}::date)`);
             queryParams.push(startDate, endDate);
             paramCount += 2;
+        } else if (startDate) {
+            conditions.push(`r."endDate"::date >= $${paramCount}::date`);
+            queryParams.push(startDate);
+            paramCount += 1;
+        } else if (endDate) {
+            conditions.push(`r."startDate"::date <= $${paramCount}::date`);
+            queryParams.push(endDate);
+            paramCount += 1;
         }
 
         if (tab === 'interviewee' || category === 'Interviewee') {

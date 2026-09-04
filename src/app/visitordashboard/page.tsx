@@ -87,8 +87,11 @@ function DashboardContent() {
             const currentTab = tabOverride || activeTab;
             const apiEndpoint = `/api/requests?tab=${currentTab}`;
             let url = `${apiEndpoint}&page=${page}&limit=${pagination.limit}`;
-            if (startDate && endDate) {
-                url += `&startDate=${startDate}&endDate=${endDate}`;
+            if (startDate) {
+                url += `&startDate=${encodeURIComponent(startDate)}`;
+            }
+            if (endDate) {
+                url += `&endDate=${encodeURIComponent(endDate)}`;
             }
             if (searchTerm) {
                 url += `&search=${encodeURIComponent(searchTerm)}`;

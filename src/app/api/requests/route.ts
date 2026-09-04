@@ -417,9 +417,17 @@ export async function GET(request: Request) {
         }
 
         if (startDate && endDate) {
-            whereClause += ` AND (r."startDate" <= $${paramCount+1} AND r."endDate" >= $${paramCount})`;
+            whereClause += ` AND (r."startDate"::date <= $${paramCount+1}::date AND r."endDate"::date >= $${paramCount}::date)`;
             queryParams.push(startDate, endDate);
             paramCount += 2;
+        } else if (startDate) {
+            whereClause += ` AND r."endDate"::date >= $${paramCount}::date`;
+            queryParams.push(startDate);
+            paramCount += 1;
+        } else if (endDate) {
+            whereClause += ` AND r."startDate"::date <= $${paramCount}::date`;
+            queryParams.push(endDate);
+            paramCount += 1;
         }
 
         if (search) {
