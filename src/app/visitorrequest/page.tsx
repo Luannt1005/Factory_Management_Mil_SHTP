@@ -281,7 +281,9 @@ export default function NewRequestPage() {
         if (!str) return '';
         const nfc = str.normalize('NFC');
         // Only allow letters, Vietnamese combining diacritics, spaces, hyphens, and apostrophes
-        return nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+        const clean = nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+        // Auto-capitalize first letter of each word in real-time as user types
+        return clean.replace(/(?:^|\s)([\p{L}\p{M}])/gu, (m) => m.toLocaleUpperCase('vi-VN'));
     };
 
     const formatName = (str: string) => {
@@ -708,7 +710,7 @@ export default function NewRequestPage() {
                                                     </div>
                                                     <div style={{ flex: 1.2, display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                         <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Name <span style={{ color: '#db011c' }}>*</span></label>
-                                                        <Input type="text" required placeholder="Candidate name" value={candidate.name} onChange={(e: any) => updateInterviewee(idx, 'name', e.target.value)} onBlur={() => handleIntervieweeBlur(idx, 'name')} />
+                                                        <Input type="text" required placeholder="Candidate name" value={candidate.name} onChange={(e: any) => updateInterviewee(idx, 'name', e.target.value)} onBlur={() => handleIntervieweeBlur(idx, 'name')} style={{ textTransform: 'capitalize' }} />
                                                     </div>
                                                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                         <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Job Title <span style={{ color: '#db011c' }}>*</span></label>
@@ -720,7 +722,7 @@ export default function NewRequestPage() {
                                                     </div>
                                                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                         <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Interviewer <span style={{ color: '#db011c' }}>*</span></label>
-                                                        <Input type="text" required placeholder="Interviewer name" value={candidate.interviewerName} onChange={(e: any) => updateInterviewee(idx, 'interviewerName', e.target.value)} onBlur={() => handleIntervieweeBlur(idx, 'interviewerName')} />
+                                                        <Input type="text" required placeholder="Interviewer name" value={candidate.interviewerName} onChange={(e: any) => updateInterviewee(idx, 'interviewerName', e.target.value)} onBlur={() => handleIntervieweeBlur(idx, 'interviewerName')} style={{ textTransform: 'capitalize' }} />
                                                     </div>
                                                     {formData.interviewees.length > 1 ? (
                                                         <div style={{ width: '55px', flexShrink: 0, textAlign: 'right' }}>
@@ -774,7 +776,7 @@ export default function NewRequestPage() {
                                                     </div>
                                                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Full Name <span style={{ color: '#db011c' }}>*</span></label>
-                                                        <Input type="text" required placeholder="e.g. Nguyen Van A" value={visitor.name} onChange={(e: any) => updateVisitor(idx, 'name', e.target.value)} onBlur={() => handleVisitorBlur(idx, 'name')} />
+                                                        <Input type="text" required placeholder="e.g. Nguyen Van A" value={visitor.name} onChange={(e: any) => updateVisitor(idx, 'name', e.target.value)} onBlur={() => handleVisitorBlur(idx, 'name')} style={{ textTransform: 'capitalize' }} />
                                                     </div>
                                                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Company <span style={{ color: '#db011c' }}>*</span></label>

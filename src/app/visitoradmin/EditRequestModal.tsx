@@ -95,7 +95,8 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
     const cleanNameInput = (str: string) => {
         if (!str) return '';
         const nfc = str.normalize('NFC');
-        return nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+        const clean = nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+        return clean.replace(/(?:^|\s)([\p{L}\p{M}])/gu, (m) => m.toLocaleUpperCase('vi-VN'));
     };
 
     const formatName = (str: string) => {
@@ -179,7 +180,7 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
                             <>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Interviewee Name</label>
-                                    <input type="text" value={formData.interviewee_name} onChange={e => setFormData({...formData, interviewee_name: cleanNameInput(e.target.value)})} onBlur={e => setFormData({...formData, interviewee_name: formatName(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                                    <input type="text" value={formData.interviewee_name} onChange={e => setFormData({...formData, interviewee_name: cleanNameInput(e.target.value)})} onBlur={e => setFormData({...formData, interviewee_name: formatName(e.target.value)})} style={{ textTransform: 'capitalize' }} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Job Title</label>
@@ -201,7 +202,7 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
                                 <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Name</label>
-                                        <input type="text" value={v.name || ''} onChange={e => handleVisitorChange(index, 'name', e.target.value)} onBlur={() => handleVisitorBlur(index, 'name')} className="w-full border border-gray-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none" required />
+                                        <input type="text" value={v.name || ''} onChange={e => handleVisitorChange(index, 'name', e.target.value)} onBlur={() => handleVisitorBlur(index, 'name')} style={{ textTransform: 'capitalize' }} className="w-full border border-gray-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none" required />
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Company</label>

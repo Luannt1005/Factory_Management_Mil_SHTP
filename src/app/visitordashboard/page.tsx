@@ -172,7 +172,8 @@ function DashboardContent() {
     const cleanNameInput = (str: string) => {
         if (!str) return '';
         const nfc = str.normalize('NFC');
-        return nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+        const clean = nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+        return clean.replace(/(?:^|\s)([\p{L}\p{M}])/gu, (m) => m.toLocaleUpperCase('vi-VN'));
     };
 
     const formatName = (str: string) => {
@@ -899,6 +900,7 @@ function DashboardContent() {
                                                                 updated[idx].name = formatName(updated[idx].name || '');
                                                                 setEditFormData({ ...editFormData, visitors: updated });
                                                             }}
+                                                            style={{ textTransform: 'capitalize' }}
                                                             className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
                                                         />
                                                     </td>
@@ -947,6 +949,7 @@ function DashboardContent() {
                                                                 updated[idx].interviewerName = formatName(updated[idx].interviewerName || '');
                                                                 setEditFormData({ ...editFormData, visitors: updated });
                                                             }}
+                                                            style={{ textTransform: 'capitalize' }}
                                                             className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
                                                         />
                                                     </td>
