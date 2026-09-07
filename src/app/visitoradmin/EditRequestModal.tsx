@@ -56,14 +56,21 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
                 factoryTour: formData.factoryTour
             };
 
+            const formattedVisitors = (formData.visitors || []).map((v: any) => ({
+                ...v,
+                name: formatName(v.name || ''),
+                company: (v.company || '').trim(),
+                title: (v.title || '').trim()
+            }));
+
             const payload = {
                 start_date: formData.start_date,
                 end_date: formData.end_date,
                 visitor_category: formData.visitor_category,
                 visiting_site: formData.visiting_site,
                 details: detailsObj,
-                visitors: formData.visitors,
-                interviewee_name: formData.interviewee_name,
+                visitors: formattedVisitors,
+                interviewee_name: formatName(formData.interviewee_name || ''),
                 job_title: formData.job_title,
                 interview_department: formData.interview_department
             };
@@ -87,17 +94,26 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
 
     const formatName = (str: string) => {
         if (!str) return '';
-        const clean = str.replace(/[^\p{L}\s]/gu, '');
-        return clean.replace(/(\p{L}+)/gu, (match) => {
-            return match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
-        });
+        const nfc = str.normalize('NFC');
+        const clean = nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+        return clean.replace(/([\p{L}\p{M}]+)/gu, (match) => {
+            return match.charAt(0).toLocaleUpperCase('vi-VN') + match.slice(1).toLocaleLowerCase('vi-VN');
+        }).trim().replace(/\s+/g, ' ');
     };
 
     const handleVisitorChange = (index: number, field: string, value: string) => {
         const newVisitors = [...formData.visitors];
-        const val = field === 'name' ? formatName(value) : value;
-        newVisitors[index] = { ...newVisitors[index], [field]: val };
+        newVisitors[index] = { ...newVisitors[index], [field]: value };
         setFormData({ ...formData, visitors: newVisitors });
+    };
+
+    const handleVisitorBlur = (index: number, field: string) => {
+        const newVisitors = [...formData.visitors];
+        const val = newVisitors[index]?.[field];
+        if (typeof val === 'string' && val.trim()) {
+            newVisitors[index] = { ...newVisitors[index], [field]: field === 'name' ? formatName(val) : val.trim() };
+            setFormData({ ...formData, visitors: newVisitors });
+        }
     };
 
     if (!request || !mounted) return null;
@@ -157,7 +173,7 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
                             <>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Interviewee Name</label>
-                                    <input type="text" value={formData.interviewee_name} onChange={e => setFormData({...formData, interviewee_name: formatName(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                                    <input type="text" value={formData.interviewee_name} onChange={e => setFormData({...formData, interviewee_name: e.target.value})} onBlur={e => setFormData({...formData, interviewee_name: formatName(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Job Title</label>
@@ -179,15 +195,15 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
                                 <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Name</label>
-                                        <input type="text" value={v.name || ''} onChange={e => handleVisitorChange(index, 'name', e.target.value)} className="w-full border border-gray-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none" required />
+                                        <input type="text" value={v.name || ''} onChange={e => handleVisitorChange(index, 'name', e.target.value)} onBlur={() => handleVisitorBlur(index, 'name')} className="w-full border border-gray-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none" required />
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Company</label>
-                                        <input type="text" value={v.company || ''} onChange={e => handleVisitorChange(index, 'company', e.target.value)} className="w-full border border-gray-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
+                                        <input type="text" value={v.company || ''} onChange={e => handleVisitorChange(index, 'company', e.target.value)} onBlur={() => handleVisitorBlur(index, 'company')} className="w-full border border-gray-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Title</label>
-                                        <input type="text" value={v.title || ''} onChange={e => handleVisitorChange(index, 'title', e.target.value)} className="w-full border border-gray-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
+                                        <input type="text" value={v.title || ''} onChange={e => handleVisitorChange(index, 'title', e.target.value)} onBlur={() => handleVisitorBlur(index, 'title')} className="w-full border border-gray-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
                                     </div>
                                 </div>
                             ))}
