@@ -171,14 +171,13 @@ function DashboardContent() {
 
     const cleanNameInput = (str: string) => {
         if (!str) return '';
-        const nfc = str.normalize('NFC');
-        const clean = nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
-        return clean.replace(/(?:^|\s)([\p{L}\p{M}])/gu, (m) => m.toLocaleUpperCase('vi-VN'));
+        return str.replace(/[0-9;:"!@#$%^&*()+={}\[\]<>?/\\|~`_=]/g, '');
     };
 
     const formatName = (str: string) => {
         if (!str) return '';
-        const clean = cleanNameInput(str);
+        const nfc = str.normalize('NFC');
+        const clean = nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
         return clean.replace(/([\p{L}\p{M}]+)/gu, (match) => {
             return match.charAt(0).toLocaleUpperCase('vi-VN') + match.slice(1).toLocaleLowerCase('vi-VN');
         }).trim().replace(/\s+/g, ' ');

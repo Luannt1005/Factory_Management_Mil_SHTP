@@ -279,16 +279,15 @@ export default function NewRequestPage() {
 
     const cleanNameInput = (str: string) => {
         if (!str) return '';
-        const nfc = str.normalize('NFC');
-        // Only allow letters, Vietnamese combining diacritics, spaces, hyphens, and apostrophes
-        const clean = nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
-        // Auto-capitalize first letter of each word in real-time as user types
-        return clean.replace(/(?:^|\s)([\p{L}\p{M}])/gu, (m) => m.toLocaleUpperCase('vi-VN'));
+        // Block numbers and special characters/symbols without modifying unicode codepoints or casing while typing
+        // This ensures Vietnamese IME (Unikey, Telex, VNI) works with 100% precision (preventing issues like Luân -> Lân)
+        return str.replace(/[0-9;:"!@#$%^&*()+={}\[\]<>?/\\|~`_=]/g, '');
     };
 
     const formatName = (str: string) => {
         if (!str) return '';
-        const clean = cleanNameInput(str);
+        const nfc = str.normalize('NFC');
+        const clean = nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
         // Capitalize first letter of each word, lowercasing the rest, supporting all Unicode Vietnamese letters
         return clean.replace(/([\p{L}\p{M}]+)/gu, (match) => {
             return match.charAt(0).toLocaleUpperCase('vi-VN') + match.slice(1).toLocaleLowerCase('vi-VN');
