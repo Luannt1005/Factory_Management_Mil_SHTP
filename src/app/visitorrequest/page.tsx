@@ -277,12 +277,16 @@ export default function NewRequestPage() {
         }
     };
 
+    const cleanNameInput = (str: string) => {
+        if (!str) return '';
+        const nfc = str.normalize('NFC');
+        // Only allow letters, Vietnamese combining diacritics, spaces, hyphens, and apostrophes
+        return nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+    };
+
     const formatName = (str: string) => {
         if (!str) return '';
-        // Normalize to NFC so all Vietnamese diacritics are standard composed characters
-        const nfc = str.normalize('NFC');
-        // Remove unwanted numbers and symbols, but preserve letters, marks, spaces, hyphens, apostrophes
-        const clean = nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+        const clean = cleanNameInput(str);
         // Capitalize first letter of each word, lowercasing the rest, supporting all Unicode Vietnamese letters
         return clean.replace(/([\p{L}\p{M}]+)/gu, (match) => {
             return match.charAt(0).toLocaleUpperCase('vi-VN') + match.slice(1).toLocaleLowerCase('vi-VN');
@@ -300,7 +304,10 @@ export default function NewRequestPage() {
     const updateInterviewee = (index: number, field: string, value: string) => {
         setFormData(prev => {
             const newInterviewees = [...prev.interviewees];
-            newInterviewees[index] = { ...newInterviewees[index], [field]: value };
+            const processedValue = (field === 'name' || field === 'interviewerName')
+                ? cleanNameInput(value)
+                : value;
+            newInterviewees[index] = { ...newInterviewees[index], [field]: processedValue };
             return { ...prev, interviewees: newInterviewees };
         });
     };
@@ -423,7 +430,8 @@ export default function NewRequestPage() {
     const updateVisitor = (index: number, field: string, value: string) => {
         setFormData(prev => {
             const newVisitors = [...prev.visitors];
-            newVisitors[index] = { ...newVisitors[index], [field]: value };
+            const processedValue = (field === 'name') ? cleanNameInput(value) : value;
+            newVisitors[index] = { ...newVisitors[index], [field]: processedValue };
             return { ...prev, visitors: newVisitors };
         });
     };
@@ -554,6 +562,36 @@ export default function NewRequestPage() {
         }
     }, [formData.startDate, formData.endDate, maxEndDateStr]);
 
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        // Validate names
+        if (formData.visitorCategory === 'Interviewee') {
+            for (let i = 0; i < formData.interviewees.length; i++) {
+                const cand = formData.interviewees[i];
+                const name = (cand.name || '').trim();
+                if (name.length < 2) {
+                    alert(`Vui lòng nhập họ và tên ứng viên #${i + 1} hợp lệ (chỉ chứa chữ cái, tối thiểu 2 ký tự).`);
+                    return;
+                }
+                if (cand.interviewerName && cand.interviewerName.trim().length < 2) {
+                    alert(`Vui lòng nhập tên người phỏng vấn #${i + 1} hợp lệ (tối thiểu 2 ký tự).`);
+                    return;
+                }
+            }
+        } else {
+            for (let i = 0; i < formData.visitors.length; i++) {
+                const v = formData.visitors[i];
+                const name = (v.name || '').trim();
+                if (name.length < 2) {
+                    alert(`Vui lòng nhập họ và tên khách #${i + 1} hợp lệ (chỉ chứa chữ cái, tối thiểu 2 ký tự).`);
+                    return;
+                }
+            }
+        }
+        setShowReviewModal(true);
+    };
+
     return (
         <div className="w-full">
             <div className="w-full mx-auto">
@@ -620,7 +658,7 @@ export default function NewRequestPage() {
                                     {(formData.visitorCategory === 'Vendor' || formData.visitorCategory === 'Contractor' || formData.visitorCategory === 'Vendor/Contractor') ? 'VENDOR / CONTRACTOR' : formData.visitorCategory === 'Interviewee' ? 'INTERVIEWEE' : 'MIL / TTI EXPAT'}
                                 </div>
 
-                                <form onSubmit={(e) => { e.preventDefault(); setShowReviewModal(true); }}>
+                                <form onSubmit={handleFormSubmit}>
                                     
                                     {/* VISITOR INFORMATION */}
                                     <SectionHeader title="Visitor Information" />

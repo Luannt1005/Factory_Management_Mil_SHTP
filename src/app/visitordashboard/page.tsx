@@ -169,10 +169,15 @@ function DashboardContent() {
         }
     };
 
-    const formatName = (str: string) => {
+    const cleanNameInput = (str: string) => {
         if (!str) return '';
         const nfc = str.normalize('NFC');
-        const clean = nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+        return nfc.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+    };
+
+    const formatName = (str: string) => {
+        if (!str) return '';
+        const clean = cleanNameInput(str);
         return clean.replace(/([\p{L}\p{M}]+)/gu, (match) => {
             return match.charAt(0).toLocaleUpperCase('vi-VN') + match.slice(1).toLocaleLowerCase('vi-VN');
         }).trim().replace(/\s+/g, ' ');
@@ -886,7 +891,7 @@ function DashboardContent() {
                                                             value={cand.name || ''}
                                                             onChange={(e) => {
                                                                 const updated = [...editFormData.visitors];
-                                                                updated[idx].name = e.target.value;
+                                                                updated[idx].name = cleanNameInput(e.target.value);
                                                                 setEditFormData({ ...editFormData, visitors: updated });
                                                             }}
                                                             onBlur={() => {
@@ -934,7 +939,7 @@ function DashboardContent() {
                                                             value={cand.interviewerName || ''}
                                                             onChange={(e) => {
                                                                 const updated = [...editFormData.visitors];
-                                                                updated[idx].interviewerName = e.target.value;
+                                                                updated[idx].interviewerName = cleanNameInput(e.target.value);
                                                                 setEditFormData({ ...editFormData, visitors: updated });
                                                             }}
                                                             onBlur={() => {
