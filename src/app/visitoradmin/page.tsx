@@ -19,6 +19,12 @@ const STATUS_OPTIONS = [
     { label: 'REJECTED', value: 'REJECTED' }
 ];
 
+const SITE_OPTIONS = [
+    { label: 'SHTP', value: 'SHTP' },
+    { label: 'DDK', value: 'DDK' },
+    { label: 'SHTP / DDK', value: 'SHTP/DDK' }
+];
+
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
     const [requests, setRequests] = useState<any[]>([]);
@@ -26,6 +32,9 @@ export default function AdminDashboard() {
     const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 15, totalPages: 0 });
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [completeStartDate, setCompleteStartDate] = useState('');
+    const [completeEndDate, setCompleteEndDate] = useState('');
+    const [sites, setSites] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [code, setCode] = useState('');
     const [statusFilters, setStatusFilters] = useState<string[]>([]);
@@ -39,7 +48,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         setMounted(true);
         fetchRequests(1);
-    }, [startDate, endDate, categories, code, statusFilters, activeTab]);
+    }, [startDate, endDate, completeStartDate, completeEndDate, sites, categories, code, statusFilters, activeTab]);
 
     const fetchRequests = async (page: number) => {
         setLoading(true);
@@ -51,6 +60,15 @@ export default function AdminDashboard() {
             }
             if (endDate) {
                 url += `&endDate=${encodeURIComponent(endDate)}`;
+            }
+            if (completeStartDate) {
+                url += `&completeStartDate=${encodeURIComponent(completeStartDate)}`;
+            }
+            if (completeEndDate) {
+                url += `&completeEndDate=${encodeURIComponent(completeEndDate)}`;
+            }
+            if (sites.length > 0) {
+                url += `&site=${encodeURIComponent(sites.join(','))}`;
             }
             if (categories.length > 0) {
                 url += `&category=${encodeURIComponent(categories.join(','))}`;
@@ -85,6 +103,15 @@ export default function AdminDashboard() {
             }
             if (endDate) {
                 url += `&endDate=${encodeURIComponent(endDate)}`;
+            }
+            if (completeStartDate) {
+                url += `&completeStartDate=${encodeURIComponent(completeStartDate)}`;
+            }
+            if (completeEndDate) {
+                url += `&completeEndDate=${encodeURIComponent(completeEndDate)}`;
+            }
+            if (sites.length > 0) {
+                url += `&site=${encodeURIComponent(sites.join(','))}`;
             }
             if (categories.length > 0) {
                 url += `&category=${encodeURIComponent(categories.join(','))}`;
@@ -344,6 +371,31 @@ export default function AdminDashboard() {
                             className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
                         />
                     </div>
+                    <div className="flex items-center gap-1.5">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">Complete Date</label>
+                        <input 
+                            type="date" 
+                            value={completeStartDate}
+                            onChange={(e) => setCompleteStartDate(e.target.value)}
+                            title="Complete Date From"
+                            className="text-xs border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                        />
+                        <span className="text-gray-400 text-xs">-</span>
+                        <input 
+                            type="date" 
+                            value={completeEndDate}
+                            onChange={(e) => setCompleteEndDate(e.target.value)}
+                            title="Complete Date To"
+                            className="text-xs border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                        />
+                    </div>
+                    <MultiSelectDropdown 
+                        label="Site"
+                        options={SITE_OPTIONS}
+                        selected={sites}
+                        onChange={setSites}
+                        placeholder="All"
+                    />
                     {activeTab === 'general' && (
                         <MultiSelectDropdown 
                             label="Category"
@@ -360,9 +412,18 @@ export default function AdminDashboard() {
                         onChange={setStatusFilters}
                         placeholder="All"
                     />
-                    {(startDate || endDate || categories.length > 0 || code || statusFilters.length > 0) && (
+                    {(startDate || endDate || completeStartDate || completeEndDate || sites.length > 0 || categories.length > 0 || code || statusFilters.length > 0) && (
                         <button 
-                            onClick={() => { setStartDate(''); setEndDate(''); setCategories([]); setCode(''); setStatusFilters([]); }}
+                            onClick={() => { 
+                                setStartDate(''); 
+                                setEndDate(''); 
+                                setCompleteStartDate('');
+                                setCompleteEndDate('');
+                                setSites([]);
+                                setCategories([]); 
+                                setCode(''); 
+                                setStatusFilters([]); 
+                            }}
                             className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4"
                         >
                             Clear
@@ -487,7 +548,14 @@ export default function AdminDashboard() {
                                             {request.visitor_title || '-'}
                                         </td>
                                         <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
-                                            {request.visitor_category}
+                                            <div className="flex flex-col gap-0.5">
+                                                <span>{request.visitor_category}</span>
+                                                {request.visiting_site && (
+                                                    <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded w-fit border border-blue-100">
+                                                        {request.visiting_site}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-bold text-[#0f172a] truncate max-w-[250px]" title={request.profiles?.name}>{request.profiles?.name}</div>
@@ -541,6 +609,11 @@ export default function AdminDashboard() {
                                             }}>
                                                 {request.status}
                                             </span>
+                                            {(request.status === 'COMPLETE' || request.status === 'APPROVED') && request.updated_at && (
+                                                <div className="text-[9px] text-gray-400 font-medium mt-0.5" title="Completion Date">
+                                                    {new Date(request.updated_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2 text-right">
                                         <div className="flex justify-end gap-2">
@@ -664,6 +737,11 @@ export default function AdminDashboard() {
                                             }}>
                                                 {request.status}
                                             </span>
+                                            {(request.status === 'COMPLETE' || request.status === 'APPROVED') && (request.updated_at || request.created_at) && (
+                                                <div className="text-[9px] text-gray-400 font-medium mt-0.5" title="Completion Date">
+                                                    {new Date(request.updated_at || request.created_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2 text-right">
                                             <div className="flex justify-end gap-2">

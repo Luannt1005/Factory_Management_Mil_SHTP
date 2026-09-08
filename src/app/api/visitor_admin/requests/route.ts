@@ -27,6 +27,9 @@ export async function GET(request: Request) {
         const tab = searchParams.get('tab');
         const code = searchParams.get('code');
         const status = searchParams.get('status');
+        const site = searchParams.get('site');
+        const completeStartDate = searchParams.get('completeStartDate');
+        const completeEndDate = searchParams.get('completeEndDate');
         const isExport = limit > 1000; // if limit is very high, it's likely an export
 
         const visitorPool = await getVisitorDbConnection();
@@ -98,6 +101,43 @@ export async function GET(request: Request) {
                 queryParams.push(...statusList);
                 paramCount += statusList.length;
             }
+        }
+
+        if (site && site !== 'All') {
+            const siteList = site.split(',').map(s => s.trim()).filter(Boolean);
+            if (siteList.length > 0) {
+                const siteConds: string[] = [];
+                for (const s of siteList) {
+                    if (s === 'SHTP') {
+                        siteConds.push(`(r."visitingSite" = $${paramCount} OR r."visitingSite" = 'SHTP/DDK')`);
+                        queryParams.push('SHTP');
+                        paramCount += 1;
+                    } else if (s === 'DDK') {
+                        siteConds.push(`(r."visitingSite" = $${paramCount} OR r."visitingSite" = 'SHTP/DDK')`);
+                        queryParams.push('DDK');
+                        paramCount += 1;
+                    } else {
+                        siteConds.push(`r."visitingSite" = $${paramCount}`);
+                        queryParams.push(s);
+                        paramCount += 1;
+                    }
+                }
+                conditions.push(`(${siteConds.join(' OR ')})`);
+            }
+        }
+
+        if (completeStartDate && completeEndDate) {
+            conditions.push(`r.status IN ('COMPLETE', 'APPROVED') AND (r."updatedAt"::date >= $${paramCount}::date AND r."updatedAt"::date <= $${paramCount+1}::date)`);
+            queryParams.push(completeStartDate, completeEndDate);
+            paramCount += 2;
+        } else if (completeStartDate) {
+            conditions.push(`r.status IN ('COMPLETE', 'APPROVED') AND (r."updatedAt"::date = $${paramCount}::date)`);
+            queryParams.push(completeStartDate);
+            paramCount += 1;
+        } else if (completeEndDate) {
+            conditions.push(`r.status IN ('COMPLETE', 'APPROVED') AND (r."updatedAt"::date <= $${paramCount}::date)`);
+            queryParams.push(completeEndDate);
+            paramCount += 1;
         }
 
         if (conditions.length > 0) {
