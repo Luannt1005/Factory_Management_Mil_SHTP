@@ -314,7 +314,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Filters Row */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-200 shadow-sm">
+            <div className="relative z-30 flex flex-wrap items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2">
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Code</label>
@@ -390,7 +390,7 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-200 text-[#0f172a] max-w-[calc(100vw-2rem)]">
+            <div className="relative z-10 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-200 text-[#0f172a] max-w-[calc(100vw-2rem)]">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>

@@ -69,14 +69,14 @@ export default function MultiSelectDropdown({
     };
 
     return (
-        <div className={`relative flex items-center gap-2 ${className}`} ref={dropdownRef}>
+        <div className={`relative flex items-center gap-2 ${isOpen ? 'z-30' : 'z-10'} ${className}`} ref={dropdownRef}>
             {label && (
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
                     {label}
                 </label>
             )}
             
-            <div className="relative">
+            <div className={`relative ${isOpen ? 'z-30' : 'z-10'}`}>
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
@@ -108,7 +108,7 @@ export default function MultiSelectDropdown({
                 </button>
 
                 {isOpen && (
-                    <div className="absolute left-0 mt-1.5 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-2 text-xs">
+                    <div className="absolute left-0 mt-1.5 w-64 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-2 text-xs">
                         <div className="flex items-center justify-between pb-2 mb-1.5 border-b border-gray-100 px-1">
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                                 {label || 'Options'} ({selected.length}/{options.length})
