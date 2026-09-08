@@ -17,19 +17,35 @@ const InputLabel = ({ children, required }: { children: React.ReactNode, require
     </label>
 );
 
-const Input = (props: any) => (
+const Input = ({ style, onFocus, onBlur, onClick, ...rest }: any) => (
     <input 
-        {...props} 
-        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', color: '#1e293b', outline: 'none' }}
-        onFocus={(e) => e.target.style.borderColor = '#db011c'}
-        onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+        {...rest} 
+        style={{ 
+            width: '100%', 
+            padding: '10px 12px', 
+            borderRadius: '6px', 
+            border: '1px solid #e2e8f0', 
+            fontSize: '14px', 
+            backgroundColor: '#f8fafc', 
+            color: '#1e293b', 
+            outline: 'none',
+            ...(style || {}) 
+        }}
+        onFocus={(e) => {
+            e.target.style.borderColor = '#db011c';
+            if (onFocus) onFocus(e);
+        }}
+        onBlur={(e) => {
+            e.target.style.borderColor = '#e2e8f0';
+            if (onBlur) onBlur(e);
+        }}
         onClick={(e) => {
-            if (props.type === 'date' || props.type === 'time') {
+            if (rest.type === 'date' || rest.type === 'time') {
                 try {
                     (e.target as any).showPicker();
                 } catch (err) {}
             }
-            if (props.onClick) props.onClick(e);
+            if (onClick) onClick(e);
         }}
     />
 );
@@ -566,10 +582,19 @@ export default function NewRequestPage() {
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Validate names
+        // Format names to Title Case before validation and review
         if (formData.visitorCategory === 'Interviewee') {
-            for (let i = 0; i < formData.interviewees.length; i++) {
-                const cand = formData.interviewees[i];
+            const formatted = formData.interviewees.map(cand => ({
+                ...cand,
+                name: formatName(cand.name),
+                interviewerName: formatName(cand.interviewerName),
+                jobTitle: capitalizeWords(cand.jobTitle),
+                interviewDepartment: capitalizeWords(cand.interviewDepartment)
+            }));
+            setFormData(prev => ({ ...prev, interviewees: formatted }));
+
+            for (let i = 0; i < formatted.length; i++) {
+                const cand = formatted[i];
                 const name = (cand.name || '').trim();
                 if (name.length < 2) {
                     alert(`Vui lòng nhập họ và tên ứng viên #${i + 1} hợp lệ (chỉ chứa chữ cái, tối thiểu 2 ký tự).`);
@@ -581,8 +606,16 @@ export default function NewRequestPage() {
                 }
             }
         } else {
-            for (let i = 0; i < formData.visitors.length; i++) {
-                const v = formData.visitors[i];
+            const formatted = formData.visitors.map(v => ({
+                ...v,
+                name: formatName(v.name),
+                company: capitalizeWords(v.company),
+                title: capitalizeWords(v.title)
+            }));
+            setFormData(prev => ({ ...prev, visitors: formatted }));
+
+            for (let i = 0; i < formatted.length; i++) {
+                const v = formatted[i];
                 const name = (v.name || '').trim();
                 if (name.length < 2) {
                     alert(`Vui lòng nhập họ và tên khách #${i + 1} hợp lệ (chỉ chứa chữ cái, tối thiểu 2 ký tự).`);
