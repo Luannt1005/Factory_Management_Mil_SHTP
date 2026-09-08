@@ -52,10 +52,29 @@ export async function GET(request: Request) {
 
         if (tab === 'interviewee' || category === 'Interviewee') {
             conditions.push(`r."visitorCategory" = 'Interviewee'`);
-        } else if (category) {
-            conditions.push(`r."visitorCategory" = $${paramCount}`);
-            queryParams.push(category);
-            paramCount += 1;
+        } else if (category && category !== 'All') {
+            const catList = category.split(',').map(c => c.trim()).filter(Boolean);
+            if (catList.length === 1) {
+                if (catList[0] === 'Vendor' || catList[0] === 'Contractor') {
+                    conditions.push(`(r."visitorCategory" = $${paramCount} OR r."visitorCategory" = 'Vendor/Contractor')`);
+                    queryParams.push(catList[0]);
+                    paramCount += 1;
+                } else {
+                    conditions.push(`r."visitorCategory" = $${paramCount}`);
+                    queryParams.push(catList[0]);
+                    paramCount += 1;
+                }
+            } else if (catList.length > 1) {
+                const expanded = new Set(catList);
+                if (catList.includes('Vendor') || catList.includes('Contractor')) {
+                    expanded.add('Vendor/Contractor');
+                }
+                const finalList = Array.from(expanded);
+                const placeholders = finalList.map((_, i) => `$${paramCount + i}`).join(', ');
+                conditions.push(`r."visitorCategory" IN (${placeholders})`);
+                queryParams.push(...finalList);
+                paramCount += finalList.length;
+            }
         } else {
             // Default (tab=general or unspecified): filter out Interviewee
             conditions.push(`r."visitorCategory" != 'Interviewee'`);
@@ -67,10 +86,18 @@ export async function GET(request: Request) {
             paramCount += 1;
         }
 
-        if (status) {
-            conditions.push(`r.status = $${paramCount}`);
-            queryParams.push(status);
-            paramCount += 1;
+        if (status && status !== 'All') {
+            const statusList = status.split(',').map(s => s.trim()).filter(Boolean);
+            if (statusList.length === 1) {
+                conditions.push(`r.status = $${paramCount}`);
+                queryParams.push(statusList[0]);
+                paramCount += 1;
+            } else if (statusList.length > 1) {
+                const placeholders = statusList.map((_, i) => `$${paramCount + i}`).join(', ');
+                conditions.push(`r.status IN (${placeholders})`);
+                queryParams.push(...statusList);
+                paramCount += statusList.length;
+            }
         }
 
         if (conditions.length > 0) {

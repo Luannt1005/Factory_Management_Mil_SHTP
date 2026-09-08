@@ -5,6 +5,19 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import EditRequestModal from './EditRequestModal';
+import MultiSelectDropdown from '@/components/MultiSelectDropdown';
+
+const CATEGORY_OPTIONS = [
+    { label: 'Vendor', value: 'Vendor' },
+    { label: 'Contractor', value: 'Contractor' },
+    { label: 'MIL/TTI Expat / SHTP Business trip', value: 'MIL/TTI Expat / SHTP Business trip' }
+];
+
+const STATUS_OPTIONS = [
+    { label: 'IN PROCESS', value: 'IN PROCESS' },
+    { label: 'COMPLETE', value: 'COMPLETE' },
+    { label: 'REJECTED', value: 'REJECTED' }
+];
 
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
@@ -13,9 +26,9 @@ export default function AdminDashboard() {
     const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 15, totalPages: 0 });
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [category, setCategory] = useState('');
+    const [categories, setCategories] = useState<string[]>([]);
     const [code, setCode] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
+    const [statusFilters, setStatusFilters] = useState<string[]>([]);
     const [exporting, setExporting] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
     const [editingRequest, setEditingRequest] = useState<any>(null);
@@ -26,7 +39,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         setMounted(true);
         fetchRequests(1);
-    }, [startDate, endDate, category, code, statusFilter, activeTab]);
+    }, [startDate, endDate, categories, code, statusFilters, activeTab]);
 
     const fetchRequests = async (page: number) => {
         setLoading(true);
@@ -39,14 +52,14 @@ export default function AdminDashboard() {
             if (endDate) {
                 url += `&endDate=${encodeURIComponent(endDate)}`;
             }
-            if (category) {
-                url += `&category=${encodeURIComponent(category)}`;
+            if (categories.length > 0) {
+                url += `&category=${encodeURIComponent(categories.join(','))}`;
             }
             if (code) {
                 url += `&code=${encodeURIComponent(code)}`;
             }
-            if (statusFilter) {
-                url += `&status=${encodeURIComponent(statusFilter)}`;
+            if (statusFilters.length > 0) {
+                url += `&status=${encodeURIComponent(statusFilters.join(','))}`;
             }
             const res = await fetch(url);
             if (res.ok) {
@@ -73,14 +86,14 @@ export default function AdminDashboard() {
             if (endDate) {
                 url += `&endDate=${encodeURIComponent(endDate)}`;
             }
-            if (category) {
-                url += `&category=${encodeURIComponent(category)}`;
+            if (categories.length > 0) {
+                url += `&category=${encodeURIComponent(categories.join(','))}`;
             }
             if (code) {
                 url += `&code=${encodeURIComponent(code)}`;
             }
-            if (statusFilter) {
-                url += `&status=${encodeURIComponent(statusFilter)}`;
+            if (statusFilters.length > 0) {
+                url += `&status=${encodeURIComponent(statusFilters.join(','))}`;
             }
             
             const res = await fetch(url);
@@ -331,35 +344,25 @@ export default function AdminDashboard() {
                             className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Category</label>
-                        <select 
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="text-sm border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
-                        >
-                            <option value="">All</option>
-                            <option value="Vendor">Vendor</option>
-                            <option value="Contractor">Contractor</option>
-                            <option value="MIL/TTI Expat / SHTP Business trip">MIL/TTI Expat / SHTP Business trip</option>
-                        </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Status</label>
-                        <select 
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="text-sm border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
-                        >
-                            <option value="">All</option>
-                            <option value="IN PROCESS">IN PROCESS</option>
-                            <option value="COMPLETE">COMPLETE</option>
-                            <option value="REJECTED">REJECTED</option>
-                        </select>
-                    </div>
-                    {(startDate || endDate || category || code || statusFilter) && (
+                    {activeTab === 'general' && (
+                        <MultiSelectDropdown 
+                            label="Category"
+                            options={CATEGORY_OPTIONS}
+                            selected={categories}
+                            onChange={setCategories}
+                            placeholder="All"
+                        />
+                    )}
+                    <MultiSelectDropdown 
+                        label="Status"
+                        options={STATUS_OPTIONS}
+                        selected={statusFilters}
+                        onChange={setStatusFilters}
+                        placeholder="All"
+                    />
+                    {(startDate || endDate || categories.length > 0 || code || statusFilters.length > 0) && (
                         <button 
-                            onClick={() => { setStartDate(''); setEndDate(''); setCategory(''); setCode(''); setStatusFilter(''); }}
+                            onClick={() => { setStartDate(''); setEndDate(''); setCategories([]); setCode(''); setStatusFilters([]); }}
                             className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4"
                         >
                             Clear
