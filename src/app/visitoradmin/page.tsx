@@ -473,6 +473,7 @@ export default function AdminDashboard() {
                                     <th className="px-3 py-2">Company</th>
                                     <th className="px-3 py-2">Title</th>
                                     <th className="px-3 py-2">Category</th>
+                                    <th className="px-3 py-2 text-center">Site</th>
                                     <th className="px-3 py-2">Submitter</th>
                                     <th className="px-3 py-2 text-center">Start Date</th>
                                     <th className="px-3 py-2 text-center">End Date</th>
@@ -499,6 +500,7 @@ export default function AdminDashboard() {
                                     <th className="px-3 py-2">Submitter</th>
                                     <th className="px-3 py-2">Job Title</th>
                                     <th className="px-3 py-2">Interviewer</th>
+                                    <th className="px-3 py-2 text-center">Site</th>
                                     <th className="px-3 py-2 text-center">Start Date</th>
                                     <th className="px-3 py-2 text-center">Start Time</th>
                                     <th className="px-3 py-2 text-center">Area</th>
@@ -548,14 +550,16 @@ export default function AdminDashboard() {
                                             {request.visitor_title || '-'}
                                         </td>
                                         <td className="px-3 py-2 text-[11px] text-gray-600 truncate max-w-[100px]">
-                                            <div className="flex flex-col gap-0.5">
-                                                <span>{request.visitor_category}</span>
-                                                {request.visiting_site && (
-                                                    <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded w-fit border border-blue-100">
-                                                        {request.visiting_site}
-                                                    </span>
-                                                )}
-                                            </div>
+                                            {request.visitor_category}
+                                        </td>
+                                        <td className="px-3 py-2 text-center whitespace-nowrap">
+                                            {request.visiting_site ? (
+                                                <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                                    {request.visiting_site}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400 text-[11px]">-</span>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-bold text-[#0f172a] truncate max-w-[250px]" title={request.profiles?.name}>{request.profiles?.name}</div>
@@ -707,6 +711,15 @@ export default function AdminDashboard() {
                                                     return request.interviewer_name || '-';
                                                 })()}
                                             </div>
+                                        </td>
+                                        <td className="px-3 py-2 text-center whitespace-nowrap">
+                                            {request.visiting_site ? (
+                                                <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                                    {request.visiting_site}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400 text-[11px]">-</span>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2 text-center text-gray-700 tabular-nums">
                                             {new Date(request.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
