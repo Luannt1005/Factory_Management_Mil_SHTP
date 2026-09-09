@@ -37,6 +37,7 @@ export default function AdminDashboard() {
     const [sites, setSites] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [code, setCode] = useState('');
+    const [submitter, setSubmitter] = useState('');
     const [statusFilters, setStatusFilters] = useState<string[]>([]);
     const [exporting, setExporting] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
@@ -48,7 +49,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         setMounted(true);
         fetchRequests(1);
-    }, [startDate, endDate, completeStartDate, completeEndDate, sites, categories, code, statusFilters, activeTab]);
+    }, [startDate, endDate, completeStartDate, completeEndDate, sites, categories, code, submitter, statusFilters, activeTab]);
 
     const fetchRequests = async (page: number) => {
         setLoading(true);
@@ -75,6 +76,9 @@ export default function AdminDashboard() {
             }
             if (code) {
                 url += `&code=${encodeURIComponent(code)}`;
+            }
+            if (submitter) {
+                url += `&submitter=${encodeURIComponent(submitter)}`;
             }
             if (statusFilters.length > 0) {
                 url += `&status=${encodeURIComponent(statusFilters.join(','))}`;
@@ -118,6 +122,9 @@ export default function AdminDashboard() {
             }
             if (code) {
                 url += `&code=${encodeURIComponent(code)}`;
+            }
+            if (submitter) {
+                url += `&submitter=${encodeURIComponent(submitter)}`;
             }
             if (statusFilters.length > 0) {
                 url += `&status=${encodeURIComponent(statusFilters.join(','))}`;
@@ -354,6 +361,16 @@ export default function AdminDashboard() {
                         />
                     </div>
                     <div className="flex items-center gap-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Submitter</label>
+                        <input 
+                            type="text" 
+                            value={submitter}
+                            onChange={(e) => setSubmitter(e.target.value)}
+                            placeholder="Name, email, dept..."
+                            className="text-sm border border-gray-300 rounded-lg px-2 py-1 w-36 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                        />
+                    </div>
+                    <div className="flex items-center gap-2">
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">From</label>
                         <input 
                             type="date" 
@@ -412,7 +429,7 @@ export default function AdminDashboard() {
                         onChange={setStatusFilters}
                         placeholder="All"
                     />
-                    {(startDate || endDate || completeStartDate || completeEndDate || sites.length > 0 || categories.length > 0 || code || statusFilters.length > 0) && (
+                    {(startDate || endDate || completeStartDate || completeEndDate || sites.length > 0 || categories.length > 0 || code || submitter || statusFilters.length > 0) && (
                         <button 
                             onClick={() => { 
                                 setStartDate(''); 
@@ -422,6 +439,7 @@ export default function AdminDashboard() {
                                 setSites([]);
                                 setCategories([]); 
                                 setCode(''); 
+                                setSubmitter('');
                                 setStatusFilters([]); 
                             }}
                             className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4"

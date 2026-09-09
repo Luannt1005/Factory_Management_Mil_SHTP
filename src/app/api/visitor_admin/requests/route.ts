@@ -28,6 +28,7 @@ export async function GET(request: Request) {
         const code = searchParams.get('code');
         const status = searchParams.get('status');
         const site = searchParams.get('site');
+        const submitter = searchParams.get('submitter');
         const completeStartDate = searchParams.get('completeStartDate');
         const completeEndDate = searchParams.get('completeEndDate');
         const isExport = limit > 1000; // if limit is very high, it's likely an export
@@ -89,6 +90,12 @@ export async function GET(request: Request) {
             paramCount += 1;
         }
 
+        if (submitter && submitter.trim()) {
+            conditions.push(`(p.name ILIKE $${paramCount} OR p.email ILIKE $${paramCount} OR p.department ILIKE $${paramCount})`);
+            queryParams.push(`%${submitter.trim()}%`);
+            paramCount += 1;
+        }
+
         if (status && status !== 'All') {
             const statusList = status.split(',').map(s => s.trim()).filter(Boolean);
             if (statusList.length === 1) {
@@ -145,7 +152,7 @@ export async function GET(request: Request) {
         }
 
         // Get total count for pagination
-        const countQuery = `SELECT COUNT(*) FROM "VisitorRequest" r ${whereClause}`;
+        const countQuery = `SELECT COUNT(*) FROM "VisitorRequest" r LEFT JOIN "User" p ON r."submitterId" = p.id ${whereClause}`;
         const { rows: countRows } = await visitorPool.query(countQuery, queryParams);
         const total = parseInt(countRows[0].count);
 
