@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/context/UserContext';
+import RequestCheckInModal from './components/RequestCheckInModal';
+import CameraScannerModal from './components/CameraScannerModal';
 
 type ViewMode = 'group' | 'visitor';
 type StatusFilter = 'ALL' | 'PENDING' | 'CHECKED_IN' | 'CHECKED_OUT';
@@ -36,6 +38,15 @@ export default function CheckInOutManagement() {
     const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [cardNumbers, setCardNumbers] = useState<Record<string, string>>({});
+
+    // QR Code Scanning & Modal States
+    const [scanInput, setScanInput] = useState('');
+    const [scanLoading, setScanLoading] = useState(false);
+    const [scanError, setScanError] = useState<string | null>(null);
+    const [scannedRequest, setScannedRequest] = useState<any | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showCameraScanner, setShowCameraScanner] = useState(false);
+    const scanInputRef = useRef<HTMLInputElement | null>(null);
 
     const handleCardNumberChange = (requestId: string, visitorIndex: number, value: string) => {
         setCardNumbers(prev => ({ ...prev, [`${requestId}-${visitorIndex}`]: value }));
@@ -93,8 +104,10 @@ export default function CheckInOutManagement() {
                 })
             });
             if (res.ok) {
-                // Refresh list locally
                 const updatedStatus = action === 'CHECK_IN' ? 'CHECKED_IN' : action === 'CHECK_OUT' ? 'CHECKED_OUT' : 'PENDING';
+                const nowIso = new Date().toISOString();
+
+                // 1. Refresh list locally
                 setHistory(prev => prev.map(req => {
                     if (req.requestId === requestId) {
                         return {
@@ -111,7 +124,7 @@ export default function CheckInOutManagement() {
                                         ...visitor, 
                                         cardNumber,
                                         checkInOutStatus: updatedStatus, 
-                                        [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: new Date().toISOString() 
+                                        [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: nowIso
                                     };
                                 }
                                 return visitor;
@@ -120,14 +133,102 @@ export default function CheckInOutManagement() {
                     }
                     return req;
                 }));
+
+                // 2. Also refresh currently opened scannedRequest in Modal
+                setScannedRequest((prev: any) => {
+                    if (!prev || prev.requestId !== requestId) return prev;
+                    return {
+                        ...prev,
+                        visitors: prev.visitors?.map((visitor: any) => {
+                            if (visitor.visitorIndex === v.visitorIndex) {
+                                if (action === 'RESET') {
+                                    return { ...visitor, checkInOutStatus: 'PENDING', checkInTime: null, checkOutTime: null };
+                                }
+                                if (action === 'UPDATE_CARD') {
+                                    return { ...visitor, cardNumber };
+                                }
+                                return {
+                                    ...visitor,
+                                    cardNumber,
+                                    checkInOutStatus: updatedStatus,
+                                    [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: nowIso
+                                };
+                            }
+                            return visitor;
+                        })
+                    };
+                });
             } else {
                 console.error('Action failed:', await res.text());
-                alert('Action failed');
+                alert('Thao tác thất bại');
             }
         } catch (err) {
             console.error('Failed to perform check in/out:', err);
         } finally {
             setActionLoading(null);
+        }
+    };
+
+    const handleLookupRequest = async (rawCode: string) => {
+        if (!rawCode || !rawCode.trim()) return;
+        let cleanCode = rawCode.trim();
+        // If it's a URL or contains slashes, extract the last segment
+        if (cleanCode.includes('/')) {
+            const segments = cleanCode.split('/').filter(Boolean);
+            cleanCode = segments[segments.length - 1];
+        }
+        if (cleanCode.startsWith('#')) {
+            cleanCode = cleanCode.substring(1);
+        }
+
+        setScanLoading(true);
+        setScanError(null);
+
+        try {
+            // 1. First check if it is already loaded in current history
+            const existing = history.find(r => 
+                (r.requestId && r.requestId.toLowerCase() === cleanCode.toLowerCase()) || 
+                (r.requestCode && r.requestCode.toLowerCase() === cleanCode.toLowerCase())
+            );
+
+            if (existing) {
+                setScannedRequest(existing);
+                setIsModalOpen(true);
+                setScanInput('');
+                return;
+            }
+
+            // 2. Fetch directly from server by search (without date/category filter restrictions)
+            const res = await fetch(`/api/visitor_admin/checkinout/history?search=${encodeURIComponent(cleanCode)}&limit=10`);
+            if (res.ok) {
+                const data = await res.json();
+                const found = (data.requests || []).find((r: any) => 
+                    (r.requestId && r.requestId.toLowerCase() === cleanCode.toLowerCase()) || 
+                    (r.requestCode && r.requestCode.toLowerCase() === cleanCode.toLowerCase())
+                ) || data.requests?.[0];
+
+                if (found) {
+                    setScannedRequest(found);
+                    setIsModalOpen(true);
+                    setScanInput('');
+                } else {
+                    setScanError(`Không tìm thấy yêu cầu hợp lệ với mã "${cleanCode}". Vui lòng kiểm tra lại đơn đã được duyệt (Approved) chưa.`);
+                }
+            } else {
+                setScanError('Lỗi tra cứu thông tin yêu cầu từ máy chủ.');
+            }
+        } catch (err) {
+            console.error('Scan lookup error:', err);
+            setScanError('Lỗi kết nối khi tra cứu yêu cầu.');
+        } finally {
+            setScanLoading(false);
+        }
+    };
+
+    const handleScanInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleLookupRequest(scanInput);
         }
     };
 
@@ -288,6 +389,81 @@ export default function CheckInOutManagement() {
     return (
         <div className="w-full pb-10 px-6 mx-auto pt-6">
 
+            {/* Quick QR Code Scanner / ID Lookup Banner */}
+            <div className="bg-gradient-to-r from-red-700 via-[#db011c] to-rose-700 p-4 rounded-xl shadow-md text-white mb-6">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shadow-inner">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-base font-black tracking-tight">QR Code Check-In / Check-Out</h2>
+                                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
+                                    Instant Scan
+                                </span>
+                            </div>
+                            <p className="text-xs text-white/80 mt-0.5">
+                                Quét mã QR bằng súng quét mã vạch, camera thiết bị hoặc nhập trực tiếp Request ID
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                        <div className="relative flex-1 md:w-80">
+                            <input
+                                ref={scanInputRef}
+                                type="text"
+                                value={scanInput}
+                                onChange={(e) => setScanInput(e.target.value)}
+                                onKeyDown={handleScanInputKeyDown}
+                                placeholder="Quét QR hoặc nhập ID (vd: VV250826_01)..."
+                                className="w-full pl-9 pr-24 py-2 bg-white text-gray-900 rounded-lg text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white shadow-inner"
+                            />
+                            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            {scanLoading ? (
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-red-600 font-bold flex items-center gap-1 bg-white px-2 py-1">
+                                    <span className="animate-spin">⏳</span> Đang tìm...
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => handleLookupRequest(scanInput)}
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 bg-[#1a1a1a] hover:bg-black text-white text-xs font-bold px-3 py-1.5 rounded-md transition-colors shadow-xs"
+                                >
+                                    Mở Đơn
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Camera Scan Button */}
+                        <button
+                            onClick={() => setShowCameraScanner(true)}
+                            title="Mở Camera quét mã QR"
+                            className="flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 active:bg-white/30 backdrop-blur-sm text-white text-xs font-bold rounded-lg border border-white/30 transition-all whitespace-nowrap shadow-xs"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>Quét Camera</span>
+                        </button>
+                    </div>
+                </div>
+
+                {scanError && (
+                    <div className="mt-3 px-3.5 py-2 bg-red-950/70 border border-red-300/40 rounded-lg text-xs font-medium text-white flex items-center justify-between animate-in fade-in duration-200">
+                        <span>⚠️ {scanError}</span>
+                        <button onClick={() => setScanError(null)} className="text-white/80 hover:text-white font-bold ml-3 text-sm">✕</button>
+                    </div>
+                )}
+            </div>
+
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 {/* Advanced Filters */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
@@ -445,7 +621,18 @@ export default function CheckInOutManagement() {
                                 const req = v._requestInfo;
                                 return (
                                     <div key={`${req.requestId}-${v.visitorIndex}`} className={`px-6 py-3 grid grid-cols-[100px_1.1fr_115px_1.2fr_1fr_1.1fr_85px_110px_95px_115px_115px_150px] gap-3 items-center border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
-                                        <div className="text-[11px] font-medium text-gray-900 truncate" title={req.requestCode || req.requestId}>{req.requestCode || req.requestId}</div>
+                                        <div 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setScannedRequest(req);
+                                                setIsModalOpen(true);
+                                            }}
+                                            className="text-[11px] font-bold text-gray-900 hover:text-[#db011c] cursor-pointer truncate underline-offset-2 hover:underline flex items-center gap-1" 
+                                            title={`Mở Modal Check-In cho đơn ${req.requestCode || req.requestId}`}
+                                        >
+                                            <span>{req.requestCode || req.requestId}</span>
+                                            <span className="text-[9px] text-[#db011c]">↗</span>
+                                        </div>
                                         <div className="text-[11px] font-bold text-gray-700 truncate" title={req.submitterName || '-'}>{req.submitterName || '-'}</div>
                                         <div className="text-xs font-black text-[#db011c] truncate" title={v.visitorCode}>{v.visitorCode}</div>
                                         <div className="text-xs font-bold text-gray-900 truncate" title={v.visitorName}>{v.visitorName}</div>
@@ -491,8 +678,28 @@ export default function CheckInOutManagement() {
                                         className="px-6 py-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center cursor-pointer hover:bg-gray-50 transition-colors"
                                         onClick={() => setExpandedRequest(expandedRequest === req.requestId ? null : req.requestId)}
                                     >
-                                        <div className="col-span-2 font-bold text-sm text-gray-900 truncate" title={req.requestCode || req.requestId}>
-                                            {req.requestCode || req.requestId}
+                                        <div className="col-span-2 font-bold text-sm text-gray-900 truncate flex items-center gap-2" title={req.requestCode || req.requestId}>
+                                            <span 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setScannedRequest(req);
+                                                    setIsModalOpen(true);
+                                                }}
+                                                className="hover:text-[#db011c] hover:underline cursor-pointer"
+                                            >
+                                                {req.requestCode || req.requestId}
+                                            </span>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setScannedRequest(req);
+                                                    setIsModalOpen(true);
+                                                }}
+                                                className="px-1.5 py-0.5 text-[9px] font-bold text-white bg-[#db011c] hover:bg-[#b00116] rounded shadow-2xs"
+                                                title="Mở Modal Check In/Out"
+                                            >
+                                                Modal
+                                            </button>
                                         </div>
                                         <div className="col-span-2 text-xs font-bold text-gray-700 truncate" title={req.submitterName || '-'}>
                                             {req.submitterName || '-'}
@@ -629,6 +836,32 @@ export default function CheckInOutManagement() {
                     </div>
                 )}
             </div>
+
+            {/* Request Check-In Modal */}
+            <RequestCheckInModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setScannedRequest(null);
+                }}
+                request={scannedRequest}
+                cardNumbers={cardNumbers}
+                onCardNumberChange={handleCardNumberChange}
+                onAction={handleAction}
+                actionLoading={actionLoading}
+                isSecurity={isSecurity}
+                isReceptionist={isReceptionist}
+                formatDateTime={formatDateTime}
+                formatDateShort={formatDateShort}
+                getCategoryBadgeClass={getCategoryBadgeClass}
+            />
+
+            {/* Camera QR Scanner Modal */}
+            <CameraScannerModal
+                isOpen={showCameraScanner}
+                onClose={() => setShowCameraScanner(false)}
+                onScan={(code) => handleLookupRequest(code)}
+            />
         </div>
     );
 }
