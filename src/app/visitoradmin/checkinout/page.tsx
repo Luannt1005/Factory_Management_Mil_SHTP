@@ -47,6 +47,9 @@ export default function CheckInOutManagement() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showCameraScanner, setShowCameraScanner] = useState(false);
     const scanInputRef = useRef<HTMLInputElement | null>(null);
+    const barcodeBufferRef = useRef<string>('');
+    const lastKeyTimeRef = useRef<number>(0);
+    const scanDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     const handleCardNumberChange = (requestId: string, visitorIndex: number, value: string) => {
         setCardNumbers(prev => ({ ...prev, [`${requestId}-${visitorIndex}`]: value }));
@@ -79,6 +82,20 @@ export default function CheckInOutManagement() {
     useEffect(() => {
         fetchHistory();
     }, [fetchHistory]);
+
+    // Auto-focus scan input on mount
+    useEffect(() => {
+        scanInputRef.current?.focus();
+    }, []);
+
+    // Re-focus scan input after modal closes
+    useEffect(() => {
+        if (!isModalOpen && !showCameraScanner) {
+            setTimeout(() => {
+                scanInputRef.current?.focus();
+            }, 100);
+        }
+    }, [isModalOpen, showCameraScanner]);
 
     // Reset pagination to page 1 on filter or view mode changes
     useEffect(() => {
@@ -150,7 +167,7 @@ export default function CheckInOutManagement() {
                                 return {
                                     ...visitor,
                                     cardNumber,
-                                    checkInOutStatus: updatedStatus,
+                                    checkInOutStatus: updatedStatus, 
                                     [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: nowIso
                                 };
                             }
@@ -225,9 +242,76 @@ export default function CheckInOutManagement() {
         }
     };
 
+    // Global KeyDown listener to capture Scanner Gun barcode directly
+    useEffect(() => {
+        const handleGlobalKeyDown = (e: KeyboardEvent) => {
+            if (isModalOpen || showCameraScanner) return;
+
+            const now = Date.now();
+            const timeDiff = now - lastKeyTimeRef.current;
+            lastKeyTimeRef.current = now;
+
+            const activeEl = document.activeElement;
+            const isInsideOtherInput = activeEl && 
+                (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && 
+                activeEl !== scanInputRef.current;
+
+            // Scanner guns end with Enter or Tab
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                const bufferCode = barcodeBufferRef.current.trim();
+                const inputVal = scanInputRef.current?.value.trim() || scanInput.trim();
+                const candidate = bufferCode.length >= 4 ? bufferCode : (inputVal.length >= 4 ? inputVal : '');
+
+                if (candidate) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    barcodeBufferRef.current = '';
+                    setScanInput('');
+                    if (scanInputRef.current) scanInputRef.current.value = '';
+                    handleLookupRequest(candidate);
+                }
+                return;
+            }
+
+            // If user is actively typing slowly in another filter input, don't intercept
+            if (isInsideOtherInput && timeDiff > 60) {
+                barcodeBufferRef.current = '';
+                return;
+            }
+
+            // Buffer single printable characters
+            if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                if (timeDiff > 150) {
+                    barcodeBufferRef.current = '';
+                }
+                barcodeBufferRef.current += e.key;
+            }
+        };
+
+        window.addEventListener('keydown', handleGlobalKeyDown, true);
+        return () => {
+            window.removeEventListener('keydown', handleGlobalKeyDown, true);
+        };
+    }, [isModalOpen, showCameraScanner, scanInput, history]);
+
+    const handleScanInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setScanInput(val);
+        if (scanDebounceTimerRef.current) clearTimeout(scanDebounceTimerRef.current);
+
+        // Auto-open modal if complete Request ID was scanned or entered (>= 7 chars)
+        const clean = val.trim();
+        if (clean.length >= 7 && (clean.startsWith('V') || clean.startsWith('v') || clean.includes('_'))) {
+            scanDebounceTimerRef.current = setTimeout(() => {
+                handleLookupRequest(clean);
+            }, 180);
+        }
+    };
+
     const handleScanInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             e.preventDefault();
+            if (scanDebounceTimerRef.current) clearTimeout(scanDebounceTimerRef.current);
             handleLookupRequest(scanInput);
         }
     };
@@ -401,12 +485,13 @@ export default function CheckInOutManagement() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-base font-black tracking-tight">QR Code Check-In / Check-Out</h2>
-                                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
-                                    Instant Scan
+                                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/90 text-white border border-emerald-300/60 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                    Sẵn sàng quét tự động
                                 </span>
                             </div>
-                            <p className="text-xs text-white/80 mt-0.5">
-                                Quét mã QR bằng súng quét mã vạch, camera thiết bị hoặc nhập trực tiếp Request ID
+                            <p className="text-xs text-white/90 mt-0.5">
+                                Cầm súng quét mã QR của khách — Modal thông tin sẽ <strong>tự động mở ngay lập tức</strong> mà không cần nhấp chuột.
                             </p>
                         </div>
                     </div>
@@ -417,9 +502,9 @@ export default function CheckInOutManagement() {
                                 ref={scanInputRef}
                                 type="text"
                                 value={scanInput}
-                                onChange={(e) => setScanInput(e.target.value)}
+                                onChange={handleScanInputChange}
                                 onKeyDown={handleScanInputKeyDown}
-                                placeholder="Quét QR hoặc nhập ID (vd: VV250826_01)..."
+                                placeholder="Súng quét bắn tự động hoặc nhập ID..."
                                 className="w-full pl-9 pr-24 py-2 bg-white text-gray-900 rounded-lg text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white shadow-inner"
                             />
                             <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
