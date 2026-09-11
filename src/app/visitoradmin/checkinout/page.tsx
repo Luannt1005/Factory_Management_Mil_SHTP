@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/context/UserContext';
 import RequestCheckInModal from './components/RequestCheckInModal';
-import CameraScannerModal from './components/CameraScannerModal';
 
 type ViewMode = 'group' | 'visitor';
 type StatusFilter = 'ALL' | 'PENDING' | 'CHECKED_IN' | 'CHECKED_OUT';
@@ -39,17 +38,13 @@ export default function CheckInOutManagement() {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [cardNumbers, setCardNumbers] = useState<Record<string, string>>({});
 
-    // QR Code Scanning & Modal States
-    const [scanInput, setScanInput] = useState('');
+    // Scanner Gun & Modal States (Runs silently in background)
     const [scanLoading, setScanLoading] = useState(false);
     const [scanError, setScanError] = useState<string | null>(null);
     const [scannedRequest, setScannedRequest] = useState<any | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [showCameraScanner, setShowCameraScanner] = useState(false);
-    const scanInputRef = useRef<HTMLInputElement | null>(null);
     const barcodeBufferRef = useRef<string>('');
     const lastKeyTimeRef = useRef<number>(0);
-    const scanDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     const handleCardNumberChange = (requestId: string, visitorIndex: number, value: string) => {
         setCardNumbers(prev => ({ ...prev, [`${requestId}-${visitorIndex}`]: value }));
@@ -82,20 +77,6 @@ export default function CheckInOutManagement() {
     useEffect(() => {
         fetchHistory();
     }, [fetchHistory]);
-
-    // Auto-focus scan input on mount
-    useEffect(() => {
-        scanInputRef.current?.focus();
-    }, []);
-
-    // Re-focus scan input after modal closes
-    useEffect(() => {
-        if (!isModalOpen && !showCameraScanner) {
-            setTimeout(() => {
-                scanInputRef.current?.focus();
-            }, 100);
-        }
-    }, [isModalOpen, showCameraScanner]);
 
     // Reset pagination to page 1 on filter or view mode changes
     useEffect(() => {
@@ -242,39 +223,43 @@ export default function CheckInOutManagement() {
         }
     };
 
-    // Global KeyDown listener to capture Scanner Gun barcode directly
+    // Global KeyDown listener to capture Scanner Gun barcode directly anywhere on page
     useEffect(() => {
         const handleGlobalKeyDown = (e: KeyboardEvent) => {
-            if (isModalOpen || showCameraScanner) return;
+            if (isModalOpen) return;
 
             const now = Date.now();
             const timeDiff = now - lastKeyTimeRef.current;
             lastKeyTimeRef.current = now;
 
             const activeEl = document.activeElement;
-            const isInsideOtherInput = activeEl && 
-                (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && 
-                activeEl !== scanInputRef.current;
+            const isInsideInput = activeEl && 
+                (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
 
             // Scanner guns end with Enter or Tab
             if (e.key === 'Enter' || e.key === 'Tab') {
                 const bufferCode = barcodeBufferRef.current.trim();
-                const inputVal = scanInputRef.current?.value.trim() || scanInput.trim();
-                const candidate = bufferCode.length >= 4 ? bufferCode : (inputVal.length >= 4 ? inputVal : '');
+                let candidate = bufferCode.length >= 4 ? bufferCode : '';
+
+                // If cursor was in a filter input when scanned or typed:
+                if (!candidate && isInsideInput && (activeEl as HTMLInputElement).value) {
+                    const val = (activeEl as HTMLInputElement).value.trim();
+                    if (val.length >= 4 && (val.startsWith('V') || val.startsWith('v') || val.includes('_'))) {
+                        candidate = val;
+                    }
+                }
 
                 if (candidate) {
                     e.preventDefault();
                     e.stopPropagation();
                     barcodeBufferRef.current = '';
-                    setScanInput('');
-                    if (scanInputRef.current) scanInputRef.current.value = '';
                     handleLookupRequest(candidate);
                 }
                 return;
             }
 
-            // If user is actively typing slowly in another filter input, don't intercept
-            if (isInsideOtherInput && timeDiff > 60) {
+            // If user is typing slowly in a text input (e.g. search filter), don't buffer as scanner gun
+            if (isInsideInput && timeDiff > 80) {
                 barcodeBufferRef.current = '';
                 return;
             }
@@ -292,29 +277,7 @@ export default function CheckInOutManagement() {
         return () => {
             window.removeEventListener('keydown', handleGlobalKeyDown, true);
         };
-    }, [isModalOpen, showCameraScanner, scanInput, history]);
-
-    const handleScanInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        setScanInput(val);
-        if (scanDebounceTimerRef.current) clearTimeout(scanDebounceTimerRef.current);
-
-        // Auto-open modal if complete Request ID was scanned or entered (>= 7 chars)
-        const clean = val.trim();
-        if (clean.length >= 7 && (clean.startsWith('V') || clean.startsWith('v') || clean.includes('_'))) {
-            scanDebounceTimerRef.current = setTimeout(() => {
-                handleLookupRequest(clean);
-            }, 180);
-        }
-    };
-
-    const handleScanInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            if (scanDebounceTimerRef.current) clearTimeout(scanDebounceTimerRef.current);
-            handleLookupRequest(scanInput);
-        }
-    };
+    }, [isModalOpen, history]);
 
     const formatDateTime = (timeString: string | null) => {
         if (!timeString) return '-';
@@ -473,81 +436,18 @@ export default function CheckInOutManagement() {
     return (
         <div className="w-full pb-10 px-6 mx-auto pt-6">
 
-            {/* Quick QR Code Scanner / ID Lookup Banner */}
-            <div className="bg-gradient-to-r from-red-700 via-[#db011c] to-rose-700 p-4 rounded-xl shadow-md text-white mb-6">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shadow-inner">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-base font-black tracking-tight">QR Code Check-In / Check-Out</h2>
-                                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/90 text-white border border-emerald-300/60 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                                    Sẵn sàng quét tự động
-                                </span>
-                            </div>
-                            <p className="text-xs text-white/90 mt-0.5">
-                                Cầm súng quét mã QR của khách — Modal thông tin sẽ <strong>tự động mở ngay lập tức</strong> mà không cần nhấp chuột.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-80">
-                            <input
-                                ref={scanInputRef}
-                                type="text"
-                                value={scanInput}
-                                onChange={handleScanInputChange}
-                                onKeyDown={handleScanInputKeyDown}
-                                placeholder="Súng quét bắn tự động hoặc nhập ID..."
-                                className="w-full pl-9 pr-24 py-2 bg-white text-gray-900 rounded-lg text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white shadow-inner"
-                            />
-                            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
-                            {scanLoading ? (
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-red-600 font-bold flex items-center gap-1 bg-white px-2 py-1">
-                                    <span className="animate-spin">⏳</span> Đang tìm...
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => handleLookupRequest(scanInput)}
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 bg-[#1a1a1a] hover:bg-black text-white text-xs font-bold px-3 py-1.5 rounded-md transition-colors shadow-xs"
-                                >
-                                    Mở Đơn
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Camera Scan Button */}
-                        <button
-                            onClick={() => setShowCameraScanner(true)}
-                            title="Mở Camera quét mã QR"
-                            className="flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 active:bg-white/30 backdrop-blur-sm text-white text-xs font-bold rounded-lg border border-white/30 transition-all whitespace-nowrap shadow-xs"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span>Quét Camera</span>
-                        </button>
-                    </div>
+            {/* Floating Scanner status notifications */}
+            {scanLoading && (
+                <div className="fixed top-5 right-5 z-50 px-4 py-2.5 bg-black/80 backdrop-blur-sm text-white text-xs font-bold rounded-xl shadow-2xl flex items-center gap-2 animate-in fade-in duration-200">
+                    <span className="animate-spin">⏳</span> Đang tra cứu mã đơn...
                 </div>
-
-                {scanError && (
-                    <div className="mt-3 px-3.5 py-2 bg-red-950/70 border border-red-300/40 rounded-lg text-xs font-medium text-white flex items-center justify-between animate-in fade-in duration-200">
-                        <span>⚠️ {scanError}</span>
-                        <button onClick={() => setScanError(null)} className="text-white/80 hover:text-white font-bold ml-3 text-sm">✕</button>
-                    </div>
-                )}
-            </div>
+            )}
+            {scanError && (
+                <div className="fixed top-5 right-5 z-50 px-4 py-3 bg-red-600 text-white text-xs font-bold rounded-xl shadow-2xl flex items-center gap-3 animate-in fade-in duration-200">
+                    <span>⚠️ {scanError}</span>
+                    <button onClick={() => setScanError(null)} className="text-white/80 hover:text-white font-black text-sm">✕</button>
+                </div>
+            )}
 
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 {/* Advanced Filters */}
@@ -561,6 +461,14 @@ export default function CheckInOutManagement() {
                                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
                                 value={filters.search}
                                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        const clean = filters.search.trim();
+                                        if (clean.length >= 4) {
+                                            handleLookupRequest(clean);
+                                        }
+                                    }
+                                }}
                             />
                         </div>
                         <div className="w-full">
@@ -939,13 +847,6 @@ export default function CheckInOutManagement() {
                 formatDateTime={formatDateTime}
                 formatDateShort={formatDateShort}
                 getCategoryBadgeClass={getCategoryBadgeClass}
-            />
-
-            {/* Camera QR Scanner Modal */}
-            <CameraScannerModal
-                isOpen={showCameraScanner}
-                onClose={() => setShowCameraScanner(false)}
-                onScan={(code) => handleLookupRequest(code)}
             />
         </div>
     );
