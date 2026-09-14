@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Login - OrgChart TTI SHTP',
-  description: 'Login to Organization Chart Management System',
+  title: 'Factory Management',
+  description: 'Factory Management System',
 }
 
 export default function LoginLayout({
