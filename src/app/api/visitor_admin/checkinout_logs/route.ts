@@ -25,9 +25,10 @@ export async function GET(request: Request) {
         const startTime = searchParams.get('startTime'); // HH:mm or HH:mm:ss
         const endTime = searchParams.get('endTime'); // HH:mm or HH:mm:ss
         const performedBy = searchParams.get('performedBy');
+        const isExport = searchParams.get('export') === 'true';
         const page = parseInt(searchParams.get('page') || '1', 10);
-        const limit = parseInt(searchParams.get('limit') || '15', 10);
-        const offset = Math.max(0, (page - 1) * limit);
+        const limit = isExport ? 100000 : parseInt(searchParams.get('limit') || '15', 10);
+        const offset = isExport ? 0 : Math.max(0, (page - 1) * limit);
 
         const visitorPool = await getVisitorDbConnection();
 

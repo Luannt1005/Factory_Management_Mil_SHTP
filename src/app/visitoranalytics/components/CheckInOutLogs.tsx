@@ -27,6 +27,7 @@ interface OperatorItem {
 export default function CheckInOutLogs() {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [loading, setLoading] = useState(true);
+    const [exportLoading, setExportLoading] = useState(false);
     const [operators, setOperators] = useState<OperatorItem[]>([]);
 
     // Filters
@@ -191,28 +192,84 @@ export default function CheckInOutLogs() {
         }
     };
 
-    const handleExportExcel = () => {
-        if (!logs || logs.length === 0) {
-            alert('No data available to export.');
-            return;
+    const handleExportExcel = async () => {
+        setExportLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (search.trim()) params.append('search', search.trim());
+            if (actionFilter !== 'ALL') params.append('action', actionFilter);
+            if (operatorFilter !== 'ALL') params.append('performedBy', operatorFilter);
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+            if (startTime) params.append('startTime', startTime);
+            if (endTime) params.append('endTime', endTime);
+            params.append('export', 'true');
+            params.append('limit', '100000');
+
+            const res = await fetch(`/api/visitor_admin/checkinout_logs?${params.toString()}`);
+            if (!res.ok) {
+                throw new Error('Failed to fetch data for export');
+            }
+
+            const data = await res.json();
+            const exportData: LogEntry[] = data.logs || [];
+
+            if (exportData.length === 0) {
+                alert('Không có dữ liệu nào phù hợp với bộ lọc hiện tại để xuất file Excel.');
+                return;
+            }
+
+            const dataToExport = exportData.map((log, idx) => ({
+                'STT': idx + 1,
+                'Timestamp': formatDateTime(log.createdAt),
+                'Operator SSO': log.performedBy || '-',
+                'Operator Name': log.performedByName || '-',
+                'Action': log.action,
+                'Card Number': (log.cardNumber || '-').toString().replace(/^#/, ''),
+                'Visitor Name': log.visitorName || '-',
+                'Visitor Code': (log.visitorCode || '-').toString().replace(/^#/, ''),
+                'Request Code': (log.requestCode || log.requestId || '-').toString().replace(/^#/, '')
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+
+            // Set column widths for readability
+            ws['!cols'] = [
+                { wch: 6 },  // STT
+                { wch: 22 }, // Timestamp
+                { wch: 35 }, // Operator SSO
+                { wch: 26 }, // Operator Name
+                { wch: 15 }, // Action
+                { wch: 14 }, // Card Number
+                { wch: 26 }, // Visitor Name
+                { wch: 18 }, // Visitor Code
+                { wch: 18 }, // Request Code
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'CheckInOut_Logs');
+
+            let fileSuffix = '';
+            if (startDate && endDate) {
+                fileSuffix = `${startDate}_to_${endDate}`;
+            } else if (startDate) {
+                fileSuffix = `from_${startDate}`;
+            } else if (endDate) {
+                fileSuffix = `up_to_${endDate}`;
+            } else {
+                fileSuffix = new Date().toISOString().split('T')[0];
+            }
+            if (actionFilter !== 'ALL') {
+                fileSuffix += `_${actionFilter}`;
+            }
+
+            XLSX.writeFile(wb, `CheckInOut_Audit_Logs_${fileSuffix}.xlsx`);
+        } catch (err) {
+            console.error('Export Excel failed:', err);
+            alert('Có lỗi xảy ra khi tải dữ liệu xuất Excel. Vui lòng thử lại.');
+        } finally {
+            setExportLoading(false);
         }
-
-        const dataToExport = logs.map((log, idx) => ({
-            'No.': idx + 1,
-            'Timestamp': formatDateTime(log.createdAt),
-            'Operator SSO': log.performedBy || '-',
-            'Operator Name': log.performedByName || '-',
-            'Action': log.action,
-            'Card Number': (log.cardNumber || '-').toString().replace(/^#/, ''),
-            'Visitor Name': log.visitorName || '-',
-            'Visitor Code': (log.visitorCode || '-').toString().replace(/^#/, ''),
-            'Request Code': (log.requestCode || log.requestId || '-').toString().replace(/^#/, '')
-        }));
-
-        const ws = XLSX.utils.json_to_sheet(dataToExport);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'CheckInOut_Action_Logs');
-        XLSX.writeFile(wb, `CheckInOut_Audit_Logs_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const resetAllFilters = () => {
@@ -494,12 +551,23 @@ export default function CheckInOutLogs() {
                             {/* Export Excel Button */}
                             <button
                                 onClick={handleExportExcel}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition-colors shadow-xs"
+                                disabled={exportLoading || loading}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white rounded-lg text-xs font-bold transition-colors shadow-xs"
+                                title={`Xuất toàn bộ ${totalCount} bản ghi theo bộ lọc đang chọn`}
                             >
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Export Excel
+                                {exportLoading ? (
+                                    <>
+                                        <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                        <span>Đang xuất...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <span>Export Excel ({totalCount})</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
