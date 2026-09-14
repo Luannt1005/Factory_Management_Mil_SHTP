@@ -37,8 +37,8 @@ interface RequestCheckInModalProps {
     actionLoading: string | null;
     isSecurity?: boolean;
     isReceptionist?: boolean;
-    formatDateTime: (time: string | null) => string;
-    formatDateShort: (date: string | null) => string;
+    formatDateTime: (time?: string | null) => string;
+    formatDateShort: (date?: string | null) => string;
     getCategoryBadgeClass: (category: string) => string;
 }
 

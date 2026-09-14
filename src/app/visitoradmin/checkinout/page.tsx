@@ -192,7 +192,6 @@ export default function CheckInOutManagement() {
             if (existing) {
                 setScannedRequest(existing);
                 setIsModalOpen(true);
-                setScanInput('');
                 return;
             }
 
@@ -208,7 +207,6 @@ export default function CheckInOutManagement() {
                 if (found) {
                     setScannedRequest(found);
                     setIsModalOpen(true);
-                    setScanInput('');
                 } else {
                     setScanError(`Không tìm thấy yêu cầu hợp lệ với mã "${cleanCode}". Vui lòng kiểm tra lại đơn đã được duyệt (Approved) chưa.`);
                 }
@@ -279,7 +277,7 @@ export default function CheckInOutManagement() {
         };
     }, [isModalOpen, history]);
 
-    const formatDateTime = (timeString: string | null) => {
+    const formatDateTime = (timeString?: string | null) => {
         if (!timeString) return '-';
         const d = new Date(timeString);
         const day = String(d.getDate()).padStart(2, '0');
@@ -290,7 +288,7 @@ export default function CheckInOutManagement() {
         return `${day}/${month}/${year} ${hours}:${minutes}`;
     };
 
-    const formatDateShort = (dateString: string | null) => {
+    const formatDateShort = (dateString?: string | null) => {
         if (!dateString) return '';
         const d = new Date(dateString);
         const day = String(d.getDate()).padStart(2, '0');
