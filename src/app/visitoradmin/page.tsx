@@ -836,18 +836,28 @@ export default function AdminDashboard() {
                             Previous
                         </button>
                         <div className="flex items-center gap-1.5">
-                            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(pageNum => (
-                                <button
-                                    key={pageNum}
-                                    onClick={() => fetchRequests(pageNum)}
-                                    className={`w-8 h-8 text-[11px] font-black rounded-lg transition-all ${pagination.page === pageNum 
-                                        ? 'bg-[#db011c] text-white shadow-md' 
-                                        : 'bg-white text-gray-600 border border-gray-300 hover:border-gray-400'
-                                    }`}
-                                >
-                                    {pageNum}
-                                </button>
-                            ))}
+                            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                                .filter(pageNum => pageNum === 1 || pageNum === pagination.totalPages || (pageNum >= pagination.page - 2 && pageNum <= pagination.page + 2))
+                                .map((pageNum, idx, arr) => {
+                                    const prev = arr[idx - 1];
+                                    return (
+                                        <div key={pageNum} className="flex items-center gap-1.5">
+                                            {prev && pageNum - prev > 1 && (
+                                                <span className="px-1 text-gray-400 font-bold text-xs select-none">...</span>
+                                            )}
+                                            <button
+                                                onClick={() => fetchRequests(pageNum)}
+                                                className={`w-8 h-8 text-[11px] font-black rounded-lg transition-all ${pagination.page === pageNum 
+                                                    ? 'bg-[#db011c] text-white shadow-md' 
+                                                    : 'bg-white text-gray-600 border border-gray-300 hover:border-gray-400'
+                                                }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        </div>
+                                    );
+                                })
+                            }
                         </div>
                         <button 
                             disabled={pagination.page === pagination.totalPages || loading}
