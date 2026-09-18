@@ -105,96 +105,93 @@ export default function RequestCheckInModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6" onClick={onClose}>
             <div 
-                className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                className="bg-white rounded-2xl shadow-2xl border-t-[6px] border-t-[#db011c] w-full max-w-4xl max-h-[90vh] overflow-hidden relative text-[#0f172a] animate-in zoom-in-95 duration-200 flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="bg-[#1a1a1a] text-white p-5 flex items-center justify-between border-b border-gray-800">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#db011c] flex items-center justify-center shadow-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                            </svg>
+                <div className="p-5 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10 border-b border-gray-100">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-black text-gray-900 tracking-tight">
+                                Check-In / Check-Out #{request.requestCode || request.requestId}
+                            </h2>
+                            {request.visitorCategory && (
+                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-[#db011c] border border-red-100">
+                                    {request.visitorCategory}
+                                </span>
+                            )}
+                            {request.visitingSite && (
+                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
+                                    Site: {request.visitingSite}
+                                </span>
+                            )}
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-xl font-black tracking-tight">#{request.requestCode || request.requestId}</h2>
-                                {request.visitorCategory && (
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${getCategoryBadgeClass(request.visitorCategory)}`}>
-                                        {request.visitorCategory}
-                                    </span>
-                                )}
-                                {request.visitingSite && (
-                                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                                        Site: {request.visitingSite}
-                                    </span>
-                                )}
-                            </div>
-                            <p className="text-xs text-gray-400 mt-0.5">Request Verification & Check-In / Check-Out</p>
-                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">Xác minh thông tin và thao tác Check-In / Check-Out khách thăm</p>
                     </div>
 
                     <button 
                         onClick={onClose}
-                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
                         title="Đóng (Esc)"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
-                {/* Request Overview Information Card */}
-                <div className="bg-gray-50/80 border-b border-gray-200 p-4 grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-                    <div className="bg-white p-3 rounded-lg border border-gray-200/80 shadow-2xs">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Submitter (Người tạo)</span>
-                        <div className="font-bold text-gray-900 truncate" title={request.submitterName}>{request.submitterName || '-'}</div>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-lg border border-gray-200/80 shadow-2xs">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Company (Công ty)</span>
-                        <div className="font-bold text-gray-900 truncate" title={visitors[0]?.visitorCompany}>
-                            {visitors[0]?.visitorCompany || '-'}
+                {/* Request Overview Information */}
+                <div className="p-5 pb-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-gray-50/70 p-3.5 rounded-xl border border-gray-200/80 text-xs">
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Submitter (Người tạo)</span>
+                            <div className="font-bold text-gray-900 truncate" title={request.submitterName}>{request.submitterName || '-'}</div>
                         </div>
-                    </div>
 
-                    <div className="bg-white p-3 rounded-lg border border-gray-200/80 shadow-2xs">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Visit Date (Ngày thăm)</span>
-                        <div className="font-bold text-gray-900">
-                            {formatDateShort(request.startDate)} {request.endDate && request.endDate !== request.startDate ? `→ ${formatDateShort(request.endDate)}` : ''}
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Company (Công ty)</span>
+                            <div className="font-bold text-gray-900 truncate" title={visitors[0]?.visitorCompany}>
+                                {visitors[0]?.visitorCompany || '-'}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="bg-white p-3 rounded-lg border border-gray-200/80 shadow-2xs">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Purpose (Mục đích)</span>
-                        <div className="font-medium text-gray-700 truncate" title={request.purposeOfVisit}>
-                            {request.purposeOfVisit || '-'}
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Visit Date (Ngày thăm)</span>
+                            <div className="font-bold text-gray-900">
+                                {formatDateShort(request.startDate)} {request.endDate && request.endDate !== request.startDate ? `→ ${formatDateShort(request.endDate)}` : ''}
+                            </div>
+                        </div>
+
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Purpose (Mục đích)</span>
+                            <div className="font-medium text-gray-700 truncate" title={request.purposeOfVisit}>
+                                {request.purposeOfVisit || '-'}
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Notification Banner */}
                 {notification && (
-                    <div className={`px-5 py-2.5 text-xs font-bold flex items-center justify-between ${notification.type === 'success' ? 'bg-green-50 text-green-800 border-b border-green-200' : 'bg-red-50 text-red-800 border-b border-red-200'}`}>
+                    <div className={`mx-5 mb-2 px-4 py-2 text-xs font-semibold rounded-lg flex items-center justify-between ${notification.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
                         <span>{notification.message}</span>
-                        <button onClick={() => setNotification(null)} className="opacity-70 hover:opacity-100 ml-3">✕</button>
+                        <button onClick={() => setNotification(null)} className="opacity-70 hover:opacity-100 ml-3 font-bold">✕</button>
                     </div>
                 )}
 
                 {/* Visitors Section Header & Bulk Action Buttons */}
-                <div className="px-5 py-3.5 bg-white border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
+                <div className="px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100">
                     <div className="flex items-center gap-3">
-                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                        <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Danh sách khách ({visitors.length})
                         </h3>
-                        <div className="flex gap-2 text-[11px] font-bold">
-                            <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        <div className="flex gap-1.5 text-[11px] font-bold">
+                            <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/70">
                                 Chờ: {pendingVisitors.length}
                             </span>
-                            <span className="text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                            <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/70">
                                 Đang có mặt: {checkedInVisitors.length}
                             </span>
                             <span className="text-gray-600 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
@@ -211,7 +208,7 @@ export default function RequestCheckInModal({
                                 onClick={handleCheckInAll}
                                 className="bg-[#db011c] hover:bg-[#b00116] disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                                 Check In Tất Cả ({pendingVisitors.length})
@@ -223,7 +220,7 @@ export default function RequestCheckInModal({
                                 onClick={handleCheckOutAll}
                                 className="bg-gray-800 hover:bg-black disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                 </svg>
                                 Check Out Tất Cả ({checkedInVisitors.length})
@@ -233,7 +230,7 @@ export default function RequestCheckInModal({
                 </div>
 
                 {/* Visitors List Body */}
-                <div className="p-5 max-h-[50vh] overflow-y-auto space-y-3 bg-gray-50/40">
+                <div className="p-5 max-h-[52vh] overflow-y-auto space-y-2.5 bg-gray-50/30">
                     {visitors.map((v) => {
                         const loadingKey = `${request.requestId}-${v.visitorIndex}`;
                         const isLoading = actionLoading === loadingKey || bulkLoading;
@@ -242,51 +239,54 @@ export default function RequestCheckInModal({
                         return (
                             <div 
                                 key={v.visitorIndex}
-                                className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs hover:border-gray-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                                className="bg-white p-3.5 rounded-xl border border-gray-200/90 shadow-2xs hover:border-gray-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5"
                             >
                                 {/* Visitor Details */}
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="w-5 h-5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black flex items-center justify-center border border-gray-200">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="w-5 h-5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black flex items-center justify-center border border-gray-200 shrink-0">
                                             {v.visitorIndex + 1}
                                         </span>
-                                        <span className="font-extrabold text-sm text-gray-900 truncate">
+                                        <span className="font-bold text-sm text-gray-900 truncate">
                                             {v.visitorName}
                                         </span>
                                         {v.visitorCode && (
-                                            <span className="text-[10px] font-black text-[#db011c] bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
+                                            <span className="text-[10px] font-bold text-[#db011c] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 shrink-0">
                                                 {v.visitorCode}
                                             </span>
                                         )}
                                     </div>
-                                    <div className="text-xs text-gray-500 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                    <div className="text-xs text-gray-500 flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
                                         {v.visitorTitle && <span>{v.visitorTitle}</span>}
                                         {v.visitorCompany && (
-                                            <span className="text-gray-700 font-medium">🏢 {v.visitorCompany}</span>
+                                            <span className="text-gray-600 font-medium">🏢 {v.visitorCompany}</span>
                                         )}
                                     </div>
 
                                     {/* Timestamps */}
-                                    <div className="mt-2 text-[11px] text-gray-500 flex items-center gap-4">
-                                        {v.checkInTime && (
-                                            <span className="text-green-700 font-medium">
-                                                Vào: <strong>{formatDateTime(v.checkInTime)}</strong>
-                                            </span>
-                                        )}
-                                        {v.checkOutTime && (
-                                            <span className="text-gray-700 font-medium">
-                                                Ra: <strong>{formatDateTime(v.checkOutTime)}</strong>
-                                            </span>
-                                        )}
-                                    </div>
+                                    {(v.checkInTime || v.checkOutTime) && (
+                                        <div className="mt-1 text-[11px] text-gray-500 flex items-center gap-3">
+                                            {v.checkInTime && (
+                                                <span className="text-emerald-700 font-medium">
+                                                    Vào: <strong>{formatDateTime(v.checkInTime)}</strong>
+                                                </span>
+                                            )}
+                                            {v.checkOutTime && (
+                                                <span className="text-gray-600 font-medium">
+                                                    Ra: <strong>{formatDateTime(v.checkOutTime)}</strong>
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Card Number Input */}
-                                <div className="flex items-center gap-2">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500 whitespace-nowrap">
-                                        Số thẻ:
-                                    </label>
-                                    <div className="relative">
+                                {/* Controls */}
+                                <div className="flex flex-wrap items-center gap-3 shrink-0">
+                                    {/* Card Number Input */}
+                                    <div className="flex items-center gap-1.5">
+                                        <label className="text-[10px] font-bold uppercase text-gray-500 whitespace-nowrap">
+                                            Số thẻ:
+                                        </label>
                                         <input
                                             type="text"
                                             value={currentCard}
@@ -297,27 +297,24 @@ export default function RequestCheckInModal({
                                                 }
                                             }}
                                             placeholder="Thẻ khách..."
-                                            className="w-28 px-3 py-1.5 text-xs font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] focus:outline-none bg-white shadow-2xs"
+                                            className="w-28 px-2.5 py-1.5 text-xs font-bold border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] focus:outline-none bg-white shadow-2xs"
                                         />
                                     </div>
-                                </div>
 
-                                {/* Status Badge & Actions */}
-                                <div className="flex items-center gap-2 justify-end">
-                                    {/* Current Status Badge */}
-                                    <div className="min-w-[100px] text-center">
+                                    {/* Status Badge */}
+                                    <div className="min-w-[85px] text-center">
                                         {v.checkInOutStatus === 'PENDING' && (
-                                            <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200">
+                                            <span className="inline-block px-2.5 py-1 rounded-md text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/70">
                                                 Chờ vào
                                             </span>
                                         )}
                                         {v.checkInOutStatus === 'CHECKED_IN' && (
-                                            <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold text-green-700 bg-green-50 border border-green-200">
+                                            <span className="inline-block px-2.5 py-1 rounded-md text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/70">
                                                 Đang có mặt
                                             </span>
                                         )}
                                         {v.checkInOutStatus === 'CHECKED_OUT' && (
-                                            <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold text-gray-600 bg-gray-100 border border-gray-200">
+                                            <span className="inline-block px-2.5 py-1 rounded-md text-[10px] font-bold text-gray-600 bg-gray-100 border border-gray-200">
                                                 Đã về
                                             </span>
                                         )}
@@ -373,13 +370,13 @@ export default function RequestCheckInModal({
                 </div>
 
                 {/* Footer */}
-                <div className="bg-gray-50 px-5 py-3 border-t border-gray-200 flex items-center justify-between">
-                    <span className="text-xs text-gray-500">
-                        💡 Bạn có thể nhập số thẻ và bấm <strong>Check In</strong> để cập nhật số thẻ vào hệ thống cùng lúc.
+                <div className="p-4 px-5 flex items-center justify-between border-t border-gray-100 bg-white sticky bottom-0">
+                    <span className="text-xs text-gray-500 flex items-center gap-1.5">
+                        <span className="text-amber-500">💡</span> Nhập số thẻ và bấm <strong>Check In</strong> để cập nhật số thẻ vào hệ thống cùng lúc.
                     </span>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold rounded-lg transition-colors"
+                        className="px-5 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
                     >
                         Đóng
                     </button>
