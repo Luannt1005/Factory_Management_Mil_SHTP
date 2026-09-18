@@ -341,114 +341,132 @@ export default function AdminDashboard() {
             </div>
 
             {/* Filters Row */}
-            <div className="relative z-30 flex flex-wrap 2xl:flex-nowrap items-center justify-between gap-2.5 bg-white/50 backdrop-blur-sm px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-sm">
-                <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center gap-1.5">
-                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">Code</label>
+            <div className="relative z-30 bg-white/70 backdrop-blur-md p-4 rounded-xl border border-gray-200 shadow-sm space-y-3">
+                <div className="flex flex-wrap items-end gap-3">
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Code</label>
                         <input 
                             type="text" 
                             value={code}
                             onChange={(e) => setCode(e.target.value)}
                             placeholder="e.g. 2206"
-                            className="text-xs border border-gray-300 rounded-lg px-2 py-1 w-20 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                            className="w-24 px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
                         />
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">Submitter</label>
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Submitter</label>
                         <input 
                             type="text" 
                             value={submitter}
                             onChange={(e) => setSubmitter(e.target.value)}
                             placeholder="Name, dept..."
-                            className="text-xs border border-gray-300 rounded-lg px-2 py-1 w-28 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                            className="w-36 px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
                         />
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">From</label>
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">From</label>
                         <input 
                             type="date" 
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="text-xs border border-gray-300 rounded-lg px-2 py-1 w-32 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                            className="w-36 px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
                         />
                     </div>
-                    <div className="flex items-center gap-1">
-                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">Complete Date</label>
-                        <input 
-                            type="date" 
-                            value={completeStartDate}
-                            onChange={(e) => setCompleteStartDate(e.target.value)}
-                            title="Complete Date From"
-                            className="text-xs border border-gray-300 rounded-lg px-1.5 py-1 w-28 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
-                        />
-                        <span className="text-gray-400 text-xs">-</span>
-                        <input 
-                            type="date" 
-                            value={completeEndDate}
-                            onChange={(e) => setCompleteEndDate(e.target.value)}
-                            title="Complete Date To"
-                            className="text-xs border border-gray-300 rounded-lg px-1.5 py-1 w-28 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
-                        />
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Complete Date</label>
+                        <div className="flex items-center gap-1.5 h-[38px]">
+                            <input 
+                                type="date" 
+                                value={completeStartDate}
+                                onChange={(e) => setCompleteStartDate(e.target.value)}
+                                title="Complete Date From"
+                                className="w-32 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-[#db011c] transition-all"
+                            />
+                            <span className="text-gray-400 text-xs">-</span>
+                            <input 
+                                type="date" 
+                                value={completeEndDate}
+                                onChange={(e) => setCompleteEndDate(e.target.value)}
+                                title="Complete Date To"
+                                className="w-32 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-[#db011c] transition-all"
+                            />
+                        </div>
                     </div>
-                    <MultiSelectDropdown 
-                        label="Site"
-                        options={SITE_OPTIONS}
-                        selected={sites}
-                        onChange={setSites}
-                        placeholder="All"
-                    />
-                    {activeTab === 'general' && (
+                    <div className="w-36">
                         <MultiSelectDropdown 
-                            label="Category"
-                            options={CATEGORY_OPTIONS}
-                            selected={categories}
-                            onChange={setCategories}
-                            placeholder="All"
+                            label="Site"
+                            options={SITE_OPTIONS}
+                            selected={sites}
+                            onChange={setSites}
+                            placeholder="All Sites"
+                            vertical={true}
                         />
+                    </div>
+                    {activeTab === 'general' && (
+                        <div className="w-40">
+                            <MultiSelectDropdown 
+                                label="Category"
+                                options={CATEGORY_OPTIONS}
+                                selected={categories}
+                                onChange={setCategories}
+                                placeholder="All Categories"
+                                vertical={true}
+                            />
+                        </div>
                     )}
-                    <MultiSelectDropdown 
-                        label="Status"
-                        options={STATUS_OPTIONS}
-                        selected={statusFilters}
-                        onChange={setStatusFilters}
-                        placeholder="All"
-                    />
-                    {(startDate || completeStartDate || completeEndDate || sites.length > 0 || categories.length > 0 || code || submitter || statusFilters.length > 0) && (
-                        <button 
-                            onClick={() => { 
-                                setStartDate(''); 
-                                setCompleteStartDate('');
-                                setCompleteEndDate('');
-                                setSites([]);
-                                setCategories([]); 
-                                setCode(''); 
-                                setSubmitter('');
-                                setStatusFilters([]); 
-                            }}
-                            className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4 px-1"
-                        >
-                            Clear
-                        </button>
-                    )}
-                    {selectedRowIds.length > 0 && (
+                    <div className="w-36">
+                        <MultiSelectDropdown 
+                            label="Status"
+                            options={STATUS_OPTIONS}
+                            selected={statusFilters}
+                            onChange={setStatusFilters}
+                            placeholder="All Status"
+                            vertical={true}
+                        />
+                    </div>
+                    <div className="flex items-center gap-2 h-[38px]">
+                        {(startDate || completeStartDate || completeEndDate || sites.length > 0 || categories.length > 0 || code || submitter || statusFilters.length > 0) && (
+                            <button 
+                                onClick={() => { 
+                                    setStartDate(''); 
+                                    setCompleteStartDate('');
+                                    setCompleteEndDate('');
+                                    setSites([]);
+                                    setCategories([]); 
+                                    setCode(''); 
+                                    setSubmitter('');
+                                    setStatusFilters([]); 
+                                }}
+                                className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4 px-1"
+                            >
+                                Clear
+                            </button>
+                        )}
+                        {selectedRowIds.length > 0 && (
+                            <button
+                                onClick={handleDeleteSelected}
+                                className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition-all whitespace-nowrap h-full shadow-sm flex items-center"
+                            >
+                                Delete Selected ({selectedRowIds.length})
+                            </button>
+                        )}
                         <button
-                            onClick={handleDeleteSelected}
-                            className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-2.5 py-1.5 rounded-md transition-all whitespace-nowrap"
+                            onClick={handleExportExcel}
+                            disabled={exporting}
+                            className="text-xs font-bold text-white bg-[#10b981] hover:bg-[#059669] px-3.5 py-2 rounded transition-all whitespace-nowrap h-full shadow-sm flex items-center gap-1.5"
                         >
-                            Delete Selected ({selectedRowIds.length})
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            {exporting ? 'Exporting...' : 'Export Excel'}
                         </button>
-                    )}
-                    <button
-                        onClick={handleExportExcel}
-                        disabled={exporting}
-                        className="text-xs font-bold text-white bg-[#10b981] hover:bg-[#059669] px-3 py-1.5 rounded-md transition-all whitespace-nowrap shadow-sm"
-                    >
-                        {exporting ? 'Exporting...' : 'Export Excel'}
-                    </button>
+                    </div>
                 </div>
 
-                <div className="text-xs font-medium text-gray-500 whitespace-nowrap shrink-0">
-                    Showing <span className="text-gray-900 font-bold">{requests.length}</span> of <span className="text-gray-900 font-bold">{pagination.total}</span> requests
+                <div className="flex items-center justify-between text-xs font-medium text-gray-500 pt-2 border-t border-gray-200/60">
+                    <div>
+                        Showing <span className="text-gray-900 font-bold">{requests.length}</span> of <span className="text-gray-900 font-bold">{pagination.total}</span> requests
+                    </div>
                 </div>
             </div>
 
