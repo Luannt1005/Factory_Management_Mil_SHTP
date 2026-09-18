@@ -45,11 +45,11 @@ export async function GET(request: Request) {
             queryParams.push(startDate, endDate);
             paramCount += 2;
         } else if (startDate) {
-            conditions.push(`r."endDate"::date >= $${paramCount}::date`);
+            conditions.push(`r."startDate"::date = $${paramCount}::date`);
             queryParams.push(startDate);
             paramCount += 1;
         } else if (endDate) {
-            conditions.push(`r."startDate"::date <= $${paramCount}::date`);
+            conditions.push(`r."startDate"::date = $${paramCount}::date`);
             queryParams.push(endDate);
             paramCount += 1;
         }

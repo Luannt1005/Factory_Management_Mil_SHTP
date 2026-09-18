@@ -31,7 +31,6 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 15, totalPages: 0 });
     const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
     const [completeStartDate, setCompleteStartDate] = useState('');
     const [completeEndDate, setCompleteEndDate] = useState('');
     const [sites, setSites] = useState<string[]>([]);
@@ -49,7 +48,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         setMounted(true);
         fetchRequests(1);
-    }, [startDate, endDate, completeStartDate, completeEndDate, sites, categories, code, submitter, statusFilters, activeTab]);
+    }, [startDate, completeStartDate, completeEndDate, sites, categories, code, submitter, statusFilters, activeTab]);
 
     const fetchRequests = async (page: number) => {
         setLoading(true);
@@ -58,9 +57,6 @@ export default function AdminDashboard() {
             let url = `/api/visitor_admin/requests?tab=${activeTab}&page=${page}&limit=${pagination.limit}`;
             if (startDate) {
                 url += `&startDate=${encodeURIComponent(startDate)}`;
-            }
-            if (endDate) {
-                url += `&endDate=${encodeURIComponent(endDate)}`;
             }
             if (completeStartDate) {
                 url += `&completeStartDate=${encodeURIComponent(completeStartDate)}`;
@@ -104,9 +100,6 @@ export default function AdminDashboard() {
             let url = `/api/visitor_admin/requests?tab=${activeTab}&page=1&limit=999999`;
             if (startDate) {
                 url += `&startDate=${encodeURIComponent(startDate)}`;
-            }
-            if (endDate) {
-                url += `&endDate=${encodeURIComponent(endDate)}`;
             }
             if (completeStartDate) {
                 url += `&completeStartDate=${encodeURIComponent(completeStartDate)}`;
@@ -379,15 +372,6 @@ export default function AdminDashboard() {
                             className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">To</label>
-                        <input 
-                            type="date" 
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
-                        />
-                    </div>
                     <div className="flex items-center gap-1.5">
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">Complete Date</label>
                         <input 
@@ -429,11 +413,10 @@ export default function AdminDashboard() {
                         onChange={setStatusFilters}
                         placeholder="All"
                     />
-                    {(startDate || endDate || completeStartDate || completeEndDate || sites.length > 0 || categories.length > 0 || code || submitter || statusFilters.length > 0) && (
+                    {(startDate || completeStartDate || completeEndDate || sites.length > 0 || categories.length > 0 || code || submitter || statusFilters.length > 0) && (
                         <button 
                             onClick={() => { 
                                 setStartDate(''); 
-                                setEndDate(''); 
                                 setCompleteStartDate('');
                                 setCompleteEndDate('');
                                 setSites([]);
