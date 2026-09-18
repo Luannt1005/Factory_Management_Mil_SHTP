@@ -74,9 +74,6 @@ export default function CheckInOutManagement() {
         try {
             const query = new URLSearchParams();
             if (filters.date) query.append('date', filters.date);
-            if (categories.length > 0) query.append('category', categories.join(','));
-            if (sites.length > 0) query.append('site', sites.join(','));
-            if (filters.search) query.append('search', filters.search);
             query.append('limit', '500'); // Fetch enough for client-side pagination & filtering
 
             const res = await fetch(`/api/visitor_admin/checkinout/history?${query.toString()}`);
@@ -91,7 +88,7 @@ export default function CheckInOutManagement() {
         } finally {
             setLoading(false);
         }
-    }, [filters.date, filters.search, categories, sites, router]);
+    }, [filters.date, router]);
 
     useEffect(() => {
         fetchHistory();
@@ -334,13 +331,22 @@ export default function CheckInOutManagement() {
         return 'text-gray-600 bg-gray-50';
     };
 
-    // Filter visitors based on statusFilters, categories, sites, and visitorName
+    // Filter visitors based on statusFilters, categories, sites, visitorName, and search
     const processedHistory = history.map(req => {
         const filteredVisitors = req.visitors?.filter((v: any) => {
             if (statusFilters.length > 0 && !statusFilters.includes(v.checkInOutStatus)) return false;
             if (filters.visitorName && filters.visitorName.trim()) {
                 const nameMatch = removeAccents(v.visitorName || '').includes(removeAccents(filters.visitorName.trim()));
                 if (!nameMatch) return false;
+            }
+            if (filters.search && filters.search.trim()) {
+                const s = removeAccents(filters.search.trim());
+                const matchReq = removeAccents(req.requestCode || req.requestId || '').includes(s) ||
+                                 removeAccents(req.submitterName || '').includes(s);
+                const matchVisitor = removeAccents(v.visitorName || '').includes(s) ||
+                                     removeAccents(v.visitorCode || '').includes(s) ||
+                                     removeAccents(v.cardNumber || '').includes(s);
+                if (!matchReq && !matchVisitor) return false;
             }
             return true;
         }) || [];
@@ -367,6 +373,9 @@ export default function CheckInOutManagement() {
             if (!matchSite) return false;
         }
         if (filters.visitorName && filters.visitorName.trim()) {
+            return req.filteredVisitors.length > 0;
+        }
+        if (filters.search && filters.search.trim()) {
             return req.filteredVisitors.length > 0;
         }
         if (statusFilters.length > 0) {
@@ -467,7 +476,7 @@ export default function CheckInOutManagement() {
     );
 
     return (
-        <div className="w-full pb-10 px-6 mx-auto pt-6">
+        <div className="w-full pb-10 px-6 mx-auto pt-6 [scrollbar-gutter:stable]">
 
             {/* Floating Scanner status notifications */}
             {scanLoading && (
@@ -485,12 +494,12 @@ export default function CheckInOutManagement() {
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 {/* Advanced Filters */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-[repeat(7,1fr)_auto] gap-4 items-end">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 items-end">
                         <div className="w-full">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Search Req</label>
                             <input 
                                 type="text" 
-                                placeholder="ID, Submitter..." 
+                                placeholder="ID, Submitter, Name..." 
                                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
                                 value={filters.search}
                                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
@@ -580,44 +589,55 @@ export default function CheckInOutManagement() {
                                 </button>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Showing Count placed with natural auto width */}
-                        <div className="w-auto whitespace-nowrap pb-2 text-[11px] font-medium text-gray-500 flex items-center gap-2.5">
-                            <div>
-                                {viewMode === 'group' ? (
-                                    <>Showing <span className="text-gray-900 font-bold">{paginatedGroups.length}</span> of <span className="text-gray-900 font-bold">{processedHistory.length}</span> requests</>
-                                ) : (
-                                    <>Showing <span className="text-gray-900 font-bold">{paginatedVisitors.length}</span> of <span className="text-gray-900 font-bold">{allVisitors.length}</span> visitors</>
-                                )}
-                            </div>
-                            {(filters.search || filters.visitorName || statusFilters.length > 0 || categories.length > 0 || sites.length > 0) && (
-                                <button 
-                                    onClick={() => {
-                                        setFilters(prev => ({ ...prev, search: '', visitorName: '' }));
-                                        setStatusFilters([]);
-                                        setCategories([]);
-                                        setSites([]);
-                                    }}
-                                    className="text-xs font-bold text-[#db011c] hover:underline underline-offset-4"
-                                    title="Clear all filters"
-                                >
-                                    Clear
-                                </button>
+                    {/* Sub-bar: Showing Count & Clear All Filters */}
+                    <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-gray-200/70 text-[11px] font-medium text-gray-500">
+                        <div>
+                            {viewMode === 'group' ? (
+                                <>Showing <span className="text-gray-900 font-bold">{paginatedGroups.length}</span> of <span className="text-gray-900 font-bold">{processedHistory.length}</span> requests</>
+                            ) : (
+                                <>Showing <span className="text-gray-900 font-bold">{paginatedVisitors.length}</span> of <span className="text-gray-900 font-bold">{allVisitors.length}</span> visitors</>
                             )}
                         </div>
+                        {(filters.search || filters.visitorName || statusFilters.length > 0 || categories.length > 0 || sites.length > 0) && (
+                            <button 
+                                onClick={() => {
+                                    setFilters(prev => ({ ...prev, search: '', visitorName: '' }));
+                                    setStatusFilters([]);
+                                    setCategories([]);
+                                    setSites([]);
+                                }}
+                                className="text-xs font-bold text-[#db011c] hover:underline underline-offset-4 flex items-center gap-1"
+                                title="Clear all filters"
+                            >
+                                <span>✕</span> Clear all filters
+                            </button>
+                        )}
                     </div>
                 </div>
 
                 {/* List Container */}
-                <div className="p-0">
-                    {loading ? (
-                        <div className="p-10 text-center text-gray-500">Loading...</div>
-                    ) : viewMode === 'group' && processedHistory.length === 0 ? (
-                        <div className="p-10 text-center text-gray-500">No requests found matching the filters.</div>
-                    ) : viewMode === 'visitor' && allVisitors.length === 0 ? (
-                        <div className="p-10 text-center text-gray-500">No visitors found matching the filters.</div>
+                <div className="p-0 relative min-h-[500px]">
+                    {loading && history.length === 0 ? (
+                        <div className="p-16 flex flex-col items-center justify-center text-gray-400 gap-3 min-h-[450px]">
+                            <div className="w-8 h-8 border-2 border-gray-300 border-t-[#db011c] rounded-full animate-spin"></div>
+                            <span className="text-xs font-semibold">Đang tải dữ liệu check-in...</span>
+                        </div>
+                    ) : (viewMode === 'group' && processedHistory.length === 0) || (viewMode === 'visitor' && allVisitors.length === 0) ? (
+                        <div className="p-16 text-center text-gray-500 min-h-[400px] flex items-center justify-center">
+                            {viewMode === 'group' ? 'No requests found matching the filters.' : 'No visitors found matching the filters.'}
+                        </div>
                     ) : (
-                        <div className="flex flex-col">
+                        <div className={`flex flex-col relative transition-opacity duration-200 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                            {loading && (
+                                <div className="absolute inset-0 bg-white/50 backdrop-blur-[0.5px] z-20 flex items-center justify-center min-h-[300px]">
+                                    <div className="px-4 py-2 bg-black/80 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-xl">
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        <span>Đang cập nhật...</span>
+                                    </div>
+                                </div>
+                            )}
                             
                             {viewMode === 'visitor' && (
                                 <div className="hidden md:grid grid-cols-[100px_1.1fr_115px_1.2fr_1fr_1.1fr_85px_110px_95px_115px_115px_150px] gap-3 items-center bg-[#1a1a1a] text-white px-6 py-3 font-bold text-[9px] uppercase tracking-wider mb-2">
