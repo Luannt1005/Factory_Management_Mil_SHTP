@@ -341,38 +341,38 @@ export default function AdminDashboard() {
             </div>
 
             {/* Filters Row */}
-            <div className="relative z-30 bg-white/70 backdrop-blur-md p-4 rounded-xl border border-gray-200 shadow-sm space-y-3">
-                <div className="flex flex-wrap items-end gap-3">
-                    <div>
+            <div className="relative z-30 bg-white/70 backdrop-blur-md p-3.5 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div className="flex-1 min-w-[90px] max-w-[130px]">
                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Code</label>
                         <input 
                             type="text" 
                             value={code}
                             onChange={(e) => setCode(e.target.value)}
                             placeholder="e.g. 2206"
-                            className="w-24 px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
                         />
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-[130px] max-w-[190px]">
                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Submitter</label>
                         <input 
                             type="text" 
                             value={submitter}
                             onChange={(e) => setSubmitter(e.target.value)}
                             placeholder="Name, dept..."
-                            className="w-36 px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
                         />
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-[130px] max-w-[160px]">
                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">From</label>
                         <input 
                             type="date" 
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="w-36 px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
+                            className="w-full px-2 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
                         />
                     </div>
-                    <div>
+                    <div className="flex-[1.4] min-w-[240px] max-w-[280px]">
                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Complete Date</label>
                         <div className="flex items-center gap-1.5 h-[38px]">
                             <input 
@@ -380,7 +380,7 @@ export default function AdminDashboard() {
                                 value={completeStartDate}
                                 onChange={(e) => setCompleteStartDate(e.target.value)}
                                 title="Complete Date From"
-                                className="w-32 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-[#db011c] transition-all"
+                                className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-[#db011c] transition-all"
                             />
                             <span className="text-gray-400 text-xs">-</span>
                             <input 
@@ -388,11 +388,11 @@ export default function AdminDashboard() {
                                 value={completeEndDate}
                                 onChange={(e) => setCompleteEndDate(e.target.value)}
                                 title="Complete Date To"
-                                className="w-32 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-[#db011c] transition-all"
+                                className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-[#db011c] transition-all"
                             />
                         </div>
                     </div>
-                    <div className="w-36">
+                    <div className="flex-1 min-w-[110px] max-w-[150px]">
                         <MultiSelectDropdown 
                             label="Site"
                             options={SITE_OPTIONS}
@@ -403,7 +403,7 @@ export default function AdminDashboard() {
                         />
                     </div>
                     {activeTab === 'general' && (
-                        <div className="w-40">
+                        <div className="flex-1 min-w-[120px] max-w-[170px]">
                             <MultiSelectDropdown 
                                 label="Category"
                                 options={CATEGORY_OPTIONS}
@@ -414,7 +414,7 @@ export default function AdminDashboard() {
                             />
                         </div>
                     )}
-                    <div className="w-36">
+                    <div className="flex-1 min-w-[110px] max-w-[150px]">
                         <MultiSelectDropdown 
                             label="Status"
                             options={STATUS_OPTIONS}
@@ -424,7 +424,7 @@ export default function AdminDashboard() {
                             vertical={true}
                         />
                     </div>
-                    <div className="flex items-center gap-2 h-[38px]">
+                    <div className="flex items-center gap-2.5 h-[38px] shrink-0">
                         {(startDate || completeStartDate || completeEndDate || sites.length > 0 || categories.length > 0 || code || submitter || statusFilters.length > 0) && (
                             <button 
                                 onClick={() => { 
@@ -460,12 +460,9 @@ export default function AdminDashboard() {
                             </svg>
                             {exporting ? 'Exporting...' : 'Export Excel'}
                         </button>
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs font-medium text-gray-500 pt-2 border-t border-gray-200/60">
-                    <div>
-                        Showing <span className="text-gray-900 font-bold">{requests.length}</span> of <span className="text-gray-900 font-bold">{pagination.total}</span> requests
+                        <div className="text-xs font-medium text-gray-500 whitespace-nowrap pl-2 border-l border-gray-300 h-6 flex items-center">
+                            Showing <span className="text-gray-900 font-bold mx-1">{requests.length}</span> of <span className="text-gray-900 font-bold mx-1">{pagination.total}</span> requests
+                        </div>
                     </div>
                 </div>
             </div>
