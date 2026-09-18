@@ -80,22 +80,38 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
         }
 
         if (category) {
-            whereConditions.push(`r."visitorCategory" = $${paramCount}`);
-            queryParams.push(category);
-            paramCount += 1;
+            const catList = category.split(',').map((c: string) => c.trim()).filter(Boolean);
+            if (catList.length === 1) {
+                whereConditions.push(`r."visitorCategory" = $${paramCount}`);
+                queryParams.push(catList[0]);
+                paramCount += 1;
+            } else if (catList.length > 1) {
+                whereConditions.push(`r."visitorCategory" = ANY($${paramCount}::text[])`);
+                queryParams.push(catList);
+                paramCount += 1;
+            }
         }
 
         if (site) {
-            if (site === 'SHTP' || site === 'DDK') {
-                whereConditions.push(`(r."visitingSite" = $${paramCount} OR r."visitingSite" = 'SHTP/DDK' OR r."visitingSite" = 'Both')`);
-                queryParams.push(site);
-                paramCount += 1;
-            } else if (site === 'SHTP/DDK') {
-                whereConditions.push(`(r."visitingSite" = 'SHTP/DDK' OR r."visitingSite" = 'Both')`);
-            } else {
-                whereConditions.push(`r."visitingSite" = $${paramCount}`);
-                queryParams.push(site);
-                paramCount += 1;
+            const siteList = site.split(',').map((s: string) => s.trim()).filter(Boolean);
+            if (siteList.length > 0) {
+                const siteConds: string[] = [];
+                for (const s of siteList) {
+                    if (s === 'SHTP' || s === 'DDK') {
+                        siteConds.push(`(r."visitingSite" = $${paramCount} OR r."visitingSite" = 'SHTP/DDK' OR r."visitingSite" = 'Both')`);
+                        queryParams.push(s);
+                        paramCount += 1;
+                    } else if (s === 'SHTP/DDK') {
+                        siteConds.push(`(r."visitingSite" = 'SHTP/DDK' OR r."visitingSite" = 'Both')`);
+                    } else {
+                        siteConds.push(`r."visitingSite" = $${paramCount}`);
+                        queryParams.push(s);
+                        paramCount += 1;
+                    }
+                }
+                if (siteConds.length > 0) {
+                    whereConditions.push(`(${siteConds.join(' OR ')})`);
+                }
             }
         }
 

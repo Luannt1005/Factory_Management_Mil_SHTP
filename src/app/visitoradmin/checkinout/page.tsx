@@ -4,9 +4,28 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/context/UserContext';
 import RequestCheckInModal from './components/RequestCheckInModal';
+import MultiSelectDropdown, { MultiSelectOption } from '@/components/MultiSelectDropdown';
 
 type ViewMode = 'group' | 'visitor';
-type StatusFilter = 'ALL' | 'PENDING' | 'CHECKED_IN' | 'CHECKED_OUT';
+
+const STATUS_OPTIONS: MultiSelectOption[] = [
+    { label: 'Expected Arrival (Chưa đến)', value: 'PENDING' },
+    { label: 'Checked In (Đang có mặt)', value: 'CHECKED_IN' },
+    { label: 'Checked Out (Đã rời đi)', value: 'CHECKED_OUT' }
+];
+
+const CATEGORY_OPTIONS: MultiSelectOption[] = [
+    { label: 'Vendor', value: 'Vendor' },
+    { label: 'Contractor', value: 'Contractor' },
+    { label: 'MIL / TTI EXPAT', value: 'MIL/TTI Expat / SHTP Business trip' },
+    { label: 'Interviewee', value: 'Interviewee' }
+];
+
+const SITE_OPTIONS: MultiSelectOption[] = [
+    { label: 'SHTP', value: 'SHTP' },
+    { label: 'DDK', value: 'DDK' },
+    { label: 'SHTP / DDK', value: 'SHTP/DDK' }
+];
 
 const removeAccents = (str: string) => {
     return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -24,13 +43,13 @@ export default function CheckInOutManagement() {
     // Filters and View State
     const [filters, setFilters] = useState({ 
         date: new Date().toISOString().split('T')[0], 
-        category: '', 
         search: '',
-        visitorName: '',
-        site: ''
+        visitorName: ''
     });
+    const [statusFilters, setStatusFilters] = useState<string[]>([]);
+    const [categories, setCategories] = useState<string[]>([]);
+    const [sites, setSites] = useState<string[]>([]);
     const [viewMode, setViewMode] = useState<ViewMode>('visitor');
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 15;
     
@@ -55,9 +74,9 @@ export default function CheckInOutManagement() {
         try {
             const query = new URLSearchParams();
             if (filters.date) query.append('date', filters.date);
-            if (filters.category) query.append('category', filters.category);
+            if (categories.length > 0) query.append('category', categories.join(','));
+            if (sites.length > 0) query.append('site', sites.join(','));
             if (filters.search) query.append('search', filters.search);
-            if (filters.site) query.append('site', filters.site);
             query.append('limit', '500'); // Fetch enough for client-side pagination & filtering
 
             const res = await fetch(`/api/visitor_admin/checkinout/history?${query.toString()}`);
@@ -72,7 +91,7 @@ export default function CheckInOutManagement() {
         } finally {
             setLoading(false);
         }
-    }, [filters, router]);
+    }, [filters.date, filters.search, categories, sites, router]);
 
     useEffect(() => {
         fetchHistory();
@@ -81,7 +100,7 @@ export default function CheckInOutManagement() {
     // Reset pagination to page 1 on filter or view mode changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [filters, statusFilter, viewMode]);
+    }, [filters, statusFilters, categories, sites, viewMode]);
 
     const handleAction = async (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET' | 'UPDATE_CARD', requestCode?: string) => {
         setActionLoading(`${requestId}-${v.visitorIndex}`);
@@ -315,10 +334,10 @@ export default function CheckInOutManagement() {
         return 'text-gray-600 bg-gray-50';
     };
 
-    // Filter visitors based on statusFilter and visitorName
+    // Filter visitors based on statusFilters, categories, sites, and visitorName
     const processedHistory = history.map(req => {
         const filteredVisitors = req.visitors?.filter((v: any) => {
-            if (statusFilter !== 'ALL' && v.checkInOutStatus !== statusFilter) return false;
+            if (statusFilters.length > 0 && !statusFilters.includes(v.checkInOutStatus)) return false;
             if (filters.visitorName && filters.visitorName.trim()) {
                 const nameMatch = removeAccents(v.visitorName || '').includes(removeAccents(filters.visitorName.trim()));
                 if (!nameMatch) return false;
@@ -331,10 +350,26 @@ export default function CheckInOutManagement() {
             filteredVisitors
         };
     }).filter(req => {
+        if (categories.length > 0 && !categories.includes(req.visitorCategory)) {
+            return false;
+        }
+        if (sites.length > 0) {
+            const reqSite = req.visitingSite || '';
+            const matchSite = sites.some(s => {
+                if (s === 'SHTP' || s === 'DDK') {
+                    return reqSite.includes(s) || reqSite === 'SHTP/DDK' || reqSite === 'Both';
+                }
+                if (s === 'SHTP/DDK') {
+                    return reqSite === 'SHTP/DDK' || reqSite === 'Both' || (reqSite.includes('SHTP') && reqSite.includes('DDK'));
+                }
+                return reqSite === s;
+            });
+            if (!matchSite) return false;
+        }
         if (filters.visitorName && filters.visitorName.trim()) {
             return req.filteredVisitors.length > 0;
         }
-        if (statusFilter !== 'ALL') {
+        if (statusFilters.length > 0) {
             return req.filteredVisitors.length > 0;
         }
         return true;
@@ -497,44 +532,34 @@ export default function CheckInOutManagement() {
                             </div>
                         </div>
                         <div className="w-full">
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Status</label>
-                            <select 
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                            >
-                                <option value="ALL">All Status</option>
-                                <option value="PENDING">Expected Arrival</option>
-                                <option value="CHECKED_IN">Checked In</option>
-                                <option value="CHECKED_OUT">Checked Out</option>
-                            </select>
+                            <MultiSelectDropdown 
+                                label="Status"
+                                options={STATUS_OPTIONS}
+                                selected={statusFilters}
+                                onChange={setStatusFilters}
+                                placeholder="All Status"
+                                vertical={true}
+                            />
                         </div>
                         <div className="w-full">
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category</label>
-                            <select 
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
-                                value={filters.category}
-                                onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                            >
-                                <option value="">All Categories</option>
-                                <option value="Vendor">Vendor</option>
-                                <option value="Contractor">Contractor</option>
-                                <option value="MIL/TTI Expat / SHTP Business trip">MIL / TTI EXPAT</option>
-                                <option value="Interviewee">Interviewee</option>
-                            </select>
+                            <MultiSelectDropdown 
+                                label="Category"
+                                options={CATEGORY_OPTIONS}
+                                selected={categories}
+                                onChange={setCategories}
+                                placeholder="All Categories"
+                                vertical={true}
+                            />
                         </div>
                         <div className="w-full">
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Site</label>
-                            <select 
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
-                                value={filters.site}
-                                onChange={(e) => setFilters({ ...filters, site: e.target.value })}
-                            >
-                                <option value="">All Sites</option>
-                                <option value="SHTP">SHTP</option>
-                                <option value="DDK">DDK</option>
-                                <option value="SHTP/DDK">SHTP / DDK</option>
-                            </select>
+                            <MultiSelectDropdown 
+                                label="Site"
+                                options={SITE_OPTIONS}
+                                selected={sites}
+                                onChange={setSites}
+                                placeholder="All Sites"
+                                vertical={true}
+                            />
                         </div>
                         
                         {/* View Modes Toggle */}
@@ -557,11 +582,27 @@ export default function CheckInOutManagement() {
                         </div>
 
                         {/* Showing Count placed with natural auto width */}
-                        <div className="w-auto whitespace-nowrap pb-2.5 text-[11px] font-medium text-gray-500">
-                            {viewMode === 'group' ? (
-                                <>Showing <span className="text-gray-900 font-bold">{paginatedGroups.length}</span> of <span className="text-gray-900 font-bold">{processedHistory.length}</span> requests</>
-                            ) : (
-                                <>Showing <span className="text-gray-900 font-bold">{paginatedVisitors.length}</span> of <span className="text-gray-900 font-bold">{allVisitors.length}</span> visitors</>
+                        <div className="w-auto whitespace-nowrap pb-2 text-[11px] font-medium text-gray-500 flex items-center gap-2.5">
+                            <div>
+                                {viewMode === 'group' ? (
+                                    <>Showing <span className="text-gray-900 font-bold">{paginatedGroups.length}</span> of <span className="text-gray-900 font-bold">{processedHistory.length}</span> requests</>
+                                ) : (
+                                    <>Showing <span className="text-gray-900 font-bold">{paginatedVisitors.length}</span> of <span className="text-gray-900 font-bold">{allVisitors.length}</span> visitors</>
+                                )}
+                            </div>
+                            {(filters.search || filters.visitorName || statusFilters.length > 0 || categories.length > 0 || sites.length > 0) && (
+                                <button 
+                                    onClick={() => {
+                                        setFilters(prev => ({ ...prev, search: '', visitorName: '' }));
+                                        setStatusFilters([]);
+                                        setCategories([]);
+                                        setSites([]);
+                                    }}
+                                    className="text-xs font-bold text-[#db011c] hover:underline underline-offset-4"
+                                    title="Clear all filters"
+                                >
+                                    Clear
+                                </button>
                             )}
                         </div>
                     </div>

@@ -14,6 +14,8 @@ interface MultiSelectDropdownProps {
     onChange: (selected: string[]) => void;
     placeholder?: string;
     className?: string;
+    buttonClassName?: string;
+    vertical?: boolean;
 }
 
 export default function MultiSelectDropdown({
@@ -22,7 +24,9 @@ export default function MultiSelectDropdown({
     selected,
     onChange,
     placeholder = 'All',
-    className = ''
+    className = '',
+    buttonClassName,
+    vertical = false
 }: MultiSelectDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -69,20 +73,20 @@ export default function MultiSelectDropdown({
     };
 
     return (
-        <div className={`relative flex items-center gap-2 ${isOpen ? 'z-30' : 'z-10'} ${className}`} ref={dropdownRef}>
+        <div className={`relative ${vertical ? 'flex flex-col w-full' : 'flex items-center gap-2'} ${isOpen ? 'z-30' : 'z-10'} ${className}`} ref={dropdownRef}>
             {label && (
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
+                <label className={`${vertical ? 'block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1' : 'text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap'}`}>
                     {label}
                 </label>
             )}
             
-            <div className={`relative ${isOpen ? 'z-30' : 'z-10'}`}>
+            <div className={`relative ${isOpen ? 'z-30' : 'z-10'} ${vertical ? 'w-full' : ''}`}>
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`text-sm border rounded-lg px-2.5 py-1 flex items-center justify-between gap-2 h-8 bg-white transition-all text-left min-w-[130px] max-w-[210px] ${
+                    className={buttonClassName || `text-sm border rounded-lg px-2.5 py-1 flex items-center justify-between gap-2 ${vertical ? 'h-[38px] w-full rounded' : 'h-8 min-w-[130px] max-w-[210px]'} bg-white transition-all text-left ${
                         selected.length > 0 
-                            ? 'border-red-400 ring-1 ring-red-100 font-semibold text-gray-900' 
+                            ? 'border-[#db011c] ring-1 ring-red-100 font-semibold text-gray-900' 
                             : 'border-gray-300 text-gray-600 hover:border-gray-400'
                     }`}
                 >
@@ -91,13 +95,13 @@ export default function MultiSelectDropdown({
                     </span>
                     
                     {selected.length > 0 && (
-                        <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-red-200">
+                        <span className="bg-red-50 text-[#db011c] text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-red-200 shrink-0">
                             {selected.length}
                         </span>
                     )}
 
                     <svg 
-                        className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+                        className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`} 
                         fill="none" 
                         viewBox="0 0 24 24" 
                         strokeWidth="2" 
@@ -108,7 +112,7 @@ export default function MultiSelectDropdown({
                 </button>
 
                 {isOpen && (
-                    <div className="absolute left-0 mt-1.5 w-64 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-2 text-xs">
+                    <div className={`absolute left-0 mt-1.5 ${vertical ? 'w-full min-w-[220px]' : 'w-64'} bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-2 text-xs`}>
                         <div className="flex items-center justify-between pb-2 mb-1.5 border-b border-gray-100 px-1">
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                                 {label || 'Options'} ({selected.length}/{options.length})
