@@ -341,45 +341,45 @@ export default function AdminDashboard() {
             </div>
 
             {/* Filters Row */}
-            <div className="relative z-30 flex flex-wrap items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-200 shadow-sm">
-                <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Code</label>
+            <div className="relative z-30 flex flex-wrap 2xl:flex-nowrap items-center justify-between gap-2.5 bg-white/50 backdrop-blur-sm px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">Code</label>
                         <input 
                             type="text" 
                             value={code}
                             onChange={(e) => setCode(e.target.value)}
                             placeholder="e.g. 2206"
-                            className="text-sm border border-gray-300 rounded-lg px-2 py-1 w-24 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                            className="text-xs border border-gray-300 rounded-lg px-2 py-1 w-20 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">Submitter</label>
+                    <div className="flex items-center gap-1.5">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">Submitter</label>
                         <input 
                             type="text" 
                             value={submitter}
                             onChange={(e) => setSubmitter(e.target.value)}
-                            placeholder="Name, email, dept..."
-                            className="text-sm border border-gray-300 rounded-lg px-2 py-1 w-36 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                            placeholder="Name, dept..."
+                            className="text-xs border border-gray-300 rounded-lg px-2 py-1 w-28 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight">From</label>
+                    <div className="flex items-center gap-1.5">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">From</label>
                         <input 
                             type="date" 
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
+                            className="text-xs border border-gray-300 rounded-lg px-2 py-1 w-32 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
                         />
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">Complete Date</label>
+                    <div className="flex items-center gap-1">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">Complete Date</label>
                         <input 
                             type="date" 
                             value={completeStartDate}
                             onChange={(e) => setCompleteStartDate(e.target.value)}
                             title="Complete Date From"
-                            className="text-xs border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                            className="text-xs border border-gray-300 rounded-lg px-1.5 py-1 w-28 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
                         />
                         <span className="text-gray-400 text-xs">-</span>
                         <input 
@@ -387,7 +387,7 @@ export default function AdminDashboard() {
                             value={completeEndDate}
                             onChange={(e) => setCompleteEndDate(e.target.value)}
                             title="Complete Date To"
-                            className="text-xs border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
+                            className="text-xs border border-gray-300 rounded-lg px-1.5 py-1 w-28 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all h-8"
                         />
                     </div>
                     <MultiSelectDropdown 
@@ -425,7 +425,7 @@ export default function AdminDashboard() {
                                 setSubmitter('');
                                 setStatusFilters([]); 
                             }}
-                            className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4"
+                            className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4 px-1"
                         >
                             Clear
                         </button>
@@ -433,7 +433,7 @@ export default function AdminDashboard() {
                     {selectedRowIds.length > 0 && (
                         <button
                             onClick={handleDeleteSelected}
-                            className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-md transition-all ml-2"
+                            className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-2.5 py-1.5 rounded-md transition-all whitespace-nowrap"
                         >
                             Delete Selected ({selectedRowIds.length})
                         </button>
@@ -441,13 +441,13 @@ export default function AdminDashboard() {
                     <button
                         onClick={handleExportExcel}
                         disabled={exporting}
-                        className="text-xs font-bold text-white bg-[#10b981] hover:bg-[#059669] px-3 py-1.5 rounded-md transition-all ml-2"
+                        className="text-xs font-bold text-white bg-[#10b981] hover:bg-[#059669] px-3 py-1.5 rounded-md transition-all whitespace-nowrap shadow-sm"
                     >
                         {exporting ? 'Exporting...' : 'Export Excel'}
                     </button>
                 </div>
 
-                <div className="text-sm font-medium text-gray-500">
+                <div className="text-xs font-medium text-gray-500 whitespace-nowrap shrink-0">
                     Showing <span className="text-gray-900 font-bold">{requests.length}</span> of <span className="text-gray-900 font-bold">{pagination.total}</span> requests
                 </div>
             </div>

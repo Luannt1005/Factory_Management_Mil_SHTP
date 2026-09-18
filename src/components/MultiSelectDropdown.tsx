@@ -84,7 +84,7 @@ export default function MultiSelectDropdown({
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={buttonClassName || `text-sm border rounded-lg px-2.5 py-1 flex items-center justify-between gap-2 ${vertical ? 'h-[38px] w-full rounded' : 'h-8 min-w-[130px] max-w-[210px]'} bg-white transition-all text-left ${
+                    className={buttonClassName || `text-sm border rounded-lg px-2.5 py-1 flex items-center justify-between gap-2 ${vertical ? 'h-[38px] w-full rounded' : 'h-8 min-w-[90px] max-w-[160px]'} bg-white transition-all text-left ${
                         selected.length > 0 
                             ? 'border-[#db011c] ring-1 ring-red-100 font-semibold text-gray-900' 
                             : 'border-gray-300 text-gray-600 hover:border-gray-400'
