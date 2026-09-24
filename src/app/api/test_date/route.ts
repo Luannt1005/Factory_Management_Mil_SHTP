@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         (v.idx::int - 1) AS "visitorIndex",
         r."visitingSite",
         r."purposeOfVisit",
-        r.id || '-V' || v.idx AS "visitorCode"
+        r.id || 'V' || v.idx AS "visitorCode"
     FROM "VisitorRequest" r
     CROSS JOIN LATERAL json_array_elements(
         CASE 

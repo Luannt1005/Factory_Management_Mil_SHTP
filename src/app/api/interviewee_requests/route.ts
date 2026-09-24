@@ -42,25 +42,33 @@ export async function POST(request: Request) {
 
         await visitorPool.query('BEGIN');
 
-        // Generate Custom ID with Prefix for Interviewee
+        // Generate Custom ID with Prefix for Interviewee (Prefix 'A')
         const now = new Date();
         const dd = String(now.getDate()).padStart(2, '0');
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const yy = String(now.getFullYear()).slice(-2);
-        const datePrefix = `VI${dd}${mm}${yy}`;
+        const datePrefix = `A${dd}${mm}${yy}`;
 
-        // Find the last sequence for today
+        // Find the last sequence for today (supporting new format A24092601 and legacy A240926_01 / VI240926_01)
         const { rows: lastReq } = await visitorPool.query(
             `SELECT "visitorCode" FROM "IntervieweeRequest" WHERE "visitorCode" LIKE $1 ORDER BY "visitorCode" DESC LIMIT 1`,
-            [`${datePrefix}_%`]
+            [`${datePrefix}%`]
         );
 
         let sequence = 1;
         if (lastReq.length > 0) {
             const lastId = lastReq[0].visitorCode;
-            const lastSeqStr = lastId.split('_')[1];
-            if (lastSeqStr) {
-                sequence = parseInt(lastSeqStr, 10) + 1;
+            if (lastId.includes('_')) {
+                const parts = lastId.split('_');
+                const lastSeqStr = parts[parts.length - 1];
+                if (lastSeqStr && !isNaN(parseInt(lastSeqStr, 10))) {
+                    sequence = parseInt(lastSeqStr, 10) + 1;
+                }
+            } else if (lastId.startsWith(datePrefix)) {
+                const seqPart = lastId.slice(datePrefix.length);
+                if (seqPart && !isNaN(parseInt(seqPart, 10))) {
+                    sequence = parseInt(seqPart, 10) + 1;
+                }
             }
         }
 
@@ -69,7 +77,7 @@ export async function POST(request: Request) {
         const createdCodes: string[] = [];
 
         for (const candidate of candidateList) {
-            const newVisitorCode = `${datePrefix}_${String(sequence).padStart(2, '0')}`;
+            const newVisitorCode = `${datePrefix}${String(sequence).padStart(2, '0')}`;
             sequence++;
 
             const candDept = (candidate.interviewDepartment || interviewDepartment || '').trim();

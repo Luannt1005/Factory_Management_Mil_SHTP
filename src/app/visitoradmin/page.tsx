@@ -168,7 +168,7 @@ export default function AdminDashboard() {
 
                             return {
                                 'Request Code': (r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase(),
-                                'Visitor Code': (r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase() + '-V' + (index + 1),
+                                'Visitor Code': (r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase() + 'V' + (index + 1),
                                 'Visitor Name': v.name || r.visitor_name || '',
                                 'Visitor Title': v.title || r.visitor_title || '',
                                 'Visitor Company': v.company || r.current_company || '',

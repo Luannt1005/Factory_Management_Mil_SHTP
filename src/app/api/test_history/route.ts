@@ -125,7 +125,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
                                         'visitorName', v.elem->>'name',
                                         'visitorTitle', v.elem->>'title',
                                         'visitorCompany', COALESCE(v.elem->>'company', (r.visitors_json::json)->0->>'company'),
-                                        'visitorCode', r."requestId" || '-V' || v.idx,
+                                        'visitorCode', r."requestId" || 'V' || v.idx,
                                         'checkInOutStatus', COALESCE(c.status, 'PENDING'),
                                         'checkInTime', c."checkInTime",
                                         'checkOutTime', c."checkOutTime",

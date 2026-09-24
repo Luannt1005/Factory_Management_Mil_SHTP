@@ -86,13 +86,14 @@ export async function POST(request: Request) {
         await visitorPool.query('BEGIN');
 
         // Generate Custom ID with Prefix
-        let catPrefix = 'V'; // Default for MIL / TTI EXPAT
+        // V: Vendor, C: Contractor, A: Interviewee, E: MIL/TTI Expat / SHTP Business trip (default)
+        let catPrefix = 'E'; // Default for MIL / TTI Expat / SHTP Business trip
         if (visitorCategory === 'Vendor') {
-            catPrefix = 'VV';
+            catPrefix = 'V';
         } else if (visitorCategory === 'Contractor') {
-            catPrefix = 'VC';
+            catPrefix = 'C';
         } else if (visitorCategory === 'Interviewee') {
-            catPrefix = 'VI';
+            catPrefix = 'A';
         }
 
         const now = new Date();
@@ -101,22 +102,30 @@ export async function POST(request: Request) {
         const yy = String(now.getFullYear()).slice(-2);
         const datePrefix = `${catPrefix}${dd}${mm}${yy}`;
 
-        // Find the last sequence for today
+        // Find the last sequence for today (supporting new format like E24092601 and legacy E240926_01)
         const { rows: lastReq } = await visitorPool.query(
             `SELECT id FROM "VisitorRequest" WHERE id LIKE $1 ORDER BY id DESC LIMIT 1`,
-            [`${datePrefix}_%`]
+            [`${datePrefix}%`]
         );
 
         let sequence = 1;
         if (lastReq.length > 0) {
             const lastId = lastReq[0].id;
-            const lastSeqStr = lastId.split('_')[1];
-            if (lastSeqStr) {
-                sequence = parseInt(lastSeqStr) + 1;
+            if (lastId.includes('_')) {
+                const parts = lastId.split('_');
+                const lastSeqStr = parts[parts.length - 1];
+                if (lastSeqStr && !isNaN(parseInt(lastSeqStr, 10))) {
+                    sequence = parseInt(lastSeqStr, 10) + 1;
+                }
+            } else if (lastId.startsWith(datePrefix)) {
+                const seqPart = lastId.slice(datePrefix.length);
+                if (seqPart && !isNaN(parseInt(seqPart, 10))) {
+                    sequence = parseInt(seqPart, 10) + 1;
+                }
             }
         }
         
-        const newRequestId = `${datePrefix}_${String(sequence).padStart(2, '0')}`;
+        const newRequestId = `${datePrefix}${String(sequence).padStart(2, '0')}`;
 
         const submitterId = await getOrCreateVisitorProfile(session.user, visitorPool);
         const isInterviewee = visitorCategory === 'Interviewee';
