@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { CheckCircleIcon, XCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 import type { UserAccount } from "@/types/user.types";
 import { formatDateTime as formatDate } from "@/utils/date";
+import { Badge } from "@/components/ui/Badge";
 
 export default function PendingApprovals() {
     const [users, setUsers] = useState<UserAccount[]>([]);
@@ -138,9 +139,9 @@ export default function PendingApprovals() {
                                             <div className="text-xs text-gray-500">{user.email || user.username}</div>
                                         </div>
                                     </div>
-                                    <span className="bg-yellow-50 text-yellow-600 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    <Badge variant="warning" size="sm">
                                         PENDING
-                                    </span>
+                                    </Badge>
                                 </div>
                                 
                                 <div className="space-y-1.5 mb-4 flex-1">

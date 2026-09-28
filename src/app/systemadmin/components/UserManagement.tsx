@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { hashPassword } from "@/lib/password";
-import { MagnifyingGlassIcon, PencilSquareIcon, TrashIcon, EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, PencilSquareIcon, TrashIcon, EllipsisHorizontalIcon, PlusIcon } from "@heroicons/react/24/outline";
 import type { UserAccount, AppRole } from "@/types/user.types";
 import { formatDateShort } from "@/utils/date";
+import { Button } from "@/components/ui/Button";
 
 export default function UserManagement() {
     const [users, setUsers] = useState<UserAccount[]>([]);
@@ -267,7 +268,10 @@ export default function UserManagement() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        icon={<PlusIcon className="w-4 h-4" />}
                         onClick={() => {
                             setModalMode("add");
                             setFormData({
@@ -287,10 +291,9 @@ export default function UserManagement() {
                             });
                             setIsModalOpen(true);
                         }}
-                        className="flex items-center gap-1.5 bg-[#b52427] hover:bg-[#9a1e21] text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
                     >
                         New Account
-                    </button>
+                    </Button>
                     <div className="text-xs text-gray-500 font-medium">
                         {filteredUsers.length} total
                     </div>
