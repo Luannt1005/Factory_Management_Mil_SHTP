@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { roomsAdminApi } from '@/features/visitor/rooms/services/roomsAdminApi';
-import { ExcelColumnFilter } from '@/features/visitor/rooms/components/ExcelColumnFilter';
 import { MeetingRoomsTab } from '@/features/visitor/rooms/components/tabs/MeetingRoomsTab';
 import { HostDepartmentsTab } from '@/features/visitor/rooms/components/tabs/HostDepartmentsTab';
 import { CategoriesTab } from '@/features/visitor/rooms/components/tabs/CategoriesTab';
+import { FacilityRoomsTab } from '@/features/visitor/rooms/components/tabs/FacilityRoomsTab';
 import { NewCategoryModal } from '@/features/visitor/rooms/components/modals/NewCategoryModal';
+import { NewFacilityRoomModal } from '@/features/visitor/rooms/components/modals/NewFacilityRoomModal';
 import type {
     FacilityRoom,
     FacilityRoomFormData,
@@ -64,44 +65,6 @@ export default function AdminRoomsPage() {
     const [editingHostDept, setEditingHostDept] = useState<HostDepartment | null>(null);
     const [newHostDept, setNewHostDept] = useState<HostDepartmentFormData>({ bu: '', functional_dept: '', functional_host_name: '', functional_host_email: '', department: '', department_host_name: '', department_host_email: '' });
     const [selectedFuncDeptOption, setSelectedFuncDeptOption] = useState<string>('');
-
-    // --- Column Filter States for All Tabs (Excel-like multiselect arrays) ---
-    const [roomFilters, setRoomFilters] = useState<{ [key: string]: string[] }>({
-        category: [],
-        name: [],
-        description: [],
-        approver_email: [],
-        is_active: []
-    });
-
-    // Filtered lists
-
-    const filteredRooms = useMemo(() => {
-        return rooms.filter(room => {
-            if (roomFilters.category.length > 0) {
-                const val = room.category || '(Blanks)';
-                if (!roomFilters.category.includes(val)) return false;
-            }
-            if (roomFilters.name.length > 0) {
-                const val = room.name || '(Blanks)';
-                if (!roomFilters.name.includes(val)) return false;
-            }
-            if (roomFilters.description.length > 0) {
-                const val = room.description || '(Blanks)';
-                if (!roomFilters.description.includes(val)) return false;
-            }
-            if (roomFilters.approver_email.length > 0) {
-                const val = room.approver_email || '(Blanks)';
-                if (!roomFilters.approver_email.includes(val)) return false;
-            }
-            if (roomFilters.is_active.length > 0) {
-                const val = room.is_active ? 'Active' : 'Inactive';
-                if (!roomFilters.is_active.includes(val)) return false;
-            }
-            return true;
-        });
-    }, [rooms, roomFilters]);
-
 
     const uniqueFunctionalDepts = Array.from(new Set(hostDepartments.map((h: HostDepartment) => h.functional_dept).filter(Boolean)));
 
@@ -373,158 +336,16 @@ export default function AdminRoomsPage() {
 
             {/* ROOMS TAB */}
             {activeTab === 'rooms' && (
-                <div className="animate-in fade-in duration-300">
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse table-fixed min-w-[900px]">
-                                <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                        <th className="p-4 w-[18%]">
-                                            <ExcelColumnFilter
-                                                title="Category"
-                                                allValues={rooms.map(r => r.category)}
-                                                selectedValues={roomFilters.category}
-                                                onFilterChange={(selected) => setRoomFilters(prev => ({ ...prev, category: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 w-[22%]">
-                                            <ExcelColumnFilter
-                                                title="Room Name"
-                                                allValues={rooms.map(r => r.name)}
-                                                selectedValues={roomFilters.name}
-                                                onFilterChange={(selected) => setRoomFilters(prev => ({ ...prev, name: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 w-[22%]">
-                                            <ExcelColumnFilter
-                                                title="Description"
-                                                allValues={rooms.map(r => r.description)}
-                                                selectedValues={roomFilters.description}
-                                                onFilterChange={(selected) => setRoomFilters(prev => ({ ...prev, description: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 w-[20%]">
-                                            <ExcelColumnFilter
-                                                title="Approver Email"
-                                                allValues={rooms.map(r => r.approver_email)}
-                                                selectedValues={roomFilters.approver_email}
-                                                onFilterChange={(selected) => setRoomFilters(prev => ({ ...prev, approver_email: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 text-center w-[10%]">
-                                            <ExcelColumnFilter
-                                                title="Status"
-                                                allValues={rooms.map(r => r.is_active ? 'Active' : 'Inactive')}
-                                                selectedValues={roomFilters.is_active}
-                                                onFilterChange={(selected) => setRoomFilters(prev => ({ ...prev, is_active: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 text-right w-[8%]">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <span>Action</span>
-                                                {(roomFilters.category.length > 0 || roomFilters.name.length > 0 || roomFilters.description.length > 0 || roomFilters.approver_email.length > 0 || roomFilters.is_active.length > 0) && (
-                                                    <button
-                                                        onClick={() => setRoomFilters({ category: [], name: [], description: [], approver_email: [], is_active: [] })}
-                                                        className="text-[11px] font-bold text-red-600 hover:text-red-800 underline ml-2"
-                                                        title="Reset all filters"
-                                                    >
-                                                        Clear
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-[0.875rem] font-medium bg-white">
-                                    {loadingRooms ? (
-                                        <tr><td colSpan={6} className="p-8 text-center text-gray-400">Loading rooms...</td></tr>
-                                    ) : filteredRooms.map((room) => (
-                                        <tr key={room.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            {editingRoom && editingRoom.id === room.id ? (
-                                                <>
-                                                    <td className="p-4">
-                                                        <select 
-                                                            className="w-full px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
-                                                            value={editingRoom.category}
-                                                            onChange={e => setEditingRoom({...editingRoom, category: e.target.value})}
-                                                        >
-                                                            {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                                                        </select>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <input 
-                                                            type="text" 
-                                                            className="w-full px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
-                                                            value={editingRoom.name}
-                                                            onChange={e => setEditingRoom({...editingRoom, name: e.target.value})}
-                                                        />
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <input 
-                                                            type="text" 
-                                                            className="w-full px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
-                                                            value={editingRoom.description || ''}
-                                                            onChange={e => setEditingRoom({...editingRoom, description: e.target.value})}
-                                                        />
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <input 
-                                                            type="email" 
-                                                            className="w-full px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
-                                                            value={editingRoom.approver_email || ''}
-                                                            onChange={e => setEditingRoom({...editingRoom, approver_email: e.target.value})}
-                                                        />
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        <select
-                                                            className="px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
-                                                            value={editingRoom.is_active ? 'true' : 'false'}
-                                                            onChange={e => setEditingRoom({...editingRoom, is_active: e.target.value === 'true'})}
-                                                        >
-                                                            <option value="true">Active</option>
-                                                            <option value="false">Inactive</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="p-4 text-right">
-                                                        <div className="flex gap-2 justify-end">
-                                                            <button onClick={() => handleUpdateRoom(room.id, editingRoom)} className="text-white bg-green-500 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-600">Save</button>
-                                                            <button onClick={() => setEditingRoom(null)} className="text-gray-500 bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300">Cancel</button>
-                                                        </div>
-                                                    </td>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <td className="p-5">
-                                                        <span className="text-[10px] px-2.5 py-1 rounded-full uppercase font-bold" style={{ background: '#f8fafc', color: '#db011c', border: '1px solid #e2e8f0' }}>
-                                                            {room.category}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-5 font-bold text-gray-800 truncate" title={room.name}>{room.name}</td>
-                                                    <td className="p-5 text-gray-600 text-xs truncate" title={room.description || ''}>{room.description || '-'}</td>
-                                                    <td className="p-5 text-gray-600 truncate">
-                                                        <span className={room.approver_email ? 'font-medium' : 'text-gray-400 italic'} title={room.approver_email || ''}>{room.approver_email || 'No email'}</span>
-                                                    </td>
-                                                    <td className="p-5 text-xs font-bold text-center">
-                                                        <span className={room.is_active ? 'text-green-500' : 'text-gray-400'}>{room.is_active ? '● Active' : '○ Inactive'}</span>
-                                                    </td>
-                                                    <td className="p-5 text-right">
-                                                        <div className="flex gap-3 justify-end">
-                                                            <button onClick={() => setEditingRoom(room)} className="text-[#db011c] font-bold hover:underline text-xs">Edit</button>
-                                                            <button onClick={() => handleDeleteRoom(room.id)} className="text-red-500 font-bold hover:underline text-xs">Delete</button>
-                                                        </div>
-                                                    </td>
-                                                </>
-                                            )}
-                                        </tr>
-                                    ))}
-                                    {filteredRooms.length === 0 && !loadingRooms && (
-                                        <tr><td colSpan={6} className="p-16 text-center text-gray-400 font-medium">No rooms found matching filter.</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                <FacilityRoomsTab
+                    rooms={rooms}
+                    categories={categories}
+                    loading={loadingRooms}
+                    editingRoom={editingRoom}
+                    onEdit={setEditingRoom}
+                    onUpdate={handleUpdateRoom}
+                    onDelete={handleDeleteRoom}
+                    onAdd={() => setIsRoomModalOpen(true)}
+                />
             )}
 
             {/* CATEGORIES TAB */}
@@ -554,71 +375,15 @@ export default function AdminRoomsPage() {
             )}
 
             {/* PORTAL MODALS */}
-            {mounted && isRoomModalOpen && createPortal(
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
-                    <div className="flex min-h-full items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-100 relative">
-                            <button 
-                                onClick={() => setIsRoomModalOpen(false)}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                            <h2 className="text-xl font-extrabold mb-6">Add New Room</h2>
-                            <form onSubmit={handleCreateRoom} className="flex flex-col gap-5">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Category</label>
-                                    <select 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                        value={newRoom.category} 
-                                        onChange={e => setNewRoom({ ...newRoom, category: e.target.value })}
-                                        required
-                                    >
-                                        <option value="" disabled>Select Category</option>
-                                        {categories.map(c => (
-                                            <option key={c.id} value={c.name}>{c.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Room Name</label>
-                                    <input 
-                                        type="text" 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                        value={newRoom.name} 
-                                        onChange={e => setNewRoom({ ...newRoom, name: e.target.value })} 
-                                        placeholder="e.g. Share Function Office L6M" 
-                                        required 
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description</label>
-                                    <input 
-                                        type="text" 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                        value={newRoom.description || ''} 
-                                        onChange={e => setNewRoom({ ...newRoom, description: e.target.value })} 
-                                        placeholder="e.g. Floor 6, Building A" 
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Approver Email</label>
-                                    <input 
-                                        type="email" 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                        value={newRoom.approver_email} 
-                                        onChange={e => setNewRoom({ ...newRoom, approver_email: e.target.value })} 
-                                        placeholder="approver@ttigroup.com.vn" 
-                                    />
-                                </div>
-                                <button type="submit" className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-[#db011c] hover:bg-[#b90118] transition-colors shadow-md">
-                                    Create Room
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>,
-                document.body
+            {mounted && (
+                <NewFacilityRoomModal
+                    open={isRoomModalOpen}
+                    formData={newRoom}
+                    categories={categories}
+                    onChange={(field, value) => setNewRoom(prev => ({ ...prev, [field]: value }))}
+                    onSubmit={handleCreateRoom}
+                    onClose={() => setIsRoomModalOpen(false)}
+                />
             )}
 
             {mounted && (
