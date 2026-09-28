@@ -7,6 +7,8 @@ import { roomsAdminApi } from '@/features/visitor/rooms/services/roomsAdminApi';
 import { ExcelColumnFilter } from '@/features/visitor/rooms/components/ExcelColumnFilter';
 import { MeetingRoomsTab } from '@/features/visitor/rooms/components/tabs/MeetingRoomsTab';
 import { HostDepartmentsTab } from '@/features/visitor/rooms/components/tabs/HostDepartmentsTab';
+import { CategoriesTab } from '@/features/visitor/rooms/components/tabs/CategoriesTab';
+import { NewCategoryModal } from '@/features/visitor/rooms/components/modals/NewCategoryModal';
 import type {
     FacilityRoom,
     FacilityRoomFormData,
@@ -72,12 +74,6 @@ export default function AdminRoomsPage() {
         is_active: []
     });
 
-    const [categoryFilters, setCategoryFilters] = useState<{ [key: string]: string[] }>({
-        name: [],
-        site_location: [],
-        bu: []
-    });
-
     // Filtered lists
 
     const filteredRooms = useMemo(() => {
@@ -105,24 +101,6 @@ export default function AdminRoomsPage() {
             return true;
         });
     }, [rooms, roomFilters]);
-
-    const filteredCategories = useMemo(() => {
-        return categories.filter(cat => {
-            if (categoryFilters.name.length > 0) {
-                const val = cat.name || '(Blanks)';
-                if (!categoryFilters.name.includes(val)) return false;
-            }
-            if (categoryFilters.site_location.length > 0) {
-                const val = cat.site_location || '(Blanks)';
-                if (!categoryFilters.site_location.includes(val)) return false;
-            }
-            if (categoryFilters.bu.length > 0) {
-                const val = cat.bu || '(Blanks)';
-                if (!categoryFilters.bu.includes(val)) return false;
-            }
-            return true;
-        });
-    }, [categories, categoryFilters]);
 
 
     const uniqueFunctionalDepts = Array.from(new Set(hostDepartments.map((h: HostDepartment) => h.functional_dept).filter(Boolean)));
@@ -551,127 +529,15 @@ export default function AdminRoomsPage() {
 
             {/* CATEGORIES TAB */}
             {activeTab === 'categories' && (
-                <div className="animate-in fade-in duration-300">
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse table-fixed min-w-[700px]">
-                                <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                        <th className="p-4 w-[45%]">
-                                            <ExcelColumnFilter
-                                                title="Category Name"
-                                                allValues={categories.map(c => c.name)}
-                                                selectedValues={categoryFilters.name}
-                                                onFilterChange={(selected) => setCategoryFilters(prev => ({ ...prev, name: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 text-center w-[25%]">
-                                            <ExcelColumnFilter
-                                                title="Site Location"
-                                                allValues={categories.map(c => c.site_location)}
-                                                selectedValues={categoryFilters.site_location}
-                                                onFilterChange={(selected) => setCategoryFilters(prev => ({ ...prev, site_location: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 text-center w-[20%]">
-                                            <ExcelColumnFilter
-                                                title="BU"
-                                                allValues={categories.map(c => c.bu)}
-                                                selectedValues={categoryFilters.bu}
-                                                onFilterChange={(selected) => setCategoryFilters(prev => ({ ...prev, bu: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 text-right w-[10%]">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <span>Action</span>
-                                                {(categoryFilters.name.length > 0 || categoryFilters.site_location.length > 0 || categoryFilters.bu.length > 0) && (
-                                                    <button
-                                                        onClick={() => setCategoryFilters({ name: [], site_location: [], bu: [] })}
-                                                        className="text-[11px] font-bold text-red-600 hover:text-red-800 underline ml-2"
-                                                        title="Reset all filters"
-                                                    >
-                                                        Clear
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-[0.875rem] font-medium bg-white">
-                                    {loadingCategories ? (
-                                        <tr><td colSpan={4} className="p-8 text-center text-gray-400">Loading categories...</td></tr>
-                                    ) : filteredCategories.map((cat) => (
-                                        <tr key={cat.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            {editingCategory && editingCategory.id === cat.id ? (
-                                                <>
-                                                    <td className="p-4">
-                                                        <input 
-                                                            type="text" 
-                                                            className="w-full px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
-                                                            value={editingCategory.name}
-                                                            onChange={e => setEditingCategory({...editingCategory, name: e.target.value})}
-                                                        />
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        <select 
-                                                            className="px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
-                                                            value={editingCategory.site_location}
-                                                            onChange={e => setEditingCategory({...editingCategory, site_location: e.target.value})}
-                                                        >
-                                                            <option value="SHTP">SHTP</option>
-                                                            <option value="DDK">DDK</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        <select 
-                                                            className="px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
-                                                            value={editingCategory.bu}
-                                                            onChange={e => setEditingCategory({...editingCategory, bu: e.target.value})}
-                                                        >
-                                                            <option value="Milwaukee">Milwaukee</option>
-                                                            <option value="Share Function">Share Function</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="p-4 text-right">
-                                                        <div className="flex gap-2 justify-end">
-                                                            <button onClick={() => handleUpdateCategory(cat.id, editingCategory)} className="text-white bg-green-500 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-600">Save</button>
-                                                            <button onClick={() => setEditingCategory(null)} className="text-gray-500 bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300">Cancel</button>
-                                                        </div>
-                                                    </td>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <td className="p-5 font-bold text-gray-800 truncate" title={cat.name}>
-                                                        {cat.name}
-                                                    </td>
-                                                    <td className="p-5 text-center">
-                                                        <span className="text-[10px] px-2.5 py-1 rounded-md uppercase font-bold bg-blue-50 text-blue-600 border border-blue-100">
-                                                            {cat.site_location}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-5 text-center">
-                                                        <span className="text-[10px] px-2.5 py-1 rounded-md uppercase font-bold bg-purple-50 text-purple-600 border border-purple-100">
-                                                            {cat.bu}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-5 text-right">
-                                                        <div className="flex gap-3 justify-end">
-                                                            <button onClick={() => setEditingCategory(cat)} className="text-[#db011c] font-bold hover:underline text-xs">Edit</button>
-                                                            <button onClick={() => handleDeleteCategory(cat.id)} className="text-red-500 font-bold hover:underline text-xs">Delete</button>
-                                                        </div>
-                                                    </td>
-                                                </>
-                                            )}
-                                        </tr>
-                                    ))}
-                                    {filteredCategories.length === 0 && !loadingCategories && (
-                                        <tr><td colSpan={4} className="p-16 text-center text-gray-400 font-medium">No categories found matching filter.</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                <CategoriesTab
+                    categories={categories}
+                    loading={loadingCategories}
+                    editingCategory={editingCategory}
+                    onEdit={setEditingCategory}
+                    onUpdate={handleUpdateCategory}
+                    onDelete={handleDeleteCategory}
+                    onAdd={() => setIsCategoryModalOpen(true)}
+                />
             )}
 
             {/* HOST DEPARTMENTS TAB */}
@@ -755,59 +621,14 @@ export default function AdminRoomsPage() {
                 document.body
             )}
 
-            {mounted && isCategoryModalOpen && createPortal(
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
-                    <div className="flex min-h-full items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-100 relative">
-                            <button 
-                                onClick={() => setIsCategoryModalOpen(false)}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                            <h2 className="text-xl font-extrabold mb-6">Add Category</h2>
-                            <form onSubmit={handleCreateCategory} className="flex flex-col gap-5">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Category Name</label>
-                                    <input 
-                                        type="text" 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                        value={newCategory.name} 
-                                        onChange={e => setNewCategory({ ...newCategory, name: e.target.value })} 
-                                        placeholder="e.g. Common Office" 
-                                        required 
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Site Location</label>
-                                    <select 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                        value={newCategory.site_location} 
-                                        onChange={e => setNewCategory({ ...newCategory, site_location: e.target.value })}
-                                    >
-                                        <option value="SHTP">SHTP</option>
-                                        <option value="DDK">DDK</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">BU</label>
-                                    <select 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                        value={newCategory.bu} 
-                                        onChange={e => setNewCategory({ ...newCategory, bu: e.target.value })}
-                                    >
-                                        <option value="Milwaukee">Milwaukee</option>
-                                        <option value="Share Function">Share Function</option>
-                                    </select>
-                                </div>
-                                <button type="submit" className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-[#db011c] hover:bg-[#b90118] transition-colors shadow-md">
-                                    Create Category
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>,
-                document.body
+            {mounted && (
+                <NewCategoryModal
+                    open={isCategoryModalOpen}
+                    formData={newCategory}
+                    onChange={(field, value) => setNewCategory(prev => ({ ...prev, [field]: value }))}
+                    onSubmit={handleCreateCategory}
+                    onClose={() => setIsCategoryModalOpen(false)}
+                />
             )}
 
             {mounted && isHostDeptModalOpen && createPortal(
