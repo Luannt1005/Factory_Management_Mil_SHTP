@@ -3,6 +3,25 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { roomsAdminApi } from '@/features/visitor/rooms/services/roomsAdminApi';
+import type {
+    FacilityRoom,
+    FacilityRoomFormData,
+    FacilityRoomUpdateData,
+    RoomCategory,
+    RoomCategoryFormData,
+    RoomCategoryUpdateData,
+    HostDepartment,
+    HostDepartmentFormData,
+    HostDepartmentUpdateData,
+    MeetingRoom,
+    MeetingRoomFormData,
+    MeetingRoomUpdateData,
+    RoomsApiResponse,
+    CategoriesApiResponse,
+    HostDepartmentsApiResponse,
+    MeetingRoomsApiResponse,
+} from '@/types/rooms.types';
 
 // Excel-style dropdown column filter component
 function ExcelColumnFilter({
@@ -220,28 +239,28 @@ export default function AdminRoomsPage() {
     const [isMeetingRoomModalOpen, setIsMeetingRoomModalOpen] = useState(false);
 
     // Room State
-    const [rooms, setRooms] = useState<any[]>([]);
+    const [rooms, setRooms] = useState<FacilityRoom[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
-    const [editingRoom, setEditingRoom] = useState<any>(null);
-    const [newRoom, setNewRoom] = useState({ category: '', name: '', description: '', approver_email: '' });
+    const [editingRoom, setEditingRoom] = useState<FacilityRoom | null>(null);
+    const [newRoom, setNewRoom] = useState<FacilityRoomFormData>({ category: '', name: '', description: '', approver_email: '' });
 
     // Category State
-    const [categories, setCategories] = useState<any[]>([]);
+    const [categories, setCategories] = useState<RoomCategory[]>([]);
     const [loadingCategories, setLoadingCategories] = useState(true);
-    const [editingCategory, setEditingCategory] = useState<any>(null);
-    const [newCategory, setNewCategory] = useState({ name: '', site_location: 'SHTP', bu: 'Milwaukee' });
+    const [editingCategory, setEditingCategory] = useState<RoomCategory | null>(null);
+    const [newCategory, setNewCategory] = useState<RoomCategoryFormData>({ name: '', site_location: 'SHTP', bu: 'Milwaukee' });
 
     // Host Dept State
     // Meeting Room State
-    const [meetingRooms, setMeetingRooms] = useState<any[]>([]);
+    const [meetingRooms, setMeetingRooms] = useState<MeetingRoom[]>([]);
     const [loadingMeetingRooms, setLoadingMeetingRooms] = useState(true);
-    const [editingMeetingRoom, setEditingMeetingRoom] = useState<any>(null);
-    const [newMeetingRoom, setNewMeetingRoom] = useState({ floorName: '', roomName: '' });
+    const [editingMeetingRoom, setEditingMeetingRoom] = useState<MeetingRoom | null>(null);
+    const [newMeetingRoom, setNewMeetingRoom] = useState<MeetingRoomFormData>({ floorName: '', roomName: '' });
 
-    const [hostDepartments, setHostDepartments] = useState<any[]>([]);
+    const [hostDepartments, setHostDepartments] = useState<HostDepartment[]>([]);
     const [loadingHostDepartments, setLoadingHostDepartments] = useState(true);
-    const [editingHostDept, setEditingHostDept] = useState<any>(null);
-    const [newHostDept, setNewHostDept] = useState({ bu: '', functional_dept: '', functional_host_name: '', functional_host_email: '', department: '', department_host_name: '', department_host_email: '' });
+    const [editingHostDept, setEditingHostDept] = useState<HostDepartment | null>(null);
+    const [newHostDept, setNewHostDept] = useState<HostDepartmentFormData>({ bu: '', functional_dept: '', functional_host_name: '', functional_host_email: '', department: '', department_host_name: '', department_host_email: '' });
     const [selectedFuncDeptOption, setSelectedFuncDeptOption] = useState<string>('');
 
     // --- Column Filter States for All Tabs (Excel-like multiselect arrays) ---
@@ -344,7 +363,7 @@ export default function AdminRoomsPage() {
             }
             if (hostDeptFilters.functional_host.length > 0) {
                 const val = h.functional_host_name ? `${h.functional_host_name}${h.functional_host_email ? ` (${h.functional_host_email})` : ''}` : (h.functional_host_email || '(Blanks)');
-                if (!hostDeptFilters.functional_host.includes(val) && !hostDeptFilters.functional_host.includes(h.functional_host_name) && !hostDeptFilters.functional_host.includes(h.functional_host_email)) return false;
+                if (!hostDeptFilters.functional_host.includes(val) && !hostDeptFilters.functional_host.includes(h.functional_host_name) && !(h.functional_host_email && hostDeptFilters.functional_host.includes(h.functional_host_email))) return false;
             }
             if (hostDeptFilters.department.length > 0) {
                 const val = h.department || '(Blanks)';
@@ -352,7 +371,7 @@ export default function AdminRoomsPage() {
             }
             if (hostDeptFilters.department_host.length > 0) {
                 const val = h.department_host_name ? `${h.department_host_name}${h.department_host_email ? ` (${h.department_host_email})` : ''}` : (h.department_host_email || '(Blanks)');
-                if (!hostDeptFilters.department_host.includes(val) && !hostDeptFilters.department_host.includes(h.department_host_name) && !hostDeptFilters.department_host.includes(h.department_host_email)) return false;
+                if (!hostDeptFilters.department_host.includes(val) && !hostDeptFilters.department_host.includes(h.department_host_name) && !(h.department_host_email && hostDeptFilters.department_host.includes(h.department_host_email))) return false;
             }
             if (hostDeptFilters.is_active.length > 0) {
                 const val = h.is_active ? 'Active' : 'Inactive';
@@ -362,7 +381,7 @@ export default function AdminRoomsPage() {
         });
     }, [hostDepartments, hostDeptFilters]);
 
-    const uniqueFunctionalDepts = Array.from(new Set(hostDepartments.map((h: any) => h.functional_dept).filter(Boolean)));
+    const uniqueFunctionalDepts = Array.from(new Set(hostDepartments.map((h: HostDepartment) => h.functional_dept).filter(Boolean)));
 
     useEffect(() => {
         fetchRooms();
@@ -373,43 +392,47 @@ export default function AdminRoomsPage() {
 
     const fetchRooms = async () => {
         setLoadingRooms(true);
-        const res = await fetch('/api/admin/rooms?all=true');
-        if (res.ok) {
-            const data = await res.json();
+        try {
+            const data = await roomsAdminApi.getFacilityRooms(true);
             setRooms(data.rooms);
+        } catch {
+            // Keep current behavior
         }
         setLoadingRooms(false);
     };
 
     const fetchCategories = async () => {
         setLoadingCategories(true);
-        const res = await fetch('/api/admin/room-categories');
-        if (res.ok) {
-            const data = await res.json();
+        try {
+            const data = await roomsAdminApi.getRoomCategories();
             setCategories(data.categories);
             if (data.categories.length > 0 && !newRoom.category) {
                 setNewRoom(prev => ({ ...prev, category: data.categories[0].name }));
             }
+        } catch {
+            // Keep current behavior
         }
         setLoadingCategories(false);
     };
 
     const fetchMeetingRooms = async () => {
         setLoadingMeetingRooms(true);
-        const res = await fetch('/api/admin/meeting-rooms');
-        if (res.ok) {
-            const data = await res.json();
+        try {
+            const data = await roomsAdminApi.getMeetingRooms();
             setMeetingRooms(data.meetingRooms || []);
+        } catch {
+            // Keep current behavior
         }
         setLoadingMeetingRooms(false);
     };
 
     const fetchHostDepartments = async () => {
         setLoadingHostDepartments(true);
-        const res = await fetch('/api/admin/host-departments?all=true');
-        if (res.ok) {
-            const data = await res.json();
+        try {
+            const data = await roomsAdminApi.getHostDepartments(true);
             setHostDepartments(data.hostDepartments || []);
+        } catch {
+            // Keep current behavior
         }
         setLoadingHostDepartments(false);
     };
@@ -417,78 +440,65 @@ export default function AdminRoomsPage() {
     // --- Meeting Room Handlers ---
     const handleCreateMeetingRoom = async (e: React.FormEvent) => {
         e.preventDefault();
-        const res = await fetch('/api/admin/meeting-rooms', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newMeetingRoom),
-        });
-        if (res.ok) {
+        try {
+            await roomsAdminApi.createMeetingRoom(newMeetingRoom);
             fetchMeetingRooms();
             setNewMeetingRoom({ floorName: '', roomName: '' });
             setIsMeetingRoomModalOpen(false);
-        } else {
+        } catch {
             alert('Error creating meeting room');
         }
     };
 
-    const handleUpdateMeetingRoom = async (id: string, updates: any) => {
-        const res = await fetch('/api/admin/meeting-rooms', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, ...updates }),
-        });
-        if (res.ok) {
+    const handleUpdateMeetingRoom = async (id: string, updates: MeetingRoomUpdateData) => {
+        try {
+            await roomsAdminApi.updateMeetingRoom({ id, ...updates });
             fetchMeetingRooms();
             setEditingMeetingRoom(null);
-        } else {
+        } catch {
             alert('Error updating meeting room');
         }
     };
 
     const handleDeleteMeetingRoom = async (id: string) => {
         if (!confirm('Are you sure you want to delete this meeting room?')) return;
-        const res = await fetch(`/api/admin/meeting-rooms?id=${id}`, { method: 'DELETE' });
-        if (res.ok) fetchMeetingRooms();
-        else alert('Error deleting meeting room');
+        try {
+            await roomsAdminApi.deleteMeetingRoom(id);
+            fetchMeetingRooms();
+        } catch {
+            alert('Error deleting meeting room');
+        }
     };
 
     // --- Room Handlers ---
     const handleCreateRoom = async (e: React.FormEvent) => {
         e.preventDefault();
-        const res = await fetch('/api/admin/rooms', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newRoom),
-        });
-        if (res.ok) {
+        try {
+            await roomsAdminApi.createFacilityRoom(newRoom);
             fetchRooms();
             setNewRoom({ category: categories.length > 0 ? categories[0].name : '', name: '', description: '', approver_email: '' });
             setIsRoomModalOpen(false);
-        } else {
+        } catch {
             alert('Error creating room');
         }
     };
 
-    const handleUpdateRoom = async (id: string, updates: any) => {
-        const res = await fetch('/api/admin/rooms', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, ...updates }),
-        });
-        if (res.ok) {
+    const handleUpdateRoom = async (id: string, updates: FacilityRoomUpdateData) => {
+        try {
+            await roomsAdminApi.updateFacilityRoom({ id, ...updates });
             fetchRooms();
             setEditingRoom(null);
-        } else {
+        } catch {
             alert('Error updating room');
         }
     };
 
     const handleDeleteRoom = async (id: string) => {
         if (!confirm('Are you sure you want to delete this room?')) return;
-        const res = await fetch(`/api/admin/rooms?id=${id}`, { method: 'DELETE' });
-        if (res.ok) {
+        try {
+            await roomsAdminApi.deleteFacilityRoom(id);
             fetchRooms();
-        } else {
+        } catch {
             alert('Error deleting room');
         }
     };
@@ -496,41 +506,32 @@ export default function AdminRoomsPage() {
     // --- Category Handlers ---
     const handleCreateCategory = async (e: React.FormEvent) => {
         e.preventDefault();
-        const res = await fetch('/api/admin/room-categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newCategory),
-        });
-        if (res.ok) {
+        try {
+            await roomsAdminApi.createRoomCategory(newCategory);
             fetchCategories();
             setNewCategory({ name: '', site_location: 'SHTP', bu: 'Milwaukee' });
             setIsCategoryModalOpen(false);
-        } else {
+        } catch {
             alert('Error creating category');
         }
     };
 
-    const handleUpdateCategory = async (id: string, updates: any) => {
-        const res = await fetch('/api/admin/room-categories', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, ...updates }),
-        });
-        if (res.ok) {
+    const handleUpdateCategory = async (id: string, updates: RoomCategoryUpdateData) => {
+        try {
+            await roomsAdminApi.updateRoomCategory({ id, ...updates });
             fetchCategories();
             setEditingCategory(null);
-        } else {
-            const data = await res.json();
-            alert(`Error: ${data.error}`);
+        } catch (err: any) {
+            alert(`Error: ${err.message}`);
         }
     };
 
     const handleDeleteCategory = async (id: string) => {
         if (!confirm('Are you sure you want to delete this category? Make sure no rooms are using it.')) return;
-        const res = await fetch(`/api/admin/room-categories?id=${id}`, { method: 'DELETE' });
-        if (res.ok) {
+        try {
+            await roomsAdminApi.deleteRoomCategory(id);
             fetchCategories();
-        } else {
+        } catch {
             alert('Error deleting category');
         }
     };
@@ -538,39 +539,35 @@ export default function AdminRoomsPage() {
     // --- Host Dept Handlers ---
     const handleCreateHostDept = async (e: React.FormEvent) => {
         e.preventDefault();
-        const res = await fetch('/api/admin/host-departments', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newHostDept),
-        });
-        if (res.ok) {
+        try {
+            await roomsAdminApi.createHostDepartment(newHostDept);
             fetchHostDepartments();
             setSelectedFuncDeptOption('');
             setNewHostDept({ bu: '', functional_dept: '', functional_host_name: '', functional_host_email: '', department: '', department_host_name: '', department_host_email: '' });
             setIsHostDeptModalOpen(false);
-        } else {
+        } catch {
             alert('Error creating Host Department');
         }
     };
 
-    const handleUpdateHostDept = async (id: string, updates: any) => {
-        const res = await fetch('/api/admin/host-departments', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, ...updates }),
-        });
-        if (res.ok) {
+    const handleUpdateHostDept = async (id: string, updates: HostDepartmentUpdateData) => {
+        try {
+            await roomsAdminApi.updateHostDepartment({ id, ...updates });
             fetchHostDepartments();
             setEditingHostDept(null);
-        } else {
+        } catch {
             alert('Error updating Host Department');
         }
     };
 
     const handleDeleteHostDept = async (id: string) => {
         if (!confirm('Are you sure you want to delete this?')) return;
-        const res = await fetch(`/api/admin/host-departments?id=${id}`, { method: 'DELETE' });
-        if (res.ok) fetchHostDepartments();
+        try {
+            await roomsAdminApi.deleteHostDepartment(id);
+            fetchHostDepartments();
+        } catch {
+            // Keep current behavior
+        }
     };
 
     return (
@@ -690,7 +687,7 @@ export default function AdminRoomsPage() {
                                     filteredMeetingRooms.map((room) => (
                                         <tr key={room.id} className="hover:bg-gray-50/80 transition-colors group">
                                             <td className="py-4 px-6 truncate">
-                                                {editingMeetingRoom?.id === room.id ? (
+                                                {editingMeetingRoom && editingMeetingRoom.id === room.id ? (
                                                     <input 
                                                         type="text" 
                                                         className="w-full border rounded px-2 py-1"
@@ -702,7 +699,7 @@ export default function AdminRoomsPage() {
                                                 )}
                                             </td>
                                             <td className="py-4 px-6 truncate">
-                                                {editingMeetingRoom?.id === room.id ? (
+                                                {editingMeetingRoom && editingMeetingRoom.id === room.id ? (
                                                     <input 
                                                         type="text" 
                                                         className="w-full border rounded px-2 py-1"
@@ -714,7 +711,7 @@ export default function AdminRoomsPage() {
                                                 )}
                                             </td>
                                             <td className="py-4 px-6 text-right">
-                                                {editingMeetingRoom?.id === room.id ? (
+                                                {editingMeetingRoom && editingMeetingRoom.id === room.id ? (
                                                     <div className="flex justify-end gap-2">
                                                         <button 
                                                             onClick={() => handleUpdateMeetingRoom(room.id, { floorName: editingMeetingRoom.floorName, roomName: editingMeetingRoom.roomName })}
@@ -825,7 +822,7 @@ export default function AdminRoomsPage() {
                                         <tr><td colSpan={6} className="p-8 text-center text-gray-400">Loading rooms...</td></tr>
                                     ) : filteredRooms.map((room) => (
                                         <tr key={room.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            {editingRoom?.id === room.id ? (
+                                            {editingRoom && editingRoom.id === room.id ? (
                                                 <>
                                                     <td className="p-4">
                                                         <select 
@@ -856,7 +853,7 @@ export default function AdminRoomsPage() {
                                                         <input 
                                                             type="email" 
                                                             className="w-full px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
-                                                            value={editingRoom.approver_email}
+                                                            value={editingRoom.approver_email || ''}
                                                             onChange={e => setEditingRoom({...editingRoom, approver_email: e.target.value})}
                                                         />
                                                     </td>
@@ -965,7 +962,7 @@ export default function AdminRoomsPage() {
                                         <tr><td colSpan={4} className="p-8 text-center text-gray-400">Loading categories...</td></tr>
                                     ) : filteredCategories.map((cat) => (
                                         <tr key={cat.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            {editingCategory?.id === cat.id ? (
+                                            {editingCategory && editingCategory.id === cat.id ? (
                                                 <>
                                                     <td className="p-4">
                                                         <input 
@@ -1114,7 +1111,7 @@ export default function AdminRoomsPage() {
                                         <tr><td colSpan={7} className="p-8 text-center text-gray-400">Loading...</td></tr>
                                     ) : filteredHostDepartments.map((h) => (
                                         <tr key={h.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            {editingHostDept?.id === h.id ? (
+                                            {editingHostDept && editingHostDept.id === h.id ? (
                                                 <>
                                                     <td className="p-2"><input type="text" className="w-full p-1 border rounded text-xs" value={editingHostDept.bu || ''} onChange={e => setEditingHostDept({...editingHostDept, bu: e.target.value})} placeholder="BU" /></td>
                                                     <td className="p-2"><input type="text" className="w-full p-1 border rounded text-xs" value={editingHostDept.functional_dept} onChange={e => setEditingHostDept({...editingHostDept, functional_dept: e.target.value})} /></td>
@@ -1326,7 +1323,7 @@ export default function AdminRoomsPage() {
                                                     functional_host_email: ''
                                                 });
                                             } else {
-                                                const existing = hostDepartments.find((h: any) => h.functional_dept === val);
+                                                const existing = hostDepartments.find((h: HostDepartment) => h.functional_dept === val);
                                                 setNewHostDept({
                                                     ...newHostDept,
                                                     functional_dept: val,
@@ -1339,7 +1336,7 @@ export default function AdminRoomsPage() {
                                         required
                                     >
                                         <option value="" disabled>-- Select Existing Functional Dept --</option>
-                                        {uniqueFunctionalDepts.map((fd: any) => (
+                                        {uniqueFunctionalDepts.map((fd: string) => (
                                             <option key={fd} value={fd}>{fd}</option>
                                         ))}
                                         <option value="__NEW__">+ Create New Functional Dept...</option>
