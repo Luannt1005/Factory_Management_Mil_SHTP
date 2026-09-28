@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DataImport from "@/components/DataImport";
 import SheetManagerTable from "@/components/SheetManagerTable";
+import { Badge } from "@/components/ui/Badge";
 
 // Icons
 import {
@@ -156,9 +157,13 @@ function AdminDashboardContent() {
                                     <ClockIcon className="w-4 h-4 mr-2" />
                                     Review Changes
                                     {pendingCount > 0 && (
-                                        <span className="ml-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                        <Badge
+                                            variant="danger"
+                                            size="sm"
+                                            className="ml-2 min-w-[18px] justify-center"
+                                        >
                                             {pendingCount}
-                                        </span>
+                                        </Badge>
                                     )}
                                 </button>
                             </div>

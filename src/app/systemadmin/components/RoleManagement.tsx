@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { PlusIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
 
 interface AppRole {
     id: string;
@@ -151,17 +154,18 @@ export default function RoleManagement() {
         <div className="h-full flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-gray-100">
                 <div className="text-sm font-semibold text-gray-800">Role Management</div>
-                <button
+                <Button
+                    size="sm"
+                    variant="primary"
+                    icon={<PlusIcon className="w-4 h-4" />}
                     onClick={() => {
                         setModalMode("add");
                         setFormData({ name: "", app_module: "Global", description: "", permissions: [] });
                         setIsModalOpen(true);
                     }}
-                    className="flex items-center gap-1.5 bg-[#b52427] hover:bg-[#9a1e21] text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
                 >
-                    <PlusIcon className="w-4 h-4" />
                     New Role
-                </button>
+                </Button>
             </div>
 
             <div className="flex-1 overflow-auto bg-white">
@@ -233,97 +237,115 @@ export default function RoleManagement() {
             </div>
 
             {/* Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl my-8 animate-in fade-in zoom-in-95 duration-200 border border-gray-200 flex flex-col max-h-full">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-                            <h3 className="text-lg font-bold text-gray-900">
-                                {modalMode === 'add' ? 'New Role' : 'Edit Role'}
-                            </h3>
-                            <button type="button" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                                <span className="text-2xl">×</span>
-                            </button>
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={modalMode === 'add' ? 'New Role' : 'Edit Role'}
+                maxWidth="2xl"
+                footer={
+                    <>
+                        <Button
+                            variant="secondary"
+                            size="md"
+                            onClick={() => setIsModalOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            form="role-form"
+                            variant="primary"
+                            size="md"
+                            loading={isSaving}
+                            className="min-w-[100px]"
+                        >
+                            Save Role
+                        </Button>
+                    </>
+                }
+            >
+                <form id="role-form" onSubmit={handleSubmit} className="flex flex-col space-y-4">
+                    {error && (
+                        <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
+                            {error}
                         </div>
+                    )}
 
-                        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-                            <div className="p-6 overflow-y-auto flex-1">
-                                {error && (
-                                    <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
-                                        {error}
-                                    </div>
-                                )}
-
-                                <div className="space-y-4 mb-6">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-semibold text-gray-700">Role Name</label>
-                                            <input type="text" required className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-500" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Visitor Admin" />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-semibold text-gray-700">App Module</label>
-                                            <select className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-500" value={formData.app_module} onChange={e => setFormData({ ...formData, app_module: e.target.value })}>
-                                                <option value="Global">Global</option>
-                                                <option value="Orgchart">OrgChart</option>
-                                                <option value="Visitor">Visitor</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-semibold text-gray-700">Description</label>
-                                        <textarea className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-500" rows={2} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="What can this role do?"></textarea>
-                                    </div>
-
-                                    <div className="space-y-2 mt-6">
-                                        <label className="text-xs font-semibold text-gray-700 block mb-2">Page Access Permission</label>
-                                        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-                                            <table className="w-full text-left text-xs border-collapse">
-                                                <thead className="bg-gray-50 border-b border-gray-200">
-                                                    <tr>
-                                                        <th className="py-2.5 px-4 font-semibold text-gray-700">Module / Page</th>
-                                                        <th className="py-2.5 px-4 font-semibold text-gray-700 w-24 text-center">Access</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-100">
-                                                    {PERMISSION_MATRIX.map(module => (
-                                                        <React.Fragment key={module.module}>
-                                                            <tr className="bg-gray-50/50 border-b border-gray-100">
-                                                                <td colSpan={2} className="py-2 px-4 font-bold text-[#b52427]">{module.module}</td>
-                                                            </tr>
-                                                            {module.pages.map(page => (
-                                                                <tr key={page.key} className="hover:bg-gray-50 transition-colors">
-                                                                    <td className="py-2.5 px-4 pl-8 text-gray-700 font-medium flex items-center gap-2">
-                                                                        {page.label}
-                                                                        <span className="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-mono">
-                                                                            {page.key}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="py-2.5 px-4 text-center">
-                                                                        <input type="checkbox" 
-                                                                            className="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 cursor-pointer"
-                                                                            checked={formData.permissions.includes(page.key)}
-                                                                            onChange={() => togglePermission(page.key)}
-                                                                            title={`Allow access to ${page.label}`}
-                                                                        />
-                                                                    </td>
-                                                                </tr>
-                                                            ))}
-                                                        </React.Fragment>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 shrink-0">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors">Cancel</button>
-                                <button type="submit" disabled={isSaving} className="px-4 py-2 text-sm font-medium text-white bg-[#b52427] hover:bg-[#9a1e21] rounded-lg transition-colors disabled:opacity-50 min-w-[100px]">{isSaving ? 'Saving...' : 'Save Role'}</button>
-                            </div>
-                        </form>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            label="Role Name"
+                            required
+                            value={formData.name}
+                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="e.g. Visitor Admin"
+                        />
+                        <div className="space-y-1.5">
+                            <label className="block text-xs font-semibold text-gray-700">App Module</label>
+                            <select
+                                className="w-full h-10 px-3 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c]"
+                                value={formData.app_module}
+                                onChange={e => setFormData({ ...formData, app_module: e.target.value })}
+                            >
+                                <option value="Global">Global</option>
+                                <option value="Orgchart">OrgChart</option>
+                                <option value="Visitor">Visitor</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-            )}
+
+                    <div className="space-y-1.5">
+                        <label className="block text-xs font-semibold text-gray-700">Description</label>
+                        <textarea
+                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c]"
+                            rows={2}
+                            value={formData.description}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                            placeholder="What can this role do?"
+                        />
+                    </div>
+
+                    <div className="space-y-2 pt-2">
+                        <label className="text-xs font-semibold text-gray-700 block mb-1">Page Access Permission</label>
+                        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                            <table className="w-full text-left text-xs border-collapse">
+                                <thead className="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th className="py-2.5 px-4 font-semibold text-gray-700">Module / Page</th>
+                                        <th className="py-2.5 px-4 font-semibold text-gray-700 w-24 text-center">Access</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {PERMISSION_MATRIX.map(module => (
+                                        <React.Fragment key={module.module}>
+                                            <tr className="bg-gray-50/50 border-b border-gray-100">
+                                                <td colSpan={2} className="py-2 px-4 font-bold text-[#b52427]">{module.module}</td>
+                                            </tr>
+                                            {module.pages.map(page => (
+                                                <tr key={page.key} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="py-2.5 px-4 pl-8 text-gray-700 font-medium flex items-center gap-2">
+                                                        {page.label}
+                                                        <span className="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-mono">
+                                                            {page.key}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-2.5 px-4 text-center">
+                                                        <input type="checkbox"
+                                                            className="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 cursor-pointer"
+                                                            checked={formData.permissions.includes(page.key)}
+                                                            onChange={() => togglePermission(page.key)}
+                                                            title={`Allow access to ${page.label}`}
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </React.Fragment>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 }
