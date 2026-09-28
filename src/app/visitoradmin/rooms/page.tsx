@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { roomsAdminApi } from '@/features/visitor/rooms/services/roomsAdminApi';
+import { ExcelColumnFilter } from '@/features/visitor/rooms/components/ExcelColumnFilter';
+import { MeetingRoomsTab } from '@/features/visitor/rooms/components/tabs/MeetingRoomsTab';
+import { HostDepartmentsTab } from '@/features/visitor/rooms/components/tabs/HostDepartmentsTab';
 import type {
     FacilityRoom,
     FacilityRoomFormData,
@@ -22,209 +25,6 @@ import type {
     HostDepartmentsApiResponse,
     MeetingRoomsApiResponse,
 } from '@/types/rooms.types';
-
-// Excel-style dropdown column filter component
-function ExcelColumnFilter({
-    title,
-    allValues,
-    selectedValues,
-    onFilterChange,
-    align = 'left'
-}: {
-    title: string;
-    allValues: (string | null | undefined)[];
-    selectedValues: string[];
-    onFilterChange: (selected: string[]) => void;
-    align?: 'left' | 'right';
-}) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
-    const buttonRef = useRef<HTMLButtonElement>(null);
-    const popoverRef = useRef<HTMLDivElement>(null);
-
-    // Extract unique values
-    const uniqueValues = useMemo(() => {
-        const set = new Set<string>();
-        for (const v of allValues) {
-            if (v === null || v === undefined || (typeof v === 'string' && v.trim() === '')) {
-                set.add('(Blanks)');
-            } else {
-                set.add(String(v).trim());
-            }
-        }
-        return Array.from(set).sort((a, b) => {
-            if (a === '(Blanks)') return 1;
-            if (b === '(Blanks)') return -1;
-            return a.localeCompare(b);
-        });
-    }, [allValues]);
-
-    const isFiltered = selectedValues.length > 0;
-
-    const handleToggle = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!isOpen && buttonRef.current) {
-            const rect = buttonRef.current.getBoundingClientRect();
-            let left = rect.left;
-            if (align === 'right' || left + 230 > window.innerWidth) {
-                left = Math.max(10, rect.right - 230);
-            }
-            let top = rect.bottom + 4;
-            if (top + 280 > window.innerHeight) {
-                top = Math.max(10, rect.top - 280);
-            }
-            setCoords({ top, left });
-            setIsOpen(true);
-        } else {
-            setIsOpen(false);
-        }
-    };
-
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (
-                popoverRef.current && 
-                !popoverRef.current.contains(event.target as Node) &&
-                buttonRef.current &&
-                !buttonRef.current.contains(event.target as Node)
-            ) {
-                setIsOpen(false);
-            }
-        }
-        if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isOpen]);
-
-    const handleSelectAll = (checked: boolean) => {
-        if (checked) {
-            onFilterChange([]); // Show all
-        } else {
-            onFilterChange(['__NONE__']); // Show none
-        }
-    };
-
-    const handleToggleValue = (val: string) => {
-        if (!isFiltered) {
-            // Unchecking this val when initially all were active
-            const remaining = uniqueValues.filter(v => v !== val);
-            onFilterChange(remaining.length === 0 ? ['__NONE__'] : remaining);
-        } else {
-            if (selectedValues.includes('__NONE__')) {
-                onFilterChange([val]);
-            } else if (selectedValues.includes(val)) {
-                const updated = selectedValues.filter(v => v !== val);
-                onFilterChange(updated.length === 0 ? ['__NONE__'] : updated);
-            } else {
-                const updated = [...selectedValues, val];
-                if (updated.length === uniqueValues.length) {
-                    onFilterChange([]); // All selected = clear filter
-                } else {
-                    onFilterChange(updated);
-                }
-            }
-        }
-    };
-
-    const isAllSelected = !isFiltered;
-
-    return (
-        <div className="inline-flex items-center gap-1.5 text-left">
-            <span className="font-bold text-gray-700 text-xs uppercase tracking-wider select-none truncate" title={title}>
-                {title}
-            </span>
-            <button
-                ref={buttonRef}
-                type="button"
-                onClick={handleToggle}
-                className={`p-1 rounded transition-all inline-flex items-center justify-center flex-shrink-0 ${
-                    isFiltered
-                        ? 'bg-[#db011c] text-white shadow-sm ring-2 ring-red-200'
-                        : 'text-gray-400 hover:text-gray-700 hover:bg-gray-200/80'
-                }`}
-                title={`Filter ${title}`}
-            >
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-            </button>
-
-            {isOpen && coords && typeof document !== 'undefined' && createPortal(
-                <div 
-                    ref={popoverRef}
-                    style={{ position: 'fixed', top: `${coords.top}px`, left: `${coords.left}px`, zIndex: 99999 }}
-                    className="w-56 bg-white rounded-xl shadow-2xl border border-gray-200 p-3 text-xs text-gray-700 font-normal select-none"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    {/* Header in popover */}
-                    <div className="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-2 flex items-center justify-between">
-                        <span className="truncate">Filter: {title}</span>
-                        {isFiltered && (
-                            <span className="text-[10px] bg-red-100 text-[#db011c] px-1.5 py-0.5 rounded font-bold">Active</span>
-                        )}
-                    </div>
-
-                    {/* Options list without search */}
-                    <div className="max-h-56 overflow-y-auto space-y-1 mb-2 pr-1 py-0.5">
-                        <label className="flex items-center gap-2 px-1.5 py-1 hover:bg-gray-50 rounded-md cursor-pointer font-bold text-gray-900 select-none">
-                            <input
-                                type="checkbox"
-                                checked={isAllSelected}
-                                onChange={(e) => handleSelectAll(e.target.checked)}
-                                className="rounded text-[#db011c] focus:ring-red-500 w-3.5 h-3.5"
-                            />
-                            <span>(Select All)</span>
-                        </label>
-
-                        {uniqueValues.map((val) => {
-                            const checked = isAllSelected || selectedValues.includes(val);
-                            return (
-                                <label key={val} className="flex items-center gap-2 px-1.5 py-1 hover:bg-gray-50 rounded-md cursor-pointer select-none">
-                                    <input
-                                        type="checkbox"
-                                        checked={checked}
-                                        onChange={() => handleToggleValue(val)}
-                                        className="rounded text-[#db011c] focus:ring-red-500 w-3.5 h-3.5"
-                                    />
-                                    <span className="truncate text-gray-700" title={val}>{val}</span>
-                                </label>
-                            );
-                        })}
-
-                        {uniqueValues.length === 0 && (
-                            <div className="text-center py-3 text-gray-400">No items available</div>
-                        )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                onFilterChange([]);
-                                setIsOpen(false);
-                            }}
-                            className="text-[11px] font-bold text-red-600 hover:text-red-800 underline"
-                        >
-                            Clear Filter
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setIsOpen(false)}
-                            className="bg-[#db011c] text-white px-3.5 py-1 rounded-lg font-bold text-[11px] hover:bg-[#b90118] shadow-sm transition-colors"
-                        >
-                            OK
-                        </button>
-                    </div>
-                </div>,
-                document.body
-            )}
-        </div>
-    );
-}
 
 export default function AdminRoomsPage() {
     const [mounted, setMounted] = useState(false);
@@ -278,34 +78,7 @@ export default function AdminRoomsPage() {
         bu: []
     });
 
-    const [hostDeptFilters, setHostDeptFilters] = useState<{ [key: string]: string[] }>({
-        bu: [],
-        functional_dept: [],
-        functional_host: [],
-        department: [],
-        department_host: [],
-        is_active: []
-    });
-
-    const [meetingRoomFilters, setMeetingRoomFilters] = useState<{ [key: string]: string[] }>({
-        floorName: [],
-        roomName: []
-    });
-
     // Filtered lists
-    const filteredMeetingRooms = useMemo(() => {
-        return meetingRooms.filter(room => {
-            if (meetingRoomFilters.floorName.length > 0) {
-                const val = room.floorName || '(Blanks)';
-                if (!meetingRoomFilters.floorName.includes(val)) return false;
-            }
-            if (meetingRoomFilters.roomName.length > 0) {
-                const val = room.roomName || '(Blanks)';
-                if (!meetingRoomFilters.roomName.includes(val)) return false;
-            }
-            return true;
-        });
-    }, [meetingRooms, meetingRoomFilters]);
 
     const filteredRooms = useMemo(() => {
         return rooms.filter(room => {
@@ -351,35 +124,6 @@ export default function AdminRoomsPage() {
         });
     }, [categories, categoryFilters]);
 
-    const filteredHostDepartments = useMemo(() => {
-        return hostDepartments.filter(h => {
-            if (hostDeptFilters.bu.length > 0) {
-                const val = h.bu || '(Blanks)';
-                if (!hostDeptFilters.bu.includes(val)) return false;
-            }
-            if (hostDeptFilters.functional_dept.length > 0) {
-                const val = h.functional_dept || '(Blanks)';
-                if (!hostDeptFilters.functional_dept.includes(val)) return false;
-            }
-            if (hostDeptFilters.functional_host.length > 0) {
-                const val = h.functional_host_name ? `${h.functional_host_name}${h.functional_host_email ? ` (${h.functional_host_email})` : ''}` : (h.functional_host_email || '(Blanks)');
-                if (!hostDeptFilters.functional_host.includes(val) && !hostDeptFilters.functional_host.includes(h.functional_host_name) && !(h.functional_host_email && hostDeptFilters.functional_host.includes(h.functional_host_email))) return false;
-            }
-            if (hostDeptFilters.department.length > 0) {
-                const val = h.department || '(Blanks)';
-                if (!hostDeptFilters.department.includes(val)) return false;
-            }
-            if (hostDeptFilters.department_host.length > 0) {
-                const val = h.department_host_name ? `${h.department_host_name}${h.department_host_email ? ` (${h.department_host_email})` : ''}` : (h.department_host_email || '(Blanks)');
-                if (!hostDeptFilters.department_host.includes(val) && !hostDeptFilters.department_host.includes(h.department_host_name) && !(h.department_host_email && hostDeptFilters.department_host.includes(h.department_host_email))) return false;
-            }
-            if (hostDeptFilters.is_active.length > 0) {
-                const val = h.is_active ? 'Active' : 'Inactive';
-                if (!hostDeptFilters.is_active.includes(val)) return false;
-            }
-            return true;
-        });
-    }, [hostDepartments, hostDeptFilters]);
 
     const uniqueFunctionalDepts = Array.from(new Set(hostDepartments.map((h: HostDepartment) => h.functional_dept).filter(Boolean)));
 
@@ -637,119 +381,15 @@ export default function AdminRoomsPage() {
             </div>
     
             {activeTab === 'meeting-rooms' && (
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse table-fixed min-w-[700px]">
-                            <thead>
-                                <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-                                    <th className="py-3.5 px-6 w-[45%]">
-                                        <ExcelColumnFilter
-                                            title="Floor Name"
-                                            allValues={meetingRooms.map(r => r.floorName)}
-                                            selectedValues={meetingRoomFilters.floorName}
-                                            onFilterChange={(selected) => setMeetingRoomFilters(prev => ({ ...prev, floorName: selected }))}
-                                        />
-                                    </th>
-                                    <th className="py-3.5 px-6 w-[40%]">
-                                        <ExcelColumnFilter
-                                            title="Room Name"
-                                            allValues={meetingRooms.map(r => r.roomName)}
-                                            selectedValues={meetingRoomFilters.roomName}
-                                            onFilterChange={(selected) => setMeetingRoomFilters(prev => ({ ...prev, roomName: selected }))}
-                                        />
-                                    </th>
-                                    <th className="py-3.5 px-6 text-right w-[15%]">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <span className="font-bold text-gray-700 text-xs uppercase tracking-wider">Actions</span>
-                                            {(meetingRoomFilters.floorName.length > 0 || meetingRoomFilters.roomName.length > 0) && (
-                                                <button
-                                                    onClick={() => setMeetingRoomFilters({ floorName: [], roomName: [] })}
-                                                    className="text-[11px] font-bold text-red-600 hover:text-red-800 underline ml-2"
-                                                    title="Reset all filters"
-                                                >
-                                                    Clear
-                                                </button>
-                                            )}
-                                        </div>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 text-sm">
-                                {loadingMeetingRooms ? (
-                                    <tr>
-                                        <td colSpan={3} className="py-8 text-center text-gray-500">Loading meeting rooms...</td>
-                                    </tr>
-                                ) : filteredMeetingRooms.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={3} className="py-8 text-center text-gray-500">No meeting rooms found matching filter.</td>
-                                    </tr>
-                                ) : (
-                                    filteredMeetingRooms.map((room) => (
-                                        <tr key={room.id} className="hover:bg-gray-50/80 transition-colors group">
-                                            <td className="py-4 px-6 truncate">
-                                                {editingMeetingRoom && editingMeetingRoom.id === room.id ? (
-                                                    <input 
-                                                        type="text" 
-                                                        className="w-full border rounded px-2 py-1"
-                                                        value={editingMeetingRoom.floorName}
-                                                        onChange={e => setEditingMeetingRoom({...editingMeetingRoom, floorName: e.target.value})}
-                                                    />
-                                                ) : (
-                                                    <span className="font-semibold text-gray-900">{room.floorName}</span>
-                                                )}
-                                            </td>
-                                            <td className="py-4 px-6 truncate">
-                                                {editingMeetingRoom && editingMeetingRoom.id === room.id ? (
-                                                    <input 
-                                                        type="text" 
-                                                        className="w-full border rounded px-2 py-1"
-                                                        value={editingMeetingRoom.roomName}
-                                                        onChange={e => setEditingMeetingRoom({...editingMeetingRoom, roomName: e.target.value})}
-                                                    />
-                                                ) : (
-                                                    <span className="text-gray-600">{room.roomName}</span>
-                                                )}
-                                            </td>
-                                            <td className="py-4 px-6 text-right">
-                                                {editingMeetingRoom && editingMeetingRoom.id === room.id ? (
-                                                    <div className="flex justify-end gap-2">
-                                                        <button 
-                                                            onClick={() => handleUpdateMeetingRoom(room.id, { floorName: editingMeetingRoom.floorName, roomName: editingMeetingRoom.roomName })}
-                                                            className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-1.5 rounded"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => setEditingMeetingRoom(null)}
-                                                            className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-1.5 rounded"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button 
-                                                            onClick={() => setEditingMeetingRoom(room)}
-                                                            className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-1.5 rounded transition-colors"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleDeleteMeetingRoom(room.id)}
-                                                            className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <MeetingRoomsTab
+                    meetingRooms={meetingRooms}
+                    loading={loadingMeetingRooms}
+                    editingMeetingRoom={editingMeetingRoom}
+                    onEdit={setEditingMeetingRoom}
+                    onUpdate={handleUpdateMeetingRoom}
+                    onDelete={handleDeleteMeetingRoom}
+                    onAdd={() => setIsMeetingRoomModalOpen(true)}
+                />
             )}
 
 
@@ -1036,138 +676,15 @@ export default function AdminRoomsPage() {
 
             {/* HOST DEPARTMENTS TAB */}
             {activeTab === 'host-departments' && (
-                <div className="animate-in fade-in duration-300">
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
-                                <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                        <th className="p-4 w-[11%]">
-                                            <ExcelColumnFilter
-                                                title="BU"
-                                                allValues={hostDepartments.map(h => h.bu)}
-                                                selectedValues={hostDeptFilters.bu}
-                                                onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, bu: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 w-[17%]">
-                                            <ExcelColumnFilter
-                                                title="Functional Dept"
-                                                allValues={hostDepartments.map(h => h.functional_dept)}
-                                                selectedValues={hostDeptFilters.functional_dept}
-                                                onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, functional_dept: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 w-[20%]">
-                                            <ExcelColumnFilter
-                                                title="Func Host"
-                                                allValues={hostDepartments.map(h => h.functional_host_name ? `${h.functional_host_name}${h.functional_host_email ? ` (${h.functional_host_email})` : ''}` : (h.functional_host_email || ''))}
-                                                selectedValues={hostDeptFilters.functional_host}
-                                                onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, functional_host: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 w-[17%]">
-                                            <ExcelColumnFilter
-                                                title="Department"
-                                                allValues={hostDepartments.map(h => h.department)}
-                                                selectedValues={hostDeptFilters.department}
-                                                onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, department: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 w-[20%]">
-                                            <ExcelColumnFilter
-                                                title="Dept Host"
-                                                allValues={hostDepartments.map(h => h.department_host_name ? `${h.department_host_name}${h.department_host_email ? ` (${h.department_host_email})` : ''}` : (h.department_host_email || ''))}
-                                                selectedValues={hostDeptFilters.department_host}
-                                                onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, department_host: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 text-center w-[8%]">
-                                            <ExcelColumnFilter
-                                                title="Status"
-                                                allValues={hostDepartments.map(h => h.is_active ? 'Active' : 'Inactive')}
-                                                selectedValues={hostDeptFilters.is_active}
-                                                onFilterChange={(selected) => setHostDeptFilters(prev => ({ ...prev, is_active: selected }))}
-                                            />
-                                        </th>
-                                        <th className="p-4 text-right w-[7%]">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <span>Action</span>
-                                                {(hostDeptFilters.bu.length > 0 || hostDeptFilters.functional_dept.length > 0 || hostDeptFilters.functional_host.length > 0 || hostDeptFilters.department.length > 0 || hostDeptFilters.department_host.length > 0 || hostDeptFilters.is_active.length > 0) && (
-                                                    <button
-                                                        onClick={() => setHostDeptFilters({ bu: [], functional_dept: [], functional_host: [], department: [], department_host: [], is_active: [] })}
-                                                        className="text-[11px] font-bold text-red-600 hover:text-red-800 underline ml-2"
-                                                        title="Reset all filters"
-                                                    >
-                                                        Clear
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-[0.875rem] font-medium bg-white">
-                                    {loadingHostDepartments ? (
-                                        <tr><td colSpan={7} className="p-8 text-center text-gray-400">Loading...</td></tr>
-                                    ) : filteredHostDepartments.map((h) => (
-                                        <tr key={h.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            {editingHostDept && editingHostDept.id === h.id ? (
-                                                <>
-                                                    <td className="p-2"><input type="text" className="w-full p-1 border rounded text-xs" value={editingHostDept.bu || ''} onChange={e => setEditingHostDept({...editingHostDept, bu: e.target.value})} placeholder="BU" /></td>
-                                                    <td className="p-2"><input type="text" className="w-full p-1 border rounded text-xs" value={editingHostDept.functional_dept} onChange={e => setEditingHostDept({...editingHostDept, functional_dept: e.target.value})} /></td>
-                                                    <td className="p-2">
-                                                        <input type="text" className="w-full p-1 border rounded text-xs mb-1" value={editingHostDept.functional_host_name} onChange={e => setEditingHostDept({...editingHostDept, functional_host_name: e.target.value})} placeholder="Name" />
-                                                        <input type="text" className="w-full p-1 border rounded text-xs" value={editingHostDept.functional_host_email || ''} onChange={e => setEditingHostDept({...editingHostDept, functional_host_email: e.target.value})} placeholder="Email" />
-                                                    </td>
-                                                    <td className="p-2"><input type="text" className="w-full p-1 border rounded text-xs" value={editingHostDept.department} onChange={e => setEditingHostDept({...editingHostDept, department: e.target.value})} /></td>
-                                                    <td className="p-2">
-                                                        <input type="text" className="w-full p-1 border rounded text-xs mb-1" value={editingHostDept.department_host_name} onChange={e => setEditingHostDept({...editingHostDept, department_host_name: e.target.value})} placeholder="Name" />
-                                                        <input type="text" className="w-full p-1 border rounded text-xs" value={editingHostDept.department_host_email || ''} onChange={e => setEditingHostDept({...editingHostDept, department_host_email: e.target.value})} placeholder="Email" />
-                                                    </td>
-                                                    <td className="p-2 text-center">
-                                                        <select className="p-1 border rounded text-xs" value={editingHostDept.is_active ? 'true' : 'false'} onChange={e => setEditingHostDept({...editingHostDept, is_active: e.target.value === 'true'})}>
-                                                            <option value="true">Active</option><option value="false">Inactive</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="p-2 text-right">
-                                                        <button onClick={() => handleUpdateHostDept(h.id, editingHostDept)} className="text-green-600 hover:text-green-800 font-bold mr-3 text-xs">Save</button>
-                                                        <button onClick={() => setEditingHostDept(null)} className="text-gray-400 hover:text-gray-600 font-bold text-xs">Cancel</button>
-                                                    </td>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <td className="p-4 font-bold">{h.bu || ''}</td>
-                                                    <td className="p-4">
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800 border border-gray-200">
-                                                            {h.functional_dept}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <div className="font-bold text-[#db011c]">{h.functional_host_name}</div>
-                                                        <div className="text-xs text-gray-500">{h.functional_host_email}</div>
-                                                    </td>
-                                                    <td className="p-4 font-bold">{h.department}</td>
-                                                    <td className="p-4">
-                                                        <div className="font-bold">{h.department_host_name}</div>
-                                                        <div className="text-xs text-gray-500">{h.department_host_email}</div>
-                                                    </td>
-                                                    <td className="p-4 text-center">{h.is_active ? <span className="text-green-500 text-xs font-bold">● Active</span> : <span className="text-gray-400 text-xs font-bold">○ Inactive</span>}</td>
-                                                    <td className="p-4 text-right">
-                                                        <button onClick={() => setEditingHostDept(h)} className="text-red-500 hover:text-[#b90118] font-bold text-xs mr-4 transition-colors">Edit</button>
-                                                        <button onClick={() => handleDeleteHostDept(h.id)} className="text-gray-400 hover:text-red-600 transition-colors"><svg className="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                                    </td>
-                                                </>
-                                            )}
-                                        </tr>
-                                    ))}
-                                    {filteredHostDepartments.length === 0 && !loadingHostDepartments && (
-                                        <tr><td colSpan={7} className="p-16 text-center text-gray-400 font-medium">No host departments found matching filter.</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                <HostDepartmentsTab
+                    hostDepartments={hostDepartments}
+                    loading={loadingHostDepartments}
+                    editingHostDept={editingHostDept}
+                    onEdit={setEditingHostDept}
+                    onUpdate={handleUpdateHostDept}
+                    onDelete={handleDeleteHostDept}
+                    onAdd={() => setIsHostDeptModalOpen(true)}
+                />
             )}
 
             {/* PORTAL MODALS */}
@@ -1426,60 +943,6 @@ export default function AdminRoomsPage() {
                 document.body
             )}
 
-            {mounted && isCategoryModalOpen && createPortal(
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
-                    <div className="flex min-h-full items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-100 relative">
-                            <button 
-                                onClick={() => setIsCategoryModalOpen(false)}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                            <h2 className="text-xl font-extrabold mb-6">Add Category</h2>
-                            <form onSubmit={handleCreateCategory} className="flex flex-col gap-5">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Category Name</label>
-                                    <input 
-                                        type="text" 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                        value={newCategory.name} 
-                                        onChange={e => setNewCategory({ ...newCategory, name: e.target.value })} 
-                                        placeholder="e.g. Common Office" 
-                                        required 
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Site Location</label>
-                                    <select 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                        value={newCategory.site_location} 
-                                        onChange={e => setNewCategory({ ...newCategory, site_location: e.target.value })}
-                                    >
-                                        <option value="SHTP">SHTP</option>
-                                        <option value="DDK">DDK</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">BU</label>
-                                    <select 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
-                                        value={newCategory.bu} 
-                                        onChange={e => setNewCategory({ ...newCategory, bu: e.target.value })}
-                                    >
-                                        <option value="Milwaukee">Milwaukee</option>
-                                        <option value="Share Function">Share Function</option>
-                                    </select>
-                                </div>
-                                <button type="submit" className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-[#db011c] hover:bg-[#b90118] transition-colors shadow-md">
-                                    Create Category
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
 
             {/* Meeting Room Modal */}
             {mounted && isMeetingRoomModalOpen && createPortal(
