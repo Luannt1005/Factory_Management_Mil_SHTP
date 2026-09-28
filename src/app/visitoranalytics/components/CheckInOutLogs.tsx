@@ -2,21 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import * as XLSX from 'xlsx';
-
-interface LogEntry {
-    id: string;
-    requestId: string;
-    requestCode: string;
-    visitorIndex: number;
-    visitorCode: string;
-    visitorName: string;
-    action: 'CHECK_IN' | 'CHECK_OUT' | 'INPUT_CARD' | 'REVERSE' | string;
-    cardNumber: string | null;
-    performedBy: string;
-    performedByName: string | null;
-    details: any;
-    createdAt: string;
-}
+import type { VisitorLogEntry as LogEntry } from '@/types/visitor.types';
+import { formatDateTimeWithSeconds as formatDateTime } from '@/utils/date';
 
 interface OperatorItem {
     username: string;
@@ -131,18 +118,6 @@ export default function CheckInOutLogs() {
         const interval = setInterval(fetchLogs, 30000);
         return () => clearInterval(interval);
     }, [autoRefresh, fetchLogs]);
-
-    const formatDateTime = (dateStr: string) => {
-        if (!dateStr) return '-';
-        const d = new Date(dateStr);
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        const hours = String(d.getHours()).padStart(2, '0');
-        const minutes = String(d.getMinutes()).padStart(2, '0');
-        const seconds = String(d.getSeconds()).padStart(2, '0');
-        return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-    };
 
     const getActionBadge = (action: string) => {
         switch (action) {

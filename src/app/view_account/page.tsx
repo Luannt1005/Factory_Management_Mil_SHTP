@@ -2,15 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { hashPassword } from "@/lib/password";
+import type { UserAccount } from "@/types/user.types";
 import "./view_account.css";
-
-interface UserAccount {
-    id: string;
-    username: string;
-    full_name: string;
-    role: string;
-    created_at?: string;
-}
 
 export default function ViewAccountPage() {
     const [users, setUsers] = useState<UserAccount[]>([]);

@@ -2,23 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { CheckCircleIcon, XCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
-
-interface UserAccount {
-    id: string;
-    username: string;
-    full_name: string;
-    role?: string;
-    orgchart_role?: string;
-    visitor_role?: string;
-    app_role_ids?: string[];
-    created_at?: string;
-    employee_id?: string;
-    email?: string;
-    status?: string;
-    department?: string;
-    job_title?: string;
-    location?: string;
-}
+import type { UserAccount } from "@/types/user.types";
+import { formatDateTime as formatDate } from "@/utils/date";
 
 export default function PendingApprovals() {
     const [users, setUsers] = useState<UserAccount[]>([]);
@@ -115,11 +100,6 @@ export default function PendingApprovals() {
         }
     };
 
-    const formatDate = (dateStr?: string) => {
-        if (!dateStr) return "-";
-        const d = new Date(dateStr);
-        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-    };
 
     return (
         <div className="h-full flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

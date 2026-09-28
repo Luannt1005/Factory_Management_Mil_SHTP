@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/context/UserContext';
 import RequestCheckInModal from './components/RequestCheckInModal';
 import MultiSelectDropdown, { MultiSelectOption } from '@/components/MultiSelectDropdown';
+import { removeAccents } from '@/utils/string';
+import { formatDateShort, formatDateTime } from '@/utils/date';
+import { getCategoryBadgeClass, getStatusBadgeClass } from '@/utils/badge';
 
 type ViewMode = 'group' | 'visitor';
 
@@ -26,10 +29,6 @@ const SITE_OPTIONS: MultiSelectOption[] = [
     { label: 'DDK', value: 'DDK' },
     { label: 'SHTP / DDK', value: 'SHTP/DDK' }
 ];
-
-const removeAccents = (str: string) => {
-    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-};
 
 export default function CheckInOutManagement() {
     const router = useRouter();
@@ -292,44 +291,6 @@ export default function CheckInOutManagement() {
             window.removeEventListener('keydown', handleGlobalKeyDown, true);
         };
     }, [isModalOpen, history]);
-
-    const formatDateTime = (timeString?: string | null) => {
-        if (!timeString) return '-';
-        const d = new Date(timeString);
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        const hours = String(d.getHours()).padStart(2, '0');
-        const minutes = String(d.getMinutes()).padStart(2, '0');
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
-    };
-
-    const formatDateShort = (dateString?: string | null) => {
-        if (!dateString) return '';
-        const d = new Date(dateString);
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        return `${day}/${month}/${year}`;
-    };
-
-    const getCategoryBadgeClass = (category: string) => {
-        const cat = category?.toUpperCase() || '';
-        if (cat.includes('VENDOR') && cat.includes('CONTRACTOR')) return 'text-indigo-600 bg-indigo-50';
-        if (cat.includes('VENDOR')) return 'text-blue-600 bg-blue-50';
-        if (cat.includes('CONTRACTOR')) return 'text-cyan-600 bg-cyan-50';
-        if (cat.includes('INTERVIEWEE')) return 'text-emerald-600 bg-emerald-50';
-        if (cat.includes('EXPAT')) return 'text-purple-600 bg-purple-50';
-        return 'text-gray-600 bg-gray-50';
-    };
-
-    const getStatusBadgeClass = (status: string) => {
-        const s = status?.toUpperCase() || '';
-        if (s === 'APPROVED' || s === 'COMPLETE') return 'text-green-600 bg-green-50';
-        if (s === 'REJECTED') return 'text-red-600 bg-red-50';
-        if (s === 'PENDING') return 'text-orange-600 bg-orange-50';
-        return 'text-gray-600 bg-gray-50';
-    };
 
     // Filter visitors based on statusFilters, categories, sites, visitorName, and search
     const processedHistory = history.map(req => {

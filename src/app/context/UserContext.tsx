@@ -2,18 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useSession } from "next-auth/react";
-
-interface User {
-    id: string | number;
-    username: string;
-    full_name: string;
-    role: string;
-    orgchart_role: string;
-    visitor_role: string;
-    image?: string;
-    app_role_names?: string[];
-    allowedPages?: string[];
-}
+import type { SessionUser as User } from '@/types/user.types';
 
 interface UserContextProps {
     user: User | null;

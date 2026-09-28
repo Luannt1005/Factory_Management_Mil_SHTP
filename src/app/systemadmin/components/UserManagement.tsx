@@ -3,31 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { hashPassword } from "@/lib/password";
 import { MagnifyingGlassIcon, PencilSquareIcon, TrashIcon, EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
-
-interface AppRole {
-    id: string;
-    name: string;
-    app_module: string;
-}
-
-interface UserAccount {
-    id: string;
-    username: string;
-    full_name: string;
-    role?: string;
-    orgchart_role?: string;
-    visitor_role?: string;
-    app_role_ids?: string[];
-    created_at?: string;
-    employee_id?: string;
-    email?: string;
-    last_login?: string;
-    sso_provider?: string;
-    status?: string;
-    department?: string;
-    job_title?: string;
-    location?: string;
-}
+import type { UserAccount, AppRole } from "@/types/user.types";
+import { formatDateShort } from "@/utils/date";
 
 export default function UserManagement() {
     const [users, setUsers] = useState<UserAccount[]>([]);
@@ -143,11 +120,7 @@ export default function UserManagement() {
         }
     };
 
-    const formatDate = (dateStr?: string) => {
-        if (!dateStr) return "-";
-        const d = new Date(dateStr);
-        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-    };
+    const formatDate = (dateStr?: string) => formatDateShort(dateStr, "-");
 
     const getBU = (fullname: string) => {
         if (!fullname) return 'Mil';

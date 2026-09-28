@@ -2,33 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-
-interface Visitor {
-    visitorIndex: number;
-    visitorName: string;
-    visitorTitle?: string;
-    visitorCompany?: string;
-    visitorCode?: string;
-    cardNumber?: string;
-    checkInOutStatus: 'PENDING' | 'CHECKED_IN' | 'CHECKED_OUT';
-    checkInTime?: string | null;
-    checkOutTime?: string | null;
-}
-
-interface RequestData {
-    requestId: string;
-    requestCode?: string;
-    submitterName?: string;
-    submitterDepartment?: string;
-    visitorCategory?: string;
-    visitingSite?: string;
-    purposeOfVisit?: string;
-    purposeDetail?: string;
-    startDate?: string;
-    endDate?: string;
-    status?: string;
-    visitors: Visitor[];
-}
+import type { Visitor, VisitorRequestData as RequestData } from '@/types/visitor.types';
 
 interface RequestCheckInModalProps {
     isOpen: boolean;
