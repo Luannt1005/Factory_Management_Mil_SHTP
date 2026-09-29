@@ -1,8 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { visitorAdminApi } from '@/features/visitor/admin/services/visitorAdminApi';
+import type {
+    VisitorAdminRequestRecord,
+    UpdateVisitorRequestEditPayload,
+    EditModalVisitorItem,
+} from '@/types/visitor-admin.types';
 
-export default function EditRequestModal({ request, onClose, onSave }: { request: any, onClose: () => void, onSave: (updatedData: any) => void }) {
-    const [formData, setFormData] = useState<any>({
+export interface VisitorEditModalProps {
+    request: VisitorAdminRequestRecord | null;
+    onClose: () => void;
+    onSave: (updatedData: VisitorAdminRequestRecord) => void;
+}
+
+interface VisitorEditFormData {
+    start_date: string;
+    end_date: string;
+    visitor_category: string;
+    visiting_site: string;
+    purpose: string;
+    costCenter: string;
+    factoryTour: string;
+    visitors: EditModalVisitorItem[];
+    interviewee_name: string;
+    job_title: string;
+    interview_department: string;
+}
+
+export default function VisitorEditModal({
+    request,
+    onClose,
+    onSave,
+}: VisitorEditModalProps) {
+    const [formData, setFormData] = useState<VisitorEditFormData>({
         start_date: '',
         end_date: '',
         visitor_category: 'Vendor',
@@ -18,8 +48,8 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
     const [loading, setLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    const formatToLocalDateInput = (dateVal: any) => {
-        if (!dateVal) return '';
+    const formatToLocalDateInput = (dateVal: unknown) => {
+        if (!dateVal || typeof dateVal !== 'string') return '';
         const d = new Date(dateVal);
         if (isNaN(d.getTime())) return '';
         const year = d.getFullYear();
@@ -31,21 +61,21 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
     useEffect(() => {
         setMounted(true);
         if (request) {
-            let parsedDetails: any = {};
-            try { 
-                parsedDetails = typeof request.details === 'string' ? JSON.parse(request.details || '{}') : (request.details || {}); 
+            let parsedDetails: Record<string, any> = {};
+            try {
+                parsedDetails = typeof request.details === 'string' ? JSON.parse(request.details || '{}') : (request.details || {});
             } catch (e) {}
 
-            let parsedVisitors: any[] = [];
-            try { 
-                parsedVisitors = typeof request.visitors === 'string' ? JSON.parse(request.visitors || '[]') : (request.visitors || []); 
+            let parsedVisitors: EditModalVisitorItem[] = [];
+            try {
+                parsedVisitors = typeof request.visitors === 'string' ? JSON.parse(request.visitors || '[]') : (request.visitors || []);
             } catch (e) {}
 
             if (parsedVisitors.length === 0 && request.visitor_name) {
-                parsedVisitors = [{ 
-                    name: request.visitor_name, 
-                    company: request.current_company || '', 
-                    title: request.visitor_title || '' 
+                parsedVisitors = [{
+                    name: request.visitor_name,
+                    company: request.current_company || '',
+                    title: request.visitor_title || ''
                 }];
             }
 
@@ -81,14 +111,14 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
         }).trim().replace(/\s+/g, ' ');
     };
 
-    const handleVisitorChange = (index: number, field: string, value: string) => {
+    const handleVisitorChange = (index: number, field: keyof EditModalVisitorItem, value: string) => {
         const newVisitors = [...formData.visitors];
         const val = field === 'name' ? cleanNameInput(value) : value;
         newVisitors[index] = { ...newVisitors[index], [field]: val };
         setFormData({ ...formData, visitors: newVisitors });
     };
 
-    const handleVisitorBlur = (index: number, field: string) => {
+    const handleVisitorBlur = (index: number, field: keyof EditModalVisitorItem) => {
         const newVisitors = [...formData.visitors];
         const val = newVisitors[index]?.[field];
         if (typeof val === 'string' && val.trim()) {
@@ -109,30 +139,31 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
             alert('Yêu cầu phải có ít nhất 1 khách đến thăm.');
             return;
         }
-        const newVisitors = formData.visitors.filter((_: any, i: number) => i !== index);
+        const newVisitors = formData.visitors.filter((_, i) => i !== index);
         setFormData({ ...formData, visitors: newVisitors });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!request) return;
         setLoading(true);
         try {
             const isInterview = formData.visitor_category === 'Interviewee' || request.visitor_category === 'Interviewee' || request.record_type === 'interviewee';
 
-            const detailsObj = {
+            const detailsObj: Record<string, unknown> = {
                 purpose: formData.purpose,
                 costCenter: formData.costCenter,
                 factoryTour: formData.factoryTour
             };
 
-            const formattedVisitors = (formData.visitors || []).map((v: any) => ({
+            const formattedVisitors: EditModalVisitorItem[] = (formData.visitors || []).map((v) => ({
                 ...v,
                 name: formatName(v.name || ''),
                 company: (v.company || '').trim(),
                 title: (v.title || '').trim()
             }));
 
-            const payload: any = {
+            const payload: UpdateVisitorRequestEditPayload = {
                 start_date: formData.start_date,
                 end_date: formData.end_date || formData.start_date,
                 visitor_category: formData.visitor_category,
@@ -147,24 +178,15 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
                 payload.interview_department = formData.interview_department;
             }
 
-            const targetId = request.id || request.requestId;
-            const res = await fetch(`/api/requests/${targetId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            const targetId = request.id || request.requestId || '';
+            const data = await visitorAdminApi.updateRequestDetails(targetId, payload);
 
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || 'Failed to update request');
-            }
-
-            const data = await res.json();
             alert('Cập nhật thông tin yêu cầu thành công!');
             onSave(data.data);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Update error:', error);
-            alert(`Lỗi khi cập nhật yêu cầu: ${error.message || 'Lỗi hệ thống'}`);
+            const msg = error instanceof Error ? error.message : 'Lỗi hệ thống';
+            alert(`Lỗi khi cập nhật yêu cầu: ${msg}`);
         } finally {
             setLoading(false);
         }
@@ -278,7 +300,7 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
                                         onBlur={e => setFormData({...formData, interviewee_name: formatName(e.target.value)})} 
                                         style={{ textTransform: 'capitalize' }} 
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
-                                        required
+                                        required 
                                     />
                                 </div>
                                 <div>
@@ -321,7 +343,7 @@ export default function EditRequestModal({ request, onClose, onSave }: { request
                             </div>
 
                             <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-1">
-                                {formData.visitors && formData.visitors.map((v: any, index: number) => (
+                                {formData.visitors && formData.visitors.map((v, index) => (
                                     <div key={index} className="bg-gray-50/80 p-3.5 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                                         <div className="md:col-span-4">
                                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-0.5">Name (Họ tên khách) *</label>

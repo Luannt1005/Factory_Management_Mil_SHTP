@@ -84,6 +84,7 @@ export interface HostDepartment {
     department_host_name: string;
     department_host_email: string | null;
     is_active: boolean;
+    dept_name?: string;
 }
 
 export interface HostDepartmentFormData {
