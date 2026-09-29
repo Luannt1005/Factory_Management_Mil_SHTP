@@ -1,57 +1,53 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, Fragment } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/context/UserContext';
-import RequestCheckInModal from './components/RequestCheckInModal';
-import MultiSelectDropdown, { MultiSelectOption } from '@/components/MultiSelectDropdown';
+import CheckInOutFilters from '@/features/visitor/checkinout/components/CheckInOutFilters';
+import VisitorViewTable from '@/features/visitor/checkinout/components/VisitorViewTable';
+import GroupViewTable from '@/features/visitor/checkinout/components/GroupViewTable';
+import RequestCheckInModal from '@/features/visitor/checkinout/components/RequestCheckInModal';
 import { removeAccents } from '@/utils/string';
 import { formatDateShort, formatDateTime } from '@/utils/date';
-import { getCategoryBadgeClass, getStatusBadgeClass } from '@/utils/badge';
-
-type ViewMode = 'group' | 'visitor';
-
-const STATUS_OPTIONS: MultiSelectOption[] = [
-    { label: 'Expected Arrival (Chưa đến)', value: 'PENDING' },
-    { label: 'Checked In (Đang có mặt)', value: 'CHECKED_IN' },
-    { label: 'Checked Out (Đã rời đi)', value: 'CHECKED_OUT' }
-];
-
-const CATEGORY_OPTIONS: MultiSelectOption[] = [
-    { label: 'Vendor', value: 'Vendor' },
-    { label: 'Contractor', value: 'Contractor' },
-    { label: 'MIL / TTI EXPAT', value: 'MIL/TTI Expat / SHTP Business trip' },
-    { label: 'Interviewee', value: 'Interviewee' }
-];
-
-const SITE_OPTIONS: MultiSelectOption[] = [
-    { label: 'SHTP', value: 'SHTP' },
-    { label: 'DDK', value: 'DDK' },
-    { label: 'SHTP / DDK', value: 'SHTP/DDK' }
-];
+import { getCategoryBadgeClass } from '@/utils/badge';
+import type {
+    CheckInOutAction,
+    CheckInOutFilterState,
+    CheckInOutProcessedVisitor,
+    CheckInOutRequestRecord,
+    CheckInOutViewMode,
+    CheckInOutVisitorRecord,
+    VisitorCheckInOutStatus,
+} from '@/types/checkinout.types';
+import {
+    CheckInOutApiError,
+    getCheckInOutHistory,
+    lookupCheckInOutRequest,
+    performCheckInOutAction,
+} from '@/features/visitor/checkinout/services/checkinoutApi';
 
 export default function CheckInOutManagement() {
     const router = useRouter();
     const { user } = useUser();
     const isSecurity = user?.app_role_names?.includes('Security') || false;
     const isReceptionist = user?.app_role_names?.includes('Receptionist') || false;
-    
-    const [history, setHistory] = useState<any[]>([]);
+
+    const [history, setHistory] = useState<CheckInOutRequestRecord[]>([]);
     const [loading, setLoading] = useState(false);
-    
+
     // Filters and View State
-    const [filters, setFilters] = useState({ 
-        date: new Date().toISOString().split('T')[0], 
+    const [filters, setFilters] = useState<CheckInOutFilterState>({
+        date: new Date().toISOString().split('T')[0],
         search: '',
         visitorName: ''
     });
     const [statusFilters, setStatusFilters] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [sites, setSites] = useState<string[]>([]);
-    const [viewMode, setViewMode] = useState<ViewMode>('visitor');
+    const [viewMode, setViewMode] = useState<CheckInOutViewMode>('visitor');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 15;
-    
+
     const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [cardNumbers, setCardNumbers] = useState<Record<string, string>>({});
@@ -59,7 +55,7 @@ export default function CheckInOutManagement() {
     // Scanner Gun & Modal States (Runs silently in background)
     const [scanLoading, setScanLoading] = useState(false);
     const [scanError, setScanError] = useState<string | null>(null);
-    const [scannedRequest, setScannedRequest] = useState<any | null>(null);
+    const [scannedRequest, setScannedRequest] = useState<CheckInOutRequestRecord | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const barcodeBufferRef = useRef<string>('');
     const lastKeyTimeRef = useRef<number>(0);
@@ -71,18 +67,16 @@ export default function CheckInOutManagement() {
     const fetchHistory = useCallback(async () => {
         setLoading(true);
         try {
-            const query = new URLSearchParams();
-            if (filters.date) query.append('date', filters.date);
-            query.append('limit', '500'); // Fetch enough for client-side pagination & filtering
-
-            const res = await fetch(`/api/visitor_admin/checkinout/history?${query.toString()}`);
-            if (res.ok) {
-                const data = await res.json();
-                setHistory(data.requests || []);
-            } else if (res.status === 401 || res.status === 403) {
+            const data = await getCheckInOutHistory({
+                date: filters.date,
+                limit: 500,
+            });
+            setHistory(data.requests || []);
+        } catch (err: unknown) {
+            if (err instanceof CheckInOutApiError && (err.status === 401 || err.status === 403)) {
                 router.push('/login?redirect=' + window.location.pathname);
+                return;
             }
-        } catch (err) {
             console.error('Failed to fetch history:', err);
         } finally {
             setLoading(false);
@@ -98,61 +92,30 @@ export default function CheckInOutManagement() {
         setCurrentPage(1);
     }, [filters, statusFilters, categories, sites, viewMode]);
 
-    const handleAction = async (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET' | 'UPDATE_CARD', requestCode?: string) => {
+    const handleAction = async (requestId: string, v: CheckInOutVisitorRecord, action: CheckInOutAction, requestCode?: string) => {
         setActionLoading(`${requestId}-${v.visitorIndex}`);
         try {
             const rawCardNumber = cardNumbers[`${requestId}-${v.visitorIndex}`];
             const cardNumber = rawCardNumber !== undefined ? rawCardNumber : (v.cardNumber ?? '');
-            const res = await fetch('/api/visitor_admin/checkinout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    action, 
-                    requestId, 
-                    requestCode: requestCode || v._requestInfo?.requestCode || v.requestCode || requestId,
-                    visitorIndex: v.visitorIndex,
-                    visitorName: v.visitorName,
-                    visitorCode: v.visitorCode,
-                    cardNumber
-                })
+            await performCheckInOutAction({
+                action,
+                requestId,
+                requestCode: requestCode || (v as CheckInOutProcessedVisitor)._requestInfo?.requestCode || v.requestCode || requestId,
+                visitorIndex: v.visitorIndex,
+                visitorName: v.visitorName,
+                visitorCode: v.visitorCode || `${requestId}V${v.visitorIndex + 1}`,
+                cardNumber
             });
-            if (res.ok) {
-                const updatedStatus = action === 'CHECK_IN' ? 'CHECKED_IN' : action === 'CHECK_OUT' ? 'CHECKED_OUT' : 'PENDING';
-                const nowIso = new Date().toISOString();
 
-                // 1. Refresh list locally
-                setHistory(prev => prev.map(req => {
-                    if (req.requestId === requestId) {
-                        return {
-                            ...req,
-                            visitors: req.visitors?.map((visitor: any) => {
-                                if (visitor.visitorIndex === v.visitorIndex) {
-                                    if (action === 'RESET') {
-                                        return { ...visitor, checkInOutStatus: 'PENDING', checkInTime: null, checkOutTime: null };
-                                    }
-                                    if (action === 'UPDATE_CARD') {
-                                        return { ...visitor, cardNumber };
-                                    }
-                                    return { 
-                                        ...visitor, 
-                                        cardNumber,
-                                        checkInOutStatus: updatedStatus, 
-                                        [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: nowIso
-                                    };
-                                }
-                                return visitor;
-                            })
-                        };
-                    }
-                    return req;
-                }));
+            const updatedStatus: VisitorCheckInOutStatus = action === 'CHECK_IN' ? 'CHECKED_IN' : action === 'CHECK_OUT' ? 'CHECKED_OUT' : 'PENDING';
+            const nowIso = new Date().toISOString();
 
-                // 2. Also refresh currently opened scannedRequest in Modal
-                setScannedRequest((prev: any) => {
-                    if (!prev || prev.requestId !== requestId) return prev;
+            // 1. Refresh list locally
+            setHistory(prev => prev.map(req => {
+                if (req.requestId === requestId) {
                     return {
-                        ...prev,
-                        visitors: prev.visitors?.map((visitor: any) => {
+                        ...req,
+                        visitors: req.visitors?.map(visitor => {
                             if (visitor.visitorIndex === v.visitorIndex) {
                                 if (action === 'RESET') {
                                     return { ...visitor, checkInOutStatus: 'PENDING', checkInTime: null, checkOutTime: null };
@@ -163,20 +126,44 @@ export default function CheckInOutManagement() {
                                 return {
                                     ...visitor,
                                     cardNumber,
-                                    checkInOutStatus: updatedStatus, 
+                                    checkInOutStatus: updatedStatus,
                                     [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: nowIso
                                 };
                             }
                             return visitor;
                         })
                     };
-                });
-            } else {
-                console.error('Action failed:', await res.text());
-                alert('Thao tác thất bại');
-            }
-        } catch (err) {
+                }
+                return req;
+            }));
+
+            // 2. Also refresh currently opened scannedRequest in Modal
+            setScannedRequest(prev => {
+                if (!prev || prev.requestId !== requestId) return prev;
+                return {
+                    ...prev,
+                    visitors: prev.visitors?.map(visitor => {
+                        if (visitor.visitorIndex === v.visitorIndex) {
+                            if (action === 'RESET') {
+                                return { ...visitor, checkInOutStatus: 'PENDING', checkInTime: null, checkOutTime: null };
+                            }
+                            if (action === 'UPDATE_CARD') {
+                                return { ...visitor, cardNumber };
+                            }
+                            return {
+                                ...visitor,
+                                cardNumber,
+                                checkInOutStatus: updatedStatus,
+                                [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: nowIso
+                            };
+                        }
+                        return visitor;
+                    })
+                };
+            });
+        } catch (err: unknown) {
             console.error('Failed to perform check in/out:', err);
+            alert('Thao tác thất bại');
         } finally {
             setActionLoading(null);
         }
@@ -199,8 +186,8 @@ export default function CheckInOutManagement() {
 
         try {
             // 1. First check if it is already loaded in current history
-            const existing = history.find(r => 
-                (r.requestId && r.requestId.toLowerCase() === cleanCode.toLowerCase()) || 
+            const existing = history.find(r =>
+                (r.requestId && r.requestId.toLowerCase() === cleanCode.toLowerCase()) ||
                 (r.requestCode && r.requestCode.toLowerCase() === cleanCode.toLowerCase())
             );
 
@@ -211,11 +198,10 @@ export default function CheckInOutManagement() {
             }
 
             // 2. Fetch directly from server by search (without date/category filter restrictions)
-            const res = await fetch(`/api/visitor_admin/checkinout/history?search=${encodeURIComponent(cleanCode)}&limit=10`);
-            if (res.ok) {
-                const data = await res.json();
-                const found = (data.requests || []).find((r: any) => 
-                    (r.requestId && r.requestId.toLowerCase() === cleanCode.toLowerCase()) || 
+            try {
+                const data = await lookupCheckInOutRequest(cleanCode, 10);
+                const found = (data.requests || []).find(r =>
+                    (r.requestId && r.requestId.toLowerCase() === cleanCode.toLowerCase()) ||
                     (r.requestCode && r.requestCode.toLowerCase() === cleanCode.toLowerCase())
                 ) || data.requests?.[0];
 
@@ -225,8 +211,12 @@ export default function CheckInOutManagement() {
                 } else {
                     setScanError(`Không tìm thấy yêu cầu hợp lệ với mã "${cleanCode}". Vui lòng kiểm tra lại đơn đã được duyệt (Approved) chưa.`);
                 }
-            } else {
-                setScanError('Lỗi tra cứu thông tin yêu cầu từ máy chủ.');
+            } catch (apiErr: unknown) {
+                if (apiErr instanceof CheckInOutApiError) {
+                    setScanError('Lỗi tra cứu thông tin yêu cầu từ máy chủ.');
+                } else {
+                    throw apiErr;
+                }
             }
         } catch (err) {
             console.error('Scan lookup error:', err);
@@ -246,7 +236,7 @@ export default function CheckInOutManagement() {
             lastKeyTimeRef.current = now;
 
             const activeEl = document.activeElement;
-            const isInsideInput = activeEl && 
+            const isInsideInput = activeEl &&
                 (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
 
             // Scanner guns end with Enter or Tab
@@ -294,7 +284,7 @@ export default function CheckInOutManagement() {
 
     // Filter visitors based on statusFilters, categories, sites, visitorName, and search
     const processedHistory = history.map(req => {
-        const filteredVisitors = req.visitors?.filter((v: any) => {
+        const filteredVisitors = req.visitors?.filter((v: CheckInOutVisitorRecord) => {
             if (statusFilters.length > 0 && !statusFilters.includes(v.checkInOutStatus)) return false;
             if (filters.visitorName && filters.visitorName.trim()) {
                 const nameMatch = removeAccents(v.visitorName || '').includes(removeAccents(filters.visitorName.trim()));
@@ -311,13 +301,13 @@ export default function CheckInOutManagement() {
             }
             return true;
         }) || [];
-        
+
         return {
             ...req,
             filteredVisitors
         };
     }).filter(req => {
-        if (categories.length > 0 && !categories.includes(req.visitorCategory)) {
+        if (categories.length > 0 && !categories.includes(req.visitorCategory || '')) {
             return false;
         }
         if (sites.length > 0) {
@@ -346,14 +336,14 @@ export default function CheckInOutManagement() {
     });
 
     // Flatten visitors for Visitor View
-    const allVisitors = processedHistory.flatMap(req => 
-        req.filteredVisitors.map((v: any) => ({
+    const allVisitors: CheckInOutProcessedVisitor[] = processedHistory.flatMap(req =>
+        req.filteredVisitors.map((v: CheckInOutVisitorRecord) => ({
             ...v,
             _requestInfo: req
         }))
     );
 
-    const totalPages = viewMode === 'group' 
+    const totalPages = viewMode === 'group'
         ? Math.ceil(processedHistory.length / ITEMS_PER_PAGE) || 1
         : Math.ceil(allVisitors.length / ITEMS_PER_PAGE) || 1;
 
@@ -367,74 +357,17 @@ export default function CheckInOutManagement() {
         currentPage * ITEMS_PER_PAGE
     );
 
-    // Summary stats
-    const totalRequests = history.length;
-    let totalVisitors = 0;
-    let currentlyOnSite = 0;
-    let completedCheckout = 0;
+    const handleOpenModal = (request: CheckInOutRequestRecord) => {
+        setScannedRequest(request);
+        setIsModalOpen(true);
+    };
 
-    history.forEach(req => {
-        req.visitors?.forEach((v: any) => {
-            totalVisitors++;
-            if (v.checkInOutStatus === 'CHECKED_IN') currentlyOnSite++;
-            if (v.checkInOutStatus === 'CHECKED_OUT') completedCheckout++;
-        });
-    });
-
-    const renderActionButtons = (req: any, v: any) => (
-        <div className="flex gap-1.5 items-center justify-center">
-            <button
-                disabled={actionLoading === `${req.requestId}-${v.visitorIndex}` || v.checkInOutStatus !== 'PENDING'}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    handleAction(req.requestId, v, 'CHECK_IN', req.requestCode);
-                }}
-                className={`whitespace-nowrap text-[9px] font-bold uppercase px-2 py-1.5 rounded shadow-sm transition-colors ${
-                    v.checkInOutStatus !== 'PENDING'
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-[#db011c] hover:bg-[#b00116] text-white'
-                }`}
-            >
-                Check In
-            </button>
-            
-            <button
-                disabled={actionLoading === `${req.requestId}-${v.visitorIndex}` || v.checkInOutStatus !== 'CHECKED_IN'}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    handleAction(req.requestId, v, 'CHECK_OUT', req.requestCode);
-                }}
-                className={`whitespace-nowrap text-[9px] font-bold uppercase px-2 py-1.5 rounded shadow-sm transition-colors ${
-                    v.checkInOutStatus !== 'CHECKED_IN'
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-gray-800 hover:bg-gray-700 text-white'
-                }`}
-            >
-                Check Out
-            </button>
-            
-            {/* Reset/Refresh button */}
-            {!isSecurity && !isReceptionist && (
-                <div className={`ml-0.5 ${v.checkInOutStatus === 'CHECKED_IN' || v.checkInOutStatus === 'CHECKED_OUT' ? 'visible' : 'invisible'}`}>
-                    <button
-                        disabled={actionLoading === `${req.requestId}-${v.visitorIndex}`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (window.confirm(`Reset check-in/out status for ${v.visitorName}?`)) {
-                                handleAction(req.requestId, v, 'RESET', req.requestCode);
-                            }
-                        }}
-                        title="Reset Status"
-                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                    </button>
-                </div>
-            )}
-        </div>
-    );
+    const handleClearAllFilters = () => {
+        setFilters(prev => ({ ...prev, search: '', visitorName: '' }));
+        setStatusFilters([]);
+        setCategories([]);
+        setSites([]);
+    };
 
     return (
         <div className="w-full pb-10 mx-auto [scrollbar-gutter:stable]">
@@ -454,129 +387,29 @@ export default function CheckInOutManagement() {
 
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                 {/* Advanced Filters */}
-                <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 items-end">
-                        <div className="w-full">
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Search Req</label>
-                            <input 
-                                type="text" 
-                                placeholder="ID, Submitter, Name..." 
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]" 
-                                value={filters.search}
-                                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        const clean = filters.search.trim();
-                                        if (clean.length >= 4) {
-                                            handleLookupRequest(clean);
-                                        }
-                                    }
-                                }}
-                            />
-                        </div>
-                        <div className="w-full">
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Visitor Name</label>
-                            <input 
-                                type="text" 
-                                placeholder="Name..." 
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]" 
-                                value={filters.visitorName}
-                                onChange={(e) => setFilters({ ...filters, visitorName: e.target.value })}
-                            />
-                        </div>
-                        <div className="w-full">
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Date</label>
-                            <div className="flex w-full">
-                                <input 
-                                    type="date" 
-                                    className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded-l text-sm focus:outline-none focus:border-[#db011c]" 
-                                    value={filters.date}
-                                    onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-                                />
-                                <button 
-                                    onClick={() => setFilters({ ...filters, date: new Date().toISOString().split('T')[0] })}
-                                    className={`px-2.5 text-xs font-bold uppercase rounded-r transition-colors border border-l-0 ${filters.date === new Date().toISOString().split('T')[0] ? 'bg-[#db011c] text-white border-[#db011c]' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 border-gray-300'}`}
-                                >
-                                    Today
-                                </button>
-                            </div>
-                        </div>
-                        <div className="w-full">
-                            <MultiSelectDropdown 
-                                label="Status"
-                                options={STATUS_OPTIONS}
-                                selected={statusFilters}
-                                onChange={setStatusFilters}
-                                placeholder="All Status"
-                                vertical={true}
-                            />
-                        </div>
-                        <div className="w-full">
-                            <MultiSelectDropdown 
-                                label="Category"
-                                options={CATEGORY_OPTIONS}
-                                selected={categories}
-                                onChange={setCategories}
-                                placeholder="All Categories"
-                                vertical={true}
-                            />
-                        </div>
-                        <div className="w-full">
-                            <MultiSelectDropdown 
-                                label="Site"
-                                options={SITE_OPTIONS}
-                                selected={sites}
-                                onChange={setSites}
-                                placeholder="All Sites"
-                                vertical={true}
-                            />
-                        </div>
-                        
-                        {/* View Modes Toggle */}
-                        <div className="w-full">
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">View</label>
-                            <div className="flex w-full bg-gray-200 p-1 rounded justify-between h-[38px]">
-                                <button
-                                    onClick={() => setViewMode('group')}
-                                    className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'group' ? 'bg-white shadow-sm text-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
-                                >
-                                    Group
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('visitor')}
-                                    className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'visitor' ? 'bg-white shadow-sm text-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
-                                >
-                                    Visitor
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Sub-bar: Showing Count & Clear All Filters */}
-                    <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-gray-200/70 text-[11px] font-medium text-gray-500 flex-wrap gap-2">
-                        <div>
-                            {viewMode === 'group' ? (
-                                <>Showing <span className="text-gray-900 font-bold">{paginatedGroups.length}</span> of <span className="text-gray-900 font-bold">{processedHistory.length}</span> requests</>
-                            ) : (
-                                <>Showing <span className="text-gray-900 font-bold">{paginatedVisitors.length}</span> of <span className="text-gray-900 font-bold">{allVisitors.length}</span> visitors</>
-                            )}
-                        </div>
-                        {(filters.search || filters.visitorName || statusFilters.length > 0 || categories.length > 0 || sites.length > 0) && (
-                            <button 
-                                onClick={() => {
-                                    setFilters(prev => ({ ...prev, search: '', visitorName: '' }));
-                                    setStatusFilters([]);
-                                    setCategories([]);
-                                    setSites([]);
-                                }}
-                                className="text-xs font-bold text-[#db011c] hover:underline underline-offset-4 flex items-center gap-1"
-                                title="Clear all filters"
-                            >
-                                <span>✕</span> Clear all filters
-                            </button>
-                        )}
-                    </div>
-                </div>
+                <CheckInOutFilters
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    onSearchKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            const clean = filters.search.trim();
+                            if (clean.length >= 4) {
+                                handleLookupRequest(clean);
+                            }
+                        }
+                    }}
+                    statusFilters={statusFilters}
+                    onStatusFiltersChange={setStatusFilters}
+                    categories={categories}
+                    onCategoriesChange={setCategories}
+                    sites={sites}
+                    onSitesChange={setSites}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    showingCount={viewMode === 'group' ? paginatedGroups.length : paginatedVisitors.length}
+                    totalCount={viewMode === 'group' ? processedHistory.length : allVisitors.length}
+                    onClearAllFilters={handleClearAllFilters}
+                />
 
                 {/* List Container */}
                 <div className="p-0 relative min-h-[500px]">
@@ -599,274 +432,35 @@ export default function CheckInOutManagement() {
                                     </div>
                                 </div>
                             )}
-                            
+
                             {/* Visitor View Table */}
                             {viewMode === 'visitor' && (
-                                <div className="overflow-x-auto w-full">
-                                    <table className="w-full text-left border-collapse min-w-[1360px]">
-                                        <thead>
-                                            <tr className="bg-[#1a1a1a] text-white font-bold text-[9px] uppercase tracking-wider">
-                                                <th className="py-3 px-4 w-[110px]">REQUEST</th>
-                                                <th className="py-3 px-3 min-w-[130px]">SUBMITTER</th>
-                                                <th className="py-3 px-3 w-[125px]">VISITOR CODE</th>
-                                                <th className="py-3 px-3 min-w-[140px]">FULL NAME</th>
-                                                <th className="py-3 px-3 min-w-[100px]">TITLE</th>
-                                                <th className="py-3 px-3 min-w-[120px]">COMPANY</th>
-                                                <th className="py-3 px-2 text-center w-[95px]">CATEGORY</th>
-                                                <th className="py-3 px-3 text-center w-[155px]">DATE</th>
-                                                <th className="py-3 px-3 text-center w-[105px]">CARD NUMBER</th>
-                                                <th className="py-3 px-3 text-center w-[120px]">TIME IN</th>
-                                                <th className="py-3 px-3 text-center w-[120px]">TIME OUT</th>
-                                                <th className="py-3 px-4 text-center w-[160px]">ACTION</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-200">
-                                            {paginatedVisitors.map((v: any, idx: number) => {
-                                                const req = v._requestInfo;
-                                                return (
-                                                    <tr key={`${req.requestId}-${v.visitorIndex}`} className={`transition-colors hover:bg-red-50/20 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
-                                                        <td className="py-3 px-4">
-                                                            <div 
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setScannedRequest(req);
-                                                                    setIsModalOpen(true);
-                                                                }}
-                                                                className="text-[11px] font-bold text-gray-900 hover:text-[#db011c] cursor-pointer truncate underline-offset-2 hover:underline flex items-center gap-1 max-w-[110px]" 
-                                                                title={`Mở Modal Check-In cho đơn ${req.requestCode || req.requestId}`}
-                                                            >
-                                                                <span className="truncate">{req.requestCode || req.requestId}</span>
-                                                                <span className="text-[9px] text-[#db011c] shrink-0">↗</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-3">
-                                                            <div className="text-[11px] font-bold text-gray-700 truncate max-w-[150px]" title={req.submitterName || '-'}>
-                                                                {req.submitterName || '-'}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-3">
-                                                            <div className="text-xs font-black text-[#db011c] truncate" title={v.visitorCode}>
-                                                                {v.visitorCode}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-3">
-                                                            <div className="text-xs font-bold text-gray-900 truncate max-w-[180px]" title={v.visitorName}>
-                                                                {v.visitorName}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-3">
-                                                            <div className="text-[10px] text-gray-500 truncate max-w-[120px]" title={v.visitorTitle || '-'}>
-                                                                {v.visitorTitle || '-'}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-3">
-                                                            <div className="text-[11px] font-medium text-gray-600 truncate max-w-[150px]" title={v.visitorCompany || req.visitingSite}>
-                                                                {v.visitorCompany || req.visitingSite}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-2 text-center">
-                                                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase whitespace-nowrap ${getCategoryBadgeClass(req.visitorCategory)}`}>
-                                                                {req.visitorCategory?.replace(/MIL\/TTI Expat \/ SHTP Business trip/i, 'MIL EXPAT')}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-3 text-center">
-                                                            <span className="text-[10px] font-medium text-gray-600 whitespace-nowrap">
-                                                                {formatDateShort(req.startDate)} - {formatDateShort(req.endDate)}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-3">
-                                                            <div className="w-[90px] mx-auto">
-                                                                <input 
-                                                                    type="text" 
-                                                                    placeholder="Card No." 
-                                                                    className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] text-center" 
-                                                                    value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
-                                                                    onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
-                                                                    onBlur={(e) => {
-                                                                        if (cardNumbers[`${req.requestId}-${v.visitorIndex}`] !== undefined) {
-                                                                            handleAction(req.requestId, v, 'UPDATE_CARD', req.requestCode);
-                                                                        }
-                                                                    }}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-3 text-center">
-                                                            <span className={`text-[10px] font-bold whitespace-nowrap ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>
-                                                                {formatDateTime(v.checkInTime)}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-3 text-center">
-                                                            <span className={`text-[10px] font-bold whitespace-nowrap ${v.checkOutTime ? 'text-gray-600' : 'text-gray-400'}`}>
-                                                                {formatDateTime(v.checkOutTime)}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <div className="flex justify-center items-center">
-                                                                {renderActionButtons(req, v)}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <VisitorViewTable
+                                    visitors={paginatedVisitors}
+                                    cardNumbers={cardNumbers}
+                                    onCardNumberChange={handleCardNumberChange}
+                                    onAction={handleAction}
+                                    actionLoading={actionLoading}
+                                    isSecurity={isSecurity}
+                                    isReceptionist={isReceptionist}
+                                    onOpenModal={handleOpenModal}
+                                />
                             )}
 
                             {/* Group View Table */}
                             {viewMode === 'group' && (
-                                <div className="overflow-x-auto w-full">
-                                    <table className="w-full text-left border-collapse min-w-[1000px]">
-                                        <thead>
-                                            <tr className="bg-[#1a1a1a] text-white font-bold text-xs uppercase tracking-wider">
-                                                <th className="py-3 px-6 w-[200px]">REQUEST CODE</th>
-                                                <th className="py-3 px-4 min-w-[150px]">SUBMITTER</th>
-                                                <th className="py-3 px-4 min-w-[220px]">VISITOR(S)</th>
-                                                <th className="py-3 px-4 w-[140px]">CATEGORY</th>
-                                                <th className="py-3 px-4 w-[180px]">DATE</th>
-                                                <th className="py-3 px-6 w-[110px] text-right">SITE</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-200">
-                                            {paginatedGroups.map((req, idx) => {
-                                                const isExpanded = expandedRequest === req.requestId;
-                                                return (
-                                                    <Fragment key={req.requestId}>
-                                                        <tr 
-                                                            className={`cursor-pointer transition-colors ${isExpanded ? 'bg-red-50/20' : idx % 2 === 0 ? 'bg-white' : 'bg-[#fff5f5]/30'} hover:bg-gray-50`}
-                                                            onClick={() => setExpandedRequest(isExpanded ? null : req.requestId)}
-                                                        >
-                                                            <td className="py-4 px-6 font-bold text-sm text-gray-900">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span 
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setScannedRequest(req);
-                                                                            setIsModalOpen(true);
-                                                                        }}
-                                                                        className="hover:text-[#db011c] hover:underline cursor-pointer truncate max-w-[140px]"
-                                                                        title={req.requestCode || req.requestId}
-                                                                    >
-                                                                        {req.requestCode || req.requestId}
-                                                                    </span>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setScannedRequest(req);
-                                                                            setIsModalOpen(true);
-                                                                        }}
-                                                                        className="px-1.5 py-0.5 text-[9px] font-bold text-white bg-[#db011c] hover:bg-[#b00116] rounded shadow-2xs shrink-0"
-                                                                        title="Mở Modal Check In/Out"
-                                                                    >
-                                                                        Modal
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                            <td className="py-4 px-4 text-xs font-bold text-gray-700 truncate max-w-[180px]" title={req.submitterName || '-'}>
-                                                                {req.submitterName || '-'}
-                                                            </td>
-                                                            <td className="py-4 px-4 text-sm text-gray-900 font-semibold truncate max-w-[240px]" title={req.visitors?.[0]?.visitorName || req.submitterName}>
-                                                                <span>{req.visitors?.[0]?.visitorName || '-'}</span>
-                                                                {req.filteredVisitors && req.filteredVisitors.length > 0 && (
-                                                                    <span className="text-[11px] text-gray-500 font-bold ml-2">
-                                                                        ({req.filteredVisitors.length} {req.visitorCategory === 'Interviewee' ? 'Candidate(s)' : 'Visitor(s)'})
-                                                                    </span>
-                                                                )}
-                                                            </td>
-                                                            <td className="py-4 px-4">
-                                                                <span className={`text-[10px] font-black px-2 py-1 rounded uppercase whitespace-nowrap ${getCategoryBadgeClass(req.visitorCategory)}`}>
-                                                                    {req.visitorCategory?.replace(/MIL\/TTI Expat \/ SHTP Business trip/i, 'MIL EXPAT')}
-                                                                </span>
-                                                            </td>
-                                                            <td className="py-4 px-4 text-sm text-gray-700 font-medium whitespace-nowrap">
-                                                                {formatDateShort(req.startDate)} - {formatDateShort(req.endDate)}
-                                                            </td>
-                                                            <td className="py-4 px-6 text-sm text-gray-700 text-right">
-                                                                <div className="flex items-center justify-end gap-2">
-                                                                    <span className="truncate" title={req.visitingSite}>{req.visitingSite}</span>
-                                                                    <div className="text-gray-400">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                                                                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                                                                        </svg>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                        {isExpanded && (
-                                                            <tr>
-                                                                <td colSpan={6} className="p-0 border-b border-gray-200 bg-[#f8fafc]">
-                                                                    <div className="p-4 overflow-x-auto">
-                                                                        {req.filteredVisitors && req.filteredVisitors.length > 0 ? (
-                                                                            <table className="w-full min-w-[1200px] text-left border-collapse bg-white rounded-lg border border-gray-200 shadow-xs">
-                                                                                <thead>
-                                                                                    <tr className="bg-gray-100 text-gray-600 font-bold text-[9px] uppercase tracking-wider border-b border-gray-200">
-                                                                                        <th className="py-2.5 px-3 w-[125px]">VISITOR CODE</th>
-                                                                                        <th className="py-2.5 px-3 min-w-[140px]">FULL NAME</th>
-                                                                                        <th className="py-2.5 px-3 min-w-[120px]">SUBMITTER</th>
-                                                                                        <th className="py-2.5 px-3 min-w-[100px]">TITLE</th>
-                                                                                        <th className="py-2.5 px-3 min-w-[120px]">COMPANY</th>
-                                                                                        <th className="py-2.5 px-3 text-center w-[155px]">DATE</th>
-                                                                                        <th className="py-2.5 px-3 text-center w-[105px]">CARD NUMBER</th>
-                                                                                        <th className="py-2.5 px-3 text-center w-[125px]">TIME IN</th>
-                                                                                        <th className="py-2.5 px-3 text-center w-[125px]">TIME OUT</th>
-                                                                                        <th className="py-2.5 px-4 text-center w-[160px]">ACTION</th>
-                                                                                    </tr>
-                                                                                </thead>
-                                                                                <tbody className="divide-y divide-gray-100">
-                                                                                    {req.filteredVisitors.map((v: any, vIdx: number) => (
-                                                                                        <tr key={vIdx} className="hover:bg-gray-50/80 transition-colors">
-                                                                                            <td className="py-2.5 px-3 text-xs font-black text-[#db011c] truncate">{v.visitorCode}</td>
-                                                                                            <td className="py-2.5 px-3 text-xs font-bold text-gray-900 truncate max-w-[180px]">{v.visitorName}</td>
-                                                                                            <td className="py-2.5 px-3 text-[11px] font-bold text-gray-700 truncate max-w-[140px]">{req.submitterName || '-'}</td>
-                                                                                            <td className="py-2.5 px-3 text-[11px] text-gray-600 truncate max-w-[120px]">{v.visitorTitle || '-'}</td>
-                                                                                            <td className="py-2.5 px-3 text-[11px] font-medium text-gray-600 truncate max-w-[140px]">{v.visitorCompany || req.visitingSite}</td>
-                                                                                            <td className="py-2.5 px-3 text-[10px] font-medium text-gray-600 text-center whitespace-nowrap">{formatDateShort(req.startDate)} - {formatDateShort(req.endDate)}</td>
-                                                                                            <td className="py-2.5 px-3 text-center">
-                                                                                                <div className="w-[90px] mx-auto">
-                                                                                                    <input 
-                                                                                                        type="text" 
-                                                                                                        placeholder="Card No." 
-                                                                                                        className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] text-center" 
-                                                                                                        value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
-                                                                                                        onChange={(e) => handleCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
-                                                                                                        onBlur={(e) => {
-                                                                                                            if (cardNumbers[`${req.requestId}-${v.visitorIndex}`] !== undefined) {
-                                                                                                                handleAction(req.requestId, v, 'UPDATE_CARD', req.requestCode);
-                                                                                                            }
-                                                                                                        }}
-                                                                                                        onClick={(e) => e.stopPropagation()}
-                                                                                                    />
-                                                                                                </div>
-                                                                                            </td>
-                                                                                            <td className={`py-2.5 px-3 text-[10px] font-bold text-center whitespace-nowrap ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>
-                                                                                                {formatDateTime(v.checkInTime)}
-                                                                                            </td>
-                                                                                            <td className={`py-2.5 px-3 text-[10px] font-bold text-center whitespace-nowrap ${v.checkOutTime ? 'text-gray-600' : 'text-gray-400'}`}>
-                                                                                                {formatDateTime(v.checkOutTime)}
-                                                                                            </td>
-                                                                                            <td className="py-2.5 px-4 text-center">
-                                                                                                <div className="flex justify-center items-center">
-                                                                                                    {renderActionButtons(req, v)}
-                                                                                                </div>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    ))}
-                                                                                </tbody>
-                                                                            </table>
-                                                                        ) : (
-                                                                            <div className="text-sm text-gray-500 py-2">No visitors data available.</div>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        )}
-                                                    </Fragment>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <GroupViewTable
+                                    groups={paginatedGroups}
+                                    expandedRequest={expandedRequest}
+                                    onToggleExpand={(reqId) => setExpandedRequest(expandedRequest === reqId ? null : reqId)}
+                                    cardNumbers={cardNumbers}
+                                    onCardNumberChange={handleCardNumberChange}
+                                    onAction={handleAction}
+                                    actionLoading={actionLoading}
+                                    isSecurity={isSecurity}
+                                    isReceptionist={isReceptionist}
+                                    onOpenModal={handleOpenModal}
+                                />
                             )}
                         </div>
                     )}
@@ -882,7 +476,7 @@ export default function CheckInOutManagement() {
                         >
                             Previous
                         </button>
-                        
+
                         <div className="flex items-center gap-1.5">
                             {Array.from({ length: totalPages }, (_, i) => i + 1)
                                 .filter(p => p === 1 || p === totalPages || (p >= currentPage - 2 && p <= currentPage + 2))
@@ -906,7 +500,7 @@ export default function CheckInOutManagement() {
                                 })
                             }
                         </div>
-                        
+
                         <button
                             disabled={currentPage === totalPages}
                             onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}

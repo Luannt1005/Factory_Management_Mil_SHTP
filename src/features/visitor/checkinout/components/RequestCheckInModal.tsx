@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { Visitor, VisitorRequestData as RequestData } from '@/types/visitor.types';
+import type { VisitorRequestData as RequestData } from '@/types/visitor.types';
+import type { CheckInOutAction, CheckInOutRequestRecord, CheckInOutVisitorRecord } from '@/types/checkinout.types';
 
-interface RequestCheckInModalProps {
+export interface RequestCheckInModalProps {
     isOpen: boolean;
     onClose: () => void;
-    request: RequestData | null;
+    request: CheckInOutRequestRecord | RequestData | null;
     cardNumbers: Record<string, string>;
     onCardNumberChange: (requestId: string, visitorIndex: number, value: string) => void;
-    onAction: (requestId: string, v: any, action: 'CHECK_IN' | 'CHECK_OUT' | 'RESET' | 'UPDATE_CARD', requestCode?: string) => Promise<void>;
+    onAction: (requestId: string, v: CheckInOutVisitorRecord, action: CheckInOutAction, requestCode?: string) => Promise<void>;
     actionLoading: string | null;
     isSecurity?: boolean;
     isReceptionist?: boolean;
@@ -106,11 +107,11 @@ export default function RequestCheckInModal({
     };
 
     return createPortal(
-        <div 
-            className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-5 md:p-8 bg-black/60 backdrop-blur-md transition-all duration-200 animate-in fade-in" 
+        <div
+            className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-5 md:p-8 bg-black/60 backdrop-blur-md transition-all duration-200 animate-in fade-in"
             onClick={onClose}
         >
-            <div 
+            <div
                 className="bg-white rounded-2xl shadow-2xl border-t-[6px] border-t-[#db011c] border-x border-b border-gray-100 w-full max-w-5xl max-h-[90vh] overflow-hidden relative text-[#0f172a] flex flex-col my-auto transition-all animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
@@ -137,7 +138,7 @@ export default function RequestCheckInModal({
                         </div>
                     </div>
 
-                    <button 
+                    <button
                         onClick={onClose}
                         className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-all cursor-pointer"
                         title="Close (Esc)"
@@ -198,8 +199,8 @@ export default function RequestCheckInModal({
                     {/* Notification Banner */}
                     {notification && (
                         <div className={`px-4 py-2.5 text-xs font-semibold rounded-xl flex items-center justify-between shadow-2xs ${
-                            notification.type === 'success' 
-                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                            notification.type === 'success'
+                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                                 : 'bg-red-50 text-red-800 border border-red-200'
                         }`}>
                             <span>{notification.message}</span>
