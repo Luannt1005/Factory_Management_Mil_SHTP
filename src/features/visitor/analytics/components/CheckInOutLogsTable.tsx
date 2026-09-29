@@ -2,16 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import * as XLSX from 'xlsx';
-import type { VisitorLogEntry as LogEntry } from '@/types/visitor.types';
+import { visitorAnalyticsApi } from '@/features/visitor/analytics/services/visitorAnalyticsApi';
+import type { VisitorLogEntry as LogEntry, CheckInOutLogsOperatorItem as OperatorItem } from '@/types/visitor-analytics.types';
 import { formatDateTimeWithSeconds as formatDateTime } from '@/utils/date';
 
-interface OperatorItem {
-    username: string;
-    name: string;
-    count: number;
-}
-
-export default function CheckInOutLogs() {
+export default function CheckInOutLogsTable() {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [exportLoading, setExportLoading] = useState(false);
@@ -81,26 +76,22 @@ export default function CheckInOutLogs() {
     const fetchLogs = useCallback(async () => {
         setLoading(true);
         try {
-            const params = new URLSearchParams();
-            if (search.trim()) params.append('search', search.trim());
-            if (actionFilter !== 'ALL') params.append('action', actionFilter);
-            if (operatorFilter !== 'ALL') params.append('performedBy', operatorFilter);
-            if (startDate) params.append('startDate', startDate);
-            if (endDate) params.append('endDate', endDate);
-            if (startTime) params.append('startTime', startTime);
-            if (endTime) params.append('endTime', endTime);
-            params.append('page', page.toString());
-            params.append('limit', limit.toString());
-
-            const res = await fetch(`/api/visitor_admin/checkinout_logs?${params.toString()}`);
-            if (res.ok) {
-                const data = await res.json();
-                setLogs(data.logs || []);
-                setOperators(data.operators || []);
-                if (data.pagination) {
-                    setTotalPages(data.pagination.totalPages || 1);
-                    setTotalCount(data.pagination.total || 0);
-                }
+            const data = await visitorAnalyticsApi.getCheckInOutLogs({
+                search: search.trim() || undefined,
+                action: actionFilter !== 'ALL' ? actionFilter : undefined,
+                performedBy: operatorFilter !== 'ALL' ? operatorFilter : undefined,
+                startDate: startDate || undefined,
+                endDate: endDate || undefined,
+                startTime: startTime || undefined,
+                endTime: endTime || undefined,
+                page,
+                limit,
+            });
+            setLogs(data.logs || []);
+            setOperators(data.operators || []);
+            if (data.pagination) {
+                setTotalPages(data.pagination.totalPages || 1);
+                setTotalCount(data.pagination.total || 0);
             }
         } catch (err) {
             console.error('Failed to fetch checkinout logs:', err);
@@ -170,23 +161,16 @@ export default function CheckInOutLogs() {
     const handleExportExcel = async () => {
         setExportLoading(true);
         try {
-            const params = new URLSearchParams();
-            if (search.trim()) params.append('search', search.trim());
-            if (actionFilter !== 'ALL') params.append('action', actionFilter);
-            if (operatorFilter !== 'ALL') params.append('performedBy', operatorFilter);
-            if (startDate) params.append('startDate', startDate);
-            if (endDate) params.append('endDate', endDate);
-            if (startTime) params.append('startTime', startTime);
-            if (endTime) params.append('endTime', endTime);
-            params.append('export', 'true');
-            params.append('limit', '100000');
+            const data = await visitorAnalyticsApi.exportCheckInOutLogs({
+                search: search.trim() || undefined,
+                action: actionFilter !== 'ALL' ? actionFilter : undefined,
+                performedBy: operatorFilter !== 'ALL' ? operatorFilter : undefined,
+                startDate: startDate || undefined,
+                endDate: endDate || undefined,
+                startTime: startTime || undefined,
+                endTime: endTime || undefined,
+            });
 
-            const res = await fetch(`/api/visitor_admin/checkinout_logs?${params.toString()}`);
-            if (!res.ok) {
-                throw new Error('Failed to fetch data for export');
-            }
-
-            const data = await res.json();
             const exportData: LogEntry[] = data.logs || [];
 
             if (exportData.length === 0) {
@@ -234,6 +218,7 @@ export default function CheckInOutLogs() {
             } else {
                 fileSuffix = new Date().toISOString().split('T')[0];
             }
+
             if (actionFilter !== 'ALL') {
                 fileSuffix += `_${actionFilter}`;
             }
