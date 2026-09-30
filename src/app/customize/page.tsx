@@ -1,9 +1,9 @@
 'use client';
 
-import CustomizeClient from './components/CustomizeClient';
+import CustomizeOrgChart from '@/features/orgchart/components/customize/CustomizeOrgChart';
 
-const Customize = () => {
-  return <CustomizeClient />;
+const CustomizePage = () => {
+  return <CustomizeOrgChart />;
 };
 
-export default Customize;
+export default CustomizePage;

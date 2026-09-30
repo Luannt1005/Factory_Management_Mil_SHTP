@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
-import CoreTeamOrgChart from "./CoreTeamOrgChart";
-import OpsSupportOrgChart from "./OpsSupportOrgChart";
+import CoreTeamOrgChart from "@/features/orgchart/components/exec/CoreTeamOrgChart";
+import OpsSupportOrgChart from "@/features/orgchart/components/exec/OpsSupportOrgChart";
 
 interface SlideData {
   id: number;

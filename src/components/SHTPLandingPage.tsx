@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import CoreTeamOrgChart from "./CoreTeamOrgChart";
-import OpsSupportOrgChart from "./OpsSupportOrgChart";
+import CoreTeamOrgChart from "@/features/orgchart/components/exec/CoreTeamOrgChart";
+import OpsSupportOrgChart from "@/features/orgchart/components/exec/OpsSupportOrgChart";
 
 // BRP Style Entrance Animation
 interface AnimatedSectionProps {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import styles from "./viewdata.module.css";
+import { orgchartApi } from "@/features/orgchart/services/orgchartApi";
 
 interface OrgChartRow {
   id: string;
@@ -49,11 +50,10 @@ const ViewDataOrg = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/orgchart");
-      const result = await response.json();
+      const result = await orgchartApi.getOrgchart();
 
       if (result.success) {
-        setData(result.data || []);
+        setData((result.data as unknown as OrgChartRow[]) || []);
       } else {
         setError(result.error || "Failed to load data");
       }

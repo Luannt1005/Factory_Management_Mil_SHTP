@@ -2,9 +2,9 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState, useRef, useMemo } from "react";
-import OrgChartView from "./OrgChartView";
+import OrgChartCanvas from "@/features/orgchart/components/OrgChartCanvas";
 import { useOrgData } from "@/hooks/useOrgData";
-import DepartmentFilter from "./DepartmentFilter";
+import OrgChartToolbar from "@/features/orgchart/components/OrgChartToolbar";
 import "@/styles/admin-layout.css";
 
 /**
@@ -72,7 +72,7 @@ function OrgChartPageContent() {
 
   return (
     <div className="mil-container flex flex-col h-screen overflow-hidden p-0! bg-[#f2f2f2]">
-      <DepartmentFilter
+      <OrgChartToolbar
         currentSector={currentSector}
         currentType={currentType}
         groups={groups}
@@ -83,7 +83,7 @@ function OrgChartPageContent() {
       />
 
       <main className="flex-1 relative bg-white z-0 overflow-hidden">
-        <OrgChartView selectedGroup={currentSector} selectedType={currentType} />
+        <OrgChartCanvas selectedGroup={currentSector} selectedType={currentType} />
       </main>
     </div>
   );
