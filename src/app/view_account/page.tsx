@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { hashPassword } from "@/lib/password";
 import type { UserAccount } from "@/types/user.types";
+import type { UpdateUserPayload } from "@/types/system-admin.types";
+import { systemAdminApi } from "@/features/systemadmin/services/systemAdminApi";
 import "./view_account.css";
 
 export default function ViewAccountPage() {
@@ -40,16 +42,10 @@ export default function ViewAccountPage() {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/users");
-            const result = await res.json();
-
-            if (result.success) {
-                setUsers(result.data);
-                setFilteredUsers(result.data);
-            } else {
-                setError(result.message || "Không thể tải danh sách tài khoản");
-            }
-        } catch (err: any) {
+            const data = await systemAdminApi.getUsers();
+            setUsers(data);
+            setFilteredUsers(data);
+        } catch (err: unknown) {
             console.error("Error fetching users:", err);
             setError("Lỗi kết nối. Vui lòng thử lại.");
         } finally {
@@ -96,23 +92,13 @@ export default function ViewAccountPage() {
                 // Hash password
                 const hashedPassword = await hashPassword(formData.password);
 
-                const res = await fetch("/api/users", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        username: formData.username,
-                        full_name: formData.full_name,
-                        password: hashedPassword,
-                        role: formData.role
-                    })
+                const newUser = await systemAdminApi.createUser({
+                    username: formData.username,
+                    full_name: formData.full_name,
+                    password: hashedPassword,
+                    role: formData.role
                 });
 
-                const result = await res.json();
-                if (!result.success) {
-                    throw new Error(result.message || "Không thể tạo tài khoản");
-                }
-
-                const newUser = result.data;
                 const addedUser: UserAccount = {
                     id: newUser.id,
                     username: newUser.username,
@@ -122,7 +108,7 @@ export default function ViewAccountPage() {
                 setUsers(prev => [...prev, addedUser].sort((a, b) => a.full_name.localeCompare(b.full_name)));
 
             } else if (modalMode === "edit" && currentUserId) {
-                const updateData: any = {
+                const updateData: UpdateUserPayload = {
                     id: currentUserId,
                     full_name: formData.full_name,
                     role: formData.role
@@ -137,16 +123,7 @@ export default function ViewAccountPage() {
                     updateData.password = await hashPassword(formData.password);
                 }
 
-                const res = await fetch("/api/users", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(updateData)
-                });
-
-                const result = await res.json();
-                if (!result.success) {
-                    throw new Error(result.message || "Không thể cập nhật tài khoản");
-                }
+                await systemAdminApi.updateUser(updateData);
 
                 setUsers(users.map(u =>
                     u.id === currentUserId
@@ -156,9 +133,10 @@ export default function ViewAccountPage() {
             }
 
             setIsModalOpen(false);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error saving user:", err);
-            setError("Lỗi khi lưu thông tin tài khoản: " + err.message);
+            const msg = err instanceof Error ? err.message : String(err);
+            setError("Lỗi khi lưu thông tin tài khoản: " + msg);
         } finally {
             setIsSaving(false);
         }
@@ -170,17 +148,12 @@ export default function ViewAccountPage() {
         }
 
         try {
-            const res = await fetch(`/api/users?id=${user.id}`, {
-                method: "DELETE"
-            });
-            const result = await res.json();
-
-            if (!result.success) throw new Error(result.message || "Lỗi khi xóa tài khoản");
-
+            await systemAdminApi.deleteUser(user.id);
             setUsers(users.filter(u => u.id !== user.id));
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error deleting user:", err);
-            alert(err.message || "Lỗi khi xóa tài khoản.");
+            const msg = err instanceof Error ? err.message : "Lỗi khi xóa tài khoản.";
+            alert(msg);
         }
     };
 
