@@ -10,8 +10,9 @@ import { useMemo } from 'react';
 import useSWR, { SWRConfiguration } from 'swr';
 import { OrgNode, ApiResponse } from '@/types/orgchart';
 import { swrFetcher } from '@/lib/api-client';
+import { headcountApi } from '@/features/headcount/services/headcountApi';
 
-const SHEET_API_URL = '/api/sheet';
+const SHEET_API_URL = headcountApi.ENDPOINTS.SHEET;
 
 interface UseSheetDataOptions extends SWRConfiguration {
     onSuccess?: (data: OrgNode[]) => void;

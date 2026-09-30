@@ -10,6 +10,7 @@ import useSWR from 'swr';
 import { useState, useCallback, useMemo } from 'react';
 import { swrFetcher } from '@/lib/api-client';
 import { OrgNode } from '@/types/orgchart';
+import { headcountApi } from '@/features/headcount/services/headcountApi';
 
 interface PaginatedResponse {
     success: boolean;
@@ -55,7 +56,7 @@ export function usePaginatedSheetData(options: UsePaginatedSheetDataOptions = {}
     const { initialPage = 1, pageSize = 20, enabled = true } = options;
     const [page, setPage] = useState(initialPage);
 
-    const apiUrl = enabled ? `/api/sheet?page=${page}&limit=${pageSize}` : null;
+    const apiUrl = enabled ? headcountApi.getPaginatedSheetUrl(page, pageSize) : null;
 
     const { data, error, isLoading, mutate } = useSWR<PaginatedResponse>(
         apiUrl,

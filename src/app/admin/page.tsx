@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import DataImport from "@/components/DataImport";
 import SheetManagerTable from "@/components/SheetManagerTable";
 import { Badge } from "@/components/ui/Badge";
+import { headcountApi } from "@/features/headcount/services/headcountApi";
 
 // Icons
 import {
@@ -59,13 +60,8 @@ function AdminDashboardContent() {
     useEffect(() => {
         const fetchPendingCount = async () => {
             try {
-                // Use page=1 to ensure we go into paginated path that applies filters
-                const res = await fetch('/api/sheet?page=1&limit=1&lineManagerStatus=pending');
-                const data = await res.json();
-                if (data.success) {
-                    // Use total from paginated response which reflects the filtered count
-                    setPendingCount(data.total || 0);
-                }
+                const count = await headcountApi.getPendingCount();
+                setPendingCount(count);
             } catch (err) {
                 console.error('Failed to fetch pending count:', err);
             }

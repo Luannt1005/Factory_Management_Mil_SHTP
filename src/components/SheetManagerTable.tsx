@@ -6,20 +6,19 @@ import {
   ArrowPathIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ArrowDownTrayIcon,
   XMarkIcon,
-  ClockIcon,
-  ShieldCheckIcon,
-  ChevronDoubleLeftIcon,
-  ChevronDoubleRightIcon,
   TrashIcon,
-  NoSymbolIcon
+  NoSymbolIcon,
+  ClockIcon
 } from "@heroicons/react/24/outline";
 import styles from "@/app/sheetmanager/sheet.module.css";
 import useSWR from 'swr';
 import { swrFetcher } from '@/lib/api-client';
+import { headcountApi } from "@/features/headcount/services/headcountApi";
+import { SheetManagerFilters } from "@/features/headcount/components/SheetManagerFilters";
+import { SheetManagerTableCore } from "@/features/headcount/components/SheetManagerTableCore";
+import { SheetApprovalConfirmModal } from "@/features/headcount/components/SheetApprovalConfirmModal";
 import SheetAddModal from "./SheetAddModal";
 
 interface SheetRow {
@@ -269,18 +268,8 @@ const SheetManager = ({
 
       if (!blob) throw new Error("Image conversion failed");
 
-      // 2. Prepare Upload
-      const formData = new FormData();
-      formData.append("file", blob);
-      formData.append("filename", trimLeadingZeros(empId)); // Name is trimmed Emp ID
-
-      // 3. Upload via API
-      const response = await fetch("/api/upload-image", {
-        method: "POST",
-        body: formData
-      });
-
-      const result = await response.json();
+      // 2. Upload via API
+      const result = await headcountApi.uploadImage(blob, trimLeadingZeros(empId));
 
       if (result.success) {
         setSuccessMessage("✅ Image updated successfully");
@@ -327,7 +316,7 @@ const SheetManager = ({
     }
   });
 
-  const apiUrl = `/api/sheet?${queryParams.toString()}`;
+  const apiUrl = headcountApi.buildSheetQueryUrl(queryParams);
 
   const { data: apiResult, error: swrError, mutate, isLoading, isValidating } = useSWR(
     apiUrl,
@@ -342,7 +331,7 @@ const SheetManager = ({
 
   const nextQueryParams = new URLSearchParams(queryParams);
   nextQueryParams.set('page', (currentPage + 1).toString());
-  const nextPageUrl = `/api/sheet?${nextQueryParams.toString()}`;
+  const nextPageUrl = headcountApi.buildSheetQueryUrl(nextQueryParams);
 
   useSWR(
     apiResult?.totalPages && currentPage < apiResult.totalPages ? nextPageUrl : null,
@@ -444,13 +433,7 @@ const SheetManager = ({
         }
       });
 
-      const response = await fetch("/api/sheet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add", data: dataToSave })
-      });
-
-      const result = await response.json();
+      const result = await headcountApi.addEmployee(dataToSave);
 
       if (result.success) {
         const newEmpId = formData["Emp ID"];
@@ -513,12 +496,7 @@ const SheetManager = ({
           }
         }
 
-        const response = await fetch("/api/sheet", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: rowId, data: dataToSave }),
-        });
-        const result = await response.json();
+        const result = await headcountApi.updateEmployee(rowId, dataToSave);
         if (result.success) successCount++;
       }
 
@@ -552,13 +530,7 @@ const SheetManager = ({
         dataToUpdate["requester"] = null;
       }
 
-      const response = await fetch("/api/sheet", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: rowId, data: dataToUpdate }),
-      });
-
-      const result = await response.json();
+      const result = await headcountApi.updateEmployee(rowId, dataToUpdate);
       if (result.success) {
         setSuccessMessage(action === 'approve' ? "Changes approved." : "Request rejected.");
         await mutate();
@@ -576,10 +548,7 @@ const SheetManager = ({
 
     setSaving(true);
     try {
-      const response = await fetch(`/api/sheet?id=${rowId}`, {
-        method: 'DELETE'
-      });
-      const result = await response.json();
+      const result = await headcountApi.deleteEmployee(rowId);
 
       if (result.success) {
         setSuccessMessage(`Deleted "${empName}" successfully.`);
@@ -610,18 +579,13 @@ const SheetManager = ({
   const executeRejectAll = async () => {
     setSaving(true);
     try {
-      const response = await fetch("/api/sheet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "rejectAll", data: {} }),
-      });
-      const result = await response.json();
+      const result = await headcountApi.rejectAllPending();
       if (result.success) {
         setSuccessMessage(`✓ Rejected ${result.count} requests.`);
         await mutate();
         setTimeout(() => setSuccessMessage(null), 4000);
       } else {
-        setError(result.error);
+        setError(result.error || "Failed to reject all.");
       }
     } catch (err) {
       setError("Error rejecting all.");
@@ -645,18 +609,13 @@ const SheetManager = ({
   const executeApproveAll = async () => {
     setSaving(true);
     try {
-      const response = await fetch("/api/sheet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "approveAll", data: {} }),
-      });
-      const result = await response.json();
+      const result = await headcountApi.approveAllPending();
       if (result.success) {
         setSuccessMessage(`✓ Approved ${result.count} requests.`);
         await mutate();
         setTimeout(() => setSuccessMessage(null), 4000);
       } else {
-        setError(result.error);
+        setError(result.error || "Failed to approve all.");
       }
     } catch (err) {
       setError("Error approving all.");
@@ -685,15 +644,14 @@ const SheetManager = ({
 
     setSaving(true);
     try {
-      const response = await fetch("/api/sheet?deleteAll=true", { method: "DELETE" });
-      const result = await response.json();
+      const result = await headcountApi.deleteAllEmployees();
       if (result.success) {
         setSuccessMessage(`🗑️ Deleted all ${result.count} employees.`);
         setCurrentPage(1);
         await mutate();
         setTimeout(() => setSuccessMessage(null), 5000);
       } else {
-        setError(result.error);
+        setError(result.error || "Failed to delete all.");
       }
     } catch (err) {
       setError("Error deleting all data.");
@@ -809,325 +767,49 @@ const SheetManager = ({
           </div>
         )}
 
-        <div className={styles.filterBox}>
-          <div className={styles.filterRow}>
-            {FILTER_COLUMNS.map((header) => {
-              const isDLType = header === "DL/IDL/Staff";
-              return (
-                <div key={header} className={styles.filterInputWrapper}>
-                  <label className={styles.filterLabel}>{header.replace(/\r\n/g, ' ')}</label>
-                  {isDLType ? (
-                    <select
-                      value={filters[header] || ""}
-                      onChange={(e) => handleFilterChange(header, e.target.value)}
-                      className={styles.filterInput}
-                    >
-                      <option value="">All</option>
-                      <option value="DL">DL</option>
-                      <option value="IDL">IDL</option>
-                      <option value="Staff">Staff</option>
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      placeholder={`Search...`}
-                      value={filters[header] || ""}
-                      onChange={(e) => handleFilterChange(header, e.target.value)}
-                      className={styles.filterInput}
-                    />
-                  )}
-                </div>
-              );
-            })}
-            <div className="flex items-end">
-              <button
-                onClick={() => { setFilters({}); }}
-                className={styles.btnReset}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        </div>
+        <SheetManagerFilters
+          filters={filters}
+          filterColumns={FILTER_COLUMNS}
+          onFilterChange={handleFilterChange}
+          onClearFilters={() => setFilters({})}
+          styles={styles}
+        />
 
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                {headers.map((header) => (
-                  <th key={header}>{header.replace(/\r\n/g, ' ')}</th>
-                ))}
-                <th className="w-24 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRows.map((row) => (
-                <tr key={row.id} className={modifiedRows.has(row.id) ? styles.modified : ''}>
-                  {headers.map((header) => {
-                    const isEditing = editingCell?.rowId === row.id && editingCell?.header === header;
-                    const isLM = isLineManagerCol(header);
-                    const isPending = isLM && row.lineManagerStatus === 'pending';
-
-                    return (
-                      <td
-                        key={`${row.id}-${header}`}
-                        onClick={() => handleCellClick(row.id, header)}
-                      >
-                        {isEditing ? (
-                          header === "DL/IDL/Staff" ? (
-                            <select
-                              autoFocus
-                              value={String(row[header] || "")}
-                              onChange={(e) => handleCellChange(row.id, header, e.target.value)}
-                              onBlur={() => setEditingCell(null)}
-                              className={styles.cellInput}
-                            >
-                              <option value="">Select...</option>
-                              <option value="DL">DL</option>
-                              <option value="IDL">IDL</option>
-                              <option value="Staff">Staff</option>
-                            </select>
-                          ) : header === "Status" ? (
-                            <select
-                              autoFocus
-                              value={String(row[header] || "")}
-                              onChange={(e) => handleCellChange(row.id, header, e.target.value)}
-                              onBlur={() => setEditingCell(null)}
-                              className={styles.cellInput}
-                            >
-                              <option value="">Select...</option>
-                              <option value="Active">Active</option>
-                              <option value="Active (Probation)">Active (Probation)</option>
-                              <option value="Resigned">Resigned</option>
-                              <option value="Maternity">Maternity</option>
-                            </select>
-                          ) : header === "Employee\r\n Type" ? (
-                            <select
-                              autoFocus
-                              value={String(row[header] || "")}
-                              onChange={(e) => handleCellChange(row.id, header, e.target.value)}
-                              onBlur={() => setEditingCell(null)}
-                              className={styles.cellInput}
-                            >
-                              <option value="">Select...</option>
-                              <option value="Official">Official</option>
-                              <option value="Probation">Probation</option>
-                              <option value="Contractor">Contractor</option>
-                            </select>
-                          ) : (
-                            <input
-                              autoFocus
-                              value={String(row[header] || "")}
-                              onChange={(e) => handleCellChange(row.id, header, e.target.value)}
-                              onBlur={() => setEditingCell(null)}
-                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setEditingCell(null); }}
-                              className={styles.cellInput}
-                            />
-                          )
-                        ) : (
-                          <div className={`flex items-center gap-3 min-h-[40px] ${styles.cellContent}`}>
-                            {/* Avatar for FullName */}
-                            {header === "FullName " && (
-                              <div
-                                className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-page)] shadow-sm relative group cursor-pointer"
-                                onClick={(e) => handleAvatarClick(e, row.id)}
-                                title="Click to change photo"
-                              >
-                                <img
-                                  src={row["Employee\r\n Type"] === 'hc_open' 
-                                    ? '/headcount_open.png' 
-                                    : `${IMAGE_BASE_URL}${trimLeadingZeros(row["Emp ID"])}.webp?v=${imageVersion}`}
-                                  alt=""
-                                  loading="lazy"
-                                  className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(row["FullName "] || "User")}&background=random&color=fff&size=64`;
-                                  }}
-                                />
-                                {/* Hover overlay icon */}
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity">
-                                  <ArrowPathIcon className="w-4 h-4 text-white" />
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Cell Content */}
-                            <div className="flex-grow">
-                              {(header === "DL/IDL/Staff" || header === "Employee\r\n Type" || header === "Status") ? (
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border shadow-sm ${header === "DL/IDL/Staff" ? getStatusColor(row[header], 'dl_idl') :
-                                  header === "Employee\r\n Type" ? getStatusColor(row[header], 'emp_type') :
-                                    getStatusColor(row[header], 'status')
-                                  }`}>
-                                  {String(row[header] || "")}
-                                </span>
-                              ) : (
-                                <span className={`block truncate ${header === "FullName " ? "font-semibold text-[var(--color-text-title)]" : ""}`}>
-                                  {DATE_COLUMNS.includes(header) ? formatDate(row[header]) : String(row[header] || "")}
-                                </span>
-                              )}
-
-                              {/* Pending Review Info */}
-                              {isPending && (
-                                <div className="mt-1 p-1 bg-amber-50 dark:bg-amber-900/30 rounded border border-amber-100 dark:border-amber-800 inline-block">
-                                  <span className="text-[10px] text-amber-700 dark:text-amber-300 font-bold flex items-center gap-1">
-                                    <ArrowPathIcon className="w-3 h-3 animate-spin" />
-                                    → {row.pendingLineManager}
-                                  </span>
-                                  {row.requester && (
-                                    <span className="text-[9px] text-[var(--color-text-muted)] italic block mt-0.5 px-0.5">
-                                      by {row.requester}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )
-                        }
-                      </td>
-                    );
-                  })}
-                  <td className="text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      {showApprovalOnly && (
-                        <>
-                          <button
-                            onClick={() => handleApprovalAction(row.id, 'approve')}
-                            disabled={saving}
-                            className="p-1 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/50 rounded"
-                            title="Approve"
-                          >
-                            <CheckCircleIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleApprovalAction(row.id, 'reject')}
-                            disabled={saving}
-                            className="p-1 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/50 rounded"
-                            title="Reject"
-                          >
-                            <NoSymbolIcon className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteRow(row.id, row['FullName '] || row.id);
-                        }}
-                        disabled={saving}
-                        className="p-1.5 text-gray-400 dark:text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/40 rounded transition-colors"
-                        title="Delete Employee"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filteredRows.length === 0 && (
-                <tr>
-                  <td colSpan={headers.length + 1} className="text-center py-8 text-[var(--color-text-muted)]">
-                    No records found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className={styles.pagination}>
-          <div className="flex items-center justify-between px-4">
-            <div className={styles.toolbarInfo}>
-              Showing <strong>{filteredRows.length}</strong> of <strong>{ITEMS_PER_PAGE}</strong> per page
-              {totalRecords > 0 && <span className="ml-2 text-[var(--color-text-muted)]">({totalRecords} total)</span>}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => goToPage(1)}
-                disabled={currentPage === 1}
-                className="p-1.5 border border-[var(--color-border)] rounded disabled:opacity-30 hover:bg-[var(--color-bg-page)] text-[var(--color-text-body)]"
-              >
-                <ChevronDoubleLeftIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-1.5 border border-[var(--color-border)] rounded disabled:opacity-30 hover:bg-[var(--color-bg-page)] text-[var(--color-text-body)]"
-              >
-                <ChevronLeftIcon className="w-4 h-4" />
-              </button>
-              <span className="px-3 py-1 bg-[var(--color-bg-page)] rounded font-medium text-[var(--color-text-body)] border border-[var(--color-border)]">
-                {currentPage} / {totalPages}
-              </span>
-              <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-                className="p-1.5 border border-[var(--color-border)] rounded disabled:opacity-30 hover:bg-[var(--color-bg-page)] text-[var(--color-text-body)]"
-              >
-                <ChevronRightIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => goToPage(totalPages)}
-                disabled={currentPage >= totalPages}
-                className="p-1.5 border border-[var(--color-border)] rounded disabled:opacity-30 hover:bg-[var(--color-bg-page)] text-[var(--color-text-body)]"
-              >
-                <ChevronDoubleRightIcon className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <SheetManagerTableCore
+          headers={headers}
+          rows={filteredRows}
+          modifiedRows={modifiedRows}
+          editingCell={editingCell}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          itemsPerPage={ITEMS_PER_PAGE}
+          totalRecords={totalRecords}
+          saving={saving}
+          showApprovalOnly={showApprovalOnly}
+          dateColumns={DATE_COLUMNS}
+          onCellClick={handleCellClick}
+          onCellChange={handleCellChange}
+          onCellBlur={() => setEditingCell(null)}
+          onAvatarClick={handleAvatarClick}
+          onApprovalAction={handleApprovalAction}
+          onDeleteRow={handleDeleteRow}
+          onGoToPage={goToPage}
+          formatDate={formatDate}
+          isLineManagerCol={isLineManagerCol}
+          getAvatarUrl={(empId) => headcountApi.getAvatarUrl(empId, imageVersion)}
+          getFallbackAvatarUrl={(name) => headcountApi.getFallbackAvatarUrl(name)}
+          styles={styles}
+        />
       </div>
 
-      {/* Confirm Modal for Approve All / Reject All */}
-      {
-        confirmModal.show && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-[var(--color-bg-card)] rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-in fade-in zoom-in duration-200 border border-[var(--color-border)]">
-              <div className="flex items-center gap-3 mb-4">
-                {confirmModal.type === 'approve' ? (
-                  <div className="p-3 bg-green-100 rounded-full">
-                    <CheckCircleIcon className="w-6 h-6 text-green-600" />
-                  </div>
-                ) : (
-                  <div className="p-3 bg-orange-100 rounded-full">
-                    <NoSymbolIcon className="w-6 h-6 text-orange-600" />
-                  </div>
-                )}
-                <h3 className="text-lg font-semibold text-[var(--color-text-title)]">
-                  {confirmModal.type === 'approve' ? 'Approve All Changes' : 'Reject All Changes'}
-                </h3>
-              </div>
-
-              <p className="text-[var(--color-text-muted)] mb-6">
-                {confirmModal.type === 'approve'
-                  ? `Are you sure you want to approve all ${confirmModal.count} pending changes? This will apply the new Line Manager values.`
-                  : `Are you sure you want to reject all ${confirmModal.count} pending changes? The original Line Manager values will be kept.`
-                }
-              </p>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => setConfirmModal({ show: false, type: null, count: 0 })}
-                  className="px-4 py-2 text-[var(--color-text-body)] hover:text-[var(--color-text-title)] hover:bg-[var(--color-bg-page)] rounded-lg transition-colors border border-[var(--color-border)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmAction}
-                  disabled={saving}
-                  className={`px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2 ${confirmModal.type === 'approve'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-orange-600 hover:bg-orange-700'
-                    }`}
-                >
-                  {saving && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
-                  {confirmModal.type === 'approve' ? 'Yes, Approve All' : 'Yes, Reject All'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
+      <SheetApprovalConfirmModal
+        isOpen={confirmModal.show}
+        type={confirmModal.type}
+        count={confirmModal.count}
+        saving={saving}
+        onConfirm={handleConfirmAction}
+        onClose={() => setConfirmModal({ show: false, type: null, count: 0 })}
+      />
 
       <SheetAddModal
         isOpen={showAddModal}

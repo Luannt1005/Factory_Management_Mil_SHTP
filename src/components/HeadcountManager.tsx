@@ -7,14 +7,14 @@ import {
     CheckCircleIcon,
     ExclamationCircleIcon,
     XMarkIcon,
-    ArrowDownTrayIcon,
-    TrashIcon,
-    BriefcaseIcon,
-    PencilSquareIcon
+    ArrowDownTrayIcon
 } from "@heroicons/react/24/outline";
 import styles from "@/app/sheetmanager/sheet.module.css";
 import useSWR from 'swr';
 import { swrFetcher } from '@/lib/api-client';
+import { headcountApi } from "@/features/headcount/services/headcountApi";
+import { HeadcountOpenFilters } from "@/features/headcount/components/HeadcountOpenFilters";
+import { HeadcountOpenTable } from "@/features/headcount/components/HeadcountOpenTable";
 import HeadcountAddModal from "./HeadcountAddModal";
 import HeadcountEditModal from "./HeadcountEditModal";
 
@@ -162,7 +162,7 @@ const HeadcountManager = () => {
         }
     });
 
-    const apiUrl = `/api/sheet?${queryParams.toString()}`;
+    const apiUrl = headcountApi.buildSheetQueryUrl(queryParams);
 
     const { data: apiResult, error: swrError, mutate, isLoading, isValidating } = useSWR(
         apiUrl,
@@ -287,17 +287,7 @@ const HeadcountManager = () => {
 
             dataToSave['employee_type'] = 'hc_open';
 
-            const response = await fetch("/api/sheet", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "bulkAddHeadcount",
-                    quantity: quantity,
-                    data: dataToSave
-                })
-            });
-
-            const result = await response.json();
+            const result = await headcountApi.bulkAddHeadcount(quantity, dataToSave);
             if (result.success) {
                 setSuccessMessage(`✅ Added ${result.count || quantity} open positions successfully`);
                 await mutate();
@@ -356,23 +346,19 @@ const HeadcountManager = () => {
             console.log(`Update: Keep ${idsToKeep.length}, Delete ${idsToDelete.length}, Add ${quantityToAdd}`);
 
             // === EXECUTE REQUESTS ===
-            const promises: Promise<any>[] = [];
+            const promises: Promise<unknown>[] = [];
 
             // A. Update existing records
             idsToKeep.forEach(id => {
                 promises.push(
-                    fetch("/api/sheet", {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ id: id, data: dataToSave }),
-                    })
+                    headcountApi.updateEmployee(id, dataToSave)
                 );
             });
 
             // B. Delete excess records
             idsToDelete.forEach(id => {
                 promises.push(
-                    fetch(`/api/sheet?id=${id}`, { method: 'DELETE' })
+                    headcountApi.deleteEmployee(id)
                 );
             });
 
@@ -381,15 +367,7 @@ const HeadcountManager = () => {
                 // Force employee_type
                 dataToSave['employee_type'] = 'hc_open';
                 promises.push(
-                    fetch("/api/sheet", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            action: "bulkAddHeadcount",
-                            quantity: quantityToAdd,
-                            data: dataToSave
-                        })
-                    })
+                    headcountApi.bulkAddHeadcount(quantityToAdd, dataToSave)
                 );
             }
 
@@ -434,12 +412,7 @@ const HeadcountManager = () => {
                     dataToSave[header] = value;
                 });
 
-                const response = await fetch("/api/sheet", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id: rowId, data: dataToSave }),
-                });
-                const result = await response.json();
+                const result = await headcountApi.updateEmployee(rowId, dataToSave);
                 if (result.success) successCount++;
             }
 
@@ -480,7 +453,7 @@ const HeadcountManager = () => {
             let deleted = 0;
 
             // Simple parallel delete for better speed
-            const deletePromises = deleteIds.map(id => fetch(`/api/sheet?id=${id}`, { method: 'DELETE' }));
+            const deletePromises = deleteIds.map(id => headcountApi.deleteEmployee(id));
             await Promise.all(deletePromises);
             deleted = deletePromises.length;
 
@@ -555,126 +528,30 @@ const HeadcountManager = () => {
                     </div>
                 )}
 
-                <div className={styles.filterBox}>
-                    <div className={styles.filterRow}>
-                        {FILTER_COLUMNS.map((header) => {
-                            const isDLType = header === "DL/IDL/Staff";
-                            return (
-                                <div key={header} className={styles.filterInputWrapper}>
-                                    <label className={styles.filterLabel}>{header.replace(/\r\n/g, ' ')}</label>
-                                    {isDLType ? (
-                                        <select
-                                            value={filters[header] || ""}
-                                            onChange={(e) => handleFilterChange(header, e.target.value)}
-                                            className={styles.filterInput}
-                                        >
-                                            <option value="">All</option>
-                                            <option value="DL">DL</option>
-                                            <option value="IDL">IDL</option>
-                                            <option value="Staff">Staff</option>
-                                        </select>
-                                    ) : (
-                                        <input
-                                            type="text"
-                                            placeholder={`Search...`}
-                                            value={filters[header] || ""}
-                                            onChange={(e) => handleFilterChange(header, e.target.value)}
-                                            className={styles.filterInput}
-                                        />
-                                    )}
-                                </div>
-                            );
-                        })}
-                        <div className="flex items-end">
-                            <button
-                                onClick={() => { setFilters({}); }}
-                                className={styles.btnReset}
-                            >
-                                Clear
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <HeadcountOpenFilters
+                    filters={filters}
+                    filterColumns={FILTER_COLUMNS}
+                    onFilterChange={handleFilterChange}
+                    onClearFilters={() => setFilters({})}
+                    styles={styles}
+                />
 
-                <div className={styles.tableWrapper}>
-                    <table className={styles.table}>
-                        <thead>
-                            <tr>
-                                {VISIBLE_COLUMNS.map((header) => (
-                                    <th key={header}>{header.replace(/\r\n/g, ' ')}</th>
-                                ))}
-                                <th className="w-24 text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {groupedRows.map((row) => (
-                                <tr key={row.id} className={row.ids.some(id => modifiedRows.has(id)) ? styles.modified : ''}>
-                                    {VISIBLE_COLUMNS.map((header) => {
-                                        const isEditing = editingCell?.rowId === row.id && editingCell?.header === header;
-                                        const isQuantity = header === 'Quantity';
-
-                                        return (
-                                            <td
-                                                key={`${row.id}-${header}`}
-                                                onClick={() => handleCellClick(row.id, header)}
-                                            >
-                                                {isEditing ? (
-                                                    <input
-                                                        autoFocus
-                                                        value={String(row[header] || "")}
-                                                        onChange={(e) => handleCellChange(row.id, header, e.target.value)}
-                                                        onBlur={() => setEditingCell(null)}
-                                                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setEditingCell(null); }}
-                                                        className={styles.cellInput}
-                                                    />
-                                                ) : (
-                                                    <div className={styles.cellContent}>
-                                                        {isQuantity ? (
-                                                            <span className="inline-flex items-center justify-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-bold">
-                                                                {row.count}
-                                                            </span>
-                                                        ) : (
-                                                            <span>{DATE_COLUMNS.includes(header) ? formatDate(row[header]) : String(row[header] || "")}</span>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </td>
-                                        );
-                                    })}
-                                    <td className="text-center whitespace-nowrap px-2">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleEditGroup(row); }}
-                                                className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
-                                                title="Edit Details"
-                                            >
-                                                <PencilSquareIcon className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteGroup(row); }}
-                                                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                                title="Delete Position(s)"
-                                            >
-                                                <TrashIcon className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {groupedRows.length === 0 && !isLoading && (
-                                <tr>
-                                    <td colSpan={VISIBLE_COLUMNS.length + 1} className="text-center py-8 text-gray-500">
-                                        No open headcount positions found.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="mt-4 text-xs text-gray-400 text-center">
-                    Showing {groupedRows.length} grouped positions from {rows.length} total entries.
-                </div>
+                <HeadcountOpenTable
+                    groupedRows={groupedRows}
+                    visibleColumns={VISIBLE_COLUMNS}
+                    dateColumns={DATE_COLUMNS}
+                    modifiedRows={modifiedRows}
+                    editingCell={editingCell}
+                    isLoading={isLoading}
+                    totalRawRows={rows.length}
+                    onCellClick={handleCellClick}
+                    onCellChange={handleCellChange}
+                    onCellBlur={() => setEditingCell(null)}
+                    onEditGroup={handleEditGroup}
+                    onDeleteGroup={handleDeleteGroup}
+                    formatDate={formatDate}
+                    styles={styles}
+                />
 
             </div>
 

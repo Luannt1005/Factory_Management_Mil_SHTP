@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
-    CloudArrowUpIcon,
-    DocumentIcon,
-    CheckCircleIcon,
-    ExclamationCircleIcon,
     PhotoIcon,
     TableCellsIcon
 } from "@heroicons/react/24/outline";
+import { headcountApi } from "@/features/headcount/services/headcountApi";
+import { ImportExcelResult } from "@/types/headcount.types";
+import { ExcelDataUploadCard } from "@/features/headcount/components/ExcelDataUploadCard";
+import { ImageBatchUploadCard, ImageUploadLog } from "@/features/headcount/components/ImageBatchUploadCard";
 
 type ImportTab = 'excel' | 'images';
 
@@ -24,15 +24,12 @@ export default function DataImport({ mode = 'both' }: DataImportProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [importResult, setImportResult] = useState<any>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [importResult, setImportResult] = useState<ImportExcelResult | null>(null);
 
     // Image State
     const [imageFiles, setImageFiles] = useState<File[]>([]);
-    const [imageLogs, setImageLogs] = useState<{ name: string; status: 'pending' | 'success' | 'error'; message?: string }[]>([]);
+    const [imageLogs, setImageLogs] = useState<ImageUploadLog[]>([]);
     const [uploadingImages, setUploadingImages] = useState(false);
-    const imageInputRef = useRef<HTMLInputElement>(null);
 
     // --- Excel Handlers ---
     const handleFileChange = (selectedFile: File | null) => {
@@ -52,29 +49,15 @@ export default function DataImport({ mode = 'both' }: DataImportProps) {
 
         setLoading(true);
         setError(null);
-        setSuccess(null);
-
         try {
-            const formData = new FormData();
-            formData.append("file", file);
-
-            const response = await fetch("/api/import_excel", {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || "Upload failed");
-            }
+            const data = await headcountApi.importExcel(file);
 
             setSuccess("Import successful!");
             setImportResult(data);
             setFile(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Import failed";
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -160,20 +143,7 @@ export default function DataImport({ mode = 'both' }: DataImportProps) {
                 const fileName = `${employeeId}.webp`;
 
                 // 2. Upload via API (to bypass RLS)
-                const formData = new FormData();
-                formData.append('file', blob, fileName);
-                formData.append('filename', fileName);
-
-                const response = await fetch('/api/admin/upload-employee-image', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (!response.ok || !result.success) {
-                    throw new Error(result.error || "Upload failed");
-                }
+                await headcountApi.uploadEmployeeImage(blob, fileName);
 
                 setImageLogs(prev => {
                     const newLogs = [...prev];
@@ -181,11 +151,12 @@ export default function DataImport({ mode = 'both' }: DataImportProps) {
                     return newLogs;
                 });
 
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error(err);
+                const message = err instanceof Error ? err.message : "Upload failed";
                 setImageLogs(prev => {
                     const newLogs = [...prev];
-                    newLogs[index] = { ...newLogs[index], status: 'error', message: err.message || "Upload failed" };
+                    newLogs[index] = { ...newLogs[index], status: 'error', message };
                     return newLogs;
                 });
             } finally {
@@ -242,190 +213,31 @@ export default function DataImport({ mode = 'both' }: DataImportProps) {
 
             {/* EXCEL TAB */}
             {activeTab === 'excel' && (
-                <div className="max-w-md w-full mx-auto flex flex-col items-center">
-                    <div className="text-center mb-8">
-                        <h2 className="text-xl font-bold text-gray-900">Import Organization Data</h2>
-                        <p className="text-sm text-gray-500 mt-1">Upload your Excel file to update the database</p>
-                    </div>
-
-                    <div
-                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                        onDragLeave={() => setIsDragging(false)}
-                        onDrop={(e) => {
-                            e.preventDefault();
-                            setIsDragging(false);
-                            handleFileChange(e.dataTransfer.files[0]);
-                        }}
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`
-                            w-full relative group cursor-pointer
-                            border-2 border-dashed rounded-xl p-8 transition-all duration-200
-                            flex flex-col items-center justify-center gap-4
-                            ${isDragging
-                                ? "border-blue-500 bg-blue-50/50"
-                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50/50"
-                            }
-                        `}
-                    >
-                        <div className={`
-                            p-4 rounded-full transition-colors duration-200
-                            ${isDragging ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400 group-hover:text-gray-600"}
-                        `}>
-                            <CloudArrowUpIcon className="w-8 h-8" />
-                        </div>
-
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-900 border-b-2 border-transparent group-hover:border-blue-500 inline-block">
-                                Click to upload Excel
-                            </p>
-                            <span className="text-sm text-gray-500"> or drag and drop</span>
-                        </div>
-
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".xlsx,.xls"
-                            onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
-                            className="hidden"
-                        />
-                    </div>
-
-                    {/* Status Area Excel */}
-                    <div className="mt-6 space-y-4 w-full">
-                        {file && (
-                            <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                                <DocumentIcon className="w-5 h-5 text-blue-600" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-blue-900 truncate">{file.name}</p>
-                                    <p className="text-xs text-blue-600">{(file.size / 1024).toFixed(0)} KB</p>
-                                </div>
-                                <button onClick={() => setFile(null)} className="text-blue-400 hover:text-blue-600">×</button>
-                            </div>
-                        )}
-                        {error && (
-                            <div className="flex items-start gap-3 p-3 bg-red-50 border border-red-100 rounded-lg">
-                                <ExclamationCircleIcon className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-                                <p className="text-sm text-red-800">{error}</p>
-                            </div>
-                        )}
-                        {success && (
-                            <div className="flex items-start gap-3 p-3 bg-green-50 border border-green-100 rounded-lg">
-                                <CheckCircleIcon className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                                <div className="text-sm text-green-800">
-                                    <p className="font-medium">{success}</p>
-                                    {importResult?.total && <p className="mt-1">Processed {importResult.total} records.</p>}
-                                </div>
-                            </div>
-                        )}
-
-                        <button
-                            onClick={handleUpload}
-                            disabled={!file || loading}
-                            className="w-full py-2.5 px-4 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
-                        >
-                            {loading ? "Importing..." : "Start Import"}
-                        </button>
-                    </div>
-                </div>
+                <ExcelDataUploadCard
+                    file={file}
+                    loading={loading}
+                    error={error}
+                    success={success}
+                    importResult={importResult}
+                    onFileChange={handleFileChange}
+                    onUpload={handleUpload}
+                    onClearFile={() => setFile(null)}
+                />
             )}
 
             {/* IMAGE TAB */}
             {activeTab === 'images' && (
-                <div className="w-full h-full flex flex-col">
-                    <div className="flex-1 flex flex-col items-center max-w-2xl mx-auto w-full">
-                        <div className="text-center mb-6">
-                            <h2 className="text-xl font-bold text-gray-900">Import Employee Photos</h2>
-                            <p className="text-sm text-gray-500 mt-1">
-                                Files must be named with Employee ID (e.g. <code>818.jpg</code>).
-                                <br />
-                                Images will be resized to 225x300 and converted to WebP.
-                            </p>
-                        </div>
-
-                        {imageFiles.length === 0 ? (
-                            <div
-                                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                                onDragLeave={() => setIsDragging(false)}
-                                onDrop={(e) => {
-                                    e.preventDefault();
-                                    setIsDragging(false);
-                                    handleImageFilesChange(e.dataTransfer.files);
-                                }}
-                                onClick={() => imageInputRef.current?.click()}
-                                className={`
-                                    w-full h-48 border-2 border-dashed rounded-xl cursor-pointer flex flex-col items-center justify-center gap-3 transition-colors
-                                    ${isDragging
-                                        ? "border-blue-500 bg-blue-50/50"
-                                        : "border-gray-300 hover:bg-gray-50"
-                                    }
-                                `}
-                            >
-                                <div className={`p-3 rounded-full ${isDragging ? "bg-blue-100 text-blue-600" : "bg-blue-50 text-blue-600"}`}>
-                                    <PhotoIcon className="w-8 h-8" />
-                                </div>
-                                <p className="text-sm font-medium text-gray-900">Click to select images</p>
-                                <p className="text-xs text-gray-500">or drag and drop here</p>
-                                <p className="text-xs text-gray-400">Supports JPG, PNG, WEBP</p>
-                            </div>
-                        ) : (
-                            <div className="w-full flex-1 flex flex-col min-h-0 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-                                <div className="p-3 border-b border-gray-200 bg-white flex justify-between items-center">
-                                    <span className="text-sm font-medium text-gray-700">{imageFiles.length} files selected</span>
-                                    <button
-                                        onClick={() => { setImageFiles([]); setImageLogs([]); }}
-                                        disabled={uploadingImages}
-                                        className="text-xs text-red-600 hover:text-red-700 font-medium"
-                                    >
-                                        Clear All
-                                    </button>
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                                    {imageLogs.map((log, idx) => (
-                                        <div key={idx} className="flex items-center gap-3 p-2 bg-white rounded border border-gray-100 shadow-sm">
-                                            <div className={`w-2 h-2 rounded-full shrink-0 ${log.status === 'success' ? 'bg-green-500' :
-                                                log.status === 'error' ? 'bg-red-500' : 'bg-gray-300'
-                                                }`} />
-                                            <span className="text-sm font-mono text-gray-700 flex-1 truncate">{log.name}</span>
-                                            <span className={`text-xs px-2 py-0.5 rounded ${log.status === 'success' ? 'bg-green-100 text-green-700' :
-                                                log.status === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
-                                                }`}>
-                                                {log.message}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="w-full mt-4">
-                            <input
-                                ref={imageInputRef}
-                                type="file"
-                                multiple
-                                accept="image/*"
-                                onChange={(e) => handleImageFilesChange(e.target.files)}
-                                className="hidden"
-                            />
-
-                            {imageFiles.length > 0 && (
-                                <button
-                                    onClick={handleBatchUpload}
-                                    disabled={uploadingImages}
-                                    className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white rounded-lg font-bold shadow-sm transition-all flex items-center justify-center gap-2"
-                                >
-                                    {uploadingImages ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                            Processing {imageFiles.length} images...
-                                        </>
-                                    ) : (
-                                        `Upload ${imageFiles.filter((_, i) => imageLogs[i].status !== 'error' && imageLogs[i].status !== 'success').length} Valid Images`
-                                    )}
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <ImageBatchUploadCard
+                    imageFiles={imageFiles}
+                    imageLogs={imageLogs}
+                    uploadingImages={uploadingImages}
+                    onFilesChange={handleImageFilesChange}
+                    onBatchUpload={handleBatchUpload}
+                    onClearAll={() => {
+                        setImageFiles([]);
+                        setImageLogs([]);
+                    }}
+                />
             )}
         </div>
     );
