@@ -1,1 +1,0 @@
-export { patchOrgChartTemplates } from "@/features/orgchart/utils/orgChartTemplates";

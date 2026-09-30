@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import DepartmentSlider from '@/components/DepartmentSlider';
-import OrgChartView from '@/app/orgchart/OrgChartView';
+import OrgChartView from '@/features/orgchart/components/OrgChartCanvas';
 import HeroVideo from '@/components/HeroVideo';
 import ScrollReveal from '@/components/ScrollReveal';
 

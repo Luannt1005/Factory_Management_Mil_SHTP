@@ -2,8 +2,8 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import DataImport from "@/components/DataImport";
-import SheetManagerTable from "@/components/SheetManagerTable";
+import DataImport from "@/features/headcount/components/DataImport";
+import SheetManagerTable from "@/features/headcount/components/SheetManagerTable";
 import { Badge } from "@/components/ui/Badge";
 import { headcountApi } from "@/features/headcount/services/headcountApi";
 

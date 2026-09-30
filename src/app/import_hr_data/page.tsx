@@ -1,6 +1,6 @@
 "use client";
 
-import DataImport from "@/components/DataImport";
+import DataImport from "@/features/headcount/components/DataImport";
 import { useUser } from '@/app/context/UserContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';

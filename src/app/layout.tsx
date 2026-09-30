@@ -18,7 +18,6 @@ export const metadata: Metadata = {
 
 
 import { NextAuthProvider } from "@/components/NextAuthProvider";
-import PageHeader from "@/components/PageHeader";
 import LayoutContentWrapper from "@/components/LayoutContentWrapper";
 
 export default function RootLayout({

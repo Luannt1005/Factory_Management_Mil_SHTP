@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import MeetingRoomCascader from '@/components/MeetingRoomCascader';
+import MeetingRoomCascader from './MeetingRoomCascader';
 import type { MeetingRoom } from '@/types/rooms.types';
 import { InputLabel, FormInput } from './FormControls';
 

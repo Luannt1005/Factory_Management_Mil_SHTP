@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowPathIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
-import styles from "./sheet.module.css";
+import styles from "@/features/headcount/components/sheet.module.css";
 
 export default function Loading() {
     return (

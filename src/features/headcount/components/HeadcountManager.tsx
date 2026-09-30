@@ -9,7 +9,7 @@ import {
     XMarkIcon,
     ArrowDownTrayIcon
 } from "@heroicons/react/24/outline";
-import styles from "@/app/sheetmanager/sheet.module.css";
+import styles from "./sheet.module.css";
 import useSWR from 'swr';
 import { swrFetcher } from '@/lib/api-client';
 import { headcountApi } from "@/features/headcount/services/headcountApi";
