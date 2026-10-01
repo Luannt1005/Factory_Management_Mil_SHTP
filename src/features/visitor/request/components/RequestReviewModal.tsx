@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/Button';
 import type { VisitorRequestFormData } from '@/types/visitor-request.types';
 import type { FacilityRoom } from '@/types/rooms.types';
 
@@ -185,9 +186,13 @@ export const RequestReviewModal: React.FC<RequestReviewModalProps> = ({
                         </div>
                     )}
                 </div>
-                <div className="flex justify-end gap-4 mt-8">
-                    <button onClick={onClose} className="px-6 py-2 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-50">Edit Information</button>
-                    <button onClick={onConfirm} className="px-6 py-2 rounded-lg bg-[#db011c] text-white font-bold hover:bg-red-700 shadow-md">Confirm & Submit</button>
+                <div className="flex justify-end gap-3 mt-8">
+                    <Button variant="secondary" size="md" onClick={onClose}>
+                        Edit Information
+                    </Button>
+                    <Button variant="primary" size="md" onClick={onConfirm}>
+                        Confirm & Submit
+                    </Button>
                 </div>
             </div>
         </div>,

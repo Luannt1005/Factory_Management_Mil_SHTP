@@ -4,6 +4,9 @@ import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { FormField } from "@/components/ui/FormField";
+import { Alert } from "@/components/ui/Alert";
 import type { SystemAdminRole, PermissionModule } from "@/types/system-admin.types";
 
 export const PERMISSION_MATRIX: PermissionModule[] = [
@@ -132,9 +135,7 @@ export function RoleEditModal({
         >
             <form id="role-form" onSubmit={handleFormSubmit} className="flex flex-col space-y-4">
                 {error && (
-                    <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
-                        {error}
-                    </div>
+                    <Alert variant="error">{error}</Alert>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
@@ -145,30 +146,28 @@ export function RoleEditModal({
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="e.g. Visitor Admin"
                     />
-                    <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold text-gray-700">App Module</label>
-                        <select
-                            className="w-full h-10 px-3 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c]"
-                            value={formData.app_module}
-                            onChange={(e) => setFormData({ ...formData, app_module: e.target.value })}
-                        >
-                            <option value="Global">Global</option>
-                            <option value="Orgchart">OrgChart</option>
-                            <option value="Visitor">Visitor</option>
-                        </select>
-                    </div>
+                    <Select
+                        label="App Module"
+                        value={formData.app_module}
+                        onChange={(val) => setFormData({ ...formData, app_module: val as any })}
+                        options={[
+                            { value: "Global", label: "Global" },
+                            { value: "Orgchart", label: "OrgChart" },
+                            { value: "Visitor", label: "Visitor" },
+                        ]}
+                    />
                 </div>
 
-                <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-700">Description</label>
+                <FormField label="Description" htmlFor="role-description">
                     <textarea
+                        id="role-description"
                         className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c]"
                         rows={2}
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         placeholder="What can this role do?"
                     />
-                </div>
+                </FormField>
 
                 <div className="space-y-2 pt-2">
                     <label className="text-xs font-semibold text-gray-700 block mb-1">

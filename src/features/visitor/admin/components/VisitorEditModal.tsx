@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 import { visitorAdminApi } from '@/features/visitor/admin/services/visitorAdminApi';
 import type {
     VisitorAdminRequestRecord,
@@ -210,7 +212,12 @@ export default function VisitorEditModal({
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">Cập nhật thông tin chi tiết đơn đăng ký khách</p>
                     </div>
-                    <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Close modal"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                    >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
@@ -238,34 +245,30 @@ export default function VisitorEditModal({
                                 required 
                             />
                         </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Visiting Site (Địa điểm)</label>
-                            <select 
-                                value={formData.visiting_site} 
-                                onChange={e => setFormData({...formData, visiting_site: e.target.value})} 
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white"
-                            >
-                                <option value="SHTP">SHTP</option>
-                                <option value="DDK">DDK</option>
-                                <option value="SHTP / DDK">SHTP / DDK</option>
-                            </select>
-                        </div>
+                        <Select
+                            label="Visiting Site (Địa điểm)"
+                            value={formData.visiting_site}
+                            onChange={(val) => setFormData({ ...formData, visiting_site: val })}
+                            options={[
+                                { value: "SHTP", label: "SHTP" },
+                                { value: "DDK", label: "DDK" },
+                                { value: "SHTP / DDK", label: "SHTP / DDK" },
+                            ]}
+                        />
 
                         {!isInterview && (
                             <>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Category (Phân loại)</label>
-                                    <select 
-                                        value={formData.visitor_category} 
-                                        onChange={e => setFormData({...formData, visitor_category: e.target.value})} 
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white"
-                                    >
-                                        <option value="Vendor">Vendor</option>
-                                        <option value="Contractor">Contractor</option>
-                                        <option value="MIL/TTI Expat / SHTP Business trip">MIL/TTI Expat / SHTP Business trip</option>
-                                        <option value="Customer">Customer</option>
-                                    </select>
-                                </div>
+                                <Select
+                                    label="Category (Phân loại)"
+                                    value={formData.visitor_category}
+                                    onChange={(val) => setFormData({ ...formData, visitor_category: val })}
+                                    options={[
+                                        { value: "Vendor", label: "Vendor" },
+                                        { value: "Contractor", label: "Contractor" },
+                                        { value: "MIL/TTI Expat / SHTP Business trip", label: "MIL/TTI Expat / SHTP Business trip" },
+                                        { value: "Customer", label: "Customer" },
+                                    ]}
+                                />
                                 <div>
                                     <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Purpose (Mục đích)</label>
                                     <input 
@@ -275,17 +278,15 @@ export default function VisitorEditModal({
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Factory Tour</label>
-                                    <select 
-                                        value={formData.factoryTour} 
-                                        onChange={e => setFormData({...formData, factoryTour: e.target.value})} 
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white"
-                                    >
-                                        <option value="No">No</option>
-                                        <option value="Yes">Yes</option>
-                                    </select>
-                                </div>
+                                <Select
+                                    label="Factory Tour"
+                                    value={formData.factoryTour}
+                                    onChange={(val) => setFormData({ ...formData, factoryTour: val })}
+                                    options={[
+                                        { value: "No", label: "No" },
+                                        { value: "Yes", label: "Yes" },
+                                    ]}
+                                />
                             </>
                         )}
 
@@ -394,28 +395,20 @@ export default function VisitorEditModal({
                     )}
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                        <button 
-                            type="button" 
-                            onClick={onClose} 
+                        <Button
+                            variant="secondary"
+                            onClick={onClose}
                             disabled={loading}
-                            className="px-5 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50"
                         >
                             Cancel (Hủy)
-                        </button>
-                        <button 
-                            type="submit" 
-                            disabled={loading} 
-                            className="px-6 py-2 text-xs font-bold text-white bg-[#db011c] hover:bg-[#b50117] rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5"
+                        </Button>
+                        <Button
+                            variant="primary"
+                            type="submit"
+                            loading={loading}
                         >
-                            {loading ? (
-                                <>
-                                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                                    <span>Đang lưu...</span>
-                                </>
-                            ) : (
-                                <span>Save Changes (Lưu thay đổi)</span>
-                            )}
-                        </button>
+                            Save Changes (Lưu thay đổi)
+                        </Button>
                     </div>
                 </form>
             </div>

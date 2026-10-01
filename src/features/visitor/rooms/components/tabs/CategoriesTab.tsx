@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { ExcelColumnFilter } from '../ExcelColumnFilter';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type { RoomCategory, RoomCategoryUpdateData } from '@/types/rooms.types';
 
 export interface CategoriesTabProps {
@@ -96,7 +98,7 @@ export function CategoriesTab({
                         </thead>
                         <tbody className="text-[0.875rem] font-medium bg-white">
                             {loading ? (
-                                <tr><td colSpan={4} className="p-8 text-center text-gray-400">Loading categories...</td></tr>
+                                <TableSkeleton rows={4} columns={4} />
                             ) : filteredCategories.map((cat) => (
                                 <tr key={cat.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                     {editingCategory && editingCategory.id === cat.id ? (
@@ -162,7 +164,14 @@ export function CategoriesTab({
                                 </tr>
                             ))}
                             {filteredCategories.length === 0 && !loading && (
-                                <tr><td colSpan={4} className="p-16 text-center text-gray-400 font-medium">No categories found matching filter.</td></tr>
+                                <tr>
+                                    <td colSpan={4} className="py-12">
+                                        <EmptyState
+                                            title="No categories found"
+                                            description="No room categories match the current filter."
+                                        />
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>

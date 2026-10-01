@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/Button';
 import { cleanNameInput, formatName } from '@/utils/string';
 import type {
     VisitorDashboardRequestRecord,
@@ -201,8 +202,10 @@ export function VisitorEditIntervieweeModal({
                         </p>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label="Close modal"
+                        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -484,20 +487,21 @@ export function VisitorEditIntervieweeModal({
                     </div>
                 </div>
 
-                <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-4">
-                    <button
+                <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                    <Button
+                        variant="secondary"
                         onClick={onClose}
-                        className="px-6 py-2 rounded-lg font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                        disabled={saving}
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="primary"
                         onClick={handleSave}
-                        disabled={saving}
-                        className="px-6 py-2 rounded-lg font-bold text-white bg-[#db011c] hover:bg-[#b00116] shadow-md transition-colors disabled:opacity-50 flex items-center gap-2"
+                        loading={saving}
                     >
-                        {saving ? 'Saving...' : 'Save Changes'}
-                    </button>
+                        Save Changes
+                    </Button>
                 </div>
             </div>
         </div>,

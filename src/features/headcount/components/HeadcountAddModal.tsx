@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/Button';
 
 interface HeadcountAddModalProps {
     isOpen: boolean;
@@ -83,8 +84,10 @@ export default function HeadcountAddModal({ isOpen, onClose, onSave, columns }: 
                         </div>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                        aria-label="Close modal"
+                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                     >
                         <XMarkIcon className="w-6 h-6" />
                     </button>
@@ -166,30 +169,24 @@ export default function HeadcountAddModal({ isOpen, onClose, onSave, columns }: 
 
                 {/* Footer */}
                 <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl flex justify-end gap-3">
-                    <button
+                    <Button
                         type="button"
+                        variant="secondary"
+                        size="md"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-800 transition-colors"
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="submit"
                         form="add-headcount-form"
-                        disabled={loading}
-                        className="px-5 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                        variant="primary"
+                        size="md"
+                        loading={loading}
+                        className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800"
                     >
-                        {loading ? (
-                            <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                Adding {quantity}...
-                            </>
-                        ) : (
-                            <>
-                                Add {quantity} Open Headcounts
-                            </>
-                        )}
-                    </button>
+                        Add {quantity} Open Headcounts
+                    </Button>
                 </div>
             </div>
         </div>

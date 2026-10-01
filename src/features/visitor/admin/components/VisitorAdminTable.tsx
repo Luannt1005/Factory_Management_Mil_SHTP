@@ -1,4 +1,6 @@
 import React from 'react';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type {
     VisitorAdminRequestRecord,
     VisitorAdminPagination,
@@ -220,18 +222,22 @@ export default function VisitorAdminTable({
                                     <td className="px-3 py-2 text-right">
                                         <div className="flex justify-end gap-2">
                                             <button 
+                                                type="button"
                                                 onClick={() => onEdit(request)}
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-200"
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-200 cursor-pointer"
                                                 title="Edit Request"
+                                                aria-label="Edit Request"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
                                                 </svg>
                                             </button>
                                             <button 
+                                                type="button"
                                                 onClick={() => onView(request)}
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all border border-gray-200"
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all border border-gray-200 cursor-pointer"
                                                 title="View Details"
+                                                aria-label="View Details"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.43 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -239,18 +245,22 @@ export default function VisitorAdminTable({
                                                 </svg>
                                             </button>
                                             <button 
+                                                type="button"
                                                 onClick={() => onUpdateStatus(request.id, 'COMPLETE')} 
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-white bg-green-500 hover:bg-green-600 transition-all shadow-sm group relative"
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-white bg-green-500 hover:bg-green-600 transition-all shadow-sm group relative cursor-pointer"
                                                 title="Approve Request"
+                                                aria-label="Approve Request"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" className="w-4 h-4">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                                 </svg>
                                             </button>
                                             <button 
+                                                type="button"
                                                 onClick={() => onUpdateStatus(request.id, 'REJECTED')} 
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600 border border-gray-200 transition-all group"
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600 border border-gray-200 transition-all group cursor-pointer"
                                                 title="Reject Request"
+                                                aria-label="Reject Request"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" className="w-4 h-4">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -350,18 +360,22 @@ export default function VisitorAdminTable({
                                     <td className="px-3 py-2 text-right">
                                         <div className="flex justify-end gap-2">
                                             <button 
+                                                type="button"
                                                 onClick={() => onEdit(request)}
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-200"
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-200 cursor-pointer"
                                                 title="Edit Request"
+                                                aria-label="Edit Request"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
                                                 </svg>
                                             </button>
                                             <button 
+                                                type="button"
                                                 onClick={() => onView(request)}
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all border border-gray-200"
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all border border-gray-200 cursor-pointer"
                                                 title="View Details"
+                                                aria-label="View Details"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.43 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -369,18 +383,22 @@ export default function VisitorAdminTable({
                                                 </svg>
                                             </button>
                                             <button 
+                                                type="button"
                                                 onClick={() => onUpdateStatus(request.id, 'COMPLETE')} 
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-white bg-green-500 hover:bg-green-600 transition-all shadow-sm group relative"
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-white bg-green-500 hover:bg-green-600 transition-all shadow-sm group relative cursor-pointer"
                                                 title="Approve Request"
+                                                aria-label="Approve Request"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" className="w-4 h-4">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                                 </svg>
                                             </button>
                                             <button 
+                                                type="button"
                                                 onClick={() => onUpdateStatus(request.id, 'REJECTED')} 
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600 border border-gray-200 transition-all group"
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600 border border-gray-200 transition-all group cursor-pointer"
                                                 title="Reject Request"
+                                                aria-label="Reject Request"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" className="w-4 h-4">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -391,8 +409,18 @@ export default function VisitorAdminTable({
                                 </tr>
                             )
                         ))}
+                        {loading && (
+                            <TableSkeleton rows={8} columns={14} />
+                        )}
                         {requests.length === 0 && !loading && (
-                            <tr><td colSpan={14} className="p-20 text-center text-gray-400 font-medium">No results matching your filters.</td></tr>
+                            <tr>
+                                <td colSpan={14} className="py-12">
+                                    <EmptyState
+                                        title="No results matching your filters"
+                                        description="Try adjusting your search criteria, status filters, or date range."
+                                    />
+                                </td>
+                            </tr>
                         )}
                     </tbody>
                 </table>

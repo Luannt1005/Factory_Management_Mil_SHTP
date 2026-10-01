@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { ExcelColumnFilter } from '../ExcelColumnFilter';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type { HostDepartment, HostDepartmentUpdateData } from '@/types/rooms.types';
 
 export interface HostDepartmentsTabProps {
@@ -135,7 +137,7 @@ export function HostDepartmentsTab({
                         </thead>
                         <tbody className="text-[0.875rem] font-medium bg-white">
                             {loading ? (
-                                <tr><td colSpan={7} className="p-8 text-center text-gray-400">Loading...</td></tr>
+                                <TableSkeleton rows={5} columns={7} />
                             ) : filteredHostDepartments.map((h) => (
                                 <tr key={h.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                     {editingHostDept && editingHostDept.id === h.id ? (
@@ -188,7 +190,14 @@ export function HostDepartmentsTab({
                                 </tr>
                             ))}
                             {filteredHostDepartments.length === 0 && !loading && (
-                                <tr><td colSpan={7} className="p-16 text-center text-gray-400 font-medium">No host departments found matching filter.</td></tr>
+                                <tr>
+                                    <td colSpan={7} className="py-12">
+                                        <EmptyState
+                                            title="No host departments found"
+                                            description="No host departments match the current filters."
+                                        />
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>

@@ -3,6 +3,8 @@
 import React from "react";
 import { CheckCircleIcon, XCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDateTime as formatDate } from "@/utils/date";
 import type { UserAccount } from "@/types/user.types";
 
@@ -37,17 +39,18 @@ export function PendingApprovalsList({
 
             <div className="flex-1 overflow-auto bg-white p-4">
                 {loading ? (
-                    <div className="py-12 text-center text-sm text-gray-500">Loading...</div>
+                    <div className="py-16 text-center text-sm text-gray-500 flex flex-col items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-gray-200 border-t-[#db011c] rounded-full animate-spin mb-3" />
+                        <span>Loading pending approvals...</span>
+                    </div>
                 ) : error ? (
                     <div className="py-12 text-center text-sm text-red-500">{error}</div>
                 ) : users.length === 0 ? (
-                    <div className="py-12 text-center text-sm text-gray-500 flex flex-col items-center">
-                        <span className="text-4xl mb-3">✅</span>
-                        <p>No pending approvals</p>
-                        <p className="text-xs text-gray-400 mt-1">
-                            All non-SHTP logins have been reviewed.
-                        </p>
-                    </div>
+                    <EmptyState
+                        icon={<CheckCircleIcon className="w-8 h-8 text-emerald-500 stroke-[1.5]" />}
+                        title="No pending approvals"
+                        description="All non-SHTP logins have been reviewed."
+                    />
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {users.map((user) => (
@@ -102,18 +105,23 @@ export function PendingApprovalsList({
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
-                                    <button
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        icon={<XCircleIcon className="w-4 h-4 text-gray-500" />}
                                         onClick={() => onReject(user)}
-                                        className="flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 rounded text-xs font-semibold transition-colors"
                                     >
-                                        <XCircleIcon className="w-4 h-4" /> Reject
-                                    </button>
-                                    <button
+                                        Reject
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        className="bg-green-600 hover:bg-green-700 active:bg-green-800 focus-visible:ring-green-300"
+                                        icon={<CheckCircleIcon className="w-4 h-4" />}
                                         onClick={() => onApprove(user)}
-                                        className="flex items-center justify-center gap-1.5 py-1.5 px-2 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold transition-colors shadow-sm"
                                     >
-                                        <CheckCircleIcon className="w-4 h-4" /> Approve
-                                    </button>
+                                        Approve
+                                    </Button>
                                 </div>
                             </div>
                         ))}

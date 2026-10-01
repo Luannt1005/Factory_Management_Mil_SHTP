@@ -204,6 +204,7 @@ export default function GroupViewTable({
                                                                                 {!isSecurity && !isReceptionist && (
                                                                                     <div className={`ml-0.5 ${v.checkInOutStatus === 'CHECKED_IN' || v.checkInOutStatus === 'CHECKED_OUT' ? 'visible' : 'invisible'}`}>
                                                                                         <button
+                                                                                            type="button"
                                                                                             disabled={actionLoading === `${req.requestId}-${v.visitorIndex}`}
                                                                                             onClick={(e) => {
                                                                                                 e.stopPropagation();
@@ -212,7 +213,8 @@ export default function GroupViewTable({
                                                                                                 }
                                                                                             }}
                                                                                             title="Reset Status"
-                                                                                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                                                                                            aria-label="Reset Status"
+                                                                                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 cursor-pointer"
                                                                                         >
                                                                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

@@ -8,6 +8,9 @@ import {
     PlusIcon
 } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDateShort } from "@/utils/date";
 import type { UserAccount, AppRole } from "@/types/user.types";
 
@@ -75,12 +78,14 @@ export function UserManagementTable({
                 {ids.map((id, i) => {
                     const role = appRoles.find(r => r.id.toString() === id.toString());
                     return (
-                        <span
+                        <Badge
                             key={i}
-                            className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-[#b52427] border border-red-100 whitespace-nowrap"
+                            size="sm"
+                            variant="danger"
+                            className="bg-red-50 text-[#b52427] border-red-100 font-bold"
                         >
                             {role ? role.name : `Role ${id}`}
-                        </span>
+                        </Badge>
                     );
                 })}
             </div>
@@ -99,13 +104,13 @@ export function UserManagementTable({
                             placeholder="Name, email, or employee ID"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                            className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c]"
                         />
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold text-gray-500">Status</span>
                         <select
-                            className="text-xs border border-gray-200 rounded-full px-3 py-1.5 bg-white focus:outline-none"
+                            className="text-xs border border-gray-200 rounded-full px-3 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-[#db011c]"
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                         >
@@ -152,15 +157,14 @@ export function UserManagementTable({
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {loading ? (
-                            <tr>
-                                <td colSpan={13} className="py-12 text-center text-sm text-gray-500">
-                                    Loading...
-                                </td>
-                            </tr>
+                            <TableSkeleton rows={6} columns={13} />
                         ) : paginatedUsers.length === 0 ? (
                             <tr>
-                                <td colSpan={13} className="py-12 text-center text-sm text-gray-500">
-                                    No accounts found.
+                                <td colSpan={13} className="py-8">
+                                    <EmptyState
+                                        title="No accounts found"
+                                        description="No user accounts match the current search or filters."
+                                    />
                                 </td>
                             </tr>
                         ) : (
@@ -188,38 +192,42 @@ export function UserManagementTable({
                                     <td className="py-2.5 px-4 text-xs text-gray-600">{user.department || "-"}</td>
                                     <td className="py-2.5 px-4 text-xs text-gray-600">{user.location || "-"}</td>
                                     <td className="py-2.5 px-4">
-                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                        <Badge variant="success" size="sm">
                                             Active
-                                        </span>
+                                        </Badge>
                                     </td>
                                     <td className="py-2.5 px-4">
-                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                        <Badge variant="success" size="sm">
                                             Changed
-                                        </span>
+                                        </Badge>
                                     </td>
                                     <td className="py-2.5 px-4">
-                                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${user.status === "Inactive" ? "bg-gray-100 text-gray-600" : "bg-green-50 text-green-700"}`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${user.status === "Inactive" ? "bg-gray-400" : "bg-green-500"}`}></span>
+                                        <Badge
+                                            variant={user.status === "Inactive" ? "default" : "success"}
+                                            size="sm"
+                                        >
                                             {user.status || "Active"}
-                                        </span>
+                                        </Badge>
                                     </td>
                                     <td className="py-2.5 px-4 text-[11px] text-gray-500 font-medium">{formatDate(user.created_at)}</td>
                                     <td className="py-2.5 px-4 text-[11px] text-gray-500 font-medium">{formatDate(user.last_login)}</td>
                                     <td className="py-2.5 px-4 text-right">
                                         <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
+                                                type="button"
                                                 onClick={() => onEditClick(user)}
-                                                className="p-1 text-gray-400 hover:text-gray-800 transition-colors"
+                                                className="p-1 text-gray-400 hover:text-gray-800 transition-colors cursor-pointer"
                                                 title="Edit User"
+                                                aria-label="Edit User"
                                             >
                                                 <PencilSquareIcon className="w-4 h-4" />
                                             </button>
                                             <button
+                                                type="button"
                                                 onClick={() => onDeleteClick(user)}
-                                                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                                className="p-1 text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
                                                 title="Delete User"
+                                                aria-label="Delete User"
                                             >
                                                 <TrashIcon className="w-4 h-4" />
                                             </button>
@@ -256,16 +264,20 @@ export function UserManagementTable({
                     </span>
                     <div className="flex items-center gap-1">
                         <button
-                            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
+                            type="button"
+                            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
+                            aria-label="Previous page"
                         >
                             &lt;
                         </button>
                         <button
-                            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
+                            type="button"
+                            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
                             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
+                            aria-label="Next page"
                         >
                             &gt;
                         </button>

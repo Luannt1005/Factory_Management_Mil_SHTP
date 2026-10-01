@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { ExcelColumnFilter } from '../ExcelColumnFilter';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type { FacilityRoom, FacilityRoomUpdateData, RoomCategory } from '@/types/rooms.types';
 
 export interface FacilityRoomsTabProps {
@@ -124,7 +126,7 @@ export function FacilityRoomsTab({
                         </thead>
                         <tbody className="text-[0.875rem] font-medium bg-white">
                             {loading ? (
-                                <tr><td colSpan={6} className="p-8 text-center text-gray-400">Loading rooms...</td></tr>
+                                <TableSkeleton rows={5} columns={6} />
                             ) : filteredRooms.map((room) => (
                                 <tr key={room.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                     {editingRoom && editingRoom.id === room.id ? (
@@ -205,7 +207,14 @@ export function FacilityRoomsTab({
                                 </tr>
                             ))}
                             {filteredRooms.length === 0 && !loading && (
-                                <tr><td colSpan={6} className="p-16 text-center text-gray-400 font-medium">No rooms found matching filter.</td></tr>
+                                <tr>
+                                    <td colSpan={6} className="py-12">
+                                        <EmptyState
+                                            title="No rooms found"
+                                            description="No facility rooms match the current filter."
+                                        />
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>

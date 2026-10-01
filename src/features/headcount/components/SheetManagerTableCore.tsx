@@ -11,6 +11,7 @@ import {
     NoSymbolIcon,
     ArrowPathIcon,
 } from '@heroicons/react/24/outline';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { SheetEmployeeRow } from '@/types/headcount.types';
 
 export interface SheetEditingCell {
@@ -277,8 +278,11 @@ export const SheetManagerTableCore: React.FC<SheetManagerTableCoreProps> = ({
                         ))}
                         {rows.length === 0 && (
                             <tr>
-                                <td colSpan={headers.length + 1} className="text-center py-8 text-[var(--color-text-muted)]">
-                                    No records found
+                                <td colSpan={headers.length + 1} className="py-12">
+                                    <EmptyState
+                                        title="No records found"
+                                        description="No employee records found matching your filters in this sheet."
+                                    />
                                 </td>
                             </tr>
                         )}

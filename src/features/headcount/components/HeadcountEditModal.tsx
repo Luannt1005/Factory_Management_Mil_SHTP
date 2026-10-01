@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/Button';
 
 interface HeadcountEditModalProps {
     isOpen: boolean;
@@ -89,8 +90,10 @@ export default function HeadcountEditModal({ isOpen, onClose, onSave, initialDat
                         </div>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                        aria-label="Close modal"
+                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                     >
                         <XMarkIcon className="w-6 h-6" />
                     </button>
@@ -179,30 +182,24 @@ export default function HeadcountEditModal({ isOpen, onClose, onSave, initialDat
 
                 {/* Footer */}
                 <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl flex justify-end gap-3">
-                    <button
+                    <Button
                         type="button"
+                        variant="secondary"
+                        size="md"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-800 transition-colors"
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="submit"
                         form="edit-headcount-form"
-                        disabled={loading}
-                        className="px-5 py-2 text-sm font-bold text-white bg-amber-600 rounded-lg hover:bg-amber-700 shadow-sm shadow-amber-200 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                        variant="primary"
+                        size="md"
+                        loading={loading}
+                        className="bg-amber-600 hover:bg-amber-700 active:bg-amber-800"
                     >
-                        {loading ? (
-                            <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                Saving...
-                            </>
-                        ) : (
-                            <>
-                                Save Changes
-                            </>
-                        )}
-                    </button>
+                        Save Changes
+                    </Button>
                 </div>
             </div>
         </div>

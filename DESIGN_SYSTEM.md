@@ -256,3 +256,238 @@ Built on a compact 4px grid in `globals.css`:
    - Existing modals render plain `<div>` wrappers instead of declaring `role="dialog"`, `aria-modal="true"`, and `aria-labelledby="..."`.
 4. **Focus Rings:**
    - Some input elements use `focus:outline-none` without an explicit `focus:ring-2 focus:ring-[#db011c]` replacement, diminishing keyboard focus visibility for keyboard-only users.
+
+---
+
+## 9. Phase 15A Component Specifications & Migration Conventions
+
+### 9.1 Shared UI Primitives (`src/components/ui/`)
+
+#### 1. Button (`src/components/ui/Button.tsx`)
+- **Variants:**
+  - `primary`: Milwaukee digital red background (`#db011c`), white text, hover `#b90118`, active `#9a0114`, focus ring `#db011c/30`.
+  - `secondary`: White background, border `gray-200`, text `gray-700`, hover `gray-50`.
+  - `outline`: Transparent background, border `#db011c`, text `#db011c`, hover `red-50`.
+  - `danger`: Red background (`bg-red-600`), white text, hover `bg-red-700`.
+  - `ghost`: Transparent background, hover `gray-100`, text `gray-600`.
+- **Sizes:** `sm` (compact tables/toolbars), `md` (standard forms), `lg` (prominent actions).
+- **Interactive States:** Native `loading` spinner with auto-disabled click prevention, `disabled` opacity/cursor handling, forwardRef support.
+
+#### 2. Input (`src/components/ui/Input.tsx`)
+- **Structure:** Encapsulates standard `<label>`, `<input>`, and error/helper text with accessible label-id association.
+- **States:** Default (border `gray-200`, focus border `#db011c`, focus ring `red-100`), Error (border `red-400`, focus border `red-500`, helper text in red), Disabled (background `gray-100`, text `gray-400`).
+
+#### 3. Badge (`src/components/ui/Badge.tsx`)
+- **Status Mapping:** Integrated with `getStatusBadgeClass` and `getCategoryBadgeClass` from `src/utils/badge.ts`.
+- **Variants:** `default` (slate), `success` (green), `danger` (red), `warning` (amber), `info` (blue).
+- **Sizes:** `sm` (`text-[10px]` pill), `md` (`text-xs` pill).
+
+#### 4. Modal (`src/components/ui/Modal.tsx`)
+- **Headless UI Foundation:** Uses `@headlessui/react` `<Dialog>` and `<Transition>` with accessible `role="dialog"` and `aria-modal="true"`.
+- **Features:** Keyboard Escape key listener, backdrop blur overlay (`bg-slate-900/50`), scrollable body, fixed header and footer slots, standard close button with `aria-label`.
+
+### 9.2 Form Patterns
+- Standard label typography: `text-xs font-semibold text-gray-700 block mb-1`.
+- Mandatory indicator: `<span className="text-[#db011c]">*</span>`.
+- Field vertical spacing: `space-y-1.5`.
+- Form grid layout: `grid grid-cols-1 md:grid-cols-2 gap-4`.
+- Action buttons in modal footer: Cancel (`Button variant="secondary"`) on the left/first, Submit/Save (`Button variant="primary"`) on the right.
+
+### 9.3 Table Visual Patterns
+- Container: `bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col`.
+- Header: Sticky top-0, background `bg-[#fcf5f5]` or `bg-gray-50/95`, column header text `text-[10px] font-bold uppercase tracking-wider text-[#b52427]` or `text-gray-500`.
+- Body: `divide-y divide-gray-100`, row hover `hover:bg-gray-50/50 transition-colors`.
+- Action cells: Fixed or compact width, flex container with `gap-1` or `gap-2`, icon-only buttons with explicit `aria-label` and `title`.
+
+### 9.4 Accessibility Conventions
+1. **Icon-Only Buttons:** Every icon-only button must provide `aria-label="<Action Name>"` matching its `title`.
+2. **Interactive Cursors:** Buttons and interactive elements must declare `cursor-pointer`.
+3. **Form Association:** Labels must either wrap the control or reference the control's `id` via `htmlFor`.
+4. **Keyboard Focus:** Elements must retain visible outline/ring states (`focus:ring-1 focus:ring-[#db011c]` or `focus-visible:ring-2`).
+
+### 9.5 Migration Conventions
+1. **Zero Logic Changes:** Adopting Design System primitives must never modify event handlers, form payloads, API calls, or validation rules.
+2. **Selective Component Mapping:** Native `<button>` and `<input>` elements are migrated when props and layout are directly compatible. Specialized controls (custom date pickers, Excel cascaders, canvas overlays) remain intact.
+3. **Batch Verification:** Each feature batch must verify TypeScript compilation (`npx tsc --noEmit`) and git diff hygiene before progressing.
+
+---
+
+## 10. Phase 15B Shared Primitives Specifications
+
+### 10.1 Select (`src/components/ui/Select.tsx`)
+* **Purpose:** Provides a consistent, accessible single-select dropdown primitive built on Headless UI's `Listbox`.
+* **When to use:**
+  - Standard single-selection dropdowns in forms, modal dialogs, and filter toolbars (e.g., status, category, app module).
+  - When keyboard navigation, active highlight, and brand focus rings are needed.
+* **When NOT to use:**
+  - Specialized multi-select checkbox controls (e.g. `ExcelColumnFilter`).
+  - Hierarchical cascading pickers (e.g. `MeetingRoomCascader`).
+  - Browser-native HTML select elements where custom styling is strictly constrained by third-party canvas or layout engines.
+* **Props:**
+  - `label?: string`
+  - `value?: string`
+  - `onChange?: (value: string) => void`
+  - `options: SelectOption[]` (`{ value: string; label: string; disabled?: boolean }`)
+  - `placeholder?: string`
+  - `disabled?: boolean`
+  - `error?: string`
+  - `helperText?: string`
+  - `required?: boolean`
+  - `id?: string`
+  - `name?: string`
+  - `className?: string`
+* **Accessibility:**
+  - Automatically associates `<label>` with `<ListboxButton>` using generated or explicit `id`.
+  - Full keyboard control: `Space`/`Enter` to open, `ArrowUp`/`ArrowDown` to navigate, `Enter` to select, `Escape` to close.
+  - Declares `aria-invalid` on error and links helper text via `aria-describedby`.
+* **Example:**
+  ```tsx
+  <Select
+    label="Status"
+    value={status}
+    onChange={setStatus}
+    options={[
+      { value: 'Active', label: 'Active' },
+      { value: 'Inactive', label: 'Inactive' },
+    ]}
+  />
+  ```
+
+### 10.2 EmptyState (`src/components/ui/EmptyState.tsx`)
+* **Purpose:** Standardizes empty views for tables, card lists, search results, and filters across all domains.
+* **When to use:**
+  - When an array or query returns 0 items after loading completes (`!loading && items.length === 0`).
+  - Inside table rows (`<tr><td colSpan={...}><EmptyState ... /></td></tr>`), card containers, or panels.
+* **When NOT to use:**
+  - Initial loading states (use `TableSkeleton` instead).
+  - Landing pages or hero presentation sections.
+* **Props:**
+  - `title: string`
+  - `description?: string`
+  - `icon?: React.ReactNode` (defaults to neutral `InboxIcon`)
+  - `action?: React.ReactNode` (optional call-to-action button or reset control)
+  - `className?: string`
+* **Accessibility:**
+  - Uses semantic heading (`<h3>`) and descriptive text (`<p>`) with high readability.
+  - Decorative icons are marked `aria-hidden="true"`.
+* **Example:**
+  ```tsx
+  <EmptyState
+    title="No visitors found"
+    description="Try adjusting your date range or filter criteria."
+    action={<Button variant="outline" size="sm" onClick={resetFilters}>Clear filters</Button>}
+  />
+  ```
+
+### 10.3 TableSkeleton (`src/components/ui/TableSkeleton.tsx`)
+* **Purpose:** Visual skeleton loading placeholder for tabular data, preventing abrupt layout shifts.
+* **When to use:**
+  - Inside `<tbody>` elements during data fetching (`loading && <TableSkeleton rows={5} columns={headers.length} />`).
+* **When NOT to use:**
+  - Interactive OrgChart canvas (BalkanGraph has its own loading indicator).
+  - Page-level initial boot spinners (use full-screen spinner).
+  - Non-tabular card grids.
+* **Props:**
+  - `rows?: number` (default: 5)
+  - `columns?: number` (default: 5)
+  - `className?: string`
+* **Accessibility:**
+  - Renders valid table rows (`<tr><td>...</td></tr>`) with `animate-pulse` placeholders to preserve column dimensions without throwing DOM nesting warnings.
+* **Example:**
+  ```tsx
+  <tbody className="divide-y divide-gray-100">
+    {loading ? (
+      <TableSkeleton rows={6} columns={8} />
+    ) : items.length === 0 ? (
+      <tr>
+        <td colSpan={8} className="py-12">
+          <EmptyState title="No items found" />
+        </td>
+      </tr>
+    ) : (
+      items.map(item => <ItemRow key={item.id} item={item} />)
+    )}
+  </tbody>
+  ```
+
+### 10.4 FormField (`src/components/ui/FormField.tsx`)
+* **Purpose:** A lightweight, behavior-generic layout wrapper providing standard label, error text, helper text, and accessibility wiring for any form control.
+* **When to use:**
+  - Wrapping controls that do not have built-in label/error handling (e.g. `<textarea>`, custom pickers, compound controls, or `<Select>`).
+* **When NOT to use:**
+  - Direct `<Input>` instances that already provide their own built-in `label`, `error`, and `helperText` properties.
+  - In complex schema-driven form generators (keep forms lightweight and direct).
+* **Props:**
+  - `label?: string`
+  - `htmlFor?: string`
+  - `error?: string`
+  - `helperText?: string`
+  - `required?: boolean`
+  - `children: React.ReactNode`
+  - `className?: string`
+* **Accessibility:**
+  - Links label to target element via `htmlFor`.
+  - Associates error message through `{htmlFor}-error` id for screen readers.
+* **Example:**
+  ```tsx
+  <FormField label="Description" htmlFor="role-desc" helperText="Max 250 characters">
+    <textarea id="role-desc" className="..." value={desc} onChange={...} />
+  </FormField>
+  ```
+
+### 10.5 Alert (`src/components/ui/Alert.tsx`)
+* **Purpose:** Inline and section-level feedback banner communicating operation results, validation errors, warnings, and informational notices.
+* **When to use:**
+  - Form operation errors (e.g. "Unable to save role", "Failed to update user").
+  - Inline feedback banners at the top of modal dialogs or form sections.
+  - Operation success or system warnings within page views.
+* **When NOT to use:**
+  - Micro field-level validation errors (use `Input` `error` prop or `FormField` `error` instead).
+  - Status chips/badges inside table rows (use `Badge` instead).
+  - Global floating notifications across page transitions (reserved for future Toast system).
+* **Props:**
+  - `variant?: 'info' | 'success' | 'warning' | 'error'` (default: `'info'`)
+  - `title?: string`
+  - `children: React.ReactNode`
+  - `icon?: React.ReactNode`
+  - `className?: string`
+  - `onClose?: () => void`
+* **Accessibility:**
+  - Error alerts declare `role="alert"` for assertive screen reader announcement.
+  - Success, warning, and info alerts declare `role="status"` for polite announcement.
+  - Decorative icons are marked `aria-hidden="true"`.
+  - Dismiss button includes explicit `aria-label="Dismiss alert"`.
+* **Example:**
+  ```tsx
+  <Alert variant="error" title="Unable to save role">
+    {error}
+  </Alert>
+  ```
+
+---
+
+## 11. Complete Shared Primitives Catalog (Phase 15 Master Reference)
+
+| Primitive | Path | Responsibility | Primary Context |
+|---|---|---|---|
+| **Button** | `src/components/ui/Button.tsx` | Standardized button with `primary`, `secondary`, `outline`, `danger`, `ghost` variants and built-in loading spinner. | Actions, forms, table toolbars, modal footers. |
+| **Input** | `src/components/ui/Input.tsx` | Controlled text input with label, required asterisk, focus rings, helper text, and error states. | Single-line form inputs, search bars. |
+| **Badge** | `src/components/ui/Badge.tsx` | Status pill chip with semantic color mapping (`success`, `warning`, `danger`, `info`, `default`). | Table status columns, tags, role indicators. |
+| **Modal** | `src/components/ui/Modal.tsx` | Accessible dialog shell built on `@headlessui/react` `Dialog` with backdrop blur and Escape listener. | Modal popups, creation/edit flows. |
+| **Select** | `src/components/ui/Select.tsx` | Keyboard-navigable single-select dropdown built on `@headlessui/react` `Listbox`. | Form dropdowns, filter toolbars. |
+| **EmptyState** | `src/components/ui/EmptyState.tsx` | Standardized visual presentation for zero-result queries and empty tables/cards. | Empty table rows, empty filter results. |
+| **TableSkeleton** | `src/components/ui/TableSkeleton.tsx` | Animated pulsing skeleton rows preserving column widths during asynchronous fetch. | Table body loading state. |
+| **FormField** | `src/components/ui/FormField.tsx` | Lightweight label, helper text, and error wrapper for compound or non-input controls. | Textarea, custom pickers, compound controls. |
+| **Alert** | `src/components/ui/Alert.tsx` | Inline feedback banner with semantic color schemes (`error`, `success`, `warning`, `info`) and accessible ARIA roles. | Form operation errors, status notices. |
+
+---
+
+## 12. Specialized Controls Intentionally Preserved
+
+The following controls have domain-specific, third-party, or performance-critical interaction models that must **NOT** be forced into generic UI wrappers:
+
+1. **`ExcelColumnFilter` (`src/features/visitor/rooms/components/ExcelColumnFilter.tsx`):** Custom multi-value checkbox popover with anchored floating portal menus.
+2. **`MeetingRoomCascader` (`src/features/visitor/request/components/MeetingRoomCascader.tsx`):** Dynamic multi-level hierarchical tree picker with nested parent-child selection logic.
+3. **Native Date & Datetime-Local Pickers:** Rely on browser-native `.showPicker()` API and ISO serialization in visitor workflows.
+4. **BalkanGraph Canvas Elements:** Interactive SVG node interactions and pan/zoom handlers are directly managed by `@balkangraph/orgchart.js`.
+5. **Interactive Recharts Visuals:** SVG charts in Visitor Dashboard and Analytics.

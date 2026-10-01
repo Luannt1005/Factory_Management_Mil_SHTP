@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Button } from '@/components/ui/Button';
 
 export interface VisitorDashboardFiltersProps {
     startDate: string;
@@ -38,7 +39,7 @@ export function VisitorDashboardFilters({
                         type="date"
                         value={startDate}
                         onChange={(e) => onStartDateChange(e.target.value)}
-                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
+                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] focus:outline-none transition-all"
                     />
                 </div>
                 <div className="flex items-center gap-2">
@@ -47,16 +48,18 @@ export function VisitorDashboardFilters({
                         type="date"
                         value={endDate}
                         onChange={(e) => onEndDateChange(e.target.value)}
-                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
+                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] focus:outline-none transition-all"
                     />
                 </div>
                 {hasActiveFilters && (
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={onClear}
                         className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4"
                     >
                         Clear Filters
-                    </button>
+                    </Button>
                 )}
             </div>
 
@@ -71,14 +74,16 @@ export function VisitorDashboardFilters({
                             onSearch();
                         }
                     }}
-                    className="text-sm border border-gray-300 rounded-lg px-3 py-2 w-64 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
+                    className="text-sm border border-gray-300 rounded-lg px-3 py-2 w-64 focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] focus:outline-none transition-all"
                 />
-                <button
+                <Button
+                    variant="primary"
+                    size="sm"
+                    className="bg-gray-900 hover:bg-gray-800 text-white"
                     onClick={onSearch}
-                    className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors"
                 >
                     Search
-                </button>
+                </Button>
             </div>
 
             <div className="text-sm font-medium text-gray-500 w-full text-right mt-2 md:mt-0 md:w-auto">
