@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { GroupedHeadcountRow } from '@/types/headcount.types';
 
 export interface HeadcountEditingCell {
@@ -124,8 +125,11 @@ export function HeadcountOpenTable<T extends GroupedHeadcountRow = GroupedHeadco
                         ))}
                         {groupedRows.length === 0 && !isLoading && (
                             <tr>
-                                <td colSpan={visibleColumns.length + 1} className="text-center py-8 text-gray-500">
-                                    No open headcount positions found.
+                                <td colSpan={visibleColumns.length + 1} className="py-8 bg-gray-50/50">
+                                    <EmptyState
+                                        title="No open headcount positions found"
+                                        description="Try adjusting your filter criteria or check back later."
+                                    />
                                 </td>
                             </tr>
                         )}

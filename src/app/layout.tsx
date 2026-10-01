@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 
 import { NextAuthProvider } from "@/components/NextAuthProvider";
 import LayoutContentWrapper from "@/components/LayoutContentWrapper";
+import { NavigationProvider } from "@/app/context/NavigationContext";
 
 export default function RootLayout({
   children,
@@ -33,24 +34,26 @@ export default function RootLayout({
       >
         <NextAuthProvider>
           <UserProvider>
-            <div className="print-root flex w-full h-screen overflow-hidden">
-              <div className="print:hidden">
-                <Sidebar />
-              </div>
-              <div className="print-content flex-1 flex flex-col overflow-hidden">
+            <NavigationProvider>
+              <div className="print-root flex w-full h-screen overflow-hidden">
                 <div className="print:hidden">
-                  <Header />
+                  <Sidebar />
                 </div>
-                <main className="print-main flex-1 overflow-auto bg-[var(--color-bg-page)] relative scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent transition-colors duration-300 flex flex-col">
-                  <LayoutContentWrapper>
-                    <PageTransition>
-                      {children}
-                    </PageTransition>
-                  </LayoutContentWrapper>
-                  <AppFooter />
-                </main>
+                <div className="print-content flex-1 flex flex-col overflow-hidden">
+                  <div className="print:hidden">
+                    <Header />
+                  </div>
+                  <main className="print-main flex-1 overflow-auto bg-[var(--color-bg-page)] relative scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent transition-colors duration-300 flex flex-col">
+                    <LayoutContentWrapper>
+                      <PageTransition>
+                        {children}
+                      </PageTransition>
+                    </LayoutContentWrapper>
+                    <AppFooter />
+                  </main>
+                </div>
               </div>
-            </div>
+            </NavigationProvider>
           </UserProvider>
         </NextAuthProvider>
       </body>

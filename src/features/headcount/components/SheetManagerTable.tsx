@@ -137,26 +137,26 @@ const getStatusColor = (value: string, type: string) => {
   const v = String(value).toLowerCase().trim();
 
   if (type === 'dl_idl') {
-    if (v === 'dl') return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800';
-    if (v === 'idl') return 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800';
-    if (v === 'staff') return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800';
-    return 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700';
+    if (v === 'dl') return 'bg-blue-100 text-blue-700 border-blue-200';
+    if (v === 'idl') return 'bg-purple-100 text-purple-700 border-purple-200';
+    if (v === 'staff') return 'bg-amber-100 text-amber-700 border-amber-200';
+    return 'bg-gray-100 text-gray-700 border-gray-200';
   }
 
   if (type === 'status') {
-    if (v.includes('active')) return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800';
-    if (v.includes('resign')) return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800';
-    if (v.includes('maternity')) return 'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-800';
-    return 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700';
+    if (v.includes('active')) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    if (v.includes('resign')) return 'bg-red-100 text-red-700 border-red-200';
+    if (v.includes('maternity')) return 'bg-pink-100 text-pink-700 border-pink-200';
+    return 'bg-gray-100 text-gray-700 border-gray-200';
   }
 
   if (type === 'emp_type') {
-    if (v.includes('official')) return 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800';
-    if (v.includes('probation')) return 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800';
-    return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+    if (v.includes('official')) return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+    if (v.includes('probation')) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+    return 'bg-slate-100 text-slate-700 border-slate-200';
   }
 
-  return 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700';
+  return 'bg-gray-50 text-gray-600 border-gray-100';
 };
 
 const formatDateToISO = (value: string): string => {

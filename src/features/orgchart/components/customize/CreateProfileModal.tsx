@@ -45,16 +45,16 @@ export default function CreateProfileModal({ isOpen, onClose, onCreate, groups }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white dark:bg-slate-800 shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-200">
+            <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-200">
                 {/* Modal Header */}
-                <div className="border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 px-6 py-4 flex justify-between items-center">
+                <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex justify-between items-center">
                     <div>
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white">Create New Profile</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Duplicate from existing department</p>
+                        <h3 className="text-lg font-bold text-slate-800">Create New Profile</h3>
+                        <p className="text-xs text-slate-500">Duplicate from existing department</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        className="text-slate-400 hover:text-slate-600"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -65,22 +65,22 @@ export default function CreateProfileModal({ isOpen, onClose, onCreate, groups }
                 {/* Modal Body */}
                 <div className="space-y-5 p-6">
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Profile Name</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Profile Name</label>
                         <input
                             type="text"
                             value={newOrgName}
                             onChange={e => setNewOrgName(e.target.value)}
                             placeholder="e.g. Engineering Restructure 2024"
-                            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white px-4 py-2.5 text-sm font-medium outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                            className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                         />
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Source Department</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Source Department</label>
                         <select
                             value={selectedDept}
                             onChange={e => setSelectedDept(e.target.value)}
-                            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm font-medium outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:text-white"
+                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                         >
                             <option value="">-- Choose Department --</option>
                             {groups.map(dept => (
@@ -93,22 +93,22 @@ export default function CreateProfileModal({ isOpen, onClose, onCreate, groups }
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Description</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Description</label>
                         <textarea
                             value={newOrgDesc}
                             onChange={e => setNewOrgDesc(e.target.value)}
                             placeholder="Optional notes about this chart..."
                             rows={3}
-                            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white px-4 py-2 text-sm font-medium outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 resize-none"
+                            className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 resize-none"
                         />
                     </div>
                 </div>
 
                 {/* Modal Footer */}
-                <div className="flex items-center gap-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 px-6 py-4">
+                <div className="flex items-center gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-4">
                     <button
                         onClick={onClose}
-                        className="flex-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600"
+                        className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
                     >
                         Cancel
                     </button>

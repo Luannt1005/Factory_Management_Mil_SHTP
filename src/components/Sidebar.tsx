@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, Fragment } from "react";
 import Link from "next/link";
 import { useUser } from "@/app/context/UserContext";
+import { useNavigation } from "@/app/context/NavigationContext";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Dialog, Transition } from "@headlessui/react";
 import { preload } from "swr";
 import { swrFetcher } from "@/lib/api-client";
 
@@ -19,6 +21,7 @@ export default function Sidebar() {
   const router = useRouter();
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const { user } = useUser();
+  const { isMobileNavOpen, closeMobileNav } = useNavigation();
   const userRole = user?.role || null;
 
   interface NavItem {
@@ -202,33 +205,19 @@ export default function Sidebar() {
     return null;
   }
 
-  return (
-    <div
-      className={`relative flex flex-col h-full bg-black text-white shadow-[4px_0_10px_rgba(0,0,0,0.15)] z-30 shrink-0 w-[160px]`}
-    >
-      {/* Top Red Header Block */}
-      <Link href="/" className={`w-full bg-[#db011c] text-white flex flex-col items-center justify-center shrink-0 border-b border-white/20 h-14 hover:bg-[#b80017] transition-colors group`}>
-        <img
-          src="/Milwaukee-logo-red.png"
-          alt="Milwaukee Logo"
-          className="h-8 w-auto object-contain brightness-0 invert"
-        />
-        <span className="text-[10px] transform scale-[0.7] origin-top font-black tracking-widest text-white/90 uppercase mt-0.5 opacity-90 group-hover:opacity-100 transition-opacity whitespace-nowrap text-center leading-none">
-          Factory Management
-        </span>
-      </Link>
-
-      {/* Navigation */}
+  const renderNavLinks = (onItemClick?: () => void) => {
+    return (
       <nav className="flex-1 overflow-y-auto py-0 px-0 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
         {filteredNavGroups.map((group) => {
           const itemsToRender = getRenderItems(group.items);
           if (itemsToRender.length === 0) return null;
-          
+
           const isGroupExpanded = expandedGroup === group.title;
 
           return (
             <div key={group.title} className="w-full border-b border-white/20 flex flex-col">
               <button
+                type="button"
                 onClick={() => toggleParent(group.title)}
                 className="w-full flex items-center justify-start px-4 py-8 cursor-pointer hover:bg-white/10 transition-colors text-left relative"
               >
@@ -239,8 +228,8 @@ export default function Sidebar() {
                   }`}
                 />
               </button>
-              
-              <div 
+
+              <div
                 className={`grid transition-all duration-300 ease-in-out ${
                   isGroupExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                 }`}
@@ -254,6 +243,9 @@ export default function Sidebar() {
                           key={item.path}
                           href={item.path}
                           prefetch={true}
+                          onClick={() => {
+                            if (onItemClick) onItemClick();
+                          }}
                           onMouseEnter={() => handleMouseEnter(item.path)}
                           className={`w-full flex flex-col items-start justify-center px-6 py-2 transition-colors text-left ${
                             isActive ? "bg-white/20 font-bold" : "hover:bg-white/10 font-semibold"
@@ -270,6 +262,96 @@ export default function Sidebar() {
           );
         })}
       </nav>
-    </div>
+    );
+  };
+
+  return (
+    <>
+      {/* Desktop Sidebar (hidden on mobile, visible on md+) */}
+      <aside
+        aria-label="Desktop Navigation Sidebar"
+        className="relative hidden md:flex flex-col h-full bg-black text-white shadow-[4px_0_10px_rgba(0,0,0,0.15)] z-30 shrink-0 w-[160px]"
+      >
+        {/* Top Red Header Block */}
+        <Link
+          href="/"
+          className="w-full bg-[#db011c] text-white flex flex-col items-center justify-center shrink-0 border-b border-white/20 h-14 hover:bg-[#b80017] transition-colors group"
+        >
+          <img
+            src="/Milwaukee-logo-red.png"
+            alt="Milwaukee Logo"
+            className="h-8 w-auto object-contain brightness-0 invert"
+          />
+          <span className="text-[10px] transform scale-[0.7] origin-top font-black tracking-widest text-white/90 uppercase mt-0.5 opacity-90 group-hover:opacity-100 transition-opacity whitespace-nowrap text-center leading-none">
+            Factory Management
+          </span>
+        </Link>
+
+        {/* Navigation */}
+        {renderNavLinks()}
+      </aside>
+
+      {/* Mobile Drawer (visible on < md when isMobileNavOpen is true) */}
+      <Transition appear show={isMobileNavOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50 md:hidden" onClose={closeMobileNav}>
+          {/* Backdrop overlay */}
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-150"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-xs" aria-hidden="true" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 flex z-50">
+            <Transition.Child
+              as={Fragment}
+              enter="transition ease-out duration-300 transform"
+              enterFrom="-translate-x-full"
+              enterTo="translate-x-0"
+              leave="transition ease-in duration-200 transform"
+              leaveFrom="translate-x-0"
+              leaveTo="-translate-x-full"
+            >
+              <Dialog.Panel className="relative flex w-[220px] max-w-[80vw] flex-col h-full bg-black text-white shadow-2xl">
+                {/* Header with Brand and Close Button */}
+                <div className="flex items-center justify-between bg-[#db011c] text-white px-4 h-14 border-b border-white/20 shrink-0">
+                  <Link
+                    href="/"
+                    onClick={closeMobileNav}
+                    className="flex flex-col items-start justify-center group"
+                  >
+                    <img
+                      src="/Milwaukee-logo-red.png"
+                      alt="Milwaukee Logo"
+                      className="h-7 w-auto object-contain brightness-0 invert"
+                    />
+                    <span className="text-[9px] font-black tracking-widest text-white/90 uppercase mt-0.5 whitespace-nowrap">
+                      Factory Management
+                    </span>
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={closeMobileNav}
+                    aria-label="Close navigation"
+                    className="p-1.5 -mr-1 rounded-lg text-white/80 hover:text-white hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-white transition-colors cursor-pointer"
+                  >
+                    <XMarkIcon className="w-5 h-5 stroke-2" />
+                  </button>
+                </div>
+
+                {/* Navigation content with mobile close handler */}
+                {renderNavLinks(closeMobileNav)}
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
+    </>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useUser } from "@/app/context/UserContext";
-import { ArrowLeftOnRectangleIcon, UserCircleIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import { useNavigation } from "@/app/context/NavigationContext";
+import { ArrowLeftOnRectangleIcon, UserCircleIcon, ChevronDownIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -10,6 +11,7 @@ import { signOut, useSession } from "next-auth/react";
 export default function Header() {
   const pathname = usePathname();
   const { user } = useUser();
+  const { openMobileNav } = useNavigation();
   const { data: session } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -101,8 +103,16 @@ export default function Header() {
     <header className="sticky top-0 z-40 flex w-full bg-white shadow-sm border-b border-gray-200 h-14">
       <div className="flex flex-grow items-center justify-between px-6">
         
-        {/* Left Side: Page Title & Badge */}
-        <div className="flex items-center gap-3">
+        {/* Left Side: Hamburger Trigger & Page Title & Badge */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <button
+            type="button"
+            onClick={openMobileNav}
+            aria-label="Open navigation"
+            className="md:hidden p-1.5 -ml-2 rounded-lg text-gray-700 hover:text-black hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-[#db011c] cursor-pointer"
+          >
+            <Bars3Icon className="w-5 h-5 stroke-2" />
+          </button>
           <h2 className="text-sm font-black tracking-tighter uppercase text-[#212529] m-0 leading-none mt-0.5">
             {pageTitle}
           </h2>

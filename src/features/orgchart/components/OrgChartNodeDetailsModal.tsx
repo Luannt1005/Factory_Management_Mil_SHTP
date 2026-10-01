@@ -251,27 +251,27 @@ export default function OrgChartNodeDetailsModal({
                                             <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 text-center">Span of Control ({stats.total})</p>
                                             <div className="flex flex-wrap justify-center gap-2">
                                                 {stats.director > 0 && (
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-[var(--color-text-body)] border border-purple-200 dark:border-purple-800">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-[var(--color-text-body)] border border-purple-200">
                                                         Director: {stats.director}
                                                     </span>
                                                 )}
                                                 {stats.manager > 0 && (
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-[var(--color-text-body)] border border-blue-200 dark:border-blue-800">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-[var(--color-text-body)] border border-blue-200">
                                                         Manager: {stats.manager}
                                                     </span>
                                                 )}
                                                 {stats.supervisor > 0 && (
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-[var(--color-text-body)] border border-green-200 dark:border-green-800">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-[var(--color-text-body)] border border-green-200">
                                                         Supervisor: {stats.supervisor}
                                                     </span>
                                                 )}
                                                 {stats.specialist > 0 && (
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-[var(--color-text-body)] border border-orange-200 dark:border-orange-800">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-[var(--color-text-body)] border border-orange-200">
                                                         Specialist: {stats.specialist}
                                                     </span>
                                                 )}
                                                 {stats.engineer > 0 && (
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-teal-100 dark:bg-teal-900/30 text-[var(--color-text-body)] border border-teal-200 dark:border-teal-800">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-teal-100 text-[var(--color-text-body)] border border-teal-200">
                                                         Engineer: {stats.engineer}
                                                     </span>
                                                 )}
