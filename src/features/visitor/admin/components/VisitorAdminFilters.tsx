@@ -122,7 +122,7 @@ export default function VisitorAdminFilters({
                         value={localCode}
                         onChange={(e) => setLocalCode(e.target.value)}
                         placeholder="e.g. 2206"
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-mwk transition-all"
                     />
                 </div>
                 <div className="flex-1 min-w-[130px] max-w-[190px]">
@@ -132,7 +132,7 @@ export default function VisitorAdminFilters({
                         value={localSubmitter}
                         onChange={(e) => setLocalSubmitter(e.target.value)}
                         placeholder="Name, dept..."
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-mwk transition-all"
                     />
                 </div>
                 <div className="flex-1 min-w-[130px] max-w-[160px]">
@@ -141,7 +141,7 @@ export default function VisitorAdminFilters({
                         type="date" 
                         value={startDate}
                         onChange={(e) => onStartDateChange(e.target.value)}
-                        className="w-full px-2 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-[#db011c] transition-all"
+                        className="w-full px-2 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-mwk transition-all"
                     />
                 </div>
                 <div className="flex-[1.4] min-w-[240px] max-w-[280px]">
@@ -152,7 +152,7 @@ export default function VisitorAdminFilters({
                             value={completeStartDate}
                             onChange={(e) => onCompleteStartDateChange(e.target.value)}
                             title="Complete Date From"
-                            className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-[#db011c] transition-all"
+                            className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-mwk transition-all"
                         />
                         <span className="text-gray-400 text-xs">-</span>
                         <input 
@@ -160,7 +160,7 @@ export default function VisitorAdminFilters({
                             value={completeEndDate}
                             onChange={(e) => onCompleteEndDateChange(e.target.value)}
                             title="Complete Date To"
-                            className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-[#db011c] transition-all"
+                            className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-mwk transition-all"
                         />
                     </div>
                 </div>

@@ -79,7 +79,7 @@ export default function VisitorDetailModal({
             onClick={onClose}
         >
             <div
-                className="bg-white w-full max-w-2xl max-h-full overflow-y-auto rounded-2xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200 border-t-[8px] border-t-[#db011c] custom-scrollbar flex flex-col"
+                className="bg-white w-full max-w-2xl max-h-full overflow-y-auto rounded-2xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200 border-t-[8px] border-t-mwk custom-scrollbar flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6 pb-2 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10">
@@ -102,7 +102,7 @@ export default function VisitorDetailModal({
                                 {visitorsList.map((v: VisitorAdminVisitorItem, i: number) => (
                                     <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 bg-gray-50/50 px-4 py-2.5 rounded-lg border border-gray-100 transition-colors hover:bg-gray-50">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                            <div className="w-2 h-2 rounded-full bg-mwk shrink-0"></div>
                                             <h3 className="text-sm font-extrabold text-[#0f172a] truncate">{v.name || 'Unnamed'}</h3>
                                         </div>
                                         <div className="flex flex-col text-[11px] text-gray-500 font-medium sm:text-right ml-5 sm:ml-0 gap-0.5">
@@ -122,7 +122,7 @@ export default function VisitorDetailModal({
                                     {visitorsList.map((v: VisitorAdminVisitorItem, i: number) => (
                                         <div key={i} className="flex items-center justify-between gap-2 bg-gray-50/50 px-4 py-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
                                             <div className="flex items-center gap-3 overflow-hidden">
-                                                <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                                <div className="w-2 h-2 rounded-full bg-mwk shrink-0"></div>
                                                 <div className="overflow-hidden">
                                                     <h3 className="text-sm font-extrabold text-[#0f172a] truncate">{v.name || request.visitor_name || request.interviewee_name || 'Candidate'}</h3>
                                                     <p className="text-xs text-gray-500 font-medium truncate">
@@ -342,7 +342,7 @@ export default function VisitorDetailModal({
                 <div className="p-6 bg-gray-50/50 flex justify-end gap-3 rounded-b-2xl">
                     <button 
                         onClick={onClose} 
-                        className="px-6 py-2.5 text-sm font-bold rounded-xl text-white bg-[#db011c] hover:bg-[#b00116] shadow-md shadow-red-500/20 transition-all flex items-center gap-2"
+                        className="px-6 py-2.5 text-sm font-bold rounded-xl text-white bg-mwk hover:bg-mwk-hover shadow-md shadow-red-500/20 transition-all flex items-center gap-2"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
                         Close

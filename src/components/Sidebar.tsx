@@ -2,8 +2,8 @@
 
 import { useState, useCallback, Fragment } from "react";
 import Link from "next/link";
-import { useUser } from "@/app/context/UserContext";
-import { useNavigation } from "@/app/context/NavigationContext";
+import { useUser } from "@/contexts/UserContext";
+import { useNavigation } from "@/contexts/NavigationContext";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Dialog, Transition } from "@headlessui/react";
@@ -275,7 +275,7 @@ export default function Sidebar() {
         {/* Top Red Header Block */}
         <Link
           href="/"
-          className="w-full bg-[#db011c] text-white flex flex-col items-center justify-center shrink-0 border-b border-white/20 h-14 hover:bg-[#b80017] transition-colors group"
+          className="w-full bg-mwk text-white flex flex-col items-center justify-center shrink-0 border-b border-white/20 h-14 hover:bg-[#b80017] transition-colors group"
         >
           <img
             src="/Milwaukee-logo-red.png"
@@ -319,7 +319,7 @@ export default function Sidebar() {
             >
               <Dialog.Panel className="relative flex w-[220px] max-w-[80vw] flex-col h-full bg-black text-white shadow-2xl">
                 {/* Header with Brand and Close Button */}
-                <div className="flex items-center justify-between bg-[#db011c] text-white px-4 h-14 border-b border-white/20 shrink-0">
+                <div className="flex items-center justify-between bg-mwk text-white px-4 h-14 border-b border-white/20 shrink-0">
                   <Link
                     href="/"
                     onClick={closeMobileNav}

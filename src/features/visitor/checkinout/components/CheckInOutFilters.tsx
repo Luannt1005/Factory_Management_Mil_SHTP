@@ -73,7 +73,7 @@ export default function CheckInOutFilters({
                     <input
                         type="text"
                         placeholder="ID, Submitter, Name..."
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-mwk"
                         value={filters.search}
                         onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
                         onKeyDown={onSearchKeyDown}
@@ -84,7 +84,7 @@ export default function CheckInOutFilters({
                     <input
                         type="text"
                         placeholder="Name..."
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-[#db011c]"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-mwk"
                         value={filters.visitorName}
                         onChange={(e) => onFiltersChange({ ...filters, visitorName: e.target.value })}
                     />
@@ -94,13 +94,13 @@ export default function CheckInOutFilters({
                     <div className="flex w-full">
                         <input
                             type="date"
-                            className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded-l text-sm focus:outline-none focus:border-[#db011c]"
+                            className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded-l text-sm focus:outline-none focus:border-mwk"
                             value={filters.date}
                             onChange={(e) => onFiltersChange({ ...filters, date: e.target.value })}
                         />
                         <button
                             onClick={() => onFiltersChange({ ...filters, date: todayStr })}
-                            className={`px-2.5 text-xs font-bold uppercase rounded-r transition-colors border border-l-0 ${filters.date === todayStr ? 'bg-[#db011c] text-white border-[#db011c]' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 border-gray-300'}`}
+                            className={`px-2.5 text-xs font-bold uppercase rounded-r transition-colors border border-l-0 ${filters.date === todayStr ? 'bg-mwk text-white border-mwk' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 border-gray-300'}`}
                         >
                             Today
                         </button>
@@ -143,13 +143,13 @@ export default function CheckInOutFilters({
                     <div className="flex w-full bg-gray-200 p-1 rounded justify-between h-[38px]">
                         <button
                             onClick={() => onViewModeChange('group')}
-                            className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'group' ? 'bg-white shadow-sm text-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'group' ? 'bg-white shadow-sm text-mwk' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             Group
                         </button>
                         <button
                             onClick={() => onViewModeChange('visitor')}
-                            className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'visitor' ? 'bg-white shadow-sm text-[#db011c]' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`flex-1 px-1 py-1 text-[10px] font-bold uppercase rounded transition-colors ${viewMode === 'visitor' ? 'bg-white shadow-sm text-mwk' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             Visitor
                         </button>
@@ -169,7 +169,7 @@ export default function CheckInOutFilters({
                 {hasActiveFilters && (
                     <button
                         onClick={onClearAllFilters}
-                        className="text-xs font-bold text-[#db011c] hover:underline underline-offset-4 flex items-center gap-1"
+                        className="text-xs font-bold text-mwk hover:underline underline-offset-4 flex items-center gap-1"
                         title="Clear all filters"
                     >
                         <span>✕</span> Clear all filters

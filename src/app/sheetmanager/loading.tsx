@@ -9,7 +9,7 @@ export default function Loading() {
             {/* Header Skeleton */}
             <div className={styles.header}>
                 <div className="flex items-center gap-4">
-                    <ShieldCheckIcon className="w-8 h-8 text-[#DB011C]" />
+                    <ShieldCheckIcon className="w-8 h-8 text-mwk" />
                     <h1>Milwaukee Tool HR Registry</h1>
                 </div>
                 <div className="flex items-center gap-3">

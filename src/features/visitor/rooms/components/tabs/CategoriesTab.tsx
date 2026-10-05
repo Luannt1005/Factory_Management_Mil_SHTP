@@ -155,7 +155,7 @@ export function CategoriesTab({
                                             </td>
                                             <td className="p-5 text-right">
                                                 <div className="flex gap-3 justify-end">
-                                                    <button onClick={() => onEdit(cat)} className="text-[#db011c] font-bold hover:underline text-xs">Edit</button>
+                                                    <button onClick={() => onEdit(cat)} className="text-mwk font-bold hover:underline text-xs">Edit</button>
                                                     <button onClick={() => onDelete(cat.id)} className="text-red-500 font-bold hover:underline text-xs">Delete</button>
                                                 </div>
                                             </td>

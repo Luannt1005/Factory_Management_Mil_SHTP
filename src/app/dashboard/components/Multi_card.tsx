@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import type { EmployeeFilter } from '../page';
-import { OrgNode } from '@/types/orgchart';
+import type { OrgNode } from '@/types/orgchart.types';
 import { MetricCard } from '@/components/dashboard';
 
 interface StatsCardsProps {

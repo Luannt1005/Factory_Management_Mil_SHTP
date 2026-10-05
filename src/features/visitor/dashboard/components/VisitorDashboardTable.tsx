@@ -150,7 +150,7 @@ export function VisitorDashboardTable({
                     </span>
                 </td>
                 <td className="px-6 py-5 text-right pr-8">
-                    <button className="text-[11px] font-black text-[#db011c] uppercase tracking-tighter hover:underline">
+                    <button className="text-[11px] font-black text-mwk uppercase tracking-tighter hover:underline">
                         View Details &rarr;
                     </button>
                 </td>
@@ -245,7 +245,7 @@ export function VisitorDashboardTable({
                         )}
                         <button
                             onClick={() => onView(request)}
-                            className="text-[11px] font-black text-[#db011c] uppercase tracking-tighter hover:underline ml-1"
+                            className="text-[11px] font-black text-mwk uppercase tracking-tighter hover:underline ml-1"
                         >
                             View Details &rarr;
                         </button>
@@ -323,7 +323,7 @@ export function VisitorDashboardTable({
                                 }}
                                 className={`w-8 h-8 text-[11px] font-black rounded-lg transition-all ${
                                     pagination.page === pageNum
-                                        ? 'bg-[#db011c] text-white shadow-md'
+                                        ? 'bg-mwk text-white shadow-md'
                                         : 'bg-white text-gray-600 border border-gray-300 hover:border-gray-400'
                                 }`}
                             >

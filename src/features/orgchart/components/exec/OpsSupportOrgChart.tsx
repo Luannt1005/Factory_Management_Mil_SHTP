@@ -172,7 +172,7 @@ export default function OpsSupportOrgChart() {
       .toUpperCase() || name.slice(0, 2).toUpperCase();
 
     return (
-      <div className={`${className} bg-gradient-to-br from-[#db011c] to-[#900112] text-white flex flex-col items-center justify-center font-black text-xs rounded border border-red-700 select-none shadow-md shrink-0`}>
+      <div className={`${className} bg-gradient-to-br from-mwk to-[#900112] text-white flex flex-col items-center justify-center font-black text-xs rounded border border-red-700 select-none shadow-md shrink-0`}>
         <span className="text-[7px] opacity-70 tracking-widest leading-none mb-0.5">MIL</span>
         <span>{initials}</span>
       </div>
@@ -208,7 +208,7 @@ export default function OpsSupportOrgChart() {
           onClick={(e) => { e.stopPropagation(); setSelectedEmp(emp); }}
         >
           {/* Category Header */}
-          <div className="w-full bg-[#db011c] text-white text-center py-0.5 px-1 font-black tracking-wider text-[9px] sm:text-[10px] uppercase truncate">
+          <div className="w-full bg-mwk text-white text-center py-0.5 px-1 font-black tracking-wider text-[9px] sm:text-[10px] uppercase truncate">
             {label}
           </div>
           
@@ -269,7 +269,7 @@ export default function OpsSupportOrgChart() {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Banner */}
-          <div className="h-16 bg-[#db011c] relative flex items-center justify-center overflow-hidden shrink-0">
+          <div className="h-16 bg-mwk relative flex items-center justify-center overflow-hidden shrink-0">
              <div className="absolute inset-0 opacity-10 bg-[url('/grid-pattern.svg')] bg-center"></div>
              <img src="/logo.png" alt="Milwaukee" className="h-5 opacity-90 drop-shadow-md z-10" onError={(e) => e.currentTarget.style.display = 'none'} />
              <button 
@@ -289,7 +289,7 @@ export default function OpsSupportOrgChart() {
               {!isError ? (
                 <img src={photoUrl} alt={name} className="w-full h-full object-cover" onError={() => handleImgError(cleanId)} />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#db011c] to-[#900112] text-white flex flex-col items-center justify-center font-black text-xl">
+                <div className="w-full h-full bg-gradient-to-br from-mwk to-[#900112] text-white flex flex-col items-center justify-center font-black text-xl">
                   <span className="text-[9px] opacity-70 tracking-widest leading-none mb-1">MIL</span>
                   <span>{initials}</span>
                 </div>
@@ -398,7 +398,7 @@ export default function OpsSupportOrgChart() {
         {/* Level 0: Root (Nguyễn Nhã Quyên) */}
         <div className="w-full flex justify-center relative mb-0">
           {root && (
-            <div className="flex flex-col items-center bg-[#db011c] text-white p-1.5 sm:p-2 rounded-lg shadow-md border border-red-700 w-full max-w-[170px]">
+            <div className="flex flex-col items-center bg-mwk text-white p-1.5 sm:p-2 rounded-lg shadow-md border border-red-700 w-full max-w-[170px]">
               <div className="flex gap-2 items-center">
                 {renderPhoto(root.emp_id, mapNameToChart(root), "w-9 h-11 border border-white/20")}
                 <div className="text-left">

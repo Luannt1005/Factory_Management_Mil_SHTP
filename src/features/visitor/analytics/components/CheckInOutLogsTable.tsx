@@ -271,7 +271,7 @@ export default function CheckInOutLogsTable() {
                                         setSearch(e.target.value);
                                         setPage(1);
                                     }}
-                                    className="w-full pl-8 pr-3 py-2 bg-gray-50/50 border border-gray-300 rounded-lg text-xs font-medium focus:outline-none focus:border-[#db011c] focus:bg-white transition-colors"
+                                    className="w-full pl-8 pr-3 py-2 bg-gray-50/50 border border-gray-300 rounded-lg text-xs font-medium focus:outline-none focus:border-mwk focus:bg-white transition-colors"
                                 />
                                 <svg className="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -290,7 +290,7 @@ export default function CheckInOutLogsTable() {
                                     setActionFilter(e.target.value);
                                     setPage(1);
                                 }}
-                                className="w-full px-3 py-2 bg-gray-50/50 border border-gray-300 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#db011c] focus:bg-white transition-colors"
+                                className="w-full px-3 py-2 bg-gray-50/50 border border-gray-300 rounded-lg text-xs font-semibold focus:outline-none focus:border-mwk focus:bg-white transition-colors"
                             >
                                 <option value="ALL">All Actions</option>
                                 <option value="CHECK_IN">Check In (CHECK_IN)</option>
@@ -311,7 +311,7 @@ export default function CheckInOutLogsTable() {
                                     setOperatorFilter(e.target.value);
                                     setPage(1);
                                 }}
-                                className="w-full px-3 py-2 bg-gray-50/50 border border-gray-300 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#db011c] focus:bg-white transition-colors truncate"
+                                className="w-full px-3 py-2 bg-gray-50/50 border border-gray-300 rounded-lg text-xs font-semibold focus:outline-none focus:border-mwk focus:bg-white transition-colors truncate"
                             >
                                 <option value="ALL">All SSO Operators ({operators.length})</option>
                                 {operators.map((op) => (
@@ -333,25 +333,25 @@ export default function CheckInOutLogsTable() {
                             <div className="flex bg-gray-100 p-1 rounded-lg gap-1 h-[38px] items-center">
                                 <button
                                     onClick={() => handleDatePreset('all')}
-                                    className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${quickDatePreset === 'all' && !startDate && !endDate ? 'bg-white shadow-xs text-[#db011c]' : 'text-gray-600 hover:text-gray-900'}`}
+                                    className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${quickDatePreset === 'all' && !startDate && !endDate ? 'bg-white shadow-xs text-mwk' : 'text-gray-600 hover:text-gray-900'}`}
                                 >
                                     All Time
                                 </button>
                                 <button
                                     onClick={() => handleDatePreset('today')}
-                                    className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${quickDatePreset === 'today' ? 'bg-white shadow-xs text-[#db011c]' : 'text-gray-600 hover:text-gray-900'}`}
+                                    className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${quickDatePreset === 'today' ? 'bg-white shadow-xs text-mwk' : 'text-gray-600 hover:text-gray-900'}`}
                                 >
                                     Today
                                 </button>
                                 <button
                                     onClick={() => handleDatePreset('week')}
-                                    className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${quickDatePreset === 'week' ? 'bg-white shadow-xs text-[#db011c]' : 'text-gray-600 hover:text-gray-900'}`}
+                                    className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${quickDatePreset === 'week' ? 'bg-white shadow-xs text-mwk' : 'text-gray-600 hover:text-gray-900'}`}
                                 >
                                     Week
                                 </button>
                                 <button
                                     onClick={() => handleDatePreset('month')}
-                                    className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${quickDatePreset === 'month' ? 'bg-white shadow-xs text-[#db011c]' : 'text-gray-600 hover:text-gray-900'}`}
+                                    className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${quickDatePreset === 'month' ? 'bg-white shadow-xs text-mwk' : 'text-gray-600 hover:text-gray-900'}`}
                                 >
                                     Month
                                 </button>
@@ -372,7 +372,7 @@ export default function CheckInOutLogsTable() {
                                         setQuickDatePreset('all');
                                         setPage(1);
                                     }}
-                                    className="flex-1 px-2.5 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-[#db011c]"
+                                    className="flex-1 px-2.5 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-mwk"
                                 />
                                 <span className="text-gray-400 text-xs font-bold">to</span>
                                 <input
@@ -383,7 +383,7 @@ export default function CheckInOutLogsTable() {
                                         setQuickDatePreset('all');
                                         setPage(1);
                                     }}
-                                    className="flex-1 px-2.5 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-[#db011c]"
+                                    className="flex-1 px-2.5 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-mwk"
                                 />
                             </div>
                         </div>
@@ -430,7 +430,7 @@ export default function CheckInOutLogsTable() {
                                         setQuickTimePreset('all');
                                         setPage(1);
                                     }}
-                                    className="flex-1 px-2 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-[#db011c]"
+                                    className="flex-1 px-2 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-mwk"
                                     title="Start Hour (Giờ bắt đầu)"
                                 />
                                 <span className="text-gray-400 text-xs font-bold">to</span>
@@ -442,7 +442,7 @@ export default function CheckInOutLogsTable() {
                                         setQuickTimePreset('all');
                                         setPage(1);
                                     }}
-                                    className="flex-1 px-2 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-[#db011c]"
+                                    className="flex-1 px-2 py-1.5 bg-gray-50/50 border border-gray-300 rounded-lg text-xs text-gray-700 font-medium focus:outline-none focus:border-mwk"
                                     title="End Hour (Giờ kết thúc)"
                                 />
                                 {(startTime || endTime) && (
@@ -472,7 +472,7 @@ export default function CheckInOutLogsTable() {
                             {hasActiveFilters && (
                                 <button
                                     onClick={resetAllFilters}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-[#db011c] bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-mwk bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -503,7 +503,7 @@ export default function CheckInOutLogsTable() {
                                 className="p-1.5 text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                                 title="Refresh Logs"
                             >
-                                <svg className={`w-4 h-4 ${loading ? 'animate-spin text-[#db011c]' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className={`w-4 h-4 ${loading ? 'animate-spin text-mwk' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                             </button>
@@ -554,7 +554,7 @@ export default function CheckInOutLogsTable() {
                                 <tr>
                                     <td colSpan={7} className="py-16 text-center text-gray-500">
                                         <div className="flex flex-col items-center justify-center gap-2">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#db011c]"></div>
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mwk"></div>
                                             <span className="text-xs font-semibold">Loading action logs...</span>
                                         </div>
                                     </td>
@@ -590,7 +590,7 @@ export default function CheckInOutLogsTable() {
                                         {/* SSO Operator */}
                                         <td className="py-3.5 px-4">
                                             <div className="flex items-start gap-2">
-                                                <div className="w-7 h-7 rounded-full bg-red-100 text-[#db011c] font-black text-xs flex items-center justify-center shrink-0 uppercase shadow-xs">
+                                                <div className="w-7 h-7 rounded-full bg-red-100 text-mwk font-black text-xs flex items-center justify-center shrink-0 uppercase shadow-xs">
                                                     {(log.performedByName || log.performedBy || 'U').charAt(0)}
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
@@ -627,7 +627,7 @@ export default function CheckInOutLogsTable() {
                                                     {log.visitorName || '-'}
                                                 </span>
                                                 {log.visitorCode && (
-                                                    <span className="text-[10px] font-mono text-[#db011c] font-bold truncate">
+                                                    <span className="text-[10px] font-mono text-mwk font-bold truncate">
                                                         {log.visitorCode.replace(/^#/, '')}
                                                     </span>
                                                 )}
@@ -684,7 +684,7 @@ export default function CheckInOutLogsTable() {
                                         setLimit(parseInt(e.target.value, 10));
                                         setPage(1);
                                     }}
-                                    className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-semibold focus:outline-none focus:border-[#db011c]"
+                                    className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-semibold focus:outline-none focus:border-mwk"
                                 >
                                     <option value={15}>15</option>
                                     <option value={25}>25</option>
@@ -715,7 +715,7 @@ export default function CheckInOutLogsTable() {
                                                     onClick={() => setPage(p)}
                                                     className={`w-7 h-7 text-xs font-black rounded-md transition-all flex items-center justify-center ${
                                                         page === p
-                                                            ? 'bg-[#db011c] text-white shadow-sm'
+                                                            ? 'bg-mwk text-white shadow-sm'
                                                             : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
                                                     }`}
                                                 >

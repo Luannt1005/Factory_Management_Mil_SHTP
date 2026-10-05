@@ -104,13 +104,13 @@ export function UserManagementTable({
                             placeholder="Name, email, or employee ID"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c]"
+                            className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-mwk focus:border-mwk"
                         />
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold text-gray-500">Status</span>
                         <select
-                            className="text-xs border border-gray-200 rounded-full px-3 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-[#db011c]"
+                            className="text-xs border border-gray-200 rounded-full px-3 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-mwk"
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                         >

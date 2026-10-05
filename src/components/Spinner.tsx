@@ -13,7 +13,7 @@ const sizeClasses = {
 };
 
 const colorClasses = {
-    primary: 'border-gray-200 border-t-[#DB011C]',
+    primary: 'border-gray-200 border-t-mwk',
     white: 'border-white/30 border-t-white',
     gray: 'border-gray-100 border-t-gray-500',
 };
@@ -39,9 +39,9 @@ export default function Spinner({
 export function BouncingDots({ className = '' }: { className?: string }) {
     return (
         <div className={`flex items-center gap-1 ${className}`}>
-            <div className="w-2 h-2 bg-[#DB011C] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-2 h-2 bg-[#DB011C] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-2 h-2 bg-[#DB011C] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="w-2 h-2 bg-mwk rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-mwk rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-mwk rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
     );
 }
@@ -50,8 +50,8 @@ export function BouncingDots({ className = '' }: { className?: string }) {
 export function PulsingRing({ className = '' }: { className?: string }) {
     return (
         <div className={`relative w-10 h-10 ${className}`}>
-            <div className="absolute inset-0 border-4 border-[#DB011C]/20 rounded-full" />
-            <div className="absolute inset-0 border-4 border-transparent border-t-[#DB011C] rounded-full animate-spin" />
+            <div className="absolute inset-0 border-4 border-mwk/20 rounded-full" />
+            <div className="absolute inset-0 border-4 border-transparent border-t-mwk rounded-full animate-spin" />
             <div className="absolute inset-2 border-2 border-transparent border-b-[#ff6b6b] rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
         </div>
     );

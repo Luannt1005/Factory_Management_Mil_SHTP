@@ -67,11 +67,11 @@ export default function VisitorViewTable({
                                             e.stopPropagation();
                                             onOpenModal(req);
                                         }}
-                                        className="text-[11px] font-bold text-gray-900 hover:text-[#db011c] cursor-pointer truncate underline-offset-2 hover:underline flex items-center gap-1 max-w-[110px]"
+                                        className="text-[11px] font-bold text-gray-900 hover:text-mwk cursor-pointer truncate underline-offset-2 hover:underline flex items-center gap-1 max-w-[110px]"
                                         title={`Mở Modal Check-In cho đơn ${req.requestCode || req.requestId}`}
                                     >
                                         <span className="truncate">{req.requestCode || req.requestId}</span>
-                                        <span className="text-[9px] text-[#db011c] shrink-0">↗</span>
+                                        <span className="text-[9px] text-mwk shrink-0">↗</span>
                                     </div>
                                 </td>
                                 <td className="py-3 px-3">
@@ -80,7 +80,7 @@ export default function VisitorViewTable({
                                     </div>
                                 </td>
                                 <td className="py-3 px-3">
-                                    <div className="text-xs font-black text-[#db011c] truncate" title={v.visitorCode}>
+                                    <div className="text-xs font-black text-mwk truncate" title={v.visitorCode}>
                                         {v.visitorCode}
                                     </div>
                                 </td>
@@ -114,7 +114,7 @@ export default function VisitorViewTable({
                                         <input
                                             type="text"
                                             placeholder="Card No."
-                                            className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] text-center"
+                                            className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-mwk text-center"
                                             value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
                                             onChange={(e) => onCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
                                             onBlur={() => {
@@ -148,7 +148,7 @@ export default function VisitorViewTable({
                                                 className={`whitespace-nowrap text-[9px] font-bold uppercase px-2 py-1.5 rounded shadow-sm transition-colors ${
                                                     v.checkInOutStatus !== 'PENDING'
                                                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                                        : 'bg-[#db011c] hover:bg-[#b00116] text-white'
+                                                        : 'bg-mwk hover:bg-mwk-hover text-white'
                                                 }`}
                                             >
                                                 Check In

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Expose Milwaukee brand tokens as Tailwind utilities (bg-mwk, text-mwk, border-mwk, hover:bg-mwk-hover, ...) */
+@theme inline {
+  --color-mwk: var(--color-primary-mwk);
+  --color-mwk-hover: var(--dashboard-primary-hover);
+  --color-mwk-dark: var(--color-primary-mwk-dark);
+}
 
 
 /* ========================================

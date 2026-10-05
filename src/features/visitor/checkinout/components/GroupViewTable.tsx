@@ -69,7 +69,7 @@ export default function GroupViewTable({
                                                     e.stopPropagation();
                                                     onOpenModal(req);
                                                 }}
-                                                className="hover:text-[#db011c] hover:underline cursor-pointer truncate max-w-[140px]"
+                                                className="hover:text-mwk hover:underline cursor-pointer truncate max-w-[140px]"
                                                 title={req.requestCode || req.requestId}
                                             >
                                                 {req.requestCode || req.requestId}
@@ -79,7 +79,7 @@ export default function GroupViewTable({
                                                     e.stopPropagation();
                                                     onOpenModal(req);
                                                 }}
-                                                className="px-1.5 py-0.5 text-[9px] font-bold text-white bg-[#db011c] hover:bg-[#b00116] rounded shadow-2xs shrink-0"
+                                                className="px-1.5 py-0.5 text-[9px] font-bold text-white bg-mwk hover:bg-mwk-hover rounded shadow-2xs shrink-0"
                                                 title="Mở Modal Check In/Out"
                                             >
                                                 Modal
@@ -139,7 +139,7 @@ export default function GroupViewTable({
                                                         <tbody className="divide-y divide-gray-100">
                                                             {req.filteredVisitors.map((v: CheckInOutVisitorRecord, vIdx: number) => (
                                                                 <tr key={vIdx} className="hover:bg-gray-50/80 transition-colors">
-                                                                    <td className="py-2.5 px-3 text-xs font-black text-[#db011c] truncate">{v.visitorCode}</td>
+                                                                    <td className="py-2.5 px-3 text-xs font-black text-mwk truncate">{v.visitorCode}</td>
                                                                     <td className="py-2.5 px-3 text-xs font-bold text-gray-900 truncate max-w-[180px]">{v.visitorName}</td>
                                                                     <td className="py-2.5 px-3 text-[11px] font-bold text-gray-700 truncate max-w-[140px]">{req.submitterName || '-'}</td>
                                                                     <td className="py-2.5 px-3 text-[11px] text-gray-600 truncate max-w-[120px]">{v.visitorTitle || '-'}</td>
@@ -150,7 +150,7 @@ export default function GroupViewTable({
                                                                             <input
                                                                                 type="text"
                                                                                 placeholder="Card No."
-                                                                                className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-[#db011c] text-center"
+                                                                                className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-mwk text-center"
                                                                                 value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
                                                                                 onChange={(e) => onCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
                                                                                 onBlur={() => {
@@ -180,7 +180,7 @@ export default function GroupViewTable({
                                                                                     className={`whitespace-nowrap text-[9px] font-bold uppercase px-2 py-1.5 rounded shadow-sm transition-colors ${
                                                                                         v.checkInOutStatus !== 'PENDING'
                                                                                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                                                                            : 'bg-[#db011c] hover:bg-[#b00116] text-white'
+                                                                                            : 'bg-mwk hover:bg-mwk-hover text-white'
                                                                                     }`}
                                                                                 >
                                                                                     Check In

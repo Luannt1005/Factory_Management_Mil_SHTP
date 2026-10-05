@@ -48,7 +48,7 @@ export default function MeetingRoomCascader({
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <span className="truncate block pr-4">{value || 'Select Meeting Room'}</span>
-                <svg className={`w-4 h-4 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180 text-[#db011c]' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                <svg className={`w-4 h-4 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180 text-mwk' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </div>
 
             {isOpen && (
@@ -66,7 +66,7 @@ export default function MeetingRoomCascader({
                                             key={floor}
                                             onMouseEnter={() => setHoveredFloor(floor)}
                                             onClick={() => setHoveredFloor(floor)}
-                                            className={`px-3 py-2.5 mx-2 rounded-lg text-sm cursor-pointer flex justify-between items-center transition-all duration-200 ${hoveredFloor === floor ? 'bg-white text-[#db011c] font-bold shadow-sm ring-1 ring-gray-100' : 'text-gray-600 hover:bg-gray-100'}`}
+                                            className={`px-3 py-2.5 mx-2 rounded-lg text-sm cursor-pointer flex justify-between items-center transition-all duration-200 ${hoveredFloor === floor ? 'bg-white text-mwk font-bold shadow-sm ring-1 ring-gray-100' : 'text-gray-600 hover:bg-gray-100'}`}
                                         >
                                             <span className="truncate pr-2">{floor}</span>
                                             <svg className={`w-4 h-4 flex-shrink-0 transition-opacity ${hoveredFloor === floor ? 'opacity-100' : 'opacity-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
@@ -84,7 +84,7 @@ export default function MeetingRoomCascader({
                                             {groupedRooms[hoveredFloor].map((room: any) => (
                                                 <li 
                                                     key={room.id}
-                                                    className="px-3 py-2.5 mx-2 rounded-lg text-sm text-gray-700 hover:bg-red-50 hover:text-[#db011c] cursor-pointer font-medium transition-colors truncate"
+                                                    className="px-3 py-2.5 mx-2 rounded-lg text-sm text-gray-700 hover:bg-red-50 hover:text-mwk cursor-pointer font-medium transition-colors truncate"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         onChange(room.roomName);

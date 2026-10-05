@@ -35,7 +35,7 @@ const SplitBlock = ({ img, title, desc, dark, reverse, badge }: any) => (
     </div>
     <div className={`flex flex-col justify-center p-8 lg:p-24 text-[#212529] border-t lg:border-t-0 border-b border-gray-200`}>
       <AnimatedSection direction={reverse ? "left" : "right"}>
-        {badge && <span className="block mb-4 text-[#db011c] font-black uppercase tracking-widest text-sm">{badge}</span>}
+        {badge && <span className="block mb-4 text-mwk font-black uppercase tracking-widest text-sm">{badge}</span>}
         <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter mb-6 leading-[0.9]">
           {title}
         </h2>
@@ -55,7 +55,7 @@ const SplitVideoBlock = ({ video, title, desc, dark, reverse, badge }: any) => (
     </div>
     <div className={`flex flex-col justify-center p-8 lg:p-24 text-[#212529] border-t lg:border-t-0 border-b border-gray-200`}>
       <AnimatedSection direction={reverse ? "left" : "right"}>
-        {badge && <span className="block mb-4 text-[#db011c] font-black uppercase tracking-widest text-sm">{badge}</span>}
+        {badge && <span className="block mb-4 text-mwk font-black uppercase tracking-widest text-sm">{badge}</span>}
         <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter mb-6 leading-[0.9]">
           {title}
         </h2>
@@ -112,7 +112,7 @@ function ConstructionTabs() {
           >
             {tab.title}
             {activeTab === idx && (
-              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#db011c]" />
+              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-mwk" />
             )}
           </button>
         ))}
@@ -127,9 +127,9 @@ function ConstructionTabs() {
           
           <div className="flex flex-col gap-4">
             <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#db011c] mt-2 shrink-0"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-mwk mt-2 shrink-0"></div>
               <div>
-                <p className="text-sm font-bold text-[#db011c] uppercase tracking-widest mb-1">Milestone</p>
+                <p className="text-sm font-bold text-mwk uppercase tracking-widest mb-1">Milestone</p>
                 <p className="text-gray-700 text-lg leading-relaxed">{data.desc}</p>
               </div>
             </div>
@@ -158,8 +158,8 @@ function QuickStats() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {stats.map((stat, idx) => (
           <AnimatedSection key={idx} direction="up" delay={idx * 100}>
-            <div className="bg-white rounded-md shadow-sm border border-gray-100 border-t-4 border-t-[#db011c] p-6 flex flex-col justify-center h-full relative overflow-hidden">
-              <h4 className={`text-3xl font-black mb-2 uppercase tracking-tight ${stat.isGold ? 'text-[#cfa03f]' : 'text-[#db011c]'}`}>
+            <div className="bg-white rounded-md shadow-sm border border-gray-100 border-t-4 border-t-mwk p-6 flex flex-col justify-center h-full relative overflow-hidden">
+              <h4 className={`text-3xl font-black mb-2 uppercase tracking-tight ${stat.isGold ? 'text-[#cfa03f]' : 'text-mwk'}`}>
                 {stat.value}
               </h4>
               <p className="text-gray-500 text-sm font-medium">{stat.label}</p>
@@ -183,7 +183,7 @@ function BuildingOutlookSection() {
       <div className="w-full px-8 lg:px-24 mb-8">
         <AnimatedSection direction="up">
            <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight leading-tight">
-             BUILDING <span className="text-[#db011c]">OUTLOOK</span>
+             BUILDING <span className="text-mwk">OUTLOOK</span>
            </h3>
         </AnimatedSection>
       </div>
@@ -248,7 +248,7 @@ export default function SHTPLandingPage() {
           <div className="flex flex-col gap-16">
             <AnimatedSection direction="up" className="flex flex-col justify-center text-center">
               <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-8">
-                01. FACILITY <span className="text-[#db011c]">OVERVIEW</span>
+                01. FACILITY <span className="text-mwk">OVERVIEW</span>
               </h2>
               <p className="text-xl text-gray-700 leading-relaxed font-normal mb-12 max-w-4xl mx-auto">
                 Our state-of-the-art manufacturing campus in Saigon Hi-Tech Park is designed for innovation, optimal assembly, and world-class operations. The facility maximizes logistical flow and provides secure access for both heavy machinery and daily commuters.
@@ -262,7 +262,7 @@ export default function SHTPLandingPage() {
                   { label: "Status", value: "Operational" },
                 ].map((stat, idx) => (
                   <div key={idx} className="text-center">
-                    <p className="text-[#db011c] font-black uppercase tracking-widest text-xs mb-2">{stat.label}</p>
+                    <p className="text-mwk font-black uppercase tracking-widest text-xs mb-2">{stat.label}</p>
                     <p className="text-2xl font-black uppercase tracking-tight">{stat.value}</p>
                   </div>
                 ))}
@@ -281,7 +281,7 @@ export default function SHTPLandingPage() {
         <div className="py-24 px-8 lg:px-24 w-full text-left border-b border-gray-200">
           <AnimatedSection direction="up">
              <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-6">
-                02. CONSTRUCTION <span className="text-[#db011c]">JOURNEY</span>
+                02. CONSTRUCTION <span className="text-mwk">JOURNEY</span>
              </h2>
              <p className="text-xl text-gray-600 font-normal max-w-3xl">
                 Witness the dynamic development of our manufacturing facility, from ground breaking to the final building exterior.
@@ -300,7 +300,7 @@ export default function SHTPLandingPage() {
         <div className="w-full px-8 lg:px-24 mb-12">
           <AnimatedSection direction="up" className="text-left">
              <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-6">
-                03. ORGANIZATIONAL <span className="text-[#db011c]">STRUCTURE</span>
+                03. ORGANIZATIONAL <span className="text-mwk">STRUCTURE</span>
              </h2>
              <p className="text-xl text-gray-700 font-normal max-w-3xl">
                 Our leadership and core team directing local operations, along with the functional hierarchy managing daily processes.
@@ -338,7 +338,7 @@ export default function SHTPLandingPage() {
         <div className="w-full px-8 lg:px-24 mb-16 text-left">
           <AnimatedSection direction="up">
              <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9]">
-                04. FACILITY <span className="text-[#db011c]">LAYOUTS</span>
+                04. FACILITY <span className="text-mwk">LAYOUTS</span>
              </h2>
           </AnimatedSection>
         </div>
@@ -346,7 +346,7 @@ export default function SHTPLandingPage() {
         {/* Manufacturing Layouts */}
         <div className="bg-[#f4f4f4] py-24 px-8 lg:px-24 border-y border-gray-200">
           <div className="w-full">
-            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-16 border-b-4 border-[#db011c] inline-block pb-2 text-[#212529]">
+            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-16 border-b-4 border-mwk inline-block pb-2 text-[#212529]">
               MANUFACTURING LEVELS
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
@@ -355,8 +355,8 @@ export default function SHTPLandingPage() {
                 { level: "LEVEL 3", desc: "PRECISION ASSEMBLY & QUALITY CHECK", img: "/about_shtp/5.2 Manufacturing Layout_Level 3.png" },
                 { level: "LEVEL 5", desc: "FINAL TESTING & PACKAGING STAGING AREA", img: "/about_shtp/5.3 Manufacturing Layout_Level 5.png" },
               ].map((layout, idx) => (
-                <AnimatedSection key={idx} direction="up" className="bg-white p-8 flex flex-col h-full border-b-[8px] border-[#db011c] shadow-sm hover:shadow-md transition-shadow">
-                   <h5 className="text-3xl font-black uppercase tracking-tighter mb-2 text-[#db011c]">{layout.level}</h5>
+                <AnimatedSection key={idx} direction="up" className="bg-white p-8 flex flex-col h-full border-b-[8px] border-mwk shadow-sm hover:shadow-md transition-shadow">
+                   <h5 className="text-3xl font-black uppercase tracking-tighter mb-2 text-mwk">{layout.level}</h5>
                    <p className="text-xs font-bold tracking-wide uppercase text-gray-500 mb-6">{layout.desc}</p>
                    <div className="flex-grow flex items-center justify-center bg-[#f4f4f4] p-4">
                      <img src={layout.img} alt={layout.level} className="w-full h-auto object-contain mix-blend-multiply" />
@@ -370,7 +370,7 @@ export default function SHTPLandingPage() {
         {/* Office Layouts */}
         <div className="bg-white py-24 px-8 lg:px-24">
           <div className="w-full">
-            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-16 border-b-4 border-[#db011c] inline-block pb-2 text-[#212529]">
+            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-16 border-b-4 border-mwk inline-block pb-2 text-[#212529]">
               OFFICE LEVELS
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
@@ -379,8 +379,8 @@ export default function SHTPLandingPage() {
                 { level: "LEVEL 4", desc: "OPERATIONS OFFICES & CONFERENCE CLUSTERS", img: "/about_shtp/6.2 Office Layout_Level 4.png" },
                 { level: "LEVEL 6", desc: "EXECUTIVE SPACES & RESEARCH WORKSPACES", img: "/about_shtp/6.3 Office Layout_Level 6.png" },
               ].map((layout, idx) => (
-                <AnimatedSection key={idx} direction="up" className="bg-[#f4f4f4] p-8 flex flex-col h-full border-b-[8px] border-[#db011c] shadow-sm hover:shadow-md transition-shadow">
-                   <h5 className="text-3xl font-black uppercase tracking-tighter mb-2 text-[#db011c]">{layout.level}</h5>
+                <AnimatedSection key={idx} direction="up" className="bg-[#f4f4f4] p-8 flex flex-col h-full border-b-[8px] border-mwk shadow-sm hover:shadow-md transition-shadow">
+                   <h5 className="text-3xl font-black uppercase tracking-tighter mb-2 text-mwk">{layout.level}</h5>
                    <p className="text-xs font-bold tracking-wide uppercase text-gray-500 mb-6">{layout.desc}</p>
                    <div className="flex-grow flex items-center justify-center bg-white p-4 border border-gray-200">
                      <img src={layout.img} alt={layout.level} className="w-full h-auto object-contain mix-blend-multiply" />
@@ -394,7 +394,7 @@ export default function SHTPLandingPage() {
         {/* Meeting Room Layouts */}
         <div className="bg-[#f4f4f4] py-24 px-8 lg:px-24 border-t border-gray-200">
           <div className="w-full">
-            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-16 border-b-4 border-[#db011c] inline-block pb-2 text-[#212529]">
+            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-16 border-b-4 border-mwk inline-block pb-2 text-[#212529]">
               MEETING ROOMS
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
@@ -405,7 +405,7 @@ export default function SHTPLandingPage() {
                 { level: "LEVEL 5", img: "/about_shtp/7.4 Meeting room L5.PNG" },
                 { level: "LEVEL 6", img: "/about_shtp/7.5 Meeting room L6.PNG" },
               ].map((room, idx) => (
-                <AnimatedSection key={idx} direction="up" className="bg-white p-8 flex flex-col h-full border-b-[8px] border-[#db011c] shadow-sm hover:shadow-md transition-shadow">
+                <AnimatedSection key={idx} direction="up" className="bg-white p-8 flex flex-col h-full border-b-[8px] border-mwk shadow-sm hover:shadow-md transition-shadow">
                    <h5 className="text-3xl font-black uppercase tracking-tighter mb-6 text-[#212529]">{room.level}</h5>
                    <div className="flex-grow flex items-center justify-center bg-[#f4f4f4] p-4">
                      <img src={room.img} alt={room.level} className="w-full h-auto object-contain mix-blend-multiply" />
@@ -423,7 +423,7 @@ export default function SHTPLandingPage() {
           <div className="flex flex-col gap-12">
             <AnimatedSection direction="up" className="flex flex-col justify-center text-center">
               <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-8">
-                05. VISITOR <span className="text-[#db011c]">PROCESS</span>
+                05. VISITOR <span className="text-mwk">PROCESS</span>
               </h2>
               <p className="text-xl text-gray-700 leading-relaxed font-normal max-w-4xl mx-auto">
                 Identity verification, safety brief instruction flow, and secure registration designed to welcome our guests efficiently. Ensure you complete the required registration before arriving on site.

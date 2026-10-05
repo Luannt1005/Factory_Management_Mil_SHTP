@@ -26,7 +26,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                     htmlFor={htmlFor}
                     className="block text-xs font-semibold text-gray-700 select-none"
                 >
-                    {label} {required && <span className="text-[#db011c]">*</span>}
+                    {label} {required && <span className="text-mwk">*</span>}
                 </label>
             )}
 

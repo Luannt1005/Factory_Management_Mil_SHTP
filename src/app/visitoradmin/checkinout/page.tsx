@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/app/context/UserContext';
+import { useUser } from '@/contexts/UserContext';
 import CheckInOutFilters from '@/features/visitor/checkinout/components/CheckInOutFilters';
 import VisitorViewTable from '@/features/visitor/checkinout/components/VisitorViewTable';
 import GroupViewTable from '@/features/visitor/checkinout/components/GroupViewTable';
@@ -415,7 +415,7 @@ export default function CheckInOutManagement() {
                 <div className="p-0 relative min-h-[500px]">
                     {loading && history.length === 0 ? (
                         <div className="p-16 flex flex-col items-center justify-center text-gray-400 gap-3 min-h-[450px]">
-                            <div className="w-8 h-8 border-2 border-gray-300 border-t-[#db011c] rounded-full animate-spin"></div>
+                            <div className="w-8 h-8 border-2 border-gray-300 border-t-mwk rounded-full animate-spin"></div>
                             <span className="text-xs font-semibold">Đang tải dữ liệu check-in...</span>
                         </div>
                     ) : (viewMode === 'group' && processedHistory.length === 0) || (viewMode === 'visitor' && allVisitors.length === 0) ? (
@@ -489,7 +489,7 @@ export default function CheckInOutManagement() {
                                                 onClick={() => setCurrentPage(p)}
                                                 className={`w-8 h-8 text-xs font-black rounded-lg transition-all flex items-center justify-center ${
                                                     currentPage === p
-                                                        ? 'bg-[#db011c] text-white shadow-md'
+                                                        ? 'bg-mwk text-white shadow-md'
                                                         : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
                                                 }`}
                                             >

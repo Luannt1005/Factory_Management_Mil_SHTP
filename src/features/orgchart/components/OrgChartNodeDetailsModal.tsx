@@ -134,7 +134,7 @@ export default function OrgChartNodeDetailsModal({
                             <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-[var(--color-bg-card)] p-0 text-left align-middle shadow-2xl transition-all border border-[var(--color-border)]">
 
                                 {/* Header / Banner Background */}
-                                <div className="h-32 bg-gradient-to-r from-[#DB011C] to-[#8f0012] relative overflow-hidden">
+                                <div className="h-32 bg-gradient-to-r from-mwk to-[#8f0012] relative overflow-hidden">
                                     <div className="absolute inset-0 flex items-center justify-center opacity-50 pointer-events-none">
                                         <img
                                             src="/milwaukee_logo.png"
@@ -179,7 +179,7 @@ export default function OrgChartNodeDetailsModal({
                                         <h3 className="text-2xl font-bold text-[var(--color-text-title)] leading-tight">
                                             {nodeData.name || "Unnamed"}
                                         </h3>
-                                        <p className="text-sm font-semibold text-[#DB011C] uppercase tracking-wide mt-1">
+                                        <p className="text-sm font-semibold text-mwk uppercase tracking-wide mt-1">
                                             {nodeData.title || "No Title"}
                                         </p>
                                         <p className="text-sm text-[var(--color-text-muted)] mt-1">

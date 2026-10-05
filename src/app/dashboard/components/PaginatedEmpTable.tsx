@@ -84,7 +84,7 @@ const PaginatedEmployeeTable: React.FC<PaginatedEmployeeTableProps> = ({
     if (loading && employees.length === 0) {
         return (
             <div className={`h-full flex items-center justify-center ${className}`}>
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#db011c]"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-mwk"></div>
             </div>
         );
     }
@@ -177,7 +177,7 @@ const PaginatedEmployeeTable: React.FC<PaginatedEmployeeTableProps> = ({
                 {/* Loading indicator for page transitions */}
                 {loading && employees.length > 0 && (
                     <div className="flex justify-center py-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#db011c]"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-mwk"></div>
                     </div>
                 )}
             </div>

@@ -20,8 +20,8 @@ export async function GET(request: Request) {
         const visitorPool = await getVisitorDbConnection();
 
         // The osName field stores the user's name or email from their session
-        const osNameMatch1 = (session.user as any).full_name || '';
-        const osNameMatch2 = (session.user as any).username || '';
+        const osNameMatch1 = session.user.full_name || '';
+        const osNameMatch2 = session.user.username || '';
         const osNameMatch3 = session.user.email || '';
 
         let whereClause = 'WHERE (r."osName" = $1 OR r."osName" = $2 OR r."osName" = $3)';

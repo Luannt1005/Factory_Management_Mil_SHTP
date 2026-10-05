@@ -263,25 +263,25 @@ export default function AdminRoomsPage() {
                 <div className="flex gap-4">
                     <button 
                         onClick={() => setActiveTab('rooms')} 
-                        className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'rooms' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'rooms' ? 'border-mwk text-mwk' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                     >
                         Manage Rooms
                     </button>
                     <button 
                         onClick={() => setActiveTab('categories')} 
-                        className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'categories' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'categories' ? 'border-mwk text-mwk' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                     >
                         Room Categories
                     </button>
                     <button 
                         onClick={() => setActiveTab('host-departments')} 
-                        className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'host-departments' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'host-departments' ? 'border-mwk text-mwk' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                     >
                         Host Departments
                     </button>
                     <button 
                         onClick={() => setActiveTab('meeting-rooms')} 
-                        className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'meeting-rooms' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'meeting-rooms' ? 'border-mwk text-mwk' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                     >
                         Meeting Rooms
                     </button>
@@ -290,7 +290,7 @@ export default function AdminRoomsPage() {
                 {activeTab === 'rooms' && (
                     <button 
                         onClick={() => setIsRoomModalOpen(true)}
-                        className="bg-[#db011c] text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-[#b90118] transition-colors"
+                        className="bg-mwk text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-mwk-hover transition-colors"
                     >
                         + Add New Room
                     </button>
@@ -298,7 +298,7 @@ export default function AdminRoomsPage() {
                 {activeTab === 'categories' && (
                     <button 
                         onClick={() => setIsCategoryModalOpen(true)}
-                        className="bg-[#db011c] text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-[#b90118] transition-colors"
+                        className="bg-mwk text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-mwk-hover transition-colors"
                     >
                         + Add Category
                     </button>
@@ -306,7 +306,7 @@ export default function AdminRoomsPage() {
                 {activeTab === 'host-departments' && (
                     <button 
                         onClick={() => setIsHostDeptModalOpen(true)}
-                        className="bg-[#db011c] text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-[#b90118] transition-colors"
+                        className="bg-mwk text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-mwk-hover transition-colors"
                     >
                         + Add Host Dept
                     </button>
@@ -314,7 +314,7 @@ export default function AdminRoomsPage() {
                 {activeTab === 'meeting-rooms' && (
                     <button 
                         onClick={() => setIsMeetingRoomModalOpen(true)}
-                        className="bg-[#db011c] text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-[#b90118] transition-colors"
+                        className="bg-mwk text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-mwk-hover transition-colors"
                     >
                         + Add Meeting Room
                     </button>
@@ -489,9 +489,9 @@ export default function AdminRoomsPage() {
                                     {selectedFuncDeptOption && selectedFuncDeptOption !== '__NEW__' && (
                                         <div className="mt-1 p-3 bg-white rounded-lg border border-gray-200 text-xs flex justify-between items-center text-gray-600">
                                             <div>
-                                                <span className="font-bold text-gray-700 mr-2 border-r pr-2 border-gray-300">BU: <span className="text-[#db011c]">{newHostDept.bu || 'N/A'}</span></span>
+                                                <span className="font-bold text-gray-700 mr-2 border-r pr-2 border-gray-300">BU: <span className="text-mwk">{newHostDept.bu || 'N/A'}</span></span>
                                                 <span className="font-bold text-gray-700">Functional Host: </span>
-                                                <span className="text-[#db011c] font-bold">{newHostDept.functional_host_name || 'N/A'}</span>
+                                                <span className="text-mwk font-bold">{newHostDept.functional_host_name || 'N/A'}</span>
                                                 {newHostDept.functional_host_email && <span className="text-gray-400"> ({newHostDept.functional_host_email})</span>}
                                             </div>
                                             <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">Auto-filled</span>
@@ -519,7 +519,7 @@ export default function AdminRoomsPage() {
                                     </div>
                                 </div>
 
-                                <button type="submit" className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-[#db011c] hover:bg-[#b90118] transition-colors shadow-md">
+                                <button type="submit" className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-mwk hover:bg-mwk-hover transition-colors shadow-md">
                                     Create Host Department
                                 </button>
                             </form>
@@ -551,7 +551,7 @@ export default function AdminRoomsPage() {
                                     <input
                                         type="text"
                                         required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#db011c] focus:border-transparent outline-none transition-all"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mwk focus:border-transparent outline-none transition-all"
                                         value={newMeetingRoom.floorName}
                                         onChange={e => setNewMeetingRoom({...newMeetingRoom, floorName: e.target.value})}
                                         placeholder="e.g. Lầu 1"
@@ -562,7 +562,7 @@ export default function AdminRoomsPage() {
                                     <input
                                         type="text"
                                         required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#db011c] focus:border-transparent outline-none transition-all"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mwk focus:border-transparent outline-none transition-all"
                                         value={newMeetingRoom.roomName}
                                         onChange={e => setNewMeetingRoom({...newMeetingRoom, roomName: e.target.value})}
                                         placeholder="e.g. Phòng họp A"
@@ -579,7 +579,7 @@ export default function AdminRoomsPage() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-[#db011c] text-white font-bold rounded-lg hover:bg-[#b00116] transition-colors shadow-md"
+                                    className="px-6 py-2 bg-mwk text-white font-bold rounded-lg hover:bg-mwk-hover transition-colors shadow-md"
                                 >
                                     Create Meeting Room
                                 </button>

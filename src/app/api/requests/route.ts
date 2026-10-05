@@ -52,8 +52,8 @@ export async function POST(request: Request) {
             visitingSite, purposeDetail, functionalDept, department, bu
         } = body;
 
-        const userAppRoles = (session.user as any)?.app_role_names || [];
-        const userIsAdmin = (session.user as any)?.role === 'admin';
+        const userAppRoles = session.user?.app_role_names || [];
+        const userIsAdmin = session.user?.role === 'admin';
         const userIsHrVisitor = userAppRoles.includes('Hr Visitor') || userIsAdmin;
         const userIsSecurityOnly = userAppRoles.includes('Security') && !userIsAdmin && !userIsHrVisitor;
 
@@ -237,8 +237,8 @@ export async function POST(request: Request) {
                                 startDate: startDate,
                                 endDate: endDate,
                                 purposeOfVisit: purposeOfVisit,
-                                submitterName: session.user.name || (session.user as any).username,
-                                submitterEmail: formatEmail((session.user as any).username || session.user.email),
+                                submitterName: session.user.name || session.user.username,
+                                submitterEmail: formatEmail(session.user.username || session.user.email),
                                 visitorCategory: visitorCategory,
                                 visitors_list: visitors,
                                 is_vp_approval: (isVPApproval && rooms.length > 0) ? true : false,
@@ -277,8 +277,8 @@ export async function POST(request: Request) {
                                 startDate: startDate,
                                 endDate: endDate || startDate,
                                 purposeOfVisit: "Interview",
-                                submitterName: session.user.name || (session.user as any).username,
-                                submitterEmail: formatEmail(session.user.email || (session.user as any).username),
+                                submitterName: session.user.name || session.user.username,
+                                submitterEmail: formatEmail(session.user.email || session.user.username),
                                 visitorCategory: 'Interviewee',
                                 visitors_list: visitors,
                                 is_vp_approval: false,
@@ -305,7 +305,7 @@ export async function POST(request: Request) {
             }
         } else if (!isExpat) {
             // For Vendor, Contractor, etc., insert a single approval record for Supervisor Approval
-            const submitterEmail = formatEmail((session.user as any).username || session.user.email);
+            const submitterEmail = formatEmail(session.user.username || session.user.email);
             const { rows: approvalRows } = await client.query(
                 `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
                  VALUES (gen_random_uuid(), $1, NULL, $2, 'PENDING', NOW())
@@ -329,7 +329,7 @@ export async function POST(request: Request) {
                                 startDate: startDate,
                                 endDate: endDate,
                                 purposeOfVisit: purposeOfVisit,
-                                submitterName: session.user.name || (session.user as any).username,
+                                submitterName: session.user.name || session.user.username,
                                 visitorCategory: visitorCategory,
                                 submitterEmail: submitterEmail,
                                 visitors_list: visitors,
@@ -376,8 +376,8 @@ export async function POST(request: Request) {
                         record_type: 'new_request_notification',
                         request_id: newRequestId,
                         visitor_category: visitorCategory,
-                        submitter_name: session.user.name || (session.user as any).username || session.user.email,
-                        submitter_email: formatEmail(session.user.email || (session.user as any).username),
+                        submitter_name: session.user.name || session.user.username || session.user.email,
+                        submitter_email: formatEmail(session.user.email || session.user.username),
                         start_date: startDate,
                         end_date: endDate,
                         visitor_name: visitorName,
@@ -428,8 +428,8 @@ export async function GET(request: Request) {
         const queryParams: any[] = [submitterId];
         let paramCount = 2;
 
-        const userAppRoles = (session.user as any)?.app_role_names || [];
-        const userIsAdmin = (session.user as any)?.role === 'admin';
+        const userAppRoles = session.user?.app_role_names || [];
+        const userIsAdmin = session.user?.role === 'admin';
         const userIsHrVisitor = userAppRoles.includes('Hr Visitor') || userIsAdmin;
         const userIsSecurityOnly = userAppRoles.includes('Security') && !userIsAdmin && !userIsHrVisitor;
 

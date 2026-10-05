@@ -40,7 +40,7 @@ export function PendingApprovalsList({
             <div className="flex-1 overflow-auto bg-white p-4">
                 {loading ? (
                     <div className="py-16 text-center text-sm text-gray-500 flex flex-col items-center justify-center">
-                        <div className="w-8 h-8 border-2 border-gray-200 border-t-[#db011c] rounded-full animate-spin mb-3" />
+                        <div className="w-8 h-8 border-2 border-gray-200 border-t-mwk rounded-full animate-spin mb-3" />
                         <span>Loading pending approvals...</span>
                     </div>
                 ) : error ? (

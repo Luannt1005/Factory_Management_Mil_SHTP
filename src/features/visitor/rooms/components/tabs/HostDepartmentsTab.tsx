@@ -172,7 +172,7 @@ export function HostDepartmentsTab({
                                                 </span>
                                             </td>
                                             <td className="p-4">
-                                                <div className="font-bold text-[#db011c]">{h.functional_host_name}</div>
+                                                <div className="font-bold text-mwk">{h.functional_host_name}</div>
                                                 <div className="text-xs text-gray-500">{h.functional_host_email}</div>
                                             </td>
                                             <td className="p-4 font-bold">{h.department}</td>
@@ -182,7 +182,7 @@ export function HostDepartmentsTab({
                                             </td>
                                             <td className="p-4 text-center">{h.is_active ? <span className="text-green-500 text-xs font-bold">● Active</span> : <span className="text-gray-400 text-xs font-bold">○ Inactive</span>}</td>
                                             <td className="p-4 text-right">
-                                                <button onClick={() => onEdit(h)} className="text-red-500 hover:text-[#b90118] font-bold text-xs mr-4 transition-colors">Edit</button>
+                                                <button onClick={() => onEdit(h)} className="text-red-500 hover:text-mwk-hover font-bold text-xs mr-4 transition-colors">Edit</button>
                                                 <button onClick={() => onDelete(h.id)} className="text-gray-400 hover:text-red-600 transition-colors"><svg className="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                                             </td>
                                         </>

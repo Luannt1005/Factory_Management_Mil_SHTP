@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useUser } from "@/app/context/UserContext";
-import { useNavigation } from "@/app/context/NavigationContext";
+import { useUser } from "@/contexts/UserContext";
+import { useNavigation } from "@/contexts/NavigationContext";
 import { ArrowLeftOnRectangleIcon, UserCircleIcon, ChevronDownIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,7 +17,7 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const userName = session?.user?.name || user?.full_name || "Visitor Manager";
-  const userRole = (session?.user as any)?.role || user?.role || "Admin";
+  const userRole = session?.user?.role || user?.role || "Admin";
   const userImage = session?.user?.image;
 
   useEffect(() => {
@@ -109,14 +109,14 @@ export default function Header() {
             type="button"
             onClick={openMobileNav}
             aria-label="Open navigation"
-            className="md:hidden p-1.5 -ml-2 rounded-lg text-gray-700 hover:text-black hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-[#db011c] cursor-pointer"
+            className="md:hidden p-1.5 -ml-2 rounded-lg text-gray-700 hover:text-black hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-mwk cursor-pointer"
           >
             <Bars3Icon className="w-5 h-5 stroke-2" />
           </button>
           <h2 className="text-sm font-black tracking-tighter uppercase text-[#212529] m-0 leading-none mt-0.5">
             {pageTitle}
           </h2>
-          <span className="bg-[#db011c] text-white text-[8px] font-bold tracking-widest uppercase px-1.5 py-0.5 rounded shadow-sm">
+          <span className="bg-mwk text-white text-[8px] font-bold tracking-widest uppercase px-1.5 py-0.5 rounded shadow-sm">
             {badgeTitle}
           </span>
         </div>
@@ -155,7 +155,7 @@ export default function Header() {
                   <li>
                     <Link
                       href="/profile"
-                      className="flex items-center gap-3 px-6 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[#db011c]"
+                      className="flex items-center gap-3 px-6 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-mwk"
                       onClick={() => setIsDropdownOpen(false)}
                     >
                       <UserCircleIcon className="w-5 h-5" />

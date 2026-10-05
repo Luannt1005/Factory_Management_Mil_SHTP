@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { OrgNode } from '@/types/orgchart';
+import type { OrgNode } from '@/types/orgchart.types';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface UpcomingResignTableProps {

@@ -55,7 +55,7 @@ export const Select: React.FC<SelectProps> = ({
                     htmlFor={selectId}
                     className="block text-xs font-semibold text-gray-700 select-none"
                 >
-                    {label} {required && <span className="text-[#db011c]">*</span>}
+                    {label} {required && <span className="text-mwk">*</span>}
                 </label>
             )}
 
@@ -82,8 +82,8 @@ export const Select: React.FC<SelectProps> = ({
                                         error
                                             ? 'border-red-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-100'
                                             : open
-                                              ? 'border-[#db011c] bg-white ring-2 ring-red-100'
-                                              : 'border-gray-200 focus:border-[#db011c] focus:bg-white focus:ring-2 focus:ring-red-100'
+                                              ? 'border-mwk bg-white ring-2 ring-red-100'
+                                              : 'border-gray-200 focus:border-mwk focus:bg-white focus:ring-2 focus:ring-red-100'
                                     }
                                 `}
                             >
@@ -97,7 +97,7 @@ export const Select: React.FC<SelectProps> = ({
                                 <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                     <ChevronDownIcon
                                         className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
-                                            open ? 'rotate-180 text-[#db011c]' : ''
+                                            open ? 'rotate-180 text-mwk' : ''
                                         }`}
                                         aria-hidden="true"
                                     />
@@ -126,9 +126,9 @@ export const Select: React.FC<SelectProps> = ({
                                                     ${optDisabled ? 'opacity-40 cursor-not-allowed' : ''}
                                                     ${
                                                         active
-                                                            ? 'bg-red-50/70 text-[#db011c]'
+                                                            ? 'bg-red-50/70 text-mwk'
                                                             : selected
-                                                              ? 'text-[#db011c] font-semibold bg-red-50/30'
+                                                              ? 'text-mwk font-semibold bg-red-50/30'
                                                               : 'text-gray-800'
                                                     }
                                                 `}
@@ -143,7 +143,7 @@ export const Select: React.FC<SelectProps> = ({
                                                             {option.label}
                                                         </span>
                                                         {selected && (
-                                                            <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 text-[#db011c]">
+                                                            <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 text-mwk">
                                                                 <CheckIcon className="h-4 w-4" aria-hidden="true" />
                                                             </span>
                                                         )}

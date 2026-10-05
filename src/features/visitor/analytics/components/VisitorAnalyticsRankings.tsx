@@ -153,7 +153,7 @@ export default function VisitorAnalyticsRankings({
                             {departmentData.map((d, i) => (
                                 <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
                                     <td className="text-left py-3 font-semibold text-slate-800">{d.name}</td>
-                                    <td className="py-3 font-bold text-[#db011c]">{d.MIL}</td>
+                                    <td className="py-3 font-bold text-mwk">{d.MIL}</td>
                                     <td className="py-3 font-semibold text-slate-700">{d.SF}</td>
                                     <td className="py-3 font-bold text-slate-900">{d.total}</td>
                                 </tr>

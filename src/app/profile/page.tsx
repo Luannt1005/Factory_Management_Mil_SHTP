@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@/app/context/UserContext";
+import { useUser } from "@/contexts/UserContext";
 import {
     UserCircleIcon,
     BriefcaseIcon,

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LabelList, Tooltip, CartesianGrid } from 'recharts';
-import { OrgNode } from '@/types/orgchart';
+import type { OrgNode } from '@/types/orgchart.types';
 import { ChartCard, CHART_COLORS, chartGridProps, chartTooltipStyle } from '@/components/dashboard';
 
 interface BUOrg3ChartProps {

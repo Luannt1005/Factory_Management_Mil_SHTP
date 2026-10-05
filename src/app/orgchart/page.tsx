@@ -15,14 +15,14 @@ function OrgChartSkeleton() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
       <div className="flex flex-col items-center gap-8">
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-gray-200 border-t-[#DB011C] rounded-full animate-spin"></div>
+          <div className="w-16 h-16 border-4 border-gray-200 border-t-mwk rounded-full animate-spin"></div>
         </div>
         <div className="text-center space-y-3">
           <p className="text-gray-900 font-bold uppercase tracking-widest text-sm">Milwaukee®</p>
           <div className="flex flex-col items-center gap-3">
             <p className="text-gray-400 font-medium text-xs tracking-wide">Syncing organization data...</p>
             <div className="w-40 h-1 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-[#DB011C] w-1/3 animate-[loading-bar_1.5s_infinite]"></div>
+              <div className="h-full bg-mwk w-1/3 animate-[loading-bar_1.5s_infinite]"></div>
             </div>
           </div>
         </div>

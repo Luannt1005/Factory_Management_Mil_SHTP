@@ -9,7 +9,7 @@ export async function GET() {
         const session = await getServerSession(authOptions);
         if (!session || !session.user) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
-        const userId = (session.user as any).id;
+        const userId = session.user.id;
         const pool = await getDbConnection();
 
         const result = await pool.query("SELECT id, username, full_name, role FROM users WHERE id = $1", [userId]);
@@ -28,7 +28,7 @@ export async function PUT(req: Request) {
         const session = await getServerSession(authOptions);
         if (!session || !session.user) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
-        const userId = (session.user as any).id;
+        const userId = session.user.id;
         const body = await req.json();
 
         // Updates allowed fields

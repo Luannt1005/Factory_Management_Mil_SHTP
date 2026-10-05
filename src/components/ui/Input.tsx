@@ -30,7 +30,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                         htmlFor={inputId}
                         className="block text-xs font-semibold text-gray-700 select-none"
                     >
-                        {label} {required && <span className="text-[#db011c]">*</span>}
+                        {label} {required && <span className="text-mwk">*</span>}
                     </label>
                 )}
 
@@ -48,7 +48,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                             ${
                                 error
                                     ? 'border-red-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-100'
-                                    : 'border-gray-200 focus:border-[#db011c] focus:bg-white focus:ring-2 focus:ring-red-100'
+                                    : 'border-gray-200 focus:border-mwk focus:bg-white focus:ring-2 focus:ring-red-100'
                             }
                             ${className}
                         `}

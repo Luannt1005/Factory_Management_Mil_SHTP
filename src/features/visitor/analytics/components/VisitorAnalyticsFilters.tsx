@@ -29,7 +29,7 @@ export default function VisitorAnalyticsFilters({
             <select 
                 value={periodFilter}
                 onChange={(e) => onPeriodChange(e.target.value as VisitorAnalyticsPeriodFilter)}
-                className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-mwk text-gray-700 bg-white shadow-sm"
             >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -41,7 +41,7 @@ export default function VisitorAnalyticsFilters({
             <select 
                 value={buFilter}
                 onChange={(e) => onBuChange(e.target.value)}
-                className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-mwk text-gray-700 bg-white shadow-sm"
             >
                 <option value="all">All BUs</option>
                 <option value="MIL">Milwaukee (MIL)</option>
@@ -51,7 +51,7 @@ export default function VisitorAnalyticsFilters({
             <select 
                 value={statusFilter}
                 onChange={(e) => onStatusChange(e.target.value)}
-                className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-mwk text-gray-700 bg-white shadow-sm"
             >
                 <option value="all">All Status</option>
                 <option value="IN PROCESS">In Process</option>
@@ -62,7 +62,7 @@ export default function VisitorAnalyticsFilters({
             <select 
                 value={categoryFilter}
                 onChange={(e) => onCategoryChange(e.target.value)}
-                className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#db011c] text-gray-700 bg-white shadow-sm"
+                className="text-xs font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-mwk text-gray-700 bg-white shadow-sm"
             >
                 <option value="all">All Categories</option>
                 <option value="MIL/TTI Expat / SHTP Business trip">MIL / TTI EXPAT</option>

@@ -1,7 +1,7 @@
 "use client";
 
 import HeadcountManager from "@/features/headcount/components/HeadcountManager";
-import { useUser } from '@/app/context/UserContext';
+import { useUser } from '@/contexts/UserContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 

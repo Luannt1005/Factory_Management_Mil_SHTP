@@ -119,7 +119,7 @@ export function VisitorDetailModal({
             onClick={onClose}
         >
             <div
-                className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200 border-t-[6px] border-[#db011c]"
+                className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200 border-t-[6px] border-mwk"
                 onClick={(e) => e.stopPropagation()}
             >
                 <button
@@ -151,7 +151,7 @@ export function VisitorDetailModal({
                                             key={idx}
                                             className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors"
                                         >
-                                            <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                            <div className="w-2 h-2 rounded-full bg-mwk shrink-0"></div>
                                             <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-1 overflow-hidden">
                                                 <h2 className="text-sm font-bold text-[#0f172a] truncate">
                                                     {v.name}
@@ -300,7 +300,7 @@ export function VisitorDetailModal({
                                             key={idx}
                                             className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors"
                                         >
-                                            <div className="w-2 h-2 rounded-full bg-[#db011c] shrink-0"></div>
+                                            <div className="w-2 h-2 rounded-full bg-mwk shrink-0"></div>
                                             <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-1 overflow-hidden">
                                                 <h2 className="text-sm font-bold text-[#0f172a] truncate">
                                                     {v.name || request.interviewee_name || 'Candidate'}
@@ -390,7 +390,7 @@ export function VisitorDetailModal({
                                             onEdit(request);
                                         }
                                     }}
-                                    className="px-6 py-2.5 bg-[#db011c] hover:bg-[#b00116] text-white text-sm font-bold rounded-lg shadow-md transition-all flex items-center gap-2"
+                                    className="px-6 py-2.5 bg-mwk hover:bg-mwk-hover text-white text-sm font-bold rounded-lg shadow-md transition-all flex items-center gap-2"
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -417,7 +417,7 @@ export function VisitorDetailModal({
                     ) : (
                         <button
                             onClick={onClose}
-                            className="px-6 py-2 bg-[#db011c] hover:bg-[#b00116] text-white text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2"
+                            className="px-6 py-2 bg-mwk hover:bg-mwk-hover text-white text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2"
                         >
                             Close
                         </button>

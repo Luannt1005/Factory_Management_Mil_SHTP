@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { OrgNode } from '@/types/orgchart';
+import type { OrgNode } from '@/types/orgchart.types';
 
 interface BUFilterProps {
     nodes: OrgNode[];

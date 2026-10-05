@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LabelList, Tooltip, CartesianGrid } from 'recharts';
 import type { EmployeeFilter } from '../page';
-import { OrgNode } from '@/types/orgchart';
+import type { OrgNode } from '@/types/orgchart.types';
 import { ChartCard, CHART_COLORS, chartGridProps, chartAxisProps, chartTooltipStyle } from '@/components/dashboard';
 
 interface SeniorityChartProps {

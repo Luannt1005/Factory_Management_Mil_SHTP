@@ -19,15 +19,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         if (status === "authenticated" && session?.user) {
             const nextUser: User = {
-                id: (session.user as any).id || "",
-                username: (session.user as any).username || session.user.email || "",
+                id: session.user.id || "",
+                username: session.user.username || session.user.email || "",
                 full_name: session.user.name || "",
-                role: (session.user as any).role || "user",
-                orgchart_role: (session.user as any).orgchart_role || "user",
-                visitor_role: (session.user as any).visitor_role || "user",
+                role: session.user.role || "user",
+                orgchart_role: session.user.orgchart_role || "user",
+                visitor_role: session.user.visitor_role || "user",
                 image: session.user.image || undefined,
-                app_role_names: (session.user as any).app_role_names || [],
-                allowedPages: (session.user as any).allowedPages || [],
+                app_role_names: session.user.app_role_names || [],
+                allowedPages: session.user.allowedPages || [],
             };
             setUser(nextUser);
             localStorage.setItem('user', JSON.stringify(nextUser));

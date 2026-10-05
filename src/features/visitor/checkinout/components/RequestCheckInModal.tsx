@@ -112,13 +112,13 @@ export default function RequestCheckInModal({
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-2xl shadow-2xl border-t-[6px] border-t-[#db011c] border-x border-b border-gray-100 w-full max-w-5xl max-h-[90vh] overflow-hidden relative text-[#0f172a] flex flex-col my-auto transition-all animate-in zoom-in-95 duration-200"
+                className="bg-white rounded-2xl shadow-2xl border-t-[6px] border-t-mwk border-x border-b border-gray-100 w-full max-w-5xl max-h-[90vh] overflow-hidden relative text-[#0f172a] flex flex-col my-auto transition-all animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className="p-4 sm:p-5 flex justify-between items-center bg-white border-b border-gray-100 shrink-0">
                     <div className="flex items-center gap-2.5 flex-wrap">
-                        <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center text-[#db011c] font-black text-sm">
+                        <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center text-mwk font-black text-sm">
                             #
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -126,7 +126,7 @@ export default function RequestCheckInModal({
                                 Check-In / Out: {request.requestCode || request.requestId}
                             </h2>
                             {request.visitorCategory && (
-                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-[#db011c] border border-red-100">
+                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-mwk border border-red-100">
                                     {request.visitorCategory}
                                 </span>
                             )}
@@ -233,7 +233,7 @@ export default function RequestCheckInModal({
                                 <button
                                     disabled={bulkLoading}
                                     onClick={handleCheckInAll}
-                                    className="bg-[#db011c] hover:bg-[#b00116] disabled:opacity-50 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                                    className="bg-mwk hover:bg-mwk-hover disabled:opacity-50 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -287,7 +287,7 @@ export default function RequestCheckInModal({
                                                     <div className="font-bold text-gray-900 flex items-center gap-1.5 flex-wrap">
                                                         <span>{v.visitorName}</span>
                                                         {v.visitorCode && (
-                                                            <span className="text-[10px] font-bold text-[#db011c] bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
+                                                            <span className="text-[10px] font-bold text-mwk bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
                                                                 {v.visitorCode}
                                                             </span>
                                                         )}
@@ -314,7 +314,7 @@ export default function RequestCheckInModal({
                                                              }
                                                         }}
                                                         placeholder="Card No..."
-                                                        className="w-28 px-2.5 py-1 text-xs font-semibold border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white shadow-2xs"
+                                                        className="w-28 px-2.5 py-1 text-xs font-semibold border border-gray-300 rounded-lg focus:ring-1 focus:ring-mwk focus:border-mwk outline-none bg-white shadow-2xs"
                                                     />
                                                 </td>
                                                 <td className="py-2.5 px-3 text-center">
@@ -348,7 +348,7 @@ export default function RequestCheckInModal({
                                                             className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
                                                                 v.checkInOutStatus !== 'PENDING'
                                                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                                                                    : 'bg-[#db011c] hover:bg-[#b00116] text-white shadow-2xs'
+                                                                    : 'bg-mwk hover:bg-mwk-hover text-white shadow-2xs'
                                                             }`}
                                                         >
                                                             {isLoading && actionLoading === loadingKey ? '...' : 'Check In'}

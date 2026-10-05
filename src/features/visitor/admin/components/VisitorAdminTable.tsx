@@ -449,7 +449,7 @@ export default function VisitorAdminTable({
                                         <button
                                             onClick={() => onPageChange(pageNum)}
                                             className={`w-8 h-8 text-[11px] font-black rounded-lg transition-all ${pagination.page === pageNum 
-                                                ? 'bg-[#db011c] text-white shadow-md' 
+                                                ? 'bg-mwk text-white shadow-md' 
                                                 : 'bg-white text-gray-600 border border-gray-300 hover:border-gray-400'
                                             }`}
                                         >

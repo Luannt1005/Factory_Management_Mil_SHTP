@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import AppFooter from "@/components/app.footer";
 import PageTransition from "@/components/PageTransition";
-import { UserProvider } from "@/app/context/UserContext";
+import { UserProvider } from "@/contexts/UserContext";
 
 export const metadata: Metadata = {
   title: "Factory Management",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 import { NextAuthProvider } from "@/components/NextAuthProvider";
 import LayoutContentWrapper from "@/components/LayoutContentWrapper";
-import { NavigationProvider } from "@/app/context/NavigationContext";
+import { NavigationProvider } from "@/contexts/NavigationContext";
 
 export default function RootLayout({
   children,

@@ -48,7 +48,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         if (g === undefined) return null;
         if (g > 0) {
             return (
-                <span className="text-[#db011c] font-bold text-xs flex items-center gap-0.5">
+                <span className="text-mwk font-bold text-xs flex items-center gap-0.5">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                     </svg>
@@ -78,7 +78,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                 transition-all duration-200
                 ${onClick ? 'cursor-pointer' : ''}
                 ${active
-                    ? 'border-[#db011c] shadow-md ring-2 ring-red-100 bg-red-50/20'
+                    ? 'border-mwk shadow-md ring-2 ring-red-100 bg-red-50/20'
                     : 'border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200'
                 }
                 ${className}
@@ -89,9 +89,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                     {label}
                 </span>
                 {icon ? (
-                    <div className="text-[#db011c] shrink-0">{icon}</div>
+                    <div className="text-mwk shrink-0">{icon}</div>
                 ) : (
-                    <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-[#db011c]' : 'bg-gray-200'}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-mwk' : 'bg-gray-200'}`} />
                 )}
             </div>
 

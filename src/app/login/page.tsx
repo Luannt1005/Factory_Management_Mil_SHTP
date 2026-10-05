@@ -9,7 +9,7 @@ import styles from "./login.module.css";
 import { EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
 import { verifyPassword } from "@/lib/password";
-import { useUser } from "@/app/context/UserContext";
+import { useUser } from "@/contexts/UserContext";
 
 function LoginContent() {
   const [username, setUsername] = useState("");

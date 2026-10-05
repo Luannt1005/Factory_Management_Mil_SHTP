@@ -201,12 +201,12 @@ export default function VisitorEditModal({
 
     return createPortal(
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[110] p-4 sm:p-8" onClick={onClose}>
-            <div className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200 border-t-[6px] border-t-[#db011c] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl relative text-[#0f172a] animate-in zoom-in-95 duration-200 border-t-[6px] border-t-mwk flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="p-5 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10 border-b border-gray-100">
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-lg font-black text-gray-900 tracking-tight">Edit Request #{displayCode}</h2>
-                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-[#db011c] border border-red-100">
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-mwk border border-red-100">
                                 {formData.visitor_category}
                             </span>
                         </div>
@@ -231,7 +231,7 @@ export default function VisitorEditModal({
                                 type="date" 
                                 value={formData.start_date} 
                                 onChange={e => setFormData({...formData, start_date: e.target.value})} 
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                 required 
                             />
                         </div>
@@ -241,7 +241,7 @@ export default function VisitorEditModal({
                                 type="date" 
                                 value={formData.end_date} 
                                 onChange={e => setFormData({...formData, end_date: e.target.value})} 
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                 required 
                             />
                         </div>
@@ -275,7 +275,7 @@ export default function VisitorEditModal({
                                         type="text" 
                                         value={formData.purpose} 
                                         onChange={e => setFormData({...formData, purpose: e.target.value})} 
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                     />
                                 </div>
                                 <Select
@@ -300,7 +300,7 @@ export default function VisitorEditModal({
                                         onChange={e => setFormData({...formData, interviewee_name: cleanNameInput(e.target.value)})} 
                                         onBlur={e => setFormData({...formData, interviewee_name: formatName(e.target.value)})} 
                                         style={{ textTransform: 'capitalize' }} 
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                         required 
                                     />
                                 </div>
@@ -310,7 +310,7 @@ export default function VisitorEditModal({
                                         type="text" 
                                         value={formData.job_title} 
                                         onChange={e => setFormData({...formData, job_title: e.target.value})} 
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                     />
                                 </div>
                                 <div>
@@ -319,7 +319,7 @@ export default function VisitorEditModal({
                                         type="text" 
                                         value={formData.interview_department} 
                                         onChange={e => setFormData({...formData, interview_department: e.target.value})} 
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                     />
                                 </div>
                             </>
@@ -354,7 +354,7 @@ export default function VisitorEditModal({
                                                 onChange={e => handleVisitorChange(index, 'name', e.target.value)} 
                                                 onBlur={() => handleVisitorBlur(index, 'name')} 
                                                 style={{ textTransform: 'capitalize' }} 
-                                                className="w-full border border-gray-300 rounded-md p-1.5 text-xs font-semibold focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
+                                                className="w-full border border-gray-300 rounded-md p-1.5 text-xs font-semibold focus:ring-1 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                                 required 
                                             />
                                         </div>
@@ -365,7 +365,7 @@ export default function VisitorEditModal({
                                                 value={v.company || ''} 
                                                 onChange={e => handleVisitorChange(index, 'company', e.target.value)} 
                                                 onBlur={() => handleVisitorBlur(index, 'company')} 
-                                                className="w-full border border-gray-300 rounded-md p-1.5 text-xs focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
+                                                className="w-full border border-gray-300 rounded-md p-1.5 text-xs focus:ring-1 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                             />
                                         </div>
                                         <div className="md:col-span-3">
@@ -375,7 +375,7 @@ export default function VisitorEditModal({
                                                 value={v.title || ''} 
                                                 onChange={e => handleVisitorChange(index, 'title', e.target.value)} 
                                                 onBlur={() => handleVisitorBlur(index, 'title')} 
-                                                className="w-full border border-gray-300 rounded-md p-1.5 text-xs focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] outline-none bg-white" 
+                                                className="w-full border border-gray-300 rounded-md p-1.5 text-xs focus:ring-1 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                             />
                                         </div>
                                         <div className="md:col-span-1 flex justify-end items-end pt-3">

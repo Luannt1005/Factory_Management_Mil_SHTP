@@ -66,7 +66,7 @@ export default function VisitorAnalytics() {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#f4f6f9]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#db011c]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mwk"></div>
             </div>
         );
     }
@@ -83,7 +83,7 @@ export default function VisitorAnalytics() {
                     onClick={() => setActiveTab('analytics')}
                     className={`flex items-center gap-2 pb-3 px-4 text-sm font-bold border-b-2 transition-all ${
                         activeTab === 'analytics'
-                            ? 'border-[#db011c] text-[#db011c]'
+                            ? 'border-mwk text-mwk'
                             : 'border-transparent text-gray-500 hover:text-gray-800'
                     }`}
                 >
@@ -96,7 +96,7 @@ export default function VisitorAnalytics() {
                     onClick={() => setActiveTab('checkinout_logs')}
                     className={`flex items-center gap-2 pb-3 px-4 text-sm font-bold border-b-2 transition-all ${
                         activeTab === 'checkinout_logs'
-                            ? 'border-[#db011c] text-[#db011c]'
+                            ? 'border-mwk text-mwk'
                             : 'border-transparent text-gray-500 hover:text-gray-800'
                     }`}
                 >
@@ -104,7 +104,7 @@ export default function VisitorAnalytics() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Check-in/Out History Logs
-                    <span className="ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-red-100 text-[#db011c]">
+                    <span className="ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-red-100 text-mwk">
                         Audit Logs
                     </span>
                 </button>

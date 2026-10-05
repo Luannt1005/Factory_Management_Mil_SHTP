@@ -198,7 +198,7 @@ export function FacilityRoomsTab({
                                             </td>
                                             <td className="p-5 text-right">
                                                 <div className="flex gap-3 justify-end">
-                                                    <button onClick={() => onEdit(room)} className="text-[#db011c] font-bold hover:underline text-xs">Edit</button>
+                                                    <button onClick={() => onEdit(room)} className="text-mwk font-bold hover:underline text-xs">Edit</button>
                                                     <button onClick={() => onDelete(room.id)} className="text-red-500 font-bold hover:underline text-xs">Delete</button>
                                                 </div>
                                             </td>

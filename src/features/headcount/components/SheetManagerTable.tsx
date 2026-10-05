@@ -663,7 +663,7 @@ const SheetManager = ({
   if (isLoading && rows.length === 0) {
     return (
       <div className={styles.spinner}>
-        <ArrowPathIcon className="w-12 h-12 text-[#DB011C] animate-spin mx-auto mb-4" />
+        <ArrowPathIcon className="w-12 h-12 text-mwk animate-spin mx-auto mb-4" />
         <span>Loading page {currentPage}...</span>
       </div>
     );

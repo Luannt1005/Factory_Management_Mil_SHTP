@@ -75,7 +75,7 @@ export async function POST(request: Request) {
             }
         }
 
-        const osName = session.user.name || (session.user as any).full_name || (session.user as any).username || session.user.email;
+        const osName = session.user.name || session.user.full_name || session.user.username || session.user.email;
         const createdIds: string[] = [];
         const createdCodes: string[] = [];
 
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
                             endDate: startDate,
                             purposeOfVisit: "Interview",
                             submitterName: osName,
-                            submitterEmail: formatEmail(session.user.email || (session.user as any).username),
+                            submitterEmail: formatEmail(session.user.email || session.user.username),
                             visitorCategory: 'Interviewee',
                             interviewerName: candidateList[0]?.interviewerName || interviewerName || '',
                             startTime: startTime,

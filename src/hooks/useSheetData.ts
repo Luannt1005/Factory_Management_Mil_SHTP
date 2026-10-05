@@ -8,7 +8,7 @@
 
 import { useMemo } from 'react';
 import useSWR, { SWRConfiguration } from 'swr';
-import { OrgNode, ApiResponse } from '@/types/orgchart';
+import type { OrgNode, OrgChartApiResponse as ApiResponse } from '@/types/orgchart.types';
 import { swrFetcher } from '@/lib/api-client';
 import { headcountApi } from '@/features/headcount/services/headcountApi';
 

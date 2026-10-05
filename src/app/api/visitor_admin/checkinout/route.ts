@@ -223,8 +223,8 @@ export async function POST(request: Request) {
         const visitorPool = await getVisitorDbConnection();
         const cleanCardNumber = (typeof cardNumber === 'string' && cardNumber.trim() !== '') ? cardNumber.trim() : null;
         const effectiveRequestCode = requestCode || requestId;
-        const performedBy = (session.user as any)?.username || session.user?.email || (session.user as any)?.id || 'Unknown';
-        const performedByName = session.user?.name || (session.user as any)?.full_name || (session.user as any)?.username || session.user?.email || 'Unknown';
+        const performedBy = session.user?.username || session.user?.email || session.user?.id || 'Unknown';
+        const performedByName = session.user?.name || session.user?.full_name || session.user?.username || session.user?.email || 'Unknown';
 
         // Ensure history table exists safely
         await visitorPool.query(`

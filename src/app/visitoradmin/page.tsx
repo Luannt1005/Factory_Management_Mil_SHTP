@@ -313,13 +313,13 @@ export default function AdminDashboard() {
             <div className="flex gap-4 border-b border-gray-200">
                 <button
                     onClick={() => setActiveTab('general')}
-                    className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'general' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                    className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'general' ? 'border-mwk text-mwk' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                 >
                     General Visitors
                 </button>
                 <button
                     onClick={() => setActiveTab('interviewee')}
-                    className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'interviewee' ? 'border-[#db011c] text-[#db011c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                    className={`py-3 px-6 text-sm font-bold border-b-2 transition-colors ${activeTab === 'interviewee' ? 'border-mwk text-mwk' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                 >
                     Interviewee
                 </button>

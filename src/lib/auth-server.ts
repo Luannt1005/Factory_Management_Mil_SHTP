@@ -31,8 +31,8 @@ export function unauthorizedResponse() {
 export async function getCurrentUser(): Promise<string | null> {
     try {
         const session = await getServerSession(authOptions);
-        if (session?.user && (session.user as any).username) {
-            return (session.user as any).username;
+        if (session?.user && session.user.username) {
+            return session.user.username;
         }
         if (session?.user?.email) {
             return session.user.email;

@@ -9,7 +9,7 @@
 import useSWR from 'swr';
 import { useState, useCallback, useMemo } from 'react';
 import { swrFetcher } from '@/lib/api-client';
-import { OrgNode } from '@/types/orgchart';
+import type { OrgNode } from '@/types/orgchart.types';
 import { headcountApi } from '@/features/headcount/services/headcountApi';
 
 interface PaginatedResponse {

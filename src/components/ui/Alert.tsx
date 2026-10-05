@@ -34,7 +34,7 @@ const variantStyles: Record<
         container: 'bg-red-50/90 border-red-200 text-red-900',
         title: 'text-red-900',
         body: 'text-red-800',
-        iconColor: 'text-[#db011c]',
+        iconColor: 'text-mwk',
         defaultIcon: <XCircleIcon className="w-5 h-5 shrink-0" aria-hidden="true" />,
     },
     success: {

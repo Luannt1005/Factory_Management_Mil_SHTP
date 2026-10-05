@@ -61,8 +61,8 @@ const INITIAL_FORM_DATA: VisitorRequestFormData = {
 
 export default function NewRequestPage() {
     const { data: session } = useSession();
-    const appRoleNames = (session?.user as any)?.app_role_names || [];
-    const isAdmin = (session?.user as any)?.role === 'admin';
+    const appRoleNames = session?.user?.app_role_names || [];
+    const isAdmin = session?.user?.role === 'admin';
     const isHrVisitor = appRoleNames.includes('Hr Visitor') || isAdmin;
     const isSecurity = appRoleNames.includes('Security') && !isAdmin && !isHrVisitor;
     const router = useRouter();

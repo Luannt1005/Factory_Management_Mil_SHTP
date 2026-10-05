@@ -39,7 +39,7 @@ export function VisitorDashboardFilters({
                         type="date"
                         value={startDate}
                         onChange={(e) => onStartDateChange(e.target.value)}
-                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] focus:outline-none transition-all"
+                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-mwk focus:border-mwk focus:outline-none transition-all"
                     />
                 </div>
                 <div className="flex items-center gap-2">
@@ -48,7 +48,7 @@ export function VisitorDashboardFilters({
                         type="date"
                         value={endDate}
                         onChange={(e) => onEndDateChange(e.target.value)}
-                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] focus:outline-none transition-all"
+                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-mwk focus:border-mwk focus:outline-none transition-all"
                     />
                 </div>
                 {hasActiveFilters && (
@@ -74,7 +74,7 @@ export function VisitorDashboardFilters({
                             onSearch();
                         }
                     }}
-                    className="text-sm border border-gray-300 rounded-lg px-3 py-2 w-64 focus:ring-1 focus:ring-[#db011c] focus:border-[#db011c] focus:outline-none transition-all"
+                    className="text-sm border border-gray-300 rounded-lg px-3 py-2 w-64 focus:ring-1 focus:ring-mwk focus:border-mwk focus:outline-none transition-all"
                 />
                 <Button
                     variant="primary"

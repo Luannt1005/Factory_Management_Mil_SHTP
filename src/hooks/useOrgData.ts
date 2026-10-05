@@ -8,7 +8,7 @@
 
 import useSWR, { SWRConfiguration } from 'swr';
 import { useRef } from 'react';
-import { OrgNode, ApiResponse } from '@/types/orgchart';
+import type { OrgNode, OrgChartApiResponse as ApiResponse } from '@/types/orgchart.types';
 import { swrFetcher } from '@/lib/api-client';
 import { GET_DATA_API } from '@/constant/api';
 

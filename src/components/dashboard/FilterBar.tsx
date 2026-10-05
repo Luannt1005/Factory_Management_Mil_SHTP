@@ -30,7 +30,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         <button
                             type="button"
                             onClick={onClearAll}
-                            className="text-xs font-bold text-[#db011c] hover:underline uppercase ml-auto transition-colors cursor-pointer"
+                            className="text-xs font-bold text-mwk hover:underline uppercase ml-auto transition-colors cursor-pointer"
                         >
                             Clear All
                         </button>

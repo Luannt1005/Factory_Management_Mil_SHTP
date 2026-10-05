@@ -124,7 +124,7 @@ export function ExcelColumnFilter({
                 onClick={handleToggle}
                 className={`p-1 rounded transition-all inline-flex items-center justify-center flex-shrink-0 ${
                     isFiltered
-                        ? 'bg-[#db011c] text-white shadow-sm ring-2 ring-red-200'
+                        ? 'bg-mwk text-white shadow-sm ring-2 ring-red-200'
                         : 'text-gray-400 hover:text-gray-700 hover:bg-gray-200/80'
                 }`}
                 title={`Filter ${title}`}
@@ -145,7 +145,7 @@ export function ExcelColumnFilter({
                     <div className="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-2 flex items-center justify-between">
                         <span className="truncate">Filter: {title}</span>
                         {isFiltered && (
-                            <span className="text-[10px] bg-red-100 text-[#db011c] px-1.5 py-0.5 rounded font-bold">Active</span>
+                            <span className="text-[10px] bg-red-100 text-mwk px-1.5 py-0.5 rounded font-bold">Active</span>
                         )}
                     </div>
 
@@ -156,7 +156,7 @@ export function ExcelColumnFilter({
                                 type="checkbox"
                                 checked={isAllSelected}
                                 onChange={(e) => handleSelectAll(e.target.checked)}
-                                className="rounded text-[#db011c] focus:ring-red-500 w-3.5 h-3.5"
+                                className="rounded text-mwk focus:ring-red-500 w-3.5 h-3.5"
                             />
                             <span>(Select All)</span>
                         </label>
@@ -169,7 +169,7 @@ export function ExcelColumnFilter({
                                         type="checkbox"
                                         checked={checked}
                                         onChange={() => handleToggleValue(val)}
-                                        className="rounded text-[#db011c] focus:ring-red-500 w-3.5 h-3.5"
+                                        className="rounded text-mwk focus:ring-red-500 w-3.5 h-3.5"
                                     />
                                     <span className="truncate text-gray-700" title={val}>{val}</span>
                                 </label>
@@ -196,7 +196,7 @@ export function ExcelColumnFilter({
                         <button
                             type="button"
                             onClick={() => setIsOpen(false)}
-                            className="bg-[#db011c] text-white px-3.5 py-1 rounded-lg font-bold text-[11px] hover:bg-[#b90118] shadow-sm transition-colors"
+                            className="bg-mwk text-white px-3.5 py-1 rounded-lg font-bold text-[11px] hover:bg-mwk-hover shadow-sm transition-colors"
                         >
                             OK
                         </button>

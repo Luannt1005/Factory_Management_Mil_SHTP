@@ -190,7 +190,7 @@ export function VisitorEditIntervieweeModal({
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl relative z-10 max-h-[90vh] flex flex-col overflow-hidden border-t-[6px] border-[#db011c]">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl relative z-10 max-h-[90vh] flex flex-col overflow-hidden border-t-[6px] border-mwk">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <div>
                         <h2 className="text-lg font-black text-[#0f172a] uppercase tracking-tight">
@@ -230,7 +230,7 @@ export function VisitorEditIntervieweeModal({
                         <div className="flex items-center justify-between">
                             <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
                                 <span>Candidate List</span>
-                                <span className="bg-red-50 text-[#db011c] border border-red-200 px-2 py-0.5 rounded-full text-[11px] font-black">
+                                <span className="bg-red-50 text-mwk border border-red-200 px-2 py-0.5 rounded-full text-[11px] font-black">
                                     {candidates.length}
                                 </span>
                             </h3>
@@ -248,12 +248,12 @@ export function VisitorEditIntervieweeModal({
                                         });
                                         setEditFormData({ ...editFormData, visitors: updated });
                                     }}
-                                    className="px-3 py-1.5 bg-white border border-[#db011c] text-[#db011c] hover:bg-red-50 text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                                    className="px-3 py-1.5 bg-white border border-mwk text-mwk hover:bg-red-50 text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
                                 >
-                                    <span className="text-[#db011c] font-black text-sm">+</span> Add Candidate
+                                    <span className="text-mwk font-black text-sm">+</span> Add Candidate
                                 </button>
                             ) : (
-                                <span className="text-xs text-[#db011c] font-bold">
+                                <span className="text-xs text-mwk font-bold">
                                     Max 20 Candidates Reached
                                 </span>
                             )}
@@ -302,7 +302,7 @@ export function VisitorEditIntervieweeModal({
                                                         setEditFormData({ ...editFormData, visitors: updated });
                                                     }}
                                                     style={{ textTransform: 'capitalize' }}
-                                                    className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
+                                                    className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-mwk focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
                                                 />
                                             </td>
                                             <td className="py-1.5 px-2">
@@ -316,7 +316,7 @@ export function VisitorEditIntervieweeModal({
                                                         updated[idx].title = e.target.value;
                                                         setEditFormData({ ...editFormData, visitors: updated });
                                                     }}
-                                                    className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
+                                                    className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-mwk focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
                                                 />
                                             </td>
                                             <td className="py-1.5 px-2">
@@ -331,7 +331,7 @@ export function VisitorEditIntervieweeModal({
                                                         updated[idx].company = e.target.value;
                                                         setEditFormData({ ...editFormData, visitors: updated });
                                                     }}
-                                                    className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
+                                                    className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-mwk focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
                                                 />
                                             </td>
                                             <td className="py-1.5 px-2">
@@ -353,7 +353,7 @@ export function VisitorEditIntervieweeModal({
                                                         setEditFormData({ ...editFormData, visitors: updated });
                                                     }}
                                                     style={{ textTransform: 'capitalize' }}
-                                                    className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#db011c] focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
+                                                    className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-mwk focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
                                                 />
                                             </td>
                                             <td className="py-1.5 px-3 text-center">

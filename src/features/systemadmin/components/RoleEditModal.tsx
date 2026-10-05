@@ -161,7 +161,7 @@ export function RoleEditModal({
                 <FormField label="Description" htmlFor="role-description">
                     <textarea
                         id="role-description"
-                        className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c]"
+                        className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-mwk"
                         rows={2}
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}

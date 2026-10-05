@@ -30,7 +30,7 @@ export default function AboutVietnam() {
       {/* Floating PDF Export Button */}
       <button 
           onClick={() => window.print()}
-          className="fixed bottom-8 right-8 z-[100] print:hidden bg-[#db011c] text-white p-4 rounded-full shadow-2xl hover:bg-red-800 transition-all flex items-center justify-center group"
+          className="fixed bottom-8 right-8 z-[100] print:hidden bg-mwk text-white p-4 rounded-full shadow-2xl hover:bg-red-800 transition-all flex items-center justify-center group"
           title="Export to PDF"
       >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -51,7 +51,7 @@ export default function AboutVietnam() {
           </div>
           <div className="relative z-10 text-center px-4">
             <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter drop-shadow-2xl">
-              About <span className="text-[#db011c]">Vietnam</span>
+              About <span className="text-mwk">Vietnam</span>
             </h1>
           </div>
         </div>
@@ -63,8 +63,8 @@ export default function AboutVietnam() {
         <div className="lg:col-span-7 space-y-6">
           <AnimatedSection direction="left" className="space-y-6">
             <div className="flex items-center gap-3">
-              <span className="text-3xl font-black text-[#db011c]">01</span>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-[#db011c] pl-3">
+              <span className="text-3xl font-black text-mwk">01</span>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-mwk pl-3">
                 Overview of Vietnam
               </h2>
             </div>
@@ -108,8 +108,8 @@ export default function AboutVietnam() {
       <section className="space-y-12">
         <AnimatedSection direction="up">
           <div className="flex items-center gap-3">
-            <span className="text-3xl font-black text-[#db011c]">02</span>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-[#db011c] pl-3">
+            <span className="text-3xl font-black text-mwk">02</span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-mwk pl-3">
               Geography & Climate
             </h2>
           </div>
@@ -209,7 +209,7 @@ export default function AboutVietnam() {
                 <ul className="space-y-2 text-sm text-gray-600 font-light pt-4 flex-1">
                   {climate.details.map((detail, dIdx) => (
                     <li key={dIdx} className="flex items-start gap-2">
-                      <span className="text-[#db011c] mt-1.5">•</span>
+                      <span className="text-mwk mt-1.5">•</span>
                       <span>{detail}</span>
                     </li>
                   ))}
@@ -224,8 +224,8 @@ export default function AboutVietnam() {
       <section className="space-y-16">
         <AnimatedSection direction="up">
           <div className="flex items-center gap-3">
-            <span className="text-3xl font-black text-[#db011c]">03</span>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-[#db011c] pl-3">
+            <span className="text-3xl font-black text-mwk">03</span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 border-l-4 border-mwk pl-3">
               Culture and Lifestyle
             </h2>
           </div>
@@ -298,7 +298,7 @@ export default function AboutVietnam() {
                   <div className="grid md:grid-cols-12 gap-6 items-center">
                     {/* Text header info */}
                     <div className={`md:col-span-5 space-y-2 ${isEven ? "" : "md:order-last md:text-right"}`}>
-                      <div className={`border-[#db011c] ${isEven ? "border-l-3 pl-3" : "md:border-r-3 border-l-3 md:border-l-0 pl-3 md:pl-0 md:pr-3"}`}>
+                      <div className={`border-mwk ${isEven ? "border-l-3 pl-3" : "md:border-r-3 border-l-3 md:border-l-0 pl-3 md:pl-0 md:pr-3"}`}>
                         <h4 className="text-lg font-bold text-gray-900">{section.region}</h4>
                         <p className="text-xs text-gray-500 font-medium tracking-wide mt-0.5">{section.tagline}</p>
                       </div>
@@ -342,7 +342,7 @@ export default function AboutVietnam() {
           {/* Culture Subdivision 1: Iconic Culinary Specialties */}
           <div className="space-y-6">
             <AnimatedSection direction="left">
-              <h4 className="text-lg font-bold text-gray-800 border-l-3 border-[#db011c] pl-2.5">
+              <h4 className="text-lg font-bold text-gray-800 border-l-3 border-mwk pl-2.5">
                 Iconic Culinary Specialties
               </h4>
               <p className="text-xs text-gray-500 font-light mt-1">Dishes that define the rich flavor landscape of Vietnam.</p>
@@ -386,7 +386,7 @@ export default function AboutVietnam() {
           {/* Culture Subdivision 2: National Symbols */}
           <div className="space-y-6">
             <AnimatedSection direction="left">
-              <h4 className="text-lg font-bold text-gray-800 border-l-3 border-[#db011c] pl-2.5">
+              <h4 className="text-lg font-bold text-gray-800 border-l-3 border-mwk pl-2.5">
                 National Symbols
               </h4>
               <p className="text-xs text-gray-500 font-light mt-1">Official emblems and natural components representing sovereignty.</p>
@@ -428,7 +428,7 @@ export default function AboutVietnam() {
           {/* Culture Subdivision 3: Mythical Creatures (Tứ Linh) */}
           <div className="space-y-6">
             <AnimatedSection direction="left">
-              <h4 className="text-lg font-bold text-gray-800 border-l-3 border-[#db011c] pl-2.5">
+              <h4 className="text-lg font-bold text-gray-800 border-l-3 border-mwk pl-2.5">
                 Mythical Creatures (Tứ Linh)
               </h4>
               <p className="text-xs text-gray-500 font-light mt-1">The Four Holy Guardians guarding history, culture, and architecture.</p>

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import type { EmployeeFilter } from '../page';
-import { OrgNode } from '@/types/orgchart';
+import type { OrgNode } from '@/types/orgchart.types';
 import { ChartCard, CHART_COLORS, chartTooltipStyle } from '@/components/dashboard';
 
 interface DonutChartProps {

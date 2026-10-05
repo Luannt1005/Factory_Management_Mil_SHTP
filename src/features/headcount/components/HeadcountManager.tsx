@@ -470,7 +470,7 @@ const HeadcountManager = () => {
     if (isLoading && rows.length === 0) {
         return (
             <div className={styles.spinner}>
-                <ArrowPathIcon className="w-12 h-12 text-[#DB011C] animate-spin mx-auto mb-4" />
+                <ArrowPathIcon className="w-12 h-12 text-mwk animate-spin mx-auto mb-4" />
                 <span>Loading headcount data...</span>
                 {isValidating && (
                     <p className="text-xs text-gray-500 mt-2 max-w-md text-center">

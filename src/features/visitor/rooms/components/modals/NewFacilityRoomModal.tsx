@@ -87,7 +87,7 @@ export function NewFacilityRoomModal({
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-[#db011c] hover:bg-[#b90118] transition-colors shadow-md disabled:opacity-50"
+                            className="w-full py-3.5 mt-2 rounded-xl font-bold text-white bg-mwk hover:bg-mwk-hover transition-colors shadow-md disabled:opacity-50"
                         >
                             {loading ? 'Creating...' : 'Create Room'}
                         </button>

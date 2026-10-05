@@ -169,12 +169,12 @@ export function UserEditModal({
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-gray-700 block">
-                            Full Name <span className="text-[#db011c]">*</span>
+                            Full Name <span className="text-mwk">*</span>
                         </label>
                         <input
                             type="text"
                             required
-                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c] transition-colors"
+                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-mwk transition-colors"
                             value={formData.full_name}
                             onChange={(e) =>
                                 setFormData({ ...formData, full_name: e.target.value })
@@ -183,13 +183,13 @@ export function UserEditModal({
                     </div>
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-gray-700 block">
-                            Username {mode === "add" && <span className="text-[#db011c]">*</span>}
+                            Username {mode === "add" && <span className="text-mwk">*</span>}
                         </label>
                         <input
                             type="text"
                             required={mode === "add"}
                             disabled={mode === "edit"}
-                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c] disabled:opacity-50 transition-colors"
+                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-mwk disabled:opacity-50 transition-colors"
                             value={formData.username}
                             onChange={(e) =>
                                 setFormData({ ...formData, username: e.target.value })
@@ -200,7 +200,7 @@ export function UserEditModal({
                         <label className="text-xs font-semibold text-gray-700 block">Employee ID</label>
                         <input
                             type="text"
-                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c] transition-colors"
+                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-mwk transition-colors"
                             value={formData.employee_id}
                             onChange={(e) =>
                                 setFormData({ ...formData, employee_id: e.target.value })
@@ -209,12 +209,12 @@ export function UserEditModal({
                     </div>
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-gray-700 block">
-                            Email <span className="text-[#db011c]">*</span>
+                            Email <span className="text-mwk">*</span>
                         </label>
                         <input
                             type="email"
                             required
-                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c] transition-colors"
+                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-mwk transition-colors"
                             value={formData.email}
                             onChange={(e) =>
                                 setFormData({ ...formData, email: e.target.value })
@@ -225,7 +225,7 @@ export function UserEditModal({
                         <label className="text-xs font-semibold text-gray-700 block">Department</label>
                         <input
                             type="text"
-                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c] transition-colors"
+                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-mwk transition-colors"
                             value={formData.department}
                             onChange={(e) =>
                                 setFormData({ ...formData, department: e.target.value })
@@ -236,7 +236,7 @@ export function UserEditModal({
                         <label className="text-xs font-semibold text-gray-700 block">Job Title / Function</label>
                         <input
                             type="text"
-                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c] transition-colors"
+                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-mwk transition-colors"
                             value={formData.job_title}
                             onChange={(e) =>
                                 setFormData({ ...formData, job_title: e.target.value })
@@ -254,13 +254,13 @@ export function UserEditModal({
                     />
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-gray-700 block">
-                            Password {mode === "add" && <span className="text-[#db011c]">*</span>}
+                            Password {mode === "add" && <span className="text-mwk">*</span>}
                         </label>
                         <input
                             type="password"
                             required={mode === "add"}
                             placeholder={mode === "edit" ? "Leave blank to keep current" : ""}
-                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#db011c] transition-colors"
+                            className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-mwk transition-colors"
                             value={formData.password}
                             onChange={(e) =>
                                 setFormData({ ...formData, password: e.target.value })
@@ -286,12 +286,12 @@ export function UserEditModal({
                                 >
                                     <input
                                         type="checkbox"
-                                        className="w-4 h-4 text-[#db011c] rounded border-gray-300 focus:ring-[#db011c] cursor-pointer"
+                                        className="w-4 h-4 text-mwk rounded border-gray-300 focus:ring-mwk cursor-pointer"
                                         checked={formData.app_role_ids.includes(role.id.toString())}
                                         onChange={() => toggleAppRole(role.id.toString())}
                                     />
                                     <div className="flex flex-col">
-                                        <span className="text-xs font-bold text-gray-700 group-hover:text-[#db011c] transition-colors">
+                                        <span className="text-xs font-bold text-gray-700 group-hover:text-mwk transition-colors">
                                             {role.name}
                                         </span>
                                         <span className="text-[10px] text-gray-500">

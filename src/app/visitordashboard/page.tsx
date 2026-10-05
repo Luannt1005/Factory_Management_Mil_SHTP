@@ -24,8 +24,8 @@ import type {
 
 function DashboardContent() {
     const { data: session } = useSession();
-    const appRoleNames = (session?.user as any)?.app_role_names || [];
-    const isAdmin = (session?.user as any)?.role === 'admin';
+    const appRoleNames = session?.user?.app_role_names || [];
+    const isAdmin = session?.user?.role === 'admin';
     const isHrVisitor = appRoleNames.includes('Hr Visitor') || isAdmin;
     const isSecurity = appRoleNames.includes('Security') && !isAdmin && !isHrVisitor;
     const canAccessInterviewee = isHrVisitor || isSecurity;
@@ -238,7 +238,7 @@ function DashboardContent() {
                 activeTab={activeTab}
                 loading={loading}
                 pagination={pagination}
-                submitterEmail={session?.user?.email || (session?.user as any)?.username}
+                submitterEmail={session?.user?.email || session?.user?.username}
                 onPageChange={(page) => fetchMyRequests(page)}
                 onView={(request) => setSelectedRequest(request)}
                 onEdit={(request) => setEditingInterviewee(request)}
@@ -248,7 +248,7 @@ function DashboardContent() {
                 request={selectedRequest}
                 activeTab={activeTab}
                 mounted={mounted}
-                submitterEmail={session?.user?.email || (session?.user as any)?.username}
+                submitterEmail={session?.user?.email || session?.user?.username}
                 onClose={() => setSelectedRequest(null)}
                 onEdit={(request) => {
                     setEditingInterviewee(request);
