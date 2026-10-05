@@ -37,6 +37,16 @@ const getStatusColor = (status: string) => {
     }
 };
 
+const getPowerAutomateRunUrl = (runId: string) => {
+    if (!runId) return '#';
+    if (runId.startsWith('http://') || runId.startsWith('https://')) {
+        return runId;
+    }
+    const envId = process.env.NEXT_PUBLIC_PA_ENVIRONMENT_ID || 'Default-8b8cc6cf-0eaa-4b64-98e4-6d4672c44930';
+    const flowId = process.env.NEXT_PUBLIC_PA_FLOW_ID || 'bffa6e65-ca94-43ee-8416-f14054f729a5';
+    return `https://make.powerautomate.com/environments/${envId}/flows/${flowId}/runs/${encodeURIComponent(runId.trim())}`;
+};
+
 export default function VisitorDetailModal({
     request,
     activeTab,
@@ -296,6 +306,35 @@ export default function VisitorDetailModal({
                                     <div className="font-extrabold text-[#0f172a] text-sm">{request.visiting_site || 'SHTP'}</div>
                                 </div>
                             </>
+                        )}
+
+                        {/* Power Automate Flow Run Link */}
+                        {request.power_automate_run_id && (
+                            <div className="flex items-center justify-between py-4 border-b border-gray-50">
+                                <div className="flex items-center gap-3 text-gray-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5 text-blue-600">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                    </svg>
+                                    <span className="text-sm font-medium">Power Automate Flow</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-mono text-xs text-gray-600 bg-gray-50 px-2.5 py-1 rounded border border-gray-200 select-all max-w-[190px] truncate" title={request.power_automate_run_id}>
+                                        {request.power_automate_run_id}
+                                    </span>
+                                    <a
+                                        href={getPowerAutomateRunUrl(request.power_automate_run_id)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all shrink-0"
+                                        title="Open Flow Run in Power Automate"
+                                    >
+                                        <span>Open Flow</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-3.5 h-3.5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>

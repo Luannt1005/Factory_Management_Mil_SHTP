@@ -2,7 +2,7 @@
 
 :root {
   --footer-primary: #1a1a1a;
-  --footer-secondary: #bd011c;
+  --footer-secondary: #db011c;
   --footer-light: #f5f5f5;
   --footer-text: #ffffff;
   --footer-text-light: #cccccc;
@@ -102,7 +102,7 @@
 .social-link:hover {
   background: var(--footer-secondary);
   transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(189, 1, 28, 0.3);
+  box-shadow: 0 4px 12px rgba(219, 1, 28, 0.3);
 }
 
 /* Footer Bottom */

@@ -33,6 +33,17 @@ export function useOrgChartEditor(
         descriptionTablesRef.current = descriptionTables;
     }, [descriptionTables]);
 
+    const cleanupListenersRef = useRef<(() => void) | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (cleanupListenersRef.current) {
+                cleanupListenersRef.current();
+                cleanupListenersRef.current = null;
+            }
+        };
+    }, []);
+
 
 
     /* ================= HELPER: UPDATE NODE DATA ================= */
@@ -567,6 +578,8 @@ export function useOrgChartEditor(
                                 startMouseX = e.clientX;
                                 startMouseY = e.clientY;
                             }
+                            window.addEventListener("mousemove", onMouseMove);
+                            window.addEventListener("mouseup", onMouseUp);
                             return;
                         }
                     }
@@ -590,6 +603,8 @@ export function useOrgChartEditor(
 
                             startNodeX = table.x;
                             startNodeY = table.y;
+                            window.addEventListener("mousemove", onMouseMove);
+                            window.addEventListener("mouseup", onMouseUp);
                             return;
                         }
                     }
@@ -679,6 +694,7 @@ export function useOrgChartEditor(
                 };
 
                 const onMouseUp = (e: MouseEvent) => {
+                    removeWindowListeners();
                     if (isResizing && activeNodeId) {
                         isResizing = false;
 
@@ -781,15 +797,23 @@ export function useOrgChartEditor(
                     }
                 };
 
-                chartContainerRef.current.addEventListener("mousedown", onMouseDown, true);
-                window.addEventListener("mousemove", onMouseMove);
-                window.addEventListener("mouseup", onMouseUp);
+                function removeWindowListeners() {
+                    window.removeEventListener("mousemove", onMouseMove);
+                    window.removeEventListener("mouseup", onMouseUp);
+                }
 
-                // Cleanup
-                // Note: This useEffect has no cleanup function exposed easily because the setup is inside loadChartData.
-                // This is a flaw in the current hook structure. 
-                // We should move this listener outside loadChartData, but it depends on chartInstance.
-                // We can attach it to a ref current and clean it up in the generic useEffect cleanup.
+                if (cleanupListenersRef.current) {
+                    cleanupListenersRef.current();
+                    cleanupListenersRef.current = null;
+                }
+
+                const container = chartContainerRef.current;
+                container.addEventListener("mousedown", onMouseDown, true);
+
+                cleanupListenersRef.current = () => {
+                    container.removeEventListener("mousedown", onMouseDown, true);
+                    removeWindowListeners();
+                };
             }
 
             // Force Custom Positions on Redraw

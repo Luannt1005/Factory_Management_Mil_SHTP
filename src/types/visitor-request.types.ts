@@ -97,6 +97,9 @@ export interface CreateVisitorRequestPayload {
     interviewerName?: string;
     startTime?: string;
     interviewArea?: string;
+    power_automate_run_id?: string;
+    powerAutomateRunId?: string;
+    run_id?: string;
 }
 
 export interface CreateVisitorRequestSuccessResponse {

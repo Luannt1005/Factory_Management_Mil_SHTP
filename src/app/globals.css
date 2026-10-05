@@ -8,12 +8,12 @@
 
 :root {
   /* ===== Color Palette ===== */
-  --color-primary: #C40000;
+  --color-primary: #db011c;
   --color-primary-light: #FEE2E2;
   --color-primary-dark: #991B1B;
 
   /* Milwaukee Brand Colors */
-  --color-primary-mwk: #bd011c;
+  --color-primary-mwk: #db011c;
   --color-primary-mwk-dark: #8a010f;
   --color-primary-mwk-light: #f8f9fa;
 
@@ -21,6 +21,30 @@
   --color-bg-card: #FFFFFF;
   --color-border: #E5E7EB;
   --color-border-light: #F3F4F6;
+
+  /* ===== Dashboard Design System Tokens ===== */
+  --dashboard-primary: #db011c;
+  --dashboard-primary-hover: #b80117;
+  --dashboard-primary-soft: #fee2e2;
+
+  --dashboard-bg: #eaedf1;
+  --dashboard-surface: #ffffff;
+
+  --dashboard-text: #0f172a;
+  --dashboard-text-secondary: #475569;
+  --dashboard-text-muted: #64748b;
+
+  --dashboard-border: #e5e7eb;
+  --dashboard-border-light: #f3f4f6;
+
+  --dashboard-success: #10b981;
+  --dashboard-warning: #f59e0b;
+  --dashboard-error: #ef4444;
+  --dashboard-info: #3b82f6;
+
+  --dashboard-radius: 12px;
+  --dashboard-radius-sm: 8px;
+  --dashboard-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
 
   --color-text-title: #0F172A;
   --color-text-body: #334155;

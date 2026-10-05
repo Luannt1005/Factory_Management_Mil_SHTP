@@ -109,9 +109,18 @@ export default function AdminDashboard() {
             const ExcelJS = await import('exceljs');
 
             const exportData = data.requests.flatMap((r: VisitorAdminRequestRecord): Record<string, unknown>[] => {
-                if (activeTab === 'general') {
-                    const details = parseDetails(r.details);
+                const details = parseDetails(r.details);
+                const isCompleted = r.status === 'COMPLETE' || r.status === 'APPROVED' || r.status === 'REJECTED';
+                const approvalProgress = (r.request_approvals || []).map((a: VisitorAdminApprovalRecord) =>
+                    `[${a.status}] ${a.room_areas?.name || 'Host'} (${a.approver_email})`
+                ).join(' ; ');
 
+                const hdObj = hostDepts.find((h: HostDepartment) =>
+                    (details.functionalDept && details.department && h.functional_dept?.toLowerCase() === details.functionalDept.toLowerCase() && h.department?.toLowerCase() === details.department.toLowerCase()) ||
+                    (details.department && h.department?.toLowerCase() === details.department.toLowerCase())
+                ) || {} as Partial<HostDepartment>;
+
+                if (activeTab === 'general') {
                     let visitorsArr: VisitorAdminVisitorItem[] = [];
                     if (r.visitors) {
                         try {
@@ -126,56 +135,73 @@ export default function AdminDashboard() {
                         visitorsArr = [{ name: r.visitor_name, title: r.visitor_title, company: r.current_company }];
                     }
 
-                    return visitorsArr.map((v: VisitorAdminVisitorItem, index: number) => {
-                        const pendingApprovals = (r.request_approvals || []).filter((a: VisitorAdminApprovalRecord) => a.status === 'PENDING');
-                        const approvalProgress = (r.request_approvals || []).map((a: VisitorAdminApprovalRecord) =>
-                            `[${a.status}] ${a.room_areas?.name || 'Host'} (${a.approver_email})`
-                        ).join(' ; ');
-                        const isCompleted = r.status === 'COMPLETE' || r.status === 'APPROVED' || r.status === 'REJECTED';
+                    const rawCode = (r.request_code || r.id || '').replace(/^#/, '').split('-')[0].toUpperCase();
+                    const reqCode = rawCode;
 
-                        const hdObj = hostDepts.find((h: HostDepartment) => h.functional_dept === details.functionalDept && h.department === details.department) || {} as Partial<HostDepartment>;
+                    return visitorsArr.map((v: VisitorAdminVisitorItem, index: number) => {
+                        const visCode = `${reqCode}V${index + 1}`;
 
                         return {
-                            'Request Code': (r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase(),
-                            'Visitor Code': (r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase() + 'V' + (index + 1),
+                            'Request Code': reqCode,
+                            'Visitor Code': visCode,
                             'Visitor Name': v.name || r.visitor_name || '',
                             'Visitor Title': v.title || r.visitor_title || '',
                             'Visitor Company': v.company || r.current_company || '',
                             'Submitter Name': r.profile_name || r.profiles?.name || r.os_name || '',
                             'Submitter Department': details.submitterDept || r.profile_department || r.profiles?.department || '',
-                            'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '',
-                            'End Date': r.end_date ? new Date(r.end_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '',
-                            'Status': r.status || '',
+                            'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : '',
+                            'End Date': r.end_date ? new Date(r.end_date).toLocaleDateString('vi-VN') : '',
+                            'Visitor Category': r.visitor_category || '',
+                            'Purpose Of Visit': r.purpose_of_visit || '',
+                            'Purpose Detail': r.purpose_detail || details.purpose || '',
                             'Visiting Site': r.visiting_site || '',
-                            'Visiting Site Details': details.visitingSite || '',
-                            'Host Department': hdObj.dept_name || details.functionalDept || '',
-                            'Host Section': details.department || '',
-                            'Category': r.visitor_category || '',
-                            'Purpose': r.purpose_of_visit || '',
-                            'Detailed Purpose': r.purpose_detail || details.purpose || '',
+                            'BU': details.bu || hdObj.bu || '',
+                            'Host Functional Dept': details.functionalDept || '',
+                            'Func Host Name': hdObj.functional_host_name || details.functionalHostName || '',
+                            'Host Department': details.department || '',
+                            'Dept Host Name': hdObj.department_host_name || details.departmentHostName || '',
                             'Cost Center': details.costCenter || '',
-                            'Factory Tour': details.factoryTour || 'No',
-                            'Area Approvals': approvalProgress,
-                            'Current Pending Approver': isCompleted ? 'N/A' : (pendingApprovals.length > 0 ? pendingApprovals.map((a: VisitorAdminApprovalRecord) => a.approver_email).join(', ') : 'Fully Approved'),
-                            'Created At': r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '',
-                            'Updated At': r.updated_at ? new Date(r.updated_at).toLocaleString('vi-VN') : '',
-                            'Completion Date': isCompleted && r.updated_at ? new Date(r.updated_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : ''
+                            'Factory Tour': details.factoryTour || '',
+                            'Meal Registration': details.mealRegistration || '',
+                            'Status': r.status || '',
+                            'Approval Progress': approvalProgress,
+                            'Submit Date': r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '',
+                            'Completion Date': (isCompleted && r.updated_at) ? new Date(r.updated_at).toLocaleString('vi-VN') : ''
                         };
                     });
                 } else {
-                    const details = parseDetails(r.details);
+                    const rawCode = (r.visitor_code || r.request_code || r.id || '').replace(/^#/, '').split('-')[0].toUpperCase();
+                    const reqCode = rawCode;
+                    const visCode = r.visitor_code
+                        ? r.visitor_code.replace(/^#/, '').replace(/-/g, '')
+                        : `${reqCode}V1`;
+
                     return [{
-                        'Code': (r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase(),
-                        'Interviewee Name': r.visitor_name || r.interviewee_name || '',
+                        'Request Code': reqCode,
+                        'Visitor Code': visCode,
+                        'Visitor Name': r.interviewee_name || r.visitor_name || '',
+                        'Visitor Title': r.job_title || r.visitor_title || '',
+                        'Visitor Company': details.company || r.current_company || '',
                         'Submitter Name': r.profile_name || r.profiles?.name || r.os_name || '',
-                        'Job Title': r.visitor_title || r.job_title || '',
-                        'Interview Department': details.interviewDepartment || r.interview_department || '',
-                        'Interviewer Name': details.interviewerName || r.interviewer_name || '',
-                        'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '',
-                        'Start Time': r.start_time || '',
-                        'Interview Area': r.interview_area || '',
+                        'Submitter Department': details.submitterDept || r.profile_department || r.profiles?.department || '',
+                        'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : '',
+                        'End Date': r.end_date ? new Date(r.end_date).toLocaleDateString('vi-VN') : (r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : ''),
+                        'Visitor Category': r.visitor_category || 'Interviewee',
+                        'Purpose Of Visit': r.purpose_of_visit || 'Interview',
+                        'Purpose Detail': r.purpose_detail || details.interviewArea || r.interview_area || '',
+                        'Visiting Site': r.visiting_site || '',
+                        'BU': details.bu || hdObj.bu || '',
+                        'Host Functional Dept': details.functionalDept || '',
+                        'Func Host Name': hdObj.functional_host_name || details.functionalHostName || '',
+                        'Host Department': details.interviewDepartment || r.interview_department || details.department || '',
+                        'Dept Host Name': details.interviewerName || r.interviewer_name || hdObj.department_host_name || '',
+                        'Cost Center': details.costCenter || '',
+                        'Factory Tour': details.factoryTour || '',
+                        'Meal Registration': details.mealRegistration || '',
                         'Status': r.status || '',
-                        'Created At': r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : ''
+                        'Approval Progress': approvalProgress,
+                        'Submit Date': r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '',
+                        'Completion Date': (isCompleted && r.updated_at) ? new Date(r.updated_at).toLocaleString('vi-VN') : ''
                     }];
                 }
             });

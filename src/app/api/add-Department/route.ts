@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { getDbConnection } from "@/lib/db";
+import { isAuthenticated, unauthorizedResponse } from "@/lib/auth-server";
 
 /**
  * POST /api/add-Department
@@ -8,6 +9,10 @@ import { getDbConnection } from "@/lib/db";
  */
 export async function POST(req: Request) {
   try {
+    if (!await isAuthenticated()) {
+      return unauthorizedResponse();
+    }
+
     const body = await req.json();
 
     // Validate required fields

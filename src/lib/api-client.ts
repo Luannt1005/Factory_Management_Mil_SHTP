@@ -26,21 +26,19 @@ export const swrFetcher = async (url: string) => {
     }
 
     if (!response.ok) {
-      // For server errors, log but don't crash - return error structure
-      console.error(`❌ API error ${response.status} for URL: ${url}`, data?.error || '');
+      const errorMessage = data?.error || data?.message || `API error: ${response.status}`;
+      console.error(`❌ API error ${response.status} for URL: ${url}`, errorMessage);
 
-      // Return error object that SWR can handle gracefully
-      return {
-        success: false,
-        error: data?.error || `API error: ${response.status}`,
-        status: response.status
-      };
+      const error: any = new Error(errorMessage);
+      error.info = data;
+      error.status = response.status;
+      throw error;
     }
 
     console.log(`✓ Fetched from ${response.headers.get('x-from-cache') ? 'cache' : 'server'}: ${url}`);
     return data;
   } catch (error) {
-    // Network errors - these should throw so SWR can retry
+    // Network or HTTP errors - throw so SWR error handler can trigger
     console.error('SWR Fetch Error:', error);
     throw error;
   }

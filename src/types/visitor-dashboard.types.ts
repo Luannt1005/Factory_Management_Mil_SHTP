@@ -45,6 +45,7 @@ export interface VisitorDashboardRequestRecord {
     editCount?: number;
     created_at: string;
     request_approvals?: RequestApprovalRecord[];
+    power_automate_run_id?: string | null;
 
     // Interviewee & legacy compatibility fields
     interviewee_name?: string;

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/partial-claude-settings.json",
+  "project": "Orgchart_TTI_onprem",
+  "version": "1.0.0",
+  "allowedCommands": [
+    "node scripts/gemini_distiller.js tsc",
+    "node scripts/gemini_distiller.js build",
+    "npm run dev",
+    "npm run build",
+    "npx tsc --noEmit",
+    "git status",
+    "git diff",
+    "git log",
+    "git branch"
+  ],
+  "protectedFiles": [
+    "src/middleware.ts",
+    "src/lib/authOptions.ts",
+    "src/lib/db.ts",
+    "src/lib/visitor-db.ts",
+    "src/lib/orgchart.js",
+    "nginx.conf",
+    "ecosystem.config.js",
+    ".env.local"
+  ],
+  "verificationHooks": {
+    "typeCheck": "node scripts/gemini_distiller.js tsc",
+    "build": "node scripts/gemini_distiller.js build"
+  }
+}

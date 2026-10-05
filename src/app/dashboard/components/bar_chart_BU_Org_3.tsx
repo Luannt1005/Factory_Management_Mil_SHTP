@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LabelList, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LabelList, Tooltip, CartesianGrid } from 'recharts';
 import { OrgNode } from '@/types/orgchart';
+import { ChartCard, CHART_COLORS, chartGridProps, chartTooltipStyle } from '@/components/dashboard';
 
 interface BUOrg3ChartProps {
     className?: string;
@@ -37,99 +38,72 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
             .sort((a, b) => b.count - a.count);
     }, [nodes]);
 
-    if (loading) {
-        return (
-            <div className={`bg-[var(--color-bg-card)] rounded-xl shadow-sm p-4 h-full flex flex-col ${className}`}>
-                <div className="flex items-center justify-between mb-4 animate-pulse">
-                    <div className="h-5 w-24 bg-gray-200 rounded"></div>
-                    <div className="h-3 w-16 bg-gray-200 rounded"></div>
-                </div>
-                <div className="flex-1 flex items-end gap-2 animate-pulse px-2 overflow-hidden">
-                    {[...Array(12)].map((_, i) => (
-                        <div key={i} className="flex-1 bg-gray-100 rounded-t" style={{ height: `${[45, 60, 75, 50, 65, 40, 55, 70, 45, 60, 50, 65][i]}%` }}></div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
-    if (error || !chartData || chartData.length === 0) {
-        return (
-            <div className={`bg-[var(--color-bg-card)] rounded-xl shadow-sm p-4 h-full flex items-center justify-center text-muted text-sm ${className}`}>
-                No department data
-            </div>
-        );
-    }
-
     return (
-        <div className={`bg-[var(--color-bg-card)] rounded-xl shadow-sm p-2 h-full flex flex-col min-h-0 ${className}`}>
-            {/* Header */}
-            <div className="shrink-0 mb-2 flex items-center justify-between">
-                <h3 className="text-[15px] font-bold text-title">Departments</h3>
-                <span className="text-[12px] text-muted">{chartData.length} depts</span>
-            </div>
-
-            {/* Chart */}
-            <div className="flex-1 min-h-0">
-                <ResponsiveContainer width="100%" height="100%">
+        <ChartCard
+            className={className}
+            kicker="DEPARTMENT ALLOCATION"
+            title="Departments (BU Org 3)"
+            action={
+                <span className="text-xs font-semibold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-200">
+                    {chartData.length} depts
+                </span>
+            }
+            loading={loading}
+            empty={!chartData || chartData.length === 0}
+            emptyMessage="No department data"
+        >
+            <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={chartData}
-                        margin={{ top: 25, right: 10, left: 10, bottom: 60 }} // Increased top/bottom margin
+                        margin={{ top: 25, right: 10, left: 10, bottom: 60 }}
                     >
                         <defs>
                             <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#3B82F6" stopOpacity={1} />
-                                <stop offset="100%" stopColor="#6366F1" stopOpacity={1} />
+                                <stop offset="0%" stopColor={CHART_COLORS.accentBlue} stopOpacity={1} />
+                                <stop offset="100%" stopColor={CHART_COLORS.accentIndigo} stopOpacity={1} />
                             </linearGradient>
                         </defs>
+                        <CartesianGrid {...chartGridProps} />
                         <YAxis hide domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.15) + 2]} />
                         <XAxis
                             dataKey="name"
                             angle={-35}
                             textAnchor="end"
-                            height={60} // Increased height for rotated labels
+                            height={60}
                             interval={0}
                             tick={{
-                                fill: 'var(--color-text-body)',
+                                fill: CHART_COLORS.axis,
                                 fontSize: 11,
-                                fontWeight: 700
+                                fontWeight: 600
                             }}
-                            axisLine={{ stroke: 'var(--color-border-light)' }}
+                            axisLine={{ stroke: CHART_COLORS.axisLine }}
                             tickLine={false}
                         />
                         <Tooltip
                             isAnimationActive={false}
-                            contentStyle={{
-                                backgroundColor: 'var(--color-bg-card)',
-                                border: '1px solid var(--color-border-light)',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                color: 'var(--color-text-body)',
-                                fontSize: '12px'
-                            }}
-                            itemStyle={{ color: 'var(--color-text-body)' }}
+                            contentStyle={chartTooltipStyle}
+                            itemStyle={{ color: CHART_COLORS.text }}
                             formatter={(value: any) => [value ?? 0, 'Employees']}
                             labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
-                            labelStyle={{ color: '#64748B', fontWeight: 600, marginBottom: '4px' }}
+                            labelStyle={{ color: CHART_COLORS.textMuted, fontWeight: 600, marginBottom: '4px' }}
                         />
                         <Bar
                             dataKey="count"
                             fill="url(#barGradient)"
-                            radius={[6, 6, 0, 0]}
-                            barSize={35}
+                            radius={[4, 4, 0, 0]}
+                            barSize={32}
                         >
                             <LabelList
                                 dataKey="count"
                                 position="top"
                                 offset={10}
-                                style={{ fill: 'var(--color-text-title)', fontWeight: 800, fontSize: 12 }}
+                                style={{ fill: CHART_COLORS.text, fontWeight: 700, fontSize: 11 }}
                                 formatter={(val: any) => val > 0 ? val : ''}
                             />
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
-            </div>
-        </div>
+        </ChartCard>
     );
 };
 

@@ -80,6 +80,7 @@ export async function POST(request: Request) {
         const visitorName = primaryVisitor.name;
         const visitorTitle = primaryVisitor.title;
         const currentCompany = primaryVisitor.company;
+        const powerAutomateRunId = (body.power_automate_run_id || body.powerAutomateRunId || body.run_id || '').trim() || null;
 
         visitorPool = await getVisitorDbConnection();
 
@@ -133,10 +134,10 @@ export async function POST(request: Request) {
 
         const { rows: visitorRequests } = await visitorPool.query(
             `INSERT INTO "VisitorRequest" 
-             (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt", "visitingSite", "purposeDetail", visitors)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12, $13, $14)
+             (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt", "visitingSite", "purposeDetail", visitors, power_automate_run_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12, $13, $14, $15)
              RETURNING id`,
-            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate || startDate), purposeOfVisit || (isInterviewee ? 'Interview' : ''), visitorCategory, JSON.stringify(enhancedDetails), initialStatus, visitingSite, purposeDetail || '', JSON.stringify(visitors || [])]
+            [newRequestId, submitterId, visitorName, visitorTitle, currentCompany, new Date(startDate), new Date(endDate || startDate), purposeOfVisit || (isInterviewee ? 'Interview' : ''), visitorCategory, JSON.stringify(enhancedDetails), initialStatus, visitingSite, purposeDetail || '', JSON.stringify(visitors || []), powerAutomateRunId]
         );
 
         const visitorRequestId = visitorRequests[0].id;
@@ -221,7 +222,7 @@ export async function POST(request: Request) {
             // Trigger Power Automate ONCE with payload containing rooms and VP variables
             if (powerAutomateUrl && roomsPayload.length > 0) {
                 try {
-                    await fetch(powerAutomateUrl, {
+                    const paResponse = await fetch(powerAutomateUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -245,6 +246,10 @@ export async function POST(request: Request) {
                             rooms: roomsPayload
                         }),
                     });
+                    const resRunId = paResponse.headers.get('x-ms-workflow-run-id') || paResponse.headers.get('x-ms-request-id');
+                    if (resRunId && !powerAutomateRunId) {
+                        await visitorPool.query('UPDATE "VisitorRequest" SET power_automate_run_id = $1 WHERE id = $2', [resRunId, visitorRequestId]);
+                    }
                     console.log(`Power Automate triggered successfully for unified room approval.`);
                 } catch (paError) {
                     console.error(`Failed to trigger unified Power Automate:`, paError);
@@ -343,6 +348,10 @@ export async function POST(request: Request) {
                         const errText = await paResponse.text();
                         console.error(`Power Automate returned error ${paResponse.status} for Vendor/Contractor:`, errText);
                     } else {
+                        const resRunId = paResponse.headers.get('x-ms-workflow-run-id') || paResponse.headers.get('x-ms-request-id');
+                        if (resRunId && !powerAutomateRunId) {
+                            await visitorPool.query('UPDATE "VisitorRequest" SET power_automate_run_id = $1 WHERE id = $2', [resRunId, visitorRequestId]);
+                        }
                         console.log(`Power Automate triggered successfully for supervisor approval: ${submitterEmail}`);
                     }
                 } catch (paError) {
@@ -467,6 +476,7 @@ export async function GET(request: Request) {
                 r.details,
                 r.visitors,
                 r."editCount" as edit_count,
+                r.power_automate_run_id,
                 r."createdAt" as created_at,
                 (
                     SELECT COALESCE(json_agg(

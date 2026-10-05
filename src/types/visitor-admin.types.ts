@@ -52,6 +52,7 @@ export interface VisitorAdminRequestRecord {
     profile_department: string | null;
     profiles?: VisitorAdminUserProfile;
     request_approvals?: RequestApprovalRecord[];
+    power_automate_run_id?: string | null;
 
     // Interviewee & legacy compatibility fields
     interviewee_name?: string;

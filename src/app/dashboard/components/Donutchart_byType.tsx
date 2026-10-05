@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import type { EmployeeFilter } from '../page';
 import { OrgNode } from '@/types/orgchart';
+import { ChartCard, CHART_COLORS, chartTooltipStyle } from '@/components/dashboard';
 
 interface DonutChartProps {
     className?: string;
@@ -58,13 +59,13 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
 
         return (
             <g>
-                <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="var(--color-text-light)" fill="none" strokeWidth={1} />
-                <circle cx={ex} cy={ey} r={2} fill="var(--color-text-light)" stroke="none" />
+                <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={CHART_COLORS.axisLine} fill="none" strokeWidth={1} />
+                <circle cx={ex} cy={ey} r={2} fill={CHART_COLORS.axis} stroke="none" />
                 <text 
-                    x={ex + (Math.cos(-midAngle * RADIAN) >= 0 ? 1 : -1) * 8} 
-                    y={ey} 
-                    textAnchor={textAnchor} 
-                    fill="var(--color-text-body)" 
+                    x={ex + (Math.cos(-midAngle * RADIAN) >= 0 ? 1 : -1) * 8}
+                    y={ey}
+                    textAnchor={textAnchor}
+                    fill={CHART_COLORS.text}
                     dominantBaseline="central"
                     className="text-[12px] font-bold"
                 >
@@ -76,47 +77,30 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
 
     const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
-    if (loading) {
-        return (
-            <div className={`bg-[var(--color-bg-card)] rounded-xl shadow-sm p-4 h-full flex flex-col ${className}`}>
-                <div className="flex-1 flex flex-col items-center justify-center gap-4 animate-pulse">
-                    <div className="w-48 h-48 rounded-full border-[16px] border-gray-100"></div>
-                </div>
-            </div>
-        );
-    }
-
-    if (!chartData || chartData.length === 0) {
-        return (
-            <div className={`bg-[var(--color-bg-card)] rounded-xl shadow-sm p-4 h-full flex flex-col ${className}`}>
-                <div className="text-center text-gray-400 flex-1 flex items-center justify-center text-sm">
-                    No data available
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className={`bg-[var(--color-bg-card)] rounded-xl shadow-sm p-4 h-full flex flex-col min-h-0 ${className}`}>
-            <div className="shrink-0 mb-2">
-                <h3 className="text-[13px] pl-1 font-bold text-title">Employee Type</h3>
-            </div>
-
-            <div className="flex-1 min-h-0 relative">
+        <ChartCard
+            className={className}
+            kicker="WORKFORCE COMPOSITION"
+            title="Employee Type"
+            loading={loading}
+            empty={!chartData || chartData.length === 0}
+            emptyMessage="No data available"
+            contentClassName="flex-1 min-h-0 relative"
+        >
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <defs>
                             <linearGradient id="gradStaff" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#8B5CF6" stopOpacity={1} />
-                                <stop offset="100%" stopColor="#C4B5FD" stopOpacity={1} />
+                                <stop offset="0%" stopColor={CHART_COLORS.accentPurple} stopOpacity={1} />
+                                <stop offset="100%" stopColor={CHART_COLORS.accentPurpleLight} stopOpacity={1} />
                             </linearGradient>
                             <linearGradient id="gradIDL" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#0EA5E9" stopOpacity={1} />
-                                <stop offset="100%" stopColor="#7DD3FC" stopOpacity={1} />
+                                <stop offset="0%" stopColor={CHART_COLORS.accentSky} stopOpacity={1} />
+                                <stop offset="100%" stopColor={CHART_COLORS.accentSkyLight} stopOpacity={1} />
                             </linearGradient>
                             <linearGradient id="gradDL" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#3B82F6" stopOpacity={1} />
-                                <stop offset="100%" stopColor="#93C5FD" stopOpacity={1} />
+                                <stop offset="0%" stopColor={CHART_COLORS.accentBlue} stopOpacity={1} />
+                                <stop offset="100%" stopColor={CHART_COLORS.accentBlueLight} stopOpacity={1} />
                             </linearGradient>
                         </defs>
                         <Pie
@@ -143,20 +127,13 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                                         style={{ outline: 'none', cursor: 'pointer' }}
                                         onClick={() => onFilterChange?.({ type: 'type', value: entry.name, label: `Type: ${entry.name}` })}
                                     />
-                                )
+                                );
                             })}
                         </Pie>
                         <Tooltip
                             isAnimationActive={false}
-                            contentStyle={{
-                                backgroundColor: 'var(--color-bg-card)',
-                                border: '1px solid var(--color-border-light)',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                color: 'var(--color-text-body)',
-                                fontSize: '12px'
-                            }}
-                            itemStyle={{ color: '#1E293B' }}
+                            contentStyle={chartTooltipStyle}
+                            itemStyle={{ color: CHART_COLORS.text }}
                         />
                         <Legend
                             verticalAlign="bottom"
@@ -165,9 +142,9 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                                 <div className="flex justify-center gap-6 mt-4">
                                     {payload?.map((entry: any, index: number) => {
                                         const data = chartData.find(d => d.name === entry.value);
-                                        let dotColor = '#3B82F6';
-                                        if (entry.value === 'Staff') dotColor = '#8B5CF6';
-                                        if (entry.value === 'IDL') dotColor = '#0EA5E9';
+                                        let dotColor: string = CHART_COLORS.accentBlue;
+                                        if (entry.value === 'Staff') dotColor = CHART_COLORS.accentPurple;
+                                        if (entry.value === 'IDL') dotColor = CHART_COLORS.accentSky;
 
                                         return (
                                             <button
@@ -175,9 +152,9 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                                                 className="flex items-center gap-2 text-xs hover:opacity-70 transition-opacity"
                                                 onClick={() => onFilterChange?.({ type: 'type', value: entry.value, label: `Type: ${entry.name}` })}
                                             >
-                                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: dotColor }}></span>
-                                                <span className="text-body font-bold">{entry.value}</span>
-                                                <span className="text-muted font-medium">({data?.value} - {data?.percentage}%)</span>
+                                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: dotColor }}></span>
+                                                <span className="text-slate-800 font-bold">{entry.value}</span>
+                                                <span className="text-slate-500 font-medium">({data?.value} - {data?.percentage}%)</span>
                                             </button>
                                         );
                                     })}
@@ -191,8 +168,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                     <div className="text-3xl font-bold text-title tracking-tight">{total}</div>
                     <div className="text-[11px] text-muted font-bold uppercase tracking-[0.1em] mt-0.5">Total</div>
                 </div>
-            </div>
-        </div>
+        </ChartCard>
     );
 };
 

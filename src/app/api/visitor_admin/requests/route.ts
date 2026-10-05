@@ -41,7 +41,7 @@ export async function GET(request: Request) {
         let paramCount = 1;
 
         if (startDate && endDate) {
-            conditions.push(`(r."startDate"::date <= $${paramCount+1}::date AND r."endDate"::date >= $${paramCount}::date)`);
+            conditions.push(`(r."startDate"::date <= $${paramCount + 1}::date AND r."endDate"::date >= $${paramCount}::date)`);
             queryParams.push(startDate, endDate);
             paramCount += 2;
         } else if (startDate) {
@@ -134,7 +134,7 @@ export async function GET(request: Request) {
         }
 
         if (completeStartDate && completeEndDate) {
-            conditions.push(`r.status IN ('COMPLETE', 'APPROVED') AND (r."updatedAt"::date >= $${paramCount}::date AND r."updatedAt"::date <= $${paramCount+1}::date)`);
+            conditions.push(`r.status IN ('COMPLETE', 'APPROVED') AND (r."updatedAt"::date >= $${paramCount}::date AND r."updatedAt"::date <= $${paramCount + 1}::date)`);
             queryParams.push(completeStartDate, completeEndDate);
             paramCount += 2;
         } else if (completeStartDate) {
@@ -171,6 +171,7 @@ export async function GET(request: Request) {
                 r."purposeDetail" as purpose_detail,
                 r.details,
                 r.visitors,
+                r.power_automate_run_id,
                 r."createdAt" as created_at,
                 r."updatedAt" as updated_at,
                 p.name as profile_name,
@@ -192,7 +193,7 @@ export async function GET(request: Request) {
             LEFT JOIN "User" p ON r."submitterId" = p.id
             ${whereClause}
             ORDER BY r."createdAt" DESC
-            LIMIT $${paramCount} OFFSET $${paramCount+1}
+            LIMIT $${paramCount} OFFSET $${paramCount + 1}
         `;
         queryParams.push(limit, offset);
 
@@ -204,7 +205,7 @@ export async function GET(request: Request) {
             profiles: { name: r.profile_name, department: r.profile_department }
         }));
 
-        return NextResponse.json({ 
+        return NextResponse.json({
             requests: formattedRows,
             pagination: {
                 total,
@@ -217,6 +218,113 @@ export async function GET(request: Request) {
     } catch (error: any) {
         console.error('Fetch requests error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}
+
+const formatEmail = (emailOrUsername?: string | null) => {
+    if (!emailOrUsername) return '';
+    if (emailOrUsername.includes('@')) return emailOrUsername;
+    return `${emailOrUsername}@ttigroup.com.vn`;
+};
+
+const buildPowerAutomateRunUrl = (runId?: string | null) => {
+    if (!runId) return null;
+    return `https://make.powerautomate.com/environments/Default-8b8cc6cf-0eaa-4b64-98e4-6d4672c44930/flows/bffa6e65-ca94-43ee-8416-f14054f729a5/runs/${runId}`;
+};
+
+async function sendAdminDecisionWebhook(
+    visitorPool: any,
+    requestId: string,
+    decision: string,
+    adminUser: any
+) {
+    const webhookUrl = process.env.POWER_AUTOMATE_ADMIN_DECISION_URL ||
+        'https://default8b8cc6cf0eaa4b6498e46d4672c449.30.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/10/workflows/5bfc3984ba1f44fa965ef3fe5fd2547a/triggers/manual/paths/invoke?api-version=1';
+
+    if (!webhookUrl) return;
+
+    try {
+        const { rows: reqRows } = await visitorPool.query(`
+            SELECT r.*, u.name as submitter_name, u.email as submitter_email, u.department as submitter_dept
+            FROM "VisitorRequest" r
+            LEFT JOIN "User" u ON r."submitterId" = u.id
+            WHERE r.id = $1
+        `, [requestId]);
+
+        if (reqRows.length === 0) return;
+        const req = reqRows[0];
+
+        const { rows: appRows } = await visitorPool.query(`
+            SELECT ra.status, ra."approverEmail", rm.name as room_name
+            FROM "RequestApproval" ra
+            LEFT JOIN "RoomArea" rm ON ra."roomAreaId" = rm.id
+            WHERE ra."requestId" = $1
+        `, [requestId]);
+
+        let parsedVisitors: any[] = [];
+        try {
+            if (typeof req.visitors === 'string') {
+                parsedVisitors = JSON.parse(req.visitors);
+            } else if (Array.isArray(req.visitors)) {
+                parsedVisitors = req.visitors;
+            }
+        } catch {
+            parsedVisitors = [];
+        }
+
+        const runId = req.power_automate_run_id || null;
+        const runUrl = buildPowerAutomateRunUrl(runId);
+        const submitterEmail = formatEmail(req.submitter_email || req.submitterId);
+
+        const payload = {
+            event: 'ADMIN_DECISION',
+            action: decision,
+            status: decision,
+            requestId: req.id,
+            power_automate_run_id: runId,
+            power_automate_run_url: runUrl,
+            submitter: {
+                id: req.submitterId || '',
+                name: req.submitter_name || req.submitterId || 'User',
+                email: submitterEmail,
+                department: req.submitter_dept || ''
+            },
+            visitorDetails: {
+                visitorName: req.visitorName || '',
+                visitorTitle: req.visitorTitle || '',
+                currentCompany: req.currentCompany || '',
+                visitorCategory: req.visitorCategory || '',
+                visitingSite: req.visitingSite || '',
+                startDate: req.startDate ? req.startDate.toString() : '',
+                endDate: req.endDate ? req.endDate.toString() : '',
+                purposeOfVisit: req.purposeOfVisit || '',
+                purposeDetail: req.purposeDetail || '',
+                totalVisitors: (parsedVisitors && parsedVisitors.length > 0) ? parsedVisitors.length : 1
+            },
+            visitorsList: parsedVisitors,
+            roomApprovals: appRows.map((a: any) => ({
+                roomName: a.room_name || 'Host Department Approval',
+                status: a.status,
+                approverEmail: a.approverEmail
+            })),
+            adminDecision: {
+                decision: decision,
+                updatedBy: adminUser?.name || adminUser?.username || 'Admin',
+                adminEmail: adminUser?.email || '',
+                comment: '',
+                updatedAt: new Date().toISOString()
+            }
+        };
+
+        const res = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        console.log(`[AdminDecision Webhook] Triggered for req ${requestId} (${decision}) - Status: ${res.status}`);
+    } catch (error) {
+        console.error('[AdminDecision Webhook] Failed to trigger Power Automate:', error);
     }
 }
 
@@ -247,7 +355,7 @@ export async function PATCH(request: Request) {
 
             if (approvalRows.length > 0) {
                 const reqId = approvalRows[0].requestId;
-                
+
                 const { rows: allApps } = await visitorPool.query(
                     'SELECT status FROM "RequestApproval" WHERE "requestId"=$1',
                     [reqId]
@@ -257,7 +365,7 @@ export async function PATCH(request: Request) {
                     const anyApproved = allApps.some(a => a.status === 'APPROVED');
                     const allRejected = allApps.every(a => a.status === 'REJECTED');
                     const allDone = allApps.every(a => a.status === 'APPROVED' || a.status === 'REJECTED');
-                    
+
                     let finalStatus = 'IN PROCESS';
                     if (allDone) {
                         if (allRejected) finalStatus = 'REJECTED';
@@ -269,6 +377,9 @@ export async function PATCH(request: Request) {
                         [finalStatus, reqId]
                     );
 
+                    if (allDone && (finalStatus === 'COMPLETE' || finalStatus === 'REJECTED' || finalStatus === 'APPROVED')) {
+                        await sendAdminDecisionWebhook(visitorPool, reqId, finalStatus, session.user);
+                    }
                 }
             }
 
@@ -284,7 +395,8 @@ export async function PATCH(request: Request) {
                 [updates.status, id]
             );
 
-
+            // Send webhook to Power Automate flow on Approve / Reject / Status update
+            await sendAdminDecisionWebhook(visitorPool, id, updates.status, session.user);
 
             return NextResponse.json({ message: 'Request updated successfully', data: rows[0] }, { status: 200 });
         }
@@ -317,7 +429,7 @@ export async function DELETE(request: Request) {
         }
 
         const visitorPool = await getVisitorDbConnection();
-        
+
         // Use ANY array operator for postgres
         await visitorPool.query('DELETE FROM "VisitorRequest" WHERE id = ANY($1)', [ids]);
 

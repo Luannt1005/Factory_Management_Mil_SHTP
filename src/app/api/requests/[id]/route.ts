@@ -101,6 +101,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const cleanStartDate = start_date ? new Date(start_date) : existing.startDate;
         const cleanEndDate = end_date ? new Date(end_date) : (start_date ? new Date(start_date) : existing.endDate);
 
+        const rawRunId = body.power_automate_run_id ?? body.powerAutomateRunId ?? body.run_id;
+        const powerAutomateRunId = rawRunId !== undefined
+            ? (rawRunId ? String(rawRunId).trim() : null)
+            : (existing.power_automate_run_id || null);
+
         const updateQuery = `
             UPDATE "VisitorRequest"
             SET 
@@ -114,9 +119,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
                 "visitorName" = $8,
                 "visitorTitle" = $9,
                 "currentCompany" = $10,
+                power_automate_run_id = $11,
                 "editCount" = COALESCE("editCount", 0) + 1,
                 "updatedAt" = NOW()
-            WHERE id = $11
+            WHERE id = $12
             RETURNING *;
         `;
 
@@ -131,6 +137,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             visitorName,
             visitorTitle,
             currentCompany,
+            powerAutomateRunId,
             requestId
         ]);
 

@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LabelList, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LabelList, Tooltip, CartesianGrid } from 'recharts';
 import type { EmployeeFilter } from '../page';
 import { OrgNode } from '@/types/orgchart';
+import { ChartCard, CHART_COLORS, chartGridProps, chartAxisProps, chartTooltipStyle } from '@/components/dashboard';
 
 interface SeniorityChartProps {
     className?: string;
@@ -20,10 +21,10 @@ const TENURE_BUCKETS = [
     { key: '> 5Y', label: '> 5 years', min: 60, max: Infinity }
 ];
 
-// Colors
+// Colors mapped to shared Chart Theme
 const COLORS = {
-    Staff: '#8B5CF6',  // Purple
-    IDL: '#0EA5E9'     // Sky Blue (Cyan-ish)
+    Staff: CHART_COLORS.accentPurple,  // Violet / Staff
+    IDL: CHART_COLORS.accentSky        // Sky Blue / IDL
 };
 
 const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChange, nodes, loading = false }) => {
@@ -109,108 +110,54 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
         </div>
     );
 
-    if (loading) {
-        return (
-            <div className={`bg-[var(--color-bg-card)] rounded-xl shadow-sm p-4 h-full flex flex-col ${className}`}>
-                <div className="flex items-center justify-between mb-4 animate-pulse">
-                    <div className="h-5 w-32 bg-gray-200 rounded"></div>
-                    <div className="flex gap-2">
-                        <div className="h-3 w-12 bg-gray-200 rounded"></div>
-                        <div className="h-3 w-12 bg-gray-200 rounded"></div>
-                    </div>
-                </div>
-                <div className="flex-1 flex items-end justify-between gap-2 px-2 animate-pulse">
-                    {[...Array(6)].map((_, i) => (
-                        <div key={i} className="w-full bg-gray-100 rounded-t-lg" style={{ height: `${[45, 60, 35, 70, 50, 65][i]}%` }}></div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className={`bg-[var(--color-bg-card)] rounded-xl shadow-sm p-4 h-full flex flex-col ${className}`}>
-                <div className="text-center text-red-500 flex-1 flex items-center justify-center text-sm">
-                    Error loading data
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className={`bg-[var(--color-bg-card)] rounded-xl shadow-sm p-1 h-full flex flex-col min-h-0 ${className}`}>
-            {/* Header */}
-            <div className="shrink-0 mb-4 flex items-center justify-between">
-                <div>
-                    <h3 className="text-[13px] pl-1 py-1 font-bold text-title">Headcount by Tenure</h3>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded-sm bg-[#8B5CF6]"></span>
-                        <span className="text-[11px] font-semibold text-body">Staff</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded-sm bg-[#F59E0B]"></span>
-                        <span className="text-[11px] font-semibold text-body">IDL</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Chart */}
-            {/* Chart */}
-            <div className="flex-1 min-h-0">
-                <ResponsiveContainer width="100%" height="100%">
+        <ChartCard
+            className={className}
+            kicker="TENURE DISTRIBUTION"
+            title="Headcount by Tenure"
+            action={renderLegend()}
+            loading={loading}
+            error={error}
+        >
+            <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={chartData}
-                        margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                        margin={{ top: 12, right: 10, left: 10, bottom: 0 }}
                     >
                         <defs>
                             <linearGradient id="staffGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#8B5CF6" stopOpacity={1} />
-                                <stop offset="100%" stopColor="#C4B5FD" stopOpacity={1} />
+                                <stop offset="0%" stopColor={CHART_COLORS.accentPurple} stopOpacity={1} />
+                                <stop offset="100%" stopColor={CHART_COLORS.accentPurpleLight} stopOpacity={1} />
                             </linearGradient>
                             <linearGradient id="idlGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#0EA5E9" stopOpacity={1} />
-                                <stop offset="100%" stopColor="#7DD3FC" stopOpacity={1} />
+                                <stop offset="0%" stopColor={CHART_COLORS.accentSky} stopOpacity={1} />
+                                <stop offset="100%" stopColor={CHART_COLORS.accentSkyLight} stopOpacity={1} />
                             </linearGradient>
                         </defs>
+                        <CartesianGrid {...chartGridProps} />
                         <XAxis
                             dataKey="name"
-                            tick={{
-                                fill: 'var(--color-text-body)',
-                                fontSize: 11,
-                                fontWeight: 700
-                            }}
-                            axisLine={{ stroke: 'var(--color-border-light)' }}
-                            tickLine={false}
+                            {...chartAxisProps}
                         />
                         <Tooltip
                             isAnimationActive={false}
-                            contentStyle={{
-                                backgroundColor: 'var(--color-bg-card)',
-                                border: '1px solid var(--color-border-light)',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                color: 'var(--color-text-body)',
-                                fontSize: '12px'
-                            }}
-                            itemStyle={{ color: 'var(--color-text-body)' }}
+                            contentStyle={chartTooltipStyle}
+                            itemStyle={{ color: CHART_COLORS.text }}
                             formatter={(value: any, name: any) => [value, name]}
                             labelFormatter={(label) => chartData.find(d => d.name === label)?.fullName || label}
-                            labelStyle={{ color: '#64748B', fontWeight: 600, marginBottom: '4px' }}
+                            labelStyle={{ color: CHART_COLORS.textMuted, fontWeight: 600, marginBottom: '4px' }}
                         />
                         <Bar
                             dataKey="Staff"
                             stackId="a"
                             fill="url(#staffGradient)"
                             radius={[0, 0, 0, 0]}
-                            barSize={35}
+                            barSize={32}
                         >
                             <LabelList
                                 dataKey="Staff"
                                 position="inside"
-                                style={{ fill: '#FFFFFF', fontWeight: 800, fontSize: 11 }}
+                                style={{ fill: '#FFFFFF', fontWeight: 700, fontSize: 11 }}
                                 formatter={(value: any) => value > 0 ? value : ''}
                             />
                         </Bar>
@@ -218,21 +165,20 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
                             dataKey="IDL"
                             stackId="a"
                             fill="url(#idlGradient)"
-                            radius={[6, 6, 0, 0]}
-                            barSize={35}
+                            radius={[4, 4, 0, 0]}
+                            barSize={32}
                         >
                             <LabelList
                                 dataKey="IDL"
                                 position="top"
                                 offset={8}
-                                style={{ fill: 'var(--color-text-title)', fontWeight: 800, fontSize: 11 }}
+                                style={{ fill: CHART_COLORS.text, fontWeight: 700, fontSize: 11 }}
                                 formatter={(value: any) => value > 0 ? value : ''}
                             />
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
-            </div>
-        </div>
+        </ChartCard>
     );
 };
 

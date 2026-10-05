@@ -1,14 +1,7 @@
 import React, { useMemo } from 'react';
 import type { EmployeeFilter } from '../page';
 import { OrgNode } from '@/types/orgchart';
-
-interface StatCardProps {
-    title: string;
-    count: number;
-    loading?: boolean;
-    onClick?: () => void;
-    isActive?: boolean;
-}
+import { MetricCard } from '@/components/dashboard';
 
 interface StatsCardsProps {
     className?: string;
@@ -26,45 +19,6 @@ interface CardInfo {
     filterValue: string;
     label?: string;
 }
-
-// Compact StatCard for 72px height
-const StatCard: React.FC<StatCardProps> = ({ title, count, loading, onClick, isActive }) => {
-    if (loading) {
-        return (
-            <div className="h-[72px] bg-[var(--color-bg-card)] rounded-lg shadow-sm flex flex-col items-center justify-center">
-                <div className="animate-pulse flex flex-col items-center gap-1">
-                    <div className="h-5 bg-gray-200 rounded w-10"></div>
-                    <div className="h-3 bg-gray-200 rounded w-16"></div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <button
-            onClick={onClick}
-            className={`
-                min-h-[72px] h-auto py-2 w-full bg-[var(--color-bg-card)] rounded-lg shadow-sm
-                flex flex-col items-center justify-center gap-0.5
-                transition-all duration-200 cursor-pointer
-                border
-                ${isActive
-                    ? 'border-[#C40000] shadow-md ring-2 ring-red-100'
-                    : 'border-transparent hover:shadow-md hover:border-gray-200'
-                }
-            `}
-        >
-            {/* Count - Large number */}
-            <div className="text-xl font-bold text-title leading-tight">
-                {count.toLocaleString()}
-            </div>
-            {/* Label - Small uppercase */}
-            <div className="text-[10px] font-medium text-muted uppercase tracking-wide text-center px-1 leading-tight line-clamp-2 max-w-full">
-                {title}
-            </div>
-        </button>
-    );
-};
 
 const StatsCards: React.FC<StatsCardsProps> = ({ className, onFilterChange, activeFilter, nodes, loading = false, isFiltered = false }) => {
     // Data is now passed from parent - no more independent fetching
@@ -196,17 +150,18 @@ const StatsCards: React.FC<StatsCardsProps> = ({ className, onFilterChange, acti
     return (
         <div className={className}>
             {visibleCards.map((card, index) => (
-                <StatCard
+                <MetricCard
                     key={index}
-                    title={card.title}
-                    count={card.count}
+                    label={card.title}
+                    value={card.count}
+                    subtitle="Employees"
                     loading={loading}
                     onClick={() => onFilterChange?.({
                         type: card.filterType as any,
                         value: card.filterValue,
                         label: card.label || card.title
                     })}
-                    isActive={
+                    active={
                         (card.filterType === 'all' && activeFilter?.type === 'all') ||
                         (activeFilter?.type === card.filterType && activeFilter?.value === card.filterValue)
                     }

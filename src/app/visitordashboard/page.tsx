@@ -87,6 +87,12 @@ function DashboardContent() {
     };
 
     const abortControllerRef = useRef<AbortController | null>(null);
+    const pollCountRef = useRef(0);
+
+    // Reset polling counter when activeTab or page changes
+    useEffect(() => {
+        pollCountRef.current = 0;
+    }, [activeTab, pagination.page]);
 
     const fetchMyRequests = async (
         page: number,
@@ -152,16 +158,20 @@ function DashboardContent() {
             )
         );
 
-        if (!hasUnassignedManager) return;
+        if (!hasUnassignedManager) {
+            pollCountRef.current = 0;
+            return;
+        }
 
-        let pollCount = 0;
         const maxPolls = 6; // Safety limit: max 6 times (18 seconds) then stops completely
+        if (pollCountRef.current >= maxPolls) return;
 
         const intervalId = setInterval(() => {
-            pollCount++;
-            if (pollCount >= maxPolls) {
+            if (pollCountRef.current >= maxPolls) {
                 clearInterval(intervalId);
+                return;
             }
+            pollCountRef.current++;
             fetchMyRequests(pagination.page, activeTab, true);
         }, 3000);
 

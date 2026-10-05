@@ -9,6 +9,7 @@ import VisitorAnalyticsCharts from '@/features/visitor/analytics/components/Visi
 import VisitorAnalyticsRankings from '@/features/visitor/analytics/components/VisitorAnalyticsRankings';
 import VisitorAnalyticsRecentStream from '@/features/visitor/analytics/components/VisitorAnalyticsRecentStream';
 import CheckInOutLogsTable from '@/features/visitor/analytics/components/CheckInOutLogsTable';
+import { DashboardContainer } from '@/components/dashboard';
 
 export default function VisitorAnalytics() {
     const [activeTab, setActiveTab] = useState<'analytics' | 'checkinout_logs'>('analytics');
@@ -75,7 +76,7 @@ export default function VisitorAnalytics() {
     const { summary, trendData, periodicData, categoryData, departmentData, buDistribution, recentActivity } = data;
 
     return (
-        <div className="w-full pb-10 px-4 sm:px-6 bg-transparent min-h-screen pt-4 font-sans">
+        <DashboardContainer className="px-4 sm:px-6 pt-4 min-h-screen">
             {/* Top Navigation Tabs */}
             <div className="flex items-center gap-2 mb-5 border-b border-gray-200">
                 <button
@@ -144,6 +145,6 @@ export default function VisitorAnalytics() {
                     </VisitorAnalyticsRankings>
                 </>
             )}
-        </div>
+        </DashboardContainer>
     );
 }

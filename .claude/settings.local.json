@@ -1,0 +1,5 @@
+{
+  "localDev": true,
+  "skipExternalAuthInDev": false,
+  "defaultPort": 3001
+}

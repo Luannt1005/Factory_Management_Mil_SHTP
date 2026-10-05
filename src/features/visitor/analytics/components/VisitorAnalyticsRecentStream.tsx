@@ -1,5 +1,6 @@
 import React from 'react';
 import type { AnalyticsRecentActivityItem } from '@/types/visitor-analytics.types';
+import { Card } from '@/components/dashboard';
 
 interface VisitorAnalyticsRecentStreamProps {
     recentActivity: AnalyticsRecentActivityItem[];
@@ -7,7 +8,7 @@ interface VisitorAnalyticsRecentStreamProps {
 
 export default function VisitorAnalyticsRecentStream({ recentActivity }: VisitorAnalyticsRecentStreamProps) {
     return (
-        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm overflow-hidden flex flex-col h-[500px]">
+        <Card className="overflow-hidden flex flex-col h-[500px]">
             <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">REGISTRATIONS</div>
             <h3 className="text-sm font-black text-[#db011c] uppercase flex items-center gap-2 mb-4">
                 New Registrations <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#db011c] opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-[#db011c]"></span></span>
@@ -39,6 +40,6 @@ export default function VisitorAnalyticsRecentStream({ recentActivity }: Visitor
                     </div>
                 ))}
             </div>
-        </div>
+        </Card>
     );
 }

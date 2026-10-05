@@ -30,6 +30,7 @@ export interface VisitorRequestData {
     endDate?: string;
     status?: string;
     visitors: Visitor[];
+    power_automate_run_id?: string | null;
 }
 
 export interface VisitorLogEntry {
