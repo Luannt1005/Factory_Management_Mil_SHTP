@@ -196,8 +196,7 @@ export async function POST(req: Request) {
       const CHUNK_SIZE = 1000;
       for (let i = 0; i < dbIdsToDelete.length; i += CHUNK_SIZE) {
         const chunk = dbIdsToDelete.slice(i, i + CHUNK_SIZE);
-        const listStr = chunk.map(id => `'${id}'`).join(',');
-        await client.query(`DELETE FROM employees WHERE id IN (${listStr})`);
+        await client.query('DELETE FROM employees WHERE id = ANY($1::uuid[])', [chunk]);
         deletedCount += chunk.length;
       }
     }

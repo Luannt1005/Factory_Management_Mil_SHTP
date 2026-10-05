@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
+import type { PoolClient } from 'pg';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { hasPageAccess } from '@/lib/auth-server';
@@ -233,7 +234,7 @@ const buildPowerAutomateRunUrl = (runId?: string | null) => {
 };
 
 async function sendAdminDecisionWebhook(
-    visitorPool: any,
+    visitorPool: Pick<PoolClient, 'query'>,
     requestId: string,
     decision: string,
     adminUser: any
@@ -346,44 +347,53 @@ export async function PATCH(request: Request) {
 
         if (type === 'ROOM_APPROVAL') {
             const { approvalId, status } = updates;
-            await visitorPool.query('BEGIN');
+            // Dedicated client so BEGIN/COMMIT/ROLLBACK run on the same connection
+            const client = await visitorPool.connect();
+            try {
+                await client.query('BEGIN');
 
-            const { rows: approvalRows } = await visitorPool.query(
-                'UPDATE "RequestApproval" SET status=$1 WHERE id=$2 RETURNING "requestId"',
-                [status, approvalId]
-            );
-
-            if (approvalRows.length > 0) {
-                const reqId = approvalRows[0].requestId;
-
-                const { rows: allApps } = await visitorPool.query(
-                    'SELECT status FROM "RequestApproval" WHERE "requestId"=$1',
-                    [reqId]
+                const { rows: approvalRows } = await client.query(
+                    'UPDATE "RequestApproval" SET status=$1 WHERE id=$2 RETURNING "requestId"',
+                    [status, approvalId]
                 );
 
-                if (allApps.length > 0) {
-                    const anyApproved = allApps.some(a => a.status === 'APPROVED');
-                    const allRejected = allApps.every(a => a.status === 'REJECTED');
-                    const allDone = allApps.every(a => a.status === 'APPROVED' || a.status === 'REJECTED');
+                if (approvalRows.length > 0) {
+                    const reqId = approvalRows[0].requestId;
 
-                    let finalStatus = 'IN PROCESS';
-                    if (allDone) {
-                        if (allRejected) finalStatus = 'REJECTED';
-                        else if (anyApproved) finalStatus = 'COMPLETE';
-                    }
-
-                    await visitorPool.query(
-                        'UPDATE "VisitorRequest" SET status=$1 WHERE id=$2',
-                        [finalStatus, reqId]
+                    const { rows: allApps } = await client.query(
+                        'SELECT status FROM "RequestApproval" WHERE "requestId"=$1',
+                        [reqId]
                     );
 
-                    if (allDone && (finalStatus === 'COMPLETE' || finalStatus === 'REJECTED' || finalStatus === 'APPROVED')) {
-                        await sendAdminDecisionWebhook(visitorPool, reqId, finalStatus, session.user);
+                    if (allApps.length > 0) {
+                        const anyApproved = allApps.some(a => a.status === 'APPROVED');
+                        const allRejected = allApps.every(a => a.status === 'REJECTED');
+                        const allDone = allApps.every(a => a.status === 'APPROVED' || a.status === 'REJECTED');
+
+                        let finalStatus = 'IN PROCESS';
+                        if (allDone) {
+                            if (allRejected) finalStatus = 'REJECTED';
+                            else if (anyApproved) finalStatus = 'COMPLETE';
+                        }
+
+                        await client.query(
+                            'UPDATE "VisitorRequest" SET status=$1 WHERE id=$2',
+                            [finalStatus, reqId]
+                        );
+
+                        if (allDone && (finalStatus === 'COMPLETE' || finalStatus === 'REJECTED' || finalStatus === 'APPROVED')) {
+                            await sendAdminDecisionWebhook(client, reqId, finalStatus, session.user);
+                        }
                     }
                 }
-            }
 
-            await visitorPool.query('COMMIT');
+                await client.query('COMMIT');
+            } catch (txError) {
+                await client.query('ROLLBACK').catch(() => {});
+                throw txError;
+            } finally {
+                client.release();
+            }
             return NextResponse.json({ message: 'Room status updated' });
         }
 

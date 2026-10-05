@@ -45,8 +45,9 @@ export async function POST(request: Request) {
         );
 
         return NextResponse.json({ message: 'Host Department created successfully', data: rows[0] }, { status: 201 });
-    } catch (err: any) {
-        return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    } catch (err) {
+        console.error('[/api/admin/host-departments] error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
@@ -69,8 +70,9 @@ export async function PATCH(request: Request) {
         );
 
         return NextResponse.json({ message: 'Host Department updated successfully' }, { status: 200 });
-    } catch (err: any) {
-        return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    } catch (err) {
+        console.error('[/api/admin/host-departments] error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
@@ -88,7 +90,8 @@ export async function DELETE(request: Request) {
         await visitorPool.query('DELETE FROM "HostDepartment" WHERE id = $1', [id]);
 
         return NextResponse.json({ message: 'Host Department deleted successfully' }, { status: 200 });
-    } catch (err: any) {
-        return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    } catch (err) {
+        console.error('[/api/admin/host-departments] error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

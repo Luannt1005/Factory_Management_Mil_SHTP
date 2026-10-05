@@ -1,13 +1,14 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
+import type { PoolClient } from 'pg';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
 const formatEmail = (email: string | null | undefined) => { if (!email || typeof email !== 'string') return 'unknown@ttigroup.com.vn'; return email.includes('@') ? email : `@ttigroup.com.vn`; };
 
 export async function POST(request: Request) {
-    let visitorPool;
+    let client: PoolClient | undefined;
     try {
         const session = await getServerSession(authOptions);
         if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -38,9 +39,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'At least one candidate name is required' }, { status: 400 });
         }
 
-        visitorPool = await getVisitorDbConnection();
+        const visitorPool = await getVisitorDbConnection();
+        // Dedicated client so BEGIN/COMMIT/ROLLBACK run on the same connection
+        client = await visitorPool.connect();
 
-        await visitorPool.query('BEGIN');
+        await client.query('BEGIN');
 
         // Generate Custom ID with Prefix for Interviewee (Prefix 'A')
         const now = new Date();
@@ -50,7 +53,7 @@ export async function POST(request: Request) {
         const datePrefix = `A${dd}${mm}${yy}`;
 
         // Find the last sequence for today (supporting new format A24092601 and legacy A240926_01 / VI240926_01)
-        const { rows: lastReq } = await visitorPool.query(
+        const { rows: lastReq } = await client.query(
             `SELECT "visitorCode" FROM "IntervieweeRequest" WHERE "visitorCode" LIKE $1 ORDER BY "visitorCode" DESC LIMIT 1`,
             [`${datePrefix}%`]
         );
@@ -83,7 +86,7 @@ export async function POST(request: Request) {
             const candDept = (candidate.interviewDepartment || interviewDepartment || '').trim();
             const candInterviewer = (candidate.interviewerName || interviewerName || '').trim();
 
-            const { rows: inserted } = await visitorPool.query(
+            const { rows: inserted } = await client.query(
                 `INSERT INTO "IntervieweeRequest" 
                  ("visitorCode", "osName", "intervieweeName", "jobTitle", "interviewDepartment", "interviewerName", "startDate", "startTime", "interviewArea", status, "updatedAt")
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'COMPLETE', NOW())
@@ -97,7 +100,7 @@ export async function POST(request: Request) {
             }
         }
 
-        await visitorPool.query('COMMIT');
+        await client.query('COMMIT');
 
         // Trigger email notification webhook if configured
         if (powerAutomateNotificationUrl) {
@@ -145,9 +148,11 @@ export async function POST(request: Request) {
             count: createdIds.length
         }, { status: 201 });
 
-    } catch (error: any) {
-        if (visitorPool) await visitorPool.query('ROLLBACK');
+    } catch (error) {
+        if (client) await client.query('ROLLBACK').catch(() => {});
         console.error('Create interviewee request error:', error);
-        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    } finally {
+        client?.release();
     }
 }

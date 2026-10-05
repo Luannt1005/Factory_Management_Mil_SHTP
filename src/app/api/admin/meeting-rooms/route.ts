@@ -1,7 +1,13 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
+import { isAuthenticated, unauthorizedResponse, hasPageAccess } from '@/lib/auth-server';
 
 export async function GET(request: Request) {
+    if (!await isAuthenticated()) {
+        return unauthorizedResponse();
+    }
+
     try {
         const pool = await getVisitorDbConnection();
         const res = await pool.query('SELECT * FROM "MeetingRoom" ORDER BY "createdAt" DESC');
@@ -13,6 +19,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+    if (!await isAuthenticated()) {
+        return unauthorizedResponse();
+    }
+    if (!(await hasPageAccess('/visitoradmin/rooms'))) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     try {
         const { floorName, roomName } = await request.json();
 
@@ -34,6 +47,13 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+    if (!await isAuthenticated()) {
+        return unauthorizedResponse();
+    }
+    if (!(await hasPageAccess('/visitoradmin/rooms'))) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     try {
         const { id, floorName, roomName } = await request.json();
 
@@ -73,6 +93,13 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+    if (!await isAuthenticated()) {
+        return unauthorizedResponse();
+    }
+    if (!(await hasPageAccess('/visitoradmin/rooms'))) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');

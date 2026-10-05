@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
+import type { PoolClient } from 'pg';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
@@ -39,7 +40,7 @@ async function getOrCreateVisitorProfile(user: any, pool: any) {
 const formatEmail = (email: string | null | undefined) => { if (!email || typeof email !== 'string') return 'unknown@ttigroup.com.vn'; return email.includes('@') ? email : `@ttigroup.com.vn`; };
 
 export async function POST(request: Request) {
-    let visitorPool;
+    let client: PoolClient | undefined;
     try {
         const session = await getServerSession(authOptions);
         if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -82,9 +83,11 @@ export async function POST(request: Request) {
         const currentCompany = primaryVisitor.company;
         const powerAutomateRunId = (body.power_automate_run_id || body.powerAutomateRunId || body.run_id || '').trim() || null;
 
-        visitorPool = await getVisitorDbConnection();
+        const visitorPool = await getVisitorDbConnection();
+        // Dedicated client so BEGIN/COMMIT/ROLLBACK run on the same connection
+        client = await visitorPool.connect();
 
-        await visitorPool.query('BEGIN');
+        await client.query('BEGIN');
 
         // Generate Custom ID with Prefix
         // V: Vendor, C: Contractor, A: Interviewee, E: MIL/TTI Expat / SHTP Business trip (default)
@@ -104,7 +107,7 @@ export async function POST(request: Request) {
         const datePrefix = `${catPrefix}${dd}${mm}${yy}`;
 
         // Find the last sequence for today (supporting new format like E24092601 and legacy E240926_01)
-        const { rows: lastReq } = await visitorPool.query(
+        const { rows: lastReq } = await client.query(
             `SELECT id FROM "VisitorRequest" WHERE id LIKE $1 ORDER BY id DESC LIMIT 1`,
             [`${datePrefix}%`]
         );
@@ -128,11 +131,11 @@ export async function POST(request: Request) {
         
         const newRequestId = `${datePrefix}${String(sequence).padStart(2, '0')}`;
 
-        const submitterId = await getOrCreateVisitorProfile(session.user, visitorPool);
+        const submitterId = await getOrCreateVisitorProfile(session.user, client);
         const isInterviewee = visitorCategory === 'Interviewee';
         const initialStatus = isInterviewee ? 'COMPLETE' : 'IN PROCESS';
 
-        const { rows: visitorRequests } = await visitorPool.query(
+        const { rows: visitorRequests } = await client.query(
             `INSERT INTO "VisitorRequest" 
              (id, "submitterId", "visitorName", "visitorTitle", "currentCompany", "startDate", "endDate", "purposeOfVisit", "visitorCategory", details, status, "updatedAt", "visitingSite", "purposeDetail", visitors, power_automate_run_id)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12, $13, $14, $15)
@@ -148,11 +151,11 @@ export async function POST(request: Request) {
         const powerAutomateNotificationUrl = process.env.POWER_AUTOMATE_EMAIL_NOTIFICATION_URL;
 
         if (isExpat && roomIds && roomIds.length > 0) {
-            const { rows: allRoomsCountRow } = await visitorPool.query('SELECT COUNT(*) FROM "RoomArea" WHERE "isActive" = true');
+            const { rows: allRoomsCountRow } = await client.query('SELECT COUNT(*) FROM "RoomArea" WHERE "isActive" = true');
             const totalRooms = parseInt(allRoomsCountRow[0].count);
             const isVPApproval = (roomIds.length / totalRooms) > 0.6;
 
-            const { rows: rooms } = await visitorPool.query(
+            const { rows: rooms } = await client.query(
                 'SELECT id, name, "approverEmail" FROM "RoomArea" WHERE id = ANY($1::text[])',
                 [roomIds]
             );
@@ -161,7 +164,7 @@ export async function POST(request: Request) {
 
             // Add Host Department Approvals if selected
             if (functionalDept && department) {
-                const { rows: hostDepts } = await visitorPool.query(
+                const { rows: hostDepts } = await client.query(
                     'SELECT functional_host_email, department_host_email, functional_host_name, department_host_name FROM "HostDepartment" WHERE functional_dept = $1 AND department = $2 AND is_active = true LIMIT 1',
                     [functionalDept, department]
                 );
@@ -171,7 +174,7 @@ export async function POST(request: Request) {
                     
                     // Functional Host Approval
                     if (hostDept.functional_host_email) {
-                        const { rows: funcApprovalRows } = await visitorPool.query(
+                        const { rows: funcApprovalRows } = await client.query(
                             `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
                              VALUES (gen_random_uuid(), $1, NULL, $2, 'PENDING', NOW())
                              RETURNING id`,
@@ -186,7 +189,7 @@ export async function POST(request: Request) {
 
                     // Department Host Approval
                     if (hostDept.department_host_email) {
-                        const { rows: deptApprovalRows } = await visitorPool.query(
+                        const { rows: deptApprovalRows } = await client.query(
                             `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
                              VALUES (gen_random_uuid(), $1, NULL, $2, 'PENDING', NOW())
                              RETURNING id`,
@@ -203,7 +206,7 @@ export async function POST(request: Request) {
 
             // 1. Standard loop for each room (always run this)
             for (const room of rooms) {
-                const { rows: approvalRows } = await visitorPool.query(
+                const { rows: approvalRows } = await client.query(
                     `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
                      VALUES (gen_random_uuid(), $1, $2, $3, 'PENDING', NOW())
                      RETURNING id`,
@@ -248,7 +251,7 @@ export async function POST(request: Request) {
                     });
                     const resRunId = paResponse.headers.get('x-ms-workflow-run-id') || paResponse.headers.get('x-ms-request-id');
                     if (resRunId && !powerAutomateRunId) {
-                        await visitorPool.query('UPDATE "VisitorRequest" SET power_automate_run_id = $1 WHERE id = $2', [resRunId, visitorRequestId]);
+                        await client.query('UPDATE "VisitorRequest" SET power_automate_run_id = $1 WHERE id = $2', [resRunId, visitorRequestId]);
                     }
                     console.log(`Power Automate triggered successfully for unified room approval.`);
                 } catch (paError) {
@@ -303,7 +306,7 @@ export async function POST(request: Request) {
         } else if (!isExpat) {
             // For Vendor, Contractor, etc., insert a single approval record for Supervisor Approval
             const submitterEmail = formatEmail((session.user as any).username || session.user.email);
-            const { rows: approvalRows } = await visitorPool.query(
+            const { rows: approvalRows } = await client.query(
                 `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
                  VALUES (gen_random_uuid(), $1, NULL, $2, 'PENDING', NOW())
                  RETURNING id`,
@@ -350,7 +353,7 @@ export async function POST(request: Request) {
                     } else {
                         const resRunId = paResponse.headers.get('x-ms-workflow-run-id') || paResponse.headers.get('x-ms-request-id');
                         if (resRunId && !powerAutomateRunId) {
-                            await visitorPool.query('UPDATE "VisitorRequest" SET power_automate_run_id = $1 WHERE id = $2', [resRunId, visitorRequestId]);
+                            await client.query('UPDATE "VisitorRequest" SET power_automate_run_id = $1 WHERE id = $2', [resRunId, visitorRequestId]);
                         }
                         console.log(`Power Automate triggered successfully for supervisor approval: ${submitterEmail}`);
                     }
@@ -360,7 +363,7 @@ export async function POST(request: Request) {
             }
         }
 
-        await visitorPool.query('COMMIT');
+        await client.query('COMMIT');
 
         // Trigger email notification webhook if configured
         /*
@@ -394,10 +397,12 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ message: 'Request created successfully', id: visitorRequestId }, { status: 201 });
 
-    } catch (error: any) {
-        if (visitorPool) await visitorPool.query('ROLLBACK');
+    } catch (error) {
+        if (client) await client.query('ROLLBACK').catch(() => {});
         console.error('Create request error:', error);
-        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    } finally {
+        client?.release();
     }
 }
 
@@ -509,6 +514,6 @@ export async function GET(request: Request) {
 
     } catch (error: any) {
         console.error('Fetch requests error:', error);
-        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

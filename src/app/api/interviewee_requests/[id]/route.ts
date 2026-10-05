@@ -1,11 +1,12 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
+import type { PoolClient } from 'pg';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
-    let visitorPool;
+    let client: PoolClient | undefined;
     try {
         const session = await getServerSession(authOptions);
         if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -21,10 +22,14 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
             startDate, startTime, interviewArea, mealRegistration, factoryTour, visitingSite
         } = body;
 
-        visitorPool = await getVisitorDbConnection();
+        const visitorPool = await getVisitorDbConnection();
+
+        // Dedicated client so BEGIN/COMMIT/ROLLBACK run on the same connection
+
+        client = await visitorPool.connect();
 
         // 1. Check in VisitorRequest table (New format)
-        const { rows: vrRows } = await visitorPool.query(
+        const { rows: vrRows } = await client.query(
             `SELECT id, "editCount", details, visitors, "visitorCategory" FROM "VisitorRequest" WHERE id = $1`,
             [id]
         );
@@ -80,9 +85,9 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
                 factoryTour: factoryTour !== undefined ? factoryTour : (existingDetails.factoryTour || 'No')
             };
 
-            await visitorPool.query('BEGIN');
+            await client.query('BEGIN');
 
-            await visitorPool.query(
+            await client.query(
                 `UPDATE "VisitorRequest"
                  SET "visitorName" = $1,
                      "visitorTitle" = $2,
@@ -109,13 +114,13 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
                 ]
             );
 
-            await visitorPool.query('COMMIT');
+            await client.query('COMMIT');
 
             return NextResponse.json({ message: 'Request updated successfully', editCount: currentEditCount + 1 }, { status: 200 });
         }
 
         // 2. Legacy fallback: Check in IntervieweeRequest table
-        const { rows: irRows } = await visitorPool.query(
+        const { rows: irRows } = await client.query(
             `SELECT "editCount" FROM "IntervieweeRequest" WHERE id = $1`,
             [id]
         );
@@ -129,9 +134,9 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
             return NextResponse.json({ error: 'Maximum edit limit (3 times) reached' }, { status: 400 });
         }
 
-        await visitorPool.query('BEGIN');
+        await client.query('BEGIN');
 
-        await visitorPool.query(
+        await client.query(
             `UPDATE "IntervieweeRequest" 
              SET "intervieweeName" = $1, "jobTitle" = $2, "interviewDepartment" = $3, 
                  "interviewerName" = $4, "startDate" = $5, "startTime" = $6, "interviewArea" = $7, 
@@ -140,13 +145,15 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
             [intervieweeName, jobTitle, interviewDepartment, interviewerName, new Date(startDate), startTime, interviewArea, id]
         );
 
-        await visitorPool.query('COMMIT');
+        await client.query('COMMIT');
 
         return NextResponse.json({ message: 'Request updated successfully', editCount: legacyEditCount + 1 }, { status: 200 });
 
-    } catch (error: any) {
-        if (visitorPool) await visitorPool.query('ROLLBACK');
+    } catch (error) {
+        if (client) await client.query('ROLLBACK').catch(() => {});
         console.error('Update interviewee request error:', error);
-        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    } finally {
+        client?.release();
     }
 }

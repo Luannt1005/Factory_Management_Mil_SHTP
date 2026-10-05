@@ -111,8 +111,8 @@ export async function GET(req: Request) {
           FROM employees 
           WHERE ${whereClause} 
           ORDER BY full_name ASC 
-          LIMIT ${limit} OFFSET ${offset}
-      `, queryValues);
+          LIMIT $${queryValues.length + 1} OFFSET $${queryValues.length + 2}
+      `, [...queryValues, limit, offset]);
 
       const employees = dataResult.rows;
 

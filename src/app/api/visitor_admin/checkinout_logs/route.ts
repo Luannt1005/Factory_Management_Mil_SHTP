@@ -193,6 +193,6 @@ export async function GET(request: Request) {
 
     } catch (error: any) {
         console.error('Fetch checkinout action logs error:', error);
-        return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

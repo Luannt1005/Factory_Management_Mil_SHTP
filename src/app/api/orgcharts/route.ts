@@ -1,12 +1,17 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getDbConnection } from '@/lib/db';
+import { isAuthenticated, unauthorizedResponse } from '@/lib/auth-server';
 
 /**
  * GET /api/orgcharts
  * Fetch custom orgcharts for a specific user
  */
 export async function GET(request: Request) {
+  if (!await isAuthenticated()) {
+    return unauthorizedResponse();
+  }
+
   const { searchParams } = new URL(request.url);
   const username = searchParams.get('username');
 
@@ -45,6 +50,10 @@ export async function GET(request: Request) {
  * Create a new custom orgchart
  */
 export async function POST(request: Request) {
+  if (!await isAuthenticated()) {
+    return unauthorizedResponse();
+  }
+
   try {
     const data = await request.json();
     const { username, orgchart_name, describe, org_data, is_public } = data;

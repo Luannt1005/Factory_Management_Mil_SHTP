@@ -38,8 +38,8 @@ export async function PUT(req: Request) {
         );
 
         return NextResponse.json({ success: true, message: "Password updated" });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Change Password Error:", error);
-        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: error instanceof Error && error.message === 'User not found' ? error.message : 'Internal server error' }, { status: 500 });
     }
 }

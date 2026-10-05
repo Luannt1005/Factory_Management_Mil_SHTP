@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { promises as fs, existsSync } from "fs";
 import * as path from "path";
 import * as os from "os";
+import { isAuthenticated, unauthorizedResponse } from "@/lib/auth-server";
 
 const getUploadDir = (): string => {
     if (existsSync("D:\\Images emp\\uploads")) {
@@ -16,6 +17,10 @@ const getUploadDir = (): string => {
 };
 
 export async function POST(req: Request) {
+    if (!await isAuthenticated()) {
+        return unauthorizedResponse();
+    }
+
     try {
         const formData = await req.formData();
         const file = formData.get("file") as Blob | null;
@@ -24,6 +29,14 @@ export async function POST(req: Request) {
         if (!file || !filename) {
             return NextResponse.json(
                 { success: false, error: "File and filename are required" },
+                { status: 400 }
+            );
+        }
+
+        // Prevent path traversal outside the uploads directory (same rule as GET /api/uploads/[filename])
+        if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
+            return NextResponse.json(
+                { success: false, error: "Invalid filename" },
                 { status: 400 }
             );
         }
@@ -50,10 +63,10 @@ export async function POST(req: Request) {
             path: `/api/uploads/${filename}`
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Upload handler error:", error);
         return NextResponse.json(
-            { success: false, error: error.message || "Unknown server error" },
+            { success: false, error: "Unknown server error" },
             { status: 500 }
         );
     }

@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getDbConnection } from '@/lib/db';
+import { isAuthenticated, unauthorizedResponse } from '@/lib/auth-server';
 
 /**
  * GET /api/orgcharts/[id]
@@ -10,6 +11,10 @@ export async function GET(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    if (!await isAuthenticated()) {
+        return unauthorizedResponse();
+    }
+
     try {
         const { id } = await params;
 
@@ -62,6 +67,10 @@ export async function PUT(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    if (!await isAuthenticated()) {
+        return unauthorizedResponse();
+    }
+
     try {
         const { id } = await params;
         const data = await request.json();
@@ -113,6 +122,10 @@ export async function DELETE(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    if (!await isAuthenticated()) {
+        return unauthorizedResponse();
+    }
+
     try {
         const { id } = await params;
         const pool = await getDbConnection();

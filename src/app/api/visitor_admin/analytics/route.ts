@@ -5,6 +5,13 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { hasPageAccess } from '@/lib/auth-server';
 
+interface DepartmentBucket {
+    name: string;
+    MIL: number;
+    SF: number;
+    total: number;
+}
+
 export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -25,16 +32,22 @@ export async function GET(request: Request) {
         const status = url.searchParams.get('status');
         const category = url.searchParams.get('category');
 
-        let whereConditions = ["1=1"];
-        if (startDate) whereConditions.push(`req."startDate" >= '${startDate}'`);
-        if (endDate) whereConditions.push(`req."startDate" <= '${endDate}'`);
-        if (status && status !== 'all') whereConditions.push(`req.status = '${status}'`);
-        if (bu && bu !== 'all') whereConditions.push(`req.bu = '${bu}'`);
+        // All filter values are bound as parameters ($1, $2, ...) to prevent SQL injection
+        const whereConditions: string[] = ["1=1"];
+        const queryParams: string[] = [];
+        const addParam = (value: string) => {
+            queryParams.push(value);
+            return `$${queryParams.length}`;
+        };
+        if (startDate) whereConditions.push(`req."startDate" >= ${addParam(startDate)}`);
+        if (endDate) whereConditions.push(`req."startDate" <= ${addParam(endDate)}`);
+        if (status && status !== 'all') whereConditions.push(`req.status = ${addParam(status)}`);
+        if (bu && bu !== 'all') whereConditions.push(`req.bu = ${addParam(bu)}`);
         if (category && category !== 'all') {
             if (category.toLowerCase().includes('expat')) {
                 whereConditions.push(`req.category ILIKE '%Expat%'`);
             } else {
-                whereConditions.push(`req.category ILIKE '${category}'`);
+                whereConditions.push(`req.category ILIKE ${addParam(category)}`);
             }
         }
         
@@ -77,8 +90,8 @@ export async function GET(request: Request) {
 
         // 1. STAT CARDS
         // Visitors Today (Scheduled for today, filtered)
-        const todayRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE DATE(req."startDate") = CURRENT_DATE AND ${whereClause}`);
-        const yesterdayRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE DATE(req."startDate") = CURRENT_DATE - 1 AND ${whereClause}`);
+        const todayRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE DATE(req."startDate") = CURRENT_DATE AND ${whereClause}`, queryParams);
+        const yesterdayRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE DATE(req."startDate") = CURRENT_DATE - 1 AND ${whereClause}`, queryParams);
         
         const visitorsToday = parseInt(todayRes.rows[0]?.count || 0);
         const visitorsYesterday = parseInt(yesterdayRes.rows[0]?.count || 0);
@@ -93,19 +106,19 @@ export async function GET(request: Request) {
             FROM "VisitorCheckInOut" c
             INNER JOIN BaseReqs req ON c."requestId" = req.id
             WHERE c.status = 'CHECKED_IN' AND ${whereClause}
-        `);
+        `, queryParams);
         const currentlyPresent = parseInt(presentRes.rows[0]?.count || 0);
 
         // Total This Week
-        const thisWeekRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE req."startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
-        const lastWeekRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE req."startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND req."startDate" < date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
+        const thisWeekRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE req."startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}`, queryParams);
+        const lastWeekRes = await visitorPool.query(`${cte} SELECT COUNT(*) as count FROM BaseReqs req WHERE req."startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND req."startDate" < date_trunc('week', CURRENT_DATE) AND ${whereClause}`, queryParams);
         const totalThisWeek = parseInt(thisWeekRes.rows[0]?.count || 0);
         const totalLastWeek = parseInt(lastWeekRes.rows[0]?.count || 0);
         const weekGrowth = totalLastWeek === 0 ? 100 : Math.round(((totalThisWeek - totalLastWeek) / totalLastWeek) * 100);
 
         // Average Stay Duration this week
-        const avgStayRes = await visitorPool.query(`${cte} SELECT AVG(EXTRACT(EPOCH FROM (req."endDate" - req."startDate"))/60) as avg_minutes FROM BaseReqs req WHERE req."endDate" IS NOT NULL AND req."startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
-        const lastWeekAvgRes = await visitorPool.query(`${cte} SELECT AVG(EXTRACT(EPOCH FROM (req."endDate" - req."startDate"))/60) as avg_minutes FROM BaseReqs req WHERE req."endDate" IS NOT NULL AND req."startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND req."startDate" < date_trunc('week', CURRENT_DATE) AND ${whereClause}`);
+        const avgStayRes = await visitorPool.query(`${cte} SELECT AVG(EXTRACT(EPOCH FROM (req."endDate" - req."startDate"))/60) as avg_minutes FROM BaseReqs req WHERE req."endDate" IS NOT NULL AND req."startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}`, queryParams);
+        const lastWeekAvgRes = await visitorPool.query(`${cte} SELECT AVG(EXTRACT(EPOCH FROM (req."endDate" - req."startDate"))/60) as avg_minutes FROM BaseReqs req WHERE req."endDate" IS NOT NULL AND req."startDate" >= date_trunc('week', CURRENT_DATE - interval '1 week') AND req."startDate" < date_trunc('week', CURRENT_DATE) AND ${whereClause}`, queryParams);
         const avgStayMinutes = Math.round(parseFloat(avgStayRes.rows[0]?.avg_minutes || 0));
         const avgStayLastWeek = Math.round(parseFloat(lastWeekAvgRes.rows[0]?.avg_minutes || 0));
         const avgStayChange = avgStayMinutes - avgStayLastWeek;
@@ -124,7 +137,7 @@ export async function GET(request: Request) {
             WHERE req."startDate" >= CURRENT_DATE - interval '7 weeks' AND ${whereClause}
             GROUP BY date_trunc('week', req."startDate")
             ORDER BY date_trunc('week', req."startDate")
-        `);
+        `, queryParams);
         const trendData = trendRes.rows;
 
         // 3. PERIODIC DATA
@@ -134,7 +147,7 @@ export async function GET(request: Request) {
             WHERE req."startDate" >= date_trunc('week', CURRENT_DATE) AND ${whereClause}
             GROUP BY EXTRACT(ISODOW FROM req."startDate")
             ORDER BY EXTRACT(ISODOW FROM req."startDate")
-        `);
+        `, queryParams);
         
         const periodicData = [];
         for (let i = 2; i <= 8; i++) {
@@ -148,7 +161,7 @@ export async function GET(request: Request) {
             SELECT req.category, COUNT(*) as count 
             FROM BaseReqs req WHERE ${whereClause}
             GROUP BY req.category
-        `);
+        `, queryParams);
         let categoryData = categoryRes.rows.map(r => ({
             name: r.category,
             value: parseInt(r.count)
@@ -172,9 +185,9 @@ export async function GET(request: Request) {
             SELECT req.department, req.bu, COUNT(*) as count
             FROM BaseReqs req WHERE ${whereClause}
             GROUP BY 1, 2
-        `);
+        `, queryParams);
 
-        const deptMap: Record<string, any> = {};
+        const deptMap: Record<string, DepartmentBucket> = {};
         deptRes.rows.forEach(r => {
             const dept = r.department || 'Others';
             if (!deptMap[dept]) deptMap[dept] = { name: dept, MIL: 0, SF: 0, total: 0 };
@@ -184,10 +197,10 @@ export async function GET(request: Request) {
             deptMap[dept].total += count;
         });
 
-        const departmentData = Object.values(deptMap).sort((a: any, b: any) => b.total - a.total).slice(0, 7);
+        const departmentData = Object.values(deptMap).sort((a, b) => b.total - a.total).slice(0, 7);
 
         let totalMIL = 0, totalSF = 0;
-        Object.values(deptMap).forEach((d: any) => { totalMIL += d.MIL; totalSF += d.SF; });
+        Object.values(deptMap).forEach((d) => { totalMIL += d.MIL; totalSF += d.SF; });
         const buDistribution = [ { name: 'MIL', value: totalMIL }, { name: 'Share Function', value: totalSF } ];
 
         // 6. RECENT ACTIVITY
@@ -196,7 +209,7 @@ export async function GET(request: Request) {
             FROM BaseReqs req WHERE ${whereClause}
             ORDER BY time DESC
             LIMIT 20
-        `);
+        `, queryParams);
 
         const uniqueRecent = recentRes.rows.map(row => ({
             name: row.name,
@@ -209,7 +222,7 @@ export async function GET(request: Request) {
             summary, trendData, periodicData, categoryData, departmentData, buDistribution, recentActivity: uniqueRecent
         }, { status: 200 });
 
-} catch (error: any) {
+} catch (error) {
         console.error('Fetch analytics error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

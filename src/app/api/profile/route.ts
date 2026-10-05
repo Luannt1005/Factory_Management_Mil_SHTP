@@ -17,9 +17,9 @@ export async function GET() {
         if (result.rows.length === 0) throw new Error("User not found");
 
         return NextResponse.json({ success: true, data: result.rows[0] });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Profile GET Error:", error);
-        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: error instanceof Error && error.message === 'User not found' ? error.message : 'Internal server error' }, { status: 500 });
     }
 }
 
@@ -44,8 +44,8 @@ export async function PUT(req: Request) {
         );
 
         return NextResponse.json({ success: true, data: { full_name: body.full_name } });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Profile PUT Error:", error);
-        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: error instanceof Error && error.message === 'User not found' ? error.message : 'Internal server error' }, { status: 500 });
     }
 }

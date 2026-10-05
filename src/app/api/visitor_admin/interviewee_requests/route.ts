@@ -87,7 +87,7 @@ export async function GET(request: Request) {
 
     } catch (error: any) {
         console.error('Fetch interviewee requests error:', error);
-        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
@@ -120,7 +120,7 @@ export async function PATCH(request: Request) {
 
     } catch (error: any) {
         console.error('Update interviewee request status error:', error);
-        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 

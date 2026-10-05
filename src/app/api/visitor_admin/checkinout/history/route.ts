@@ -220,6 +220,6 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
     } catch (error: any) {
         console.error('Fetch check-in/out history error:', error);
         require('fs').appendFileSync('c:\\Users\\luan.nguyen\\Desktop\\test org\\Orgchart_TTI_onprem\\scratch\\api_error.log', 'History Route Error: ' + error.stack + '\n');
-        return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
