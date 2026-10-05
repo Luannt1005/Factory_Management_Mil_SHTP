@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, message: "User created" });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Signup API Error:", error);
         return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }

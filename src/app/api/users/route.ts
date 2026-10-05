@@ -19,11 +19,11 @@ export async function GET() {
             success: true,
             data: result.rows
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("API Fetch Users Error:", error);
         return NextResponse.json({
             success: false,
-            message: error.message || "Failed to fetch users"
+            message: "Failed to fetch users"
         }, { status: 500 });
     }
 }
@@ -62,11 +62,11 @@ export async function POST(req: Request) {
             data: result.rows[0],
             message: "User created successfully"
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("API POST User Error:", error);
         return NextResponse.json({
             success: false,
-            message: error.message || "Failed to create user"
+            message: "Failed to create user"
         }, { status: 500 });
     }
 }
@@ -90,7 +90,7 @@ export async function PUT(req: Request) {
         const pool = await getDbConnection();
 
         let query = "UPDATE users SET full_name = $1, role = $2, orgchart_role = $3, visitor_role = $4, employee_id = $5, email = $6, status = $7, department = $8, job_title = $9, location = $10, app_role_ids = $11";
-        const values: any[] = [full_name, role, orgchart_role, visitor_role, employee_id || null, email || '', status || 'Active', department || null, job_title || null, location || null, app_role_ids || []];
+        const values: (string | string[] | null)[] = [full_name, role, orgchart_role, visitor_role, employee_id || null, email || '', status || 'Active', department || null, job_title || null, location || null, app_role_ids || []];
 
         if (password && password.trim() !== "") {
             query += ", password = $12 WHERE id = $13";
@@ -106,11 +106,11 @@ export async function PUT(req: Request) {
             success: true,
             message: "User updated successfully"
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("API PUT User Error:", error);
         return NextResponse.json({
             success: false,
-            message: error.message || "Failed to update user"
+            message: "Failed to update user"
         }, { status: 500 });
     }
 }
@@ -138,11 +138,11 @@ export async function DELETE(req: Request) {
             success: true,
             message: "User deleted successfully"
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("API DELETE User Error:", error);
         return NextResponse.json({
             success: false,
-            message: error.message || "Failed to delete user"
+            message: "Failed to delete user"
         }, { status: 500 });
     }
 }

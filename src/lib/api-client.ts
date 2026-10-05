@@ -7,6 +7,19 @@
  * SWR Fetcher function with intelligent caching
  * Uses browser cache for GET requests
  */
+/** Error thrown by the shared fetch helpers; carries the HTTP status and parsed response body */
+export class ApiClientError extends Error {
+  status: number;
+  info: unknown;
+
+  constructor(message: string, status: number, info: unknown) {
+    super(message);
+    this.name = 'ApiClientError';
+    this.status = status;
+    this.info = info;
+  }
+}
+
 export const swrFetcher = async (url: string) => {
   try {
     const response = await fetch(url, {
@@ -29,10 +42,7 @@ export const swrFetcher = async (url: string) => {
       const errorMessage = data?.error || data?.message || `API error: ${response.status}`;
       console.error(`❌ API error ${response.status} for URL: ${url}`, errorMessage);
 
-      const error: any = new Error(errorMessage);
-      error.info = data;
-      error.status = response.status;
-      throw error;
+      throw new ApiClientError(errorMessage, response.status, data);
     }
 
     console.log(`✓ Fetched from ${response.headers.get('x-from-cache') ? 'cache' : 'server'}: ${url}`);

@@ -61,10 +61,10 @@ export async function POST(req: Request) {
             path: publicUrl
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Upload handler error:", error);
         return NextResponse.json(
-            { success: false, error: error.message || "Unknown server error" },
+            { success: false, error: "Unknown server error" },
             { status: 500 }
         );
     }

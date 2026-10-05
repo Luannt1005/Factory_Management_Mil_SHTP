@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: errorMessage,
+        error: "Failed to add department",
       },
       { status: 500 }
     );

@@ -65,7 +65,7 @@ export async function hasPageAccess(pagePath: string): Promise<boolean> {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) return false;
     
-    const user = session.user as any;
+    const user = session.user;
     if (user.role === 'admin') return true;
     
     if (user.allowedPages && Array.isArray(user.allowedPages)) {
@@ -94,7 +94,7 @@ export async function hasPageAccess(pagePath: string): Promise<boolean> {
             return expandedAllowedPages.has(matchingDistinctPage);
         }
 
-        return Array.from(expandedAllowedPages).some((p: any) => pagePath.startsWith(p + '/'));
+        return Array.from(expandedAllowedPages).some((p: string) => pagePath.startsWith(p + '/'));
     }
     
     return false;

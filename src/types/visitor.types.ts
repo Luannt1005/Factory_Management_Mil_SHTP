@@ -44,6 +44,6 @@ export interface VisitorLogEntry {
     cardNumber: string | null;
     performedBy: string;
     performedByName: string | null;
-    details: any;
+    details: unknown;
     createdAt: string;
 }

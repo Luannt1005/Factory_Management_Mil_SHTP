@@ -12,8 +12,8 @@ export interface ChartTooltipProps {
     unit?: string;
   }>;
   label?: string | number;
-  formatter?: (value: any, name: string) => React.ReactNode;
-  labelFormatter?: (label: any) => React.ReactNode;
+  formatter?: (value: unknown, name: string) => React.ReactNode;
+  labelFormatter?: (label: unknown) => React.ReactNode;
 }
 
 export const ChartTooltip: React.FC<ChartTooltipProps> = ({

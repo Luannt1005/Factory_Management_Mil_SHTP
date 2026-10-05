@@ -16,7 +16,7 @@ type CacheEntry<T> = {
 };
 
 // Main cache store
-const cache = new Map<string, CacheEntry<any>>();
+const cache = new Map<string, CacheEntry<unknown>>();
 
 // Default TTL: 15 minutes (increased for better performance)
 const DEFAULT_TTL = 15 * 60 * 1000;
@@ -38,7 +38,7 @@ export async function getCachedData<T>(
     // Cache hit - return cached data
     if (entry && (now - entry.timestamp < entry.ttl)) {
         console.log(`[Cache] ✅ HIT: ${key}`);
-        return entry.data;
+        return entry.data as T;
     }
 
     // Cache miss - fetch fresh data
@@ -63,7 +63,7 @@ export async function getCachedData<T>(
         // If fetch fails and we have stale data, return it
         if (entry) {
             console.log(`[Cache] ⚠️ Fetch failed, returning stale data for: ${key}`);
-            return entry.data;
+            return entry.data as T;
         }
         throw error;
     }

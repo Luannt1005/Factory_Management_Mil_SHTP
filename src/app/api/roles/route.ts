@@ -15,11 +15,11 @@ export async function GET() {
             success: true,
             data: result.rows
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("API Fetch Roles Error:", error);
         return NextResponse.json({
             success: false,
-            message: error.message || "Failed to fetch roles"
+            message: "Failed to fetch roles"
         }, { status: 500 });
     }
 }
@@ -47,11 +47,11 @@ export async function POST(req: Request) {
             data: result.rows[0],
             message: "Role created successfully"
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("API POST Role Error:", error);
         return NextResponse.json({
             success: false,
-            message: error.message || "Failed to create role"
+            message: "Failed to create role"
         }, { status: 500 });
     }
 }
@@ -79,11 +79,11 @@ export async function PUT(req: Request) {
             data: result.rows[0],
             message: "Role updated successfully"
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("API PUT Role Error:", error);
         return NextResponse.json({
             success: false,
-            message: error.message || "Failed to update role"
+            message: "Failed to update role"
         }, { status: 500 });
     }
 }
@@ -107,11 +107,11 @@ export async function DELETE(req: Request) {
             success: true,
             message: "Role deleted successfully"
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("API DELETE Role Error:", error);
         return NextResponse.json({
             success: false,
-            message: error.message || "Failed to delete role"
+            message: "Failed to delete role"
         }, { status: 500 });
     }
 }

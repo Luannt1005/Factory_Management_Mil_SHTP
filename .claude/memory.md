@@ -28,6 +28,12 @@
   - Centralized chart themes and tooltips (`ChartTheme.ts`, `ChartTooltip.tsx`).
   - Standardized font sizes, borders, radii, and Milwaukee brand accents across all charts.
 
+### Phase 18: Codebase Standardization (branch `refactor/standardization`, Oct 2026)
+- **Security:** parameterized `visitor_admin/analytics` filters (was SQL injection), `import_excel` delete and `sheet` pagination; BEGIN/COMMIT/ROLLBACK now run on a dedicated `PoolClient`; API 500s return generic messages; auth guards on `admin/meeting-rooms`, `orgcharts`, `admin/upload-employee-image` (+ path traversal check).
+- **Layering:** every business page under `src/app/` is a thin wrapper around a `features/<domain>/components/*View.tsx`; contexts live in `src/contexts/`; `components/` no longer imports `app/` or `features/`; `/visitorrequest` composes the visitor dashboard through a `dashboardSlot` prop.
+- **Design tokens:** `@theme inline` in `globals.css` exposes `mwk`, `mwk-hover`, `mwk-dark`, `mwk-soft`, `status-success|error|warning`; shared status pill/dot helpers in `src/utils/badge.ts`.
+- **Types:** `src/types/next-auth.d.ts` augments `Session['user']`; headcount sheet rows (`RawSheetRow`, `EditableSheetRow`), orgchart editor (`EditorOrgNode`, `EditNodeSaveData`) and account (`UserProfile`) types centralized.
+
 ---
 
 ## 2. Recent Functional Additions
@@ -40,7 +46,7 @@
 - Added webhook dispatcher `sendAdminDecisionWebhook` in `src/app/api/visitor_admin/requests/route.ts` triggered when Admin clicks Approve or Reject.
 
 ### Excel Export Template (Visitor Admin)
-- Standardized to exactly 25 columns in `src/app/visitoradmin/page.tsx`:
+- Standardized to exactly 25 columns in `src/features/visitor/admin/components/VisitorAdminView.tsx`:
   `Request Code | Visitor Code | Visitor Name | Visitor Title | Visitor Company | Submitter Name | Submitter Department | Start Date | End Date | Visitor Category | Purpose Of Visit | Purpose Detail | Visiting Site | BU | Host Functional Dept | Func Host Name | Host Department | Dept Host Name | Cost Center | Factory Tour | Meal Registration | Status | Approval Progress | Submit Date | Completion Date`
 - Formatted codes without `#` and `-` (e.g. `E01102603` and `E01102603V1`).
 
@@ -48,9 +54,11 @@
 
 ## 3. Known Technical Debt & Ongoing Considerations
 
-1. **Coordinator Components in `src/components/`:**
-   - `HeadcountManager.tsx`, `SheetManagerTable.tsx`, and `DataImport.tsx` currently reside in `src/components/`. They will be migrated to `src/features/headcount/` in a dedicated phase.
-2. **Dual Database Connectivity:**
+1. **Remaining `any` at the BalkanGraph boundary:**
+   - `src/lib/orgchart.d.ts` is an untyped stub, so event callbacks in `useOrgChartEditor.ts` / `OrgChartCanvas.tsx` still use `any`.
+2. **Sticky-header sheet tables:**
+   - `SheetManagerTableCore` / `HeadcountOpenTable` keep `overflow: hidden` wrappers; adding `overflow-x-auto` would break their sticky header (needs a max-height scroll container decision).
+3. **Dual Database Connectivity:**
    - Must be kept separate: `src/lib/db.ts` for Orgchart/Users/Auth and `src/lib/visitor-db.ts` for Visitor/Rooms/Security. Never cross-import pools.
-3. **BalkanGraph Distribution (`src/lib/orgchart.js`):**
+4. **BalkanGraph Distribution (`src/lib/orgchart.js`):**
    - 552 KB vendor distribution file. Must never be reformatted or modified directly.

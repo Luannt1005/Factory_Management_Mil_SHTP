@@ -142,7 +142,7 @@ export default function Sidebar() {
     // Unrestricted paths
     if (itemPath.startsWith('/introduction') || itemPath.startsWith('/profile')) return true;
 
-    const allowedPages = (user as any)?.allowedPages || [];
+    const allowedPages = user?.allowedPages || [];
 
     // Map legacy permission strings to actual paths
     const legacyMap: Record<string, string[]> = {
@@ -169,7 +169,7 @@ export default function Sidebar() {
       return expandedAllowedPages.has(matchingDistinctPage);
     }
 
-    return Array.from(expandedAllowedPages).some((p: any) => itemPath.startsWith(p + '/'));
+    return Array.from(expandedAllowedPages).some((p: string) => itemPath.startsWith(p + '/'));
   };
 
   const getRenderItems = (items: NavItem[]): NavItem[] => {

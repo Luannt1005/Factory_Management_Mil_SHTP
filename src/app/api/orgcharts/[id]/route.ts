@@ -53,7 +53,7 @@ export async function GET(
         const error = err as Error;
         console.error("GET Orgchart Error:", error.message, error.stack);
         return NextResponse.json({
-            error: error.message || "Unknown error occurred",
+            error: "Unknown error occurred",
             details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         }, { status: 500 });
     }
