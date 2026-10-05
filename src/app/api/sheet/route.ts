@@ -84,7 +84,7 @@ export async function GET(req: Request) {
 
       const hasFilters = Object.keys(filters).length > 0;
       let whereClause = "(status = 'Active' OR status IS NULL)";
-      const queryValues: any[] = [];
+      const queryValues: (string | number)[] = [];
 
       Object.entries(filters).forEach(([key, value]) => {
         const dbColumn = FILTER_MAPPING[key];
@@ -212,10 +212,9 @@ export async function GET(req: Request) {
     return response;
 
   } catch (error) {
-    const message = (error as any)?.message || (typeof error === 'string' ? error : "Unknown error");
     console.error("GET /api/sheet error:", error);
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: "Unknown error" },
       { status: 500 }
     );
   }
@@ -286,7 +285,7 @@ export async function POST(req: Request) {
           insertedCount++;
         }
         await client.query('COMMIT');
-      } catch (err: any) {
+      } catch (err) {
         await client.query('ROLLBACK');
         throw err;
       } finally {
@@ -395,7 +394,7 @@ export async function POST(req: Request) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("POST /api/sheet error:", message);
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: "Unknown error" },
       { status: 500 }
     );
   }
@@ -424,7 +423,7 @@ export async function PUT(req: Request) {
     }
 
     let setClauses = [];
-    let queryValues: any[] = [id];
+    let queryValues: (string | number | null)[] = [id];
     let vIndex = 2; // since $1 is id
 
     // Map data fields to columns
@@ -501,7 +500,7 @@ export async function PUT(req: Request) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("PUT /api/sheet error:", message);
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: "Unknown error" },
       { status: 500 }
     );
   }
@@ -562,7 +561,7 @@ export async function DELETE(req: Request) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("DELETE /api/sheet error:", message);
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: "Unknown error" },
       { status: 500 }
     );
   }

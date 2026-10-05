@@ -29,7 +29,16 @@ export interface OrgChartNode {
     bu_org_3?: string | null;
     // Raw spreadsheet column names returned by legacy sheet endpoints
     'BU Org 3'?: string | null;
+    'BU Org 3 '?: string | null;
     'Job Title'?: string | null;
+    'Emp ID'?: string | null;
+    'FullName'?: string | null;
+    'FullName '?: string | null;
+    'Dept'?: string | null;
+    'DL/IDL/Staff'?: string | null;
+    'Employee Type'?: string | null;
+    'Joining Date'?: string | null;
+    'Joining\r\n Date'?: string | null;
 }
 
 export interface OrgChartApiResponse<T = OrgChartNode> {

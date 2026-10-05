@@ -9,12 +9,13 @@
 import useSWR from 'swr';
 import { useState, useCallback, useMemo } from 'react';
 import { swrFetcher } from '@/lib/api-client';
+import type { RawSheetRow } from '@/types/headcount.types';
 import type { OrgNode } from '@/types/orgchart.types';
 import { headcountApi } from '@/features/headcount/services/headcountApi';
 
 interface PaginatedResponse {
     success: boolean;
-    data: any[];
+    data: RawSheetRow[];
     page: number;
     limit: number;
     total: number;
@@ -28,7 +29,7 @@ interface UsePaginatedSheetDataOptions {
 }
 
 // Transformer function (same as useSheetData)
-function transformSheetData(rawData: any[]): OrgNode[] {
+function transformSheetData(rawData: RawSheetRow[]): OrgNode[] {
     if (!Array.isArray(rawData)) return [];
 
     return rawData.map((row) => {

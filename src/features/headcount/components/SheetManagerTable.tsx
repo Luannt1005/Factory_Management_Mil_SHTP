@@ -1,5 +1,6 @@
 'use client';
 
+import type { EditableSheetRow, SheetFormData, SheetUpdatePayload } from '@/types/headcount.types';
 import { useEffect, useState, useCallback, useMemo, startTransition, useRef } from "react";
 import {
   PlusIcon,
@@ -21,10 +22,7 @@ import { SheetManagerTableCore } from "@/features/headcount/components/SheetMana
 import { SheetApprovalConfirmModal } from "@/features/headcount/components/SheetApprovalConfirmModal";
 import SheetAddModal from "./SheetAddModal";
 
-interface SheetRow {
-  id: string;
-  [key: string]: any;
-}
+type SheetRow = EditableSheetRow;
 
 interface EditingCell {
   rowId: string;
@@ -95,7 +93,7 @@ const isLineManagerCol = (header: string) => {
   return header.trim().replace(/\r\n|\n/g, ' ') === "Line Manager";
 };
 
-const formatDate = (value: any): string => {
+const formatDate = (value: unknown): string => {
   if (!value) return "";
   try {
     // Handle Excel serial number (integers)
@@ -269,7 +267,7 @@ const SheetManager = ({
       if (!blob) throw new Error("Image conversion failed");
 
       // 2. Upload via API
-      const result = await headcountApi.uploadImage(blob, trimLeadingZeros(empId));
+      const result = await headcountApi.uploadImage(blob, trimLeadingZeros(String(empId)));
 
       if (result.success) {
         setSuccessMessage("✅ Image updated successfully");
@@ -279,9 +277,9 @@ const SheetManager = ({
         setError(result.error || "Failed to upload image");
       }
 
-    } catch (err: any) {
+    } catch (err) {
       console.error("Upload error:", err);
-      setError("Error processing image: " + (err.message || "Unknown error"));
+      setError("Error processing image: " + ((err instanceof Error && err.message) || "Unknown error"));
     } finally {
       setSaving(false);
       setUploadingRowId(null);
@@ -417,9 +415,9 @@ const SheetManager = ({
     setShowAddModal(true);
   };
 
-  const handleSaveNewEmployee = async (formData: any): Promise<boolean> => {
+  const handleSaveNewEmployee = async (formData: SheetFormData): Promise<boolean> => {
     try {
-      const dataToSave: any = {};
+      const dataToSave: SheetFormData = {};
       Object.keys(formData).forEach(key => {
         let value = formData[key] || "";
         if (DATE_COLUMNS.includes(key) && value) {
@@ -464,15 +462,15 @@ const SheetManager = ({
         const originalRow = originalRows.find((r) => r.id === rowId);
         if (!row || !originalRow) continue;
 
-        const dataToSave: { [key: string]: any } = {};
+        const dataToSave: SheetUpdatePayload = {};
 
         headers.forEach((header) => {
           let value = row[header] || "";
           let originalValue = originalRow[header] || "";
 
           if (DATE_COLUMNS.includes(header)) {
-            value = formatDateToISO(value);
-            originalValue = formatDateToISO(originalValue);
+            value = formatDateToISO(String(value));
+            originalValue = formatDateToISO(String(originalValue));
           }
 
           if (isLineManagerCol(header) && value !== originalValue) {
@@ -517,7 +515,7 @@ const SheetManager = ({
 
     setSaving(true);
     try {
-      const dataToUpdate: any = {};
+      const dataToUpdate: SheetUpdatePayload = {};
       if (action === 'approve') {
         const lmHeader = headers.find(isLineManagerCol) || "Line Manager";
         dataToUpdate[normalizeFieldName(lmHeader)] = row.pendingLineManager;

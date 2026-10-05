@@ -1,12 +1,13 @@
 'use client';
 
+import type { SheetFormData } from '@/types/headcount.types';
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 
 interface SheetAddModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: any) => Promise<boolean>;
+    onSave: (data: SheetFormData) => Promise<boolean>;
     columns: string[];
 }
 

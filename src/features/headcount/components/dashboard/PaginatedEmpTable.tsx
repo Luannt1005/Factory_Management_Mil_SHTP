@@ -1,25 +1,34 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import type { EmployeeFilter } from '../page';
-import type { OrgNode } from '@/types/orgchart.types';
+import React, { useMemo } from 'react';
+import { usePaginatedSheetData } from '@/hooks/usePaginatedSheetData';
 
-interface EmployeeTableProps {
+interface PaginatedEmployeeTableProps {
     className?: string;
-    filter?: EmployeeFilter;
-    nodes: OrgNode[];  // Required prop
-    loading?: boolean;
+    pageSize?: number;
 }
 
-const ITEMS_PER_PAGE = 10;
-
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ className, filter, nodes, loading = false }) => {
-    // Data is now passed from parent - no more independent fetching
-    const error = null; // Error handling moved to parent
-    const [currentPage, setCurrentPage] = useState(1);
-
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCurrentPage(1);
-    }, [filter]);
+/**
+ * Server-side paginated employee table
+ * Uses usePaginatedSheetData hook for incremental data loading
+ * More efficient for initial loads when no filters are applied
+ */
+const PaginatedEmployeeTable: React.FC<PaginatedEmployeeTableProps> = ({
+    className,
+    pageSize = 10
+}) => {
+    const {
+        nodes,
+        page,
+        totalPages,
+        total,
+        startIndex,
+        endIndex,
+        loading,
+        error,
+        nextPage,
+        prevPage,
+        hasNextPage,
+        hasPrevPage,
+    } = usePaginatedSheetData({ pageSize });
 
     // Calculate tenure
     const calculateExperience = (joiningDate: string | number): string => {
@@ -56,10 +65,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ className, filter, nodes,
         return mStr;
     };
 
-    // Process and filter employee data
+    // Transform nodes to display format
     const employees = useMemo(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let filtered = nodes.map((node: any) => ({
+        return nodes.map((node) => ({
             empId: node['Emp ID'] || node.id || '',
             title: node['Job Title'] || node.title || '',
             dept: node['Dept'] || node.dept || '',
@@ -71,68 +79,12 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ className, filter, nodes,
                     ? '/headcount_open.png' 
                     : `/api/uploads/${String(node['Emp ID'] || node.id || '').replace(/^0+/, '')}.webp?v=${Date.now()}`)
         }));
+    }, [nodes]);
 
-        // Apply filters
-        if (filter) {
-            if (filter.type === 'staff') {
-                filtered = filtered.filter(emp => emp.dlIdlStaff.toLowerCase().includes('staff'));
-            } else if (filter.type === 'idl') {
-                filtered = filtered.filter(emp => emp.dlIdlStaff.toLowerCase().includes('idl'));
-            } else if (filter.type === 'title' && filter.value) {
-                const keywords = filter.value.toLowerCase().split(" ");
-                filtered = filtered.filter(emp => {
-                    const title = emp.title.toLowerCase();
-                    return keywords.every((k: string) => title.includes(k));
-                });
-            } else if (filter.type === 'tenure' && filter.value) {
-                const [minStr, maxStr] = filter.value.split('-');
-                const min = parseInt(minStr);
-                const max = maxStr === 'Infinity' ? Infinity : parseInt(maxStr);
-
-                filtered = filtered.filter(emp => {
-                    const expStr = emp.experience;
-                    let totalMonths = 0;
-                    const yearMatch = expStr.match(/(\d+)\s*year/);
-                    if (yearMatch) totalMonths += parseInt(yearMatch[1]) * 12;
-                    const monthMatch = expStr.match(/(\d+)\s*month/);
-                    if (monthMatch) totalMonths += parseInt(monthMatch[1]);
-                    return totalMonths >= min && totalMonths < max;
-                });
-            } else if (filter.type === 'type' && filter.value) {
-                const typeValue = filter.value.toLowerCase();
-                filtered = filtered.filter(emp => {
-                    const dlIdlStaff = emp.dlIdlStaff.toLowerCase();
-                    if (typeValue === 'staff') return dlIdlStaff.includes('staff');
-                    if (typeValue === 'idl') return dlIdlStaff.includes('idl');
-                    if (typeValue === 'dl') return !dlIdlStaff.includes('staff') && !dlIdlStaff.includes('idl');
-                    return true;
-                });
-            }
-        }
-
-        return filtered;
-    }, [nodes, filter]);
-
-    // Pagination
-    const totalPages = Math.ceil(employees.length / ITEMS_PER_PAGE);
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const currentEmployees = employees.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-    if (loading) {
+    if (loading && employees.length === 0) {
         return (
-            <div className={`h-full flex flex-col ${className}`}>
-                <div className="flex-1 p-4 space-y-4 animate-pulse">
-                    {[...Array(8)].map((_, i) => (
-                        <div key={i} className="flex items-center gap-4">
-                            <div className="w-8 h-8 rounded-full bg-gray-200 shrink-0"></div>
-                            <div className="flex-1 space-y-2">
-                                <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                                <div className="h-2 bg-gray-100 rounded w-1/4"></div>
-                            </div>
-                            <div className="w-16 h-3 bg-gray-100 rounded"></div>
-                        </div>
-                    ))}
-                </div>
+            <div className={`h-full flex items-center justify-center ${className}`}>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-mwk"></div>
             </div>
         );
     }
@@ -167,12 +119,11 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ className, filter, nodes,
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--color-border-light)]">
-                        {currentEmployees.map((emp, index) => (
+                        {employees.map((emp, index) => (
                             <tr key={emp.empId || index} className="hover:bg-gray-50 dark:hover:bg-blue-900/10 transition-colors [&>td]:p-2!">
                                 {/* Name + Avatar */}
                                 <td className="px-3">
                                     <div className="flex items-center gap-2">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
                                             src={emp.imageUrl}
                                             alt={emp.fullName}
@@ -222,28 +173,35 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ className, filter, nodes,
                         ))}
                     </tbody>
                 </table>
+
+                {/* Loading indicator for page transitions */}
+                {loading && employees.length > 0 && (
+                    <div className="flex justify-center py-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-mwk"></div>
+                    </div>
+                )}
             </div>
 
-            {/* Pagination - Compact */}
+            {/* Pagination - Server-side */}
             {totalPages > 1 && (
                 <div className="shrink-0 px-3 py-2 border-t border-[var(--color-border-light)] flex items-center justify-between bg-[var(--color-bg-card)]">
                     <span className="text-[10px] text-muted">
-                        {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, employees.length)} of {employees.length}
+                        {startIndex}-{endIndex} of {total}
                     </span>
                     <div className="flex gap-1">
                         <button
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
+                            onClick={prevPage}
+                            disabled={!hasPrevPage || loading}
                             className="px-2 py-1 text-[10px] font-medium rounded bg-[var(--color-bg-page)] border border-[var(--color-border-light)] text-muted hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                         >
                             Prev
                         </button>
                         <span className="px-2 py-1 text-[10px] font-medium text-muted">
-                            {currentPage}/{totalPages}
+                            {page}/{totalPages}
                         </span>
                         <button
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
+                            onClick={nextPage}
+                            disabled={!hasNextPage || loading}
                             className="px-2 py-1 text-[10px] font-medium rounded bg-[var(--color-bg-page)] border border-[var(--color-border-light)] text-muted hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                         >
                             Next
@@ -255,4 +213,4 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ className, filter, nodes,
     );
 };
 
-export default EmployeeTable;
+export default PaginatedEmployeeTable;

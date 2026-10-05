@@ -1,5 +1,6 @@
 'use client';
 
+import type { EditableSheetRow, SheetFormData } from '@/types/headcount.types';
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/Button';
@@ -7,8 +8,8 @@ import { Button } from '@/components/ui/Button';
 interface HeadcountEditModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: any, quantity: number) => Promise<boolean>;
-    initialData: any;
+    onSave: (data: SheetFormData, quantity: number) => Promise<boolean>;
+    initialData: EditableSheetRow | null;
     columns: string[];
     count: number;
 }
@@ -22,9 +23,9 @@ export default function HeadcountEditModal({ isOpen, onClose, onSave, initialDat
     // Initialize form with data
     useEffect(() => {
         if (isOpen && initialData) {
-            const data: any = {};
+            const data: SheetFormData = {};
             columns.forEach(col => {
-                data[col] = initialData[col] || "";
+                data[col] = String(initialData[col] || "");
             });
             setFormData(data);
             setQuantity(count);

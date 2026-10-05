@@ -1,5 +1,6 @@
 'use client';
 
+import type { EditableSheetRow, SheetFormData, SheetUpdatePayload } from '@/types/headcount.types';
 import { useEffect, useState, useCallback, useMemo, startTransition } from "react";
 import {
     PlusIcon,
@@ -18,10 +19,7 @@ import { HeadcountOpenTable } from "@/features/headcount/components/HeadcountOpe
 import HeadcountAddModal from "./HeadcountAddModal";
 import HeadcountEditModal from "./HeadcountEditModal";
 
-interface SheetRow {
-    id: string;
-    [key: string]: any;
-}
+type SheetRow = EditableSheetRow;
 
 interface EditingCell {
     rowId: string;
@@ -80,7 +78,7 @@ const denormalizeFieldName = (fieldName: string): string => {
     return mapping[fieldName] || fieldName;
 };
 
-const formatDate = (value: any): string => {
+const formatDate = (value: unknown): string => {
     if (!value) return "";
     try {
         if (typeof value === 'string' && value.includes('T')) {
@@ -269,9 +267,9 @@ const HeadcountManager = () => {
         setShowEditModal(true);
     };
 
-    const handleSaveHeadcount = async (formData: any, quantity: number) => {
+    const handleSaveHeadcount = async (formData: SheetFormData, quantity: number) => {
         try {
-            const dataToSave: any = {};
+            const dataToSave: SheetFormData = {};
             Object.keys(formData).forEach(key => {
                 let value = formData[key] || "";
                 if (DATE_COLUMNS.includes(key) && value) {
@@ -305,11 +303,11 @@ const HeadcountManager = () => {
     };
 
     // Save Handler for Edit Modal (Immediate Update)
-    const handleSaveEditedGroup = async (formData: any, newQuantity?: number): Promise<boolean> => {
+    const handleSaveEditedGroup = async (formData: SheetFormData, newQuantity?: number): Promise<boolean> => {
         if (!editingGroup) return false;
 
         try {
-            const dataToSave: any = {};
+            const dataToSave: SheetFormData = {};
             // Prepare data payload
             Object.keys(formData).forEach(key => {
                 let value = formData[key] || "";
@@ -399,7 +397,7 @@ const HeadcountManager = () => {
                 const originalRow = originalRows.find((r) => r.id === rowId);
                 if (!row || !originalRow) continue;
 
-                const dataToSave: { [key: string]: any } = {};
+                const dataToSave: SheetUpdatePayload = {};
 
                 // Use VISIBLE_COLUMNS minus Quantity plus whatever else we need
                 const allDirectCols = [...VISIBLE_COLUMNS, "Emp ID", "Last Working\r\nDay"].filter(c => c !== "Quantity");
@@ -407,7 +405,7 @@ const HeadcountManager = () => {
                 allDirectCols.forEach((header) => {
                     let value = row[header] || "";
                     if (DATE_COLUMNS.includes(header)) {
-                        value = formatDateToISO(value);
+                        value = formatDateToISO(String(value));
                     }
                     dataToSave[header] = value;
                 });

@@ -1,5 +1,6 @@
 'use client';
 
+import type { SheetFormData } from '@/types/headcount.types';
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/Button';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 interface HeadcountAddModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: any, quantity: number) => Promise<boolean>;
+    onSave: (data: SheetFormData, quantity: number) => Promise<boolean>;
     columns: string[];
 }
 

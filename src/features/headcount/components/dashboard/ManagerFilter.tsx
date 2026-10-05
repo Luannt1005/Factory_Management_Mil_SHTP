@@ -48,7 +48,7 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
     }, []);
 
     // Helper to get avatar URL
-    const getAvatarUrl = (node: any) => node.image || node.img || `/api/uploads/${String(node.id).trim()}.webp`;
+    const getAvatarUrl = (node: OrgNode) => node.image || node.img || `/api/uploads/${String(node.id).trim()}.webp`;
 
     // Separate suggestions for outside render
     const suggestedManagers = useMemo(() => {

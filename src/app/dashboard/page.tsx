@@ -1,35 +1,19 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import EmployeeTable from './components/Emp_table';
-import PaginatedEmployeeTable from './components/PaginatedEmpTable';
-import StatsCards from './components/Multi_card';
-import SeniorityChart from './components/Column_chart_seniority';
-import DonutChart from './components/Donutchart_byType';
-import BUOrg3Chart from './components/bar_chart_BU_Org_3';
-import UpcomingResignTable from './components/upcoming_resign_table';
-import ManagerFilter from './components/ManagerFilter';
-import TitleFilter from './components/TitleFilter';
-import BUFilter from './components/BUFilter';
+import EmployeeTable from '@/features/headcount/components/dashboard/Emp_table';
+import PaginatedEmployeeTable from '@/features/headcount/components/dashboard/PaginatedEmpTable';
+import StatsCards from '@/features/headcount/components/dashboard/Multi_card';
+import SeniorityChart from '@/features/headcount/components/dashboard/Column_chart_seniority';
+import DonutChart from '@/features/headcount/components/dashboard/Donutchart_byType';
+import BUOrg3Chart from '@/features/headcount/components/dashboard/bar_chart_BU_Org_3';
+import UpcomingResignTable from '@/features/headcount/components/dashboard/upcoming_resign_table';
+import ManagerFilter from '@/features/headcount/components/dashboard/ManagerFilter';
+import TitleFilter from '@/features/headcount/components/dashboard/TitleFilter';
+import BUFilter from '@/features/headcount/components/dashboard/BUFilter';
 import { useSheetData, getSubordinatesRecursive } from '@/hooks/useSheetData';
 import { DashboardContainer, PageHeader, FilterBar, TableCard } from '@/components/dashboard';
-
-
-export interface EmployeeFilter {
-    // Retain compatibility for single-value updates, but state will hold all
-    type: 'all' | 'staff' | 'idl' | 'title' | 'tenure' | 'type' | 'bu_org_3';
-    value?: string;
-    label?: string;
-}
-
-// New state interface for multiple active filters
-interface FilterState {
-    title: string | null;
-    bu: string | null;
-    category: 'staff' | 'idl' | null;     // mapped from 'staff' | 'idl' types
-    employeeType: string | null;          // mapped from 'type' (DL/IDL/Staff custom filter)
-    tenure: string | null;
-}
+import type { HeadcountDashboardFilter as EmployeeFilter, HeadcountFilterState as FilterState } from '@/types/headcount.types';
 
 export default function DashboardPage() {
     const { nodes, loading: nodesLoading } = useSheetData();
@@ -117,7 +101,7 @@ export default function DashboardPage() {
         // 1. Title Filter
         if (filters.title) {
             const keywords = filters.title.toLowerCase().split(" ");
-            current = current.filter((node: any) => {
+            current = current.filter((node) => {
                 const title = (node['Job Title'] || node.title || '').toLowerCase();
                 return keywords.every((k: string) => title.includes(k));
             });
@@ -125,7 +109,7 @@ export default function DashboardPage() {
 
         // 2. BU Filter
         if (filters.bu) {
-            current = current.filter((node: any) => {
+            current = current.filter((node) => {
                 const nodeBU = (node['BU Org 3'] || node.bu_org_3 || '').toLowerCase();
                 return nodeBU === filters.bu?.toLowerCase();
             });
@@ -134,13 +118,13 @@ export default function DashboardPage() {
         // 3. Category Filter (Staff/IDL quick buttons)
         if (filters.category) {
             const cat = filters.category.toLowerCase();
-            current = current.filter((n: any) => (n['DL/IDL/Staff'] || '').toLowerCase().includes(cat));
+            current = current.filter((n) => (n['DL/IDL/Staff'] || '').toLowerCase().includes(cat));
         }
 
         // 4. Employee Type Filter (from Donut charts etc)
         if (filters.employeeType) {
             const typeValue = filters.employeeType.toLowerCase();
-            current = current.filter((node: any) => {
+            current = current.filter((node) => {
                 const dlIdlStaff = (node['DL/IDL/Staff'] || '').toLowerCase();
                 if (typeValue === 'staff') return dlIdlStaff.includes('staff');
                 if (typeValue === 'idl') return dlIdlStaff.includes('idl');

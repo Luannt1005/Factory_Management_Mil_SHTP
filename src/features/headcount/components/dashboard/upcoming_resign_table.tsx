@@ -66,25 +66,25 @@ const UpcomingResignTable: React.FC<UpcomingResignTableProps> = ({ className, no
     };
 
     // Helper to find value by flexible key matching
-    const getValue = (obj: any, keys: string[]) => {
+    const getValue = (obj: OrgNode | null | undefined, keys: string[]): string | number => {
         if (!obj) return '';
+        const record = new Map<string, unknown>(Object.entries(obj));
+        const isPresent = (val: unknown): val is string | number =>
+            (typeof val === 'string' || typeof val === 'number') && String(val).trim() !== '';
         // 1. Try exact matches
         for (const key of keys) {
-            if (obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== '') {
-                return obj[key];
+            const val = record.get(key);
+            if (isPresent(val)) {
+                return val;
             }
         }
         // 2. Try case-insensitive/normalized matches
-        const objKeys = Object.keys(obj);
         const normalizedKeys = keys.map(k => k.toLowerCase().replace(/[\s\r\n_]/g, ''));
 
-        for (const objKey of objKeys) {
+        for (const [objKey, val] of record) {
             const normalizedObjKey = objKey.toLowerCase().replace(/[\s\r\n_]/g, '');
-            if (normalizedKeys.includes(normalizedObjKey)) {
-                const val = obj[objKey];
-                if (val !== undefined && val !== null && String(val).trim() !== '') {
-                    return val;
-                }
+            if (normalizedKeys.includes(normalizedObjKey) && isPresent(val)) {
+                return val;
             }
         }
         return '';
@@ -95,7 +95,7 @@ const UpcomingResignTable: React.FC<UpcomingResignTableProps> = ({ className, no
         if (!nodes || nodes.length === 0) return [];
 
         return nodes
-            .filter((node: any) => {
+            .filter((node) => {
                 const lastWorkingDay = getValue(node, [
                     'Last Working\r\nDay',
                     'Last Working Day',
@@ -106,7 +106,7 @@ const UpcomingResignTable: React.FC<UpcomingResignTableProps> = ({ className, no
                 ]);
                 return lastWorkingDay && String(lastWorkingDay).trim() !== '';
             })
-            .map((node: any) => {
+            .map((node) => {
                 const lastWorkingDay = getValue(node, [
                     'Last Working\r\nDay',
                     'Last Working Day',
@@ -125,10 +125,10 @@ const UpcomingResignTable: React.FC<UpcomingResignTableProps> = ({ className, no
                 ]);
 
                 return {
-                    empId: getValue(node, ['Employee ID', 'Emp ID', 'emp_id', 'id']),
-                    fullName: getValue(node, ['Full Name', 'Name', 'FullName ', 'FullName', 'full_name']),
-                    jobTitle: getValue(node, ['Job Title', 'job_title', 'Title', 'title']),
-                    dept: getValue(node, ['BU Org 3', 'Department', 'Dept', 'bu_org_3']),
+                    empId: String(getValue(node, ['Employee ID', 'Emp ID', 'emp_id', 'id'])),
+                    fullName: String(getValue(node, ['Full Name', 'Name', 'FullName ', 'FullName', 'full_name'])),
+                    jobTitle: String(getValue(node, ['Job Title', 'job_title', 'Title', 'title'])),
+                    dept: String(getValue(node, ['BU Org 3', 'Department', 'Dept', 'bu_org_3'])),
                     lastWorkingDay: lastWorkingDay,
                     seniority: calculateSeniority(joiningDate, lastWorkingDay),
                     imageUrl: node.image || node.img || `/api/uploads/${getValue(node, ['Employee ID', 'Emp ID', 'emp_id'])}.webp`

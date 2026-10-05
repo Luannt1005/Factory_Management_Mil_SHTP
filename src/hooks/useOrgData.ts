@@ -167,10 +167,10 @@ function filterNodesByGroup(
     if (visited.has(nodeId)) return;
     visited.add(nodeId);
 
-    const current = allNodes.find((n: any) => n.id === nodeId);
+    const current = allNodes.find((n) => n.id === nodeId);
     if (current) filtered.push(current);
 
-    allNodes.forEach((n: any) => {
+    allNodes.forEach((n) => {
       // Direct children (pid relationship) - get ALL nodes
       if (n.pid === nodeId) {
         dfs(n.id);

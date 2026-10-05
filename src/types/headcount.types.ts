@@ -31,6 +31,24 @@ export interface HeadcountEmployee {
     updated_at?: string;
 }
 
+/** Raw row returned by /api/sheet before it is mapped to an OrgNode (spreadsheet column -> cell value) */
+export type RawSheetRow = Record<string, string | number | null | undefined>;
+
+/** Any value a Sheet Manager / Headcount grid row can hold (cells plus UI-only grouping metadata) */
+export type SheetCellValue = string | number | boolean | string[] | null | undefined;
+
+/** Editable grid row used by Sheet Manager / Headcount Open tables */
+export interface EditableSheetRow {
+    id: string;
+    [column: string]: SheetCellValue;
+}
+
+/** Column -> value map produced by add/edit modals */
+export type SheetFormData = Record<string, string>;
+
+/** Column -> value map sent to the sheet update API */
+export type SheetUpdatePayload = Record<string, SheetCellValue>;
+
 /** Formatted Sheet Row representation with legacy column keys */
 export interface SheetEmployeeRow {
     id: string;

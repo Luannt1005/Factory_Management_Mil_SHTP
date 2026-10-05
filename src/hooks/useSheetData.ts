@@ -8,6 +8,7 @@
 
 import { useMemo } from 'react';
 import useSWR, { SWRConfiguration } from 'swr';
+import type { RawSheetRow } from '@/types/headcount.types';
 import type { OrgNode, OrgChartApiResponse as ApiResponse } from '@/types/orgchart.types';
 import { swrFetcher } from '@/lib/api-client';
 import { headcountApi } from '@/features/headcount/services/headcountApi';
@@ -22,7 +23,7 @@ interface UseSheetDataOptions extends SWRConfiguration {
 // ===============================
 // Transformer
 // ===============================
-function transformSheetData(rawData: any[]): OrgNode[] {
+function transformSheetData(rawData: RawSheetRow[]): OrgNode[] {
     if (!Array.isArray(rawData)) return [];
 
     return rawData.map((row) => {

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { EmployeeFilter } from '../page';
+import type { HeadcountDashboardFilter as EmployeeFilter } from '@/types/headcount.types';
 import type { OrgNode } from '@/types/orgchart.types';
 import { MetricCard } from '@/components/dashboard';
 
@@ -15,7 +15,7 @@ interface StatsCardsProps {
 interface CardInfo {
     title: string;
     count: number;
-    filterType: string;
+    filterType: EmployeeFilter['type'];
     filterValue: string;
     label?: string;
 }
@@ -33,7 +33,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ className, onFilterChange, acti
             .trim()
             .split(/\s+/);
 
-        return nodes.filter((node: any) => {
+        return nodes.filter((node) => {
             const titleWords = (node['Job Title'] || node['title'] || '')
                 .toLowerCase()
                 .split(/[^a-z0-9]+/i);
@@ -72,7 +72,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ className, onFilterChange, acti
             dl: 0
         };
 
-        nodes.forEach((node: any) => {
+        nodes.forEach((node) => {
             const dlIdlStaff = (node['DL/IDL/Staff'] || '').toLowerCase();
             if (dlIdlStaff.includes('staff')) {
                 counts.staff++;
@@ -157,7 +157,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ className, onFilterChange, acti
                     subtitle="Employees"
                     loading={loading}
                     onClick={() => onFilterChange?.({
-                        type: card.filterType as any,
+                        type: card.filterType,
                         value: card.filterValue,
                         label: card.label || card.title
                     })}

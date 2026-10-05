@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import type { EmployeeFilter } from '../page';
+import type { PieLabelRenderProps } from 'recharts';
+import type { HeadcountDashboardFilter as EmployeeFilter } from '@/types/headcount.types';
 import type { OrgNode } from '@/types/orgchart.types';
 import { ChartCard, CHART_COLORS, chartTooltipStyle } from '@/components/dashboard';
 
@@ -18,7 +19,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
 
         const counts = { Staff: 0, IDL: 0, DL: 0 };
 
-        nodes.forEach((node: any) => {
+        nodes.forEach((node) => {
             const dlIdlStaff = (node['DL/IDL/Staff'] || '').toLowerCase();
             if (dlIdlStaff.includes('staff')) {
                 counts.Staff++;
@@ -39,8 +40,9 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
     }, [nodes]);
 
     // Professional Label with Elbow Line
-    const renderCustomizedLabel = (props: any) => {
-        const { cx, cy, midAngle, innerRadius, outerRadius, value, name } = props;
+    const renderCustomizedLabel = (props: PieLabelRenderProps) => {
+        const { cx, cy, innerRadius, outerRadius, value, name } = props;
+        const midAngle = props.midAngle ?? 0;
         const RADIAN = Math.PI / 180;
         
         // Start point at donut edge
@@ -125,7 +127,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                                         key={`cell-${index}`}
                                         fill={fillUrl}
                                         style={{ outline: 'none', cursor: 'pointer' }}
-                                        onClick={() => onFilterChange?.({ type: 'type', value: entry.name, label: `Type: ${entry.name}` })}
+                                        onClick={() => onFilterChange?.({ type: 'type', value: entry.name, label: `Type: ${entry.value}` })}
                                     />
                                 );
                             })}
@@ -140,7 +142,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                             height={36}
                             content={({ payload }) => (
                                 <div className="flex justify-center gap-6 mt-4">
-                                    {payload?.map((entry: any, index: number) => {
+                                    {payload?.map((entry, index: number) => {
                                         const data = chartData.find(d => d.name === entry.value);
                                         let dotColor: string = CHART_COLORS.accentBlue;
                                         if (entry.value === 'Staff') dotColor = CHART_COLORS.accentPurple;
@@ -150,7 +152,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
                                             <button
                                                 key={`legend-${index}`}
                                                 className="flex items-center gap-2 text-xs hover:opacity-70 transition-opacity"
-                                                onClick={() => onFilterChange?.({ type: 'type', value: entry.value, label: `Type: ${entry.name}` })}
+                                                onClick={() => onFilterChange?.({ type: 'type', value: entry.value, label: `Type: ${entry.value}` })}
                                             >
                                                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: dotColor }}></span>
                                                 <span className="text-slate-800 font-bold">{entry.value}</span>

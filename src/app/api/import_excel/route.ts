@@ -1,6 +1,8 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import type { PoolClient } from "pg";
+import type { RawSheetRow } from "@/types/headcount.types";
 import { getDbConnection } from "@/lib/db";
 import { invalidateCachePrefix } from "@/lib/cache";
 import { isAuthenticated, unauthorizedResponse, getCurrentUser } from "@/lib/auth-server";
@@ -8,11 +10,11 @@ import { isAuthenticated, unauthorizedResponse, getCurrentUser } from "@/lib/aut
 /**
  * Get existing Emp IDs from database
  */
-async function getExistingEmployees(client: any): Promise<Map<string, { id: string; is_direct: string | null }>> {
+async function getExistingEmployees(client: PoolClient): Promise<Map<string, { id: string; is_direct: string | null }>> {
   const result = await client.query("SELECT id, emp_id, is_direct FROM employees");
 
   const employees = new Map<string, { id: string; is_direct: string | null }>();
-  result.rows.forEach((row: any) => {
+  result.rows.forEach((row: { id: string; emp_id: string | null; is_direct: string | null }) => {
     if (row.emp_id) {
       employees.set(row.emp_id, { id: row.id, is_direct: row.is_direct });
     }
@@ -32,7 +34,7 @@ export async function POST(req: Request) {
   const currentUser = await getCurrentUser();
   console.log(`🔐 POST /api/import_excel accessed by: ${currentUser}`);
 
-  let client: any = null;
+  let client: PoolClient | null = null;
 
   try {
     const formData = await req.formData();
@@ -53,7 +55,7 @@ export async function POST(req: Request) {
     }
 
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, {
+    const rows = XLSX.utils.sheet_to_json<RawSheetRow>(sheet, {
       defval: null,
       raw: true
     });
@@ -73,7 +75,7 @@ export async function POST(req: Request) {
     const existingEmployees = await getExistingEmployees(client);
 
     // Filter rows based on requested criteria
-    const validRows = rows.filter((row: any) => {
+    const validRows = rows.filter((row) => {
       const location = String(row["Location"] || "").trim().toUpperCase();
       const type = String(row["DL/IDL/Staff"] || "").trim().toUpperCase();
       const bu = String(row["BU"] || "").trim().toUpperCase();
@@ -95,9 +97,9 @@ export async function POST(req: Request) {
     // Get Emp IDs from import file for "Full Sync" check
     const newEmpIds = new Set(
       validRows
-        .map((row: any) => row["Emp ID"])
-        .filter((id: any) => id !== null && id !== undefined && String(id).trim() !== '')
-        .map((id: any) => String(id).trim())
+        .map((row) => row["Emp ID"])
+        .filter((id) => id !== null && id !== undefined && String(id).trim() !== '')
+        .map((id) => String(id).trim())
     );
 
     // Find Emp IDs to delete (in database but not in new file)
@@ -112,7 +114,7 @@ export async function POST(req: Request) {
     let deletedCount = 0;
 
     // 1. Process Insert/Update
-    for (const row of validRows as any[]) {
+    for (const row of validRows) {
       const rawId = row["Emp ID"];
       if (rawId === null || rawId === undefined || String(rawId).trim() === '') continue;
 
@@ -123,7 +125,7 @@ export async function POST(req: Request) {
       const existingEmp = existingEmployees.get(empId);
       const dbId = existingEmp?.id;
 
-      const safeString = (val: any) => (val === null || val === undefined) ? null : String(val);
+      const safeString = (val: unknown) => (val === null || val === undefined) ? null : String(val);
 
       const full_name = safeString(row["FullName "] || row["FullName"] || row["Full Name"]);
       const job_title = safeString(row["Job Title"]);
@@ -150,7 +152,7 @@ export async function POST(req: Request) {
       if (dbId) {
         // UPDATE
         const setClauses: string[] = [];
-        const queryParams: any[] = [dbId];
+        const queryParams: (string | null)[] = [dbId];
         let pIndex = 2; // $1 is dbId
 
         if (last_working_day !== null) { setClauses.push(`last_working_day = $${pIndex++}`); queryParams.push(last_working_day); }
@@ -214,13 +216,13 @@ export async function POST(req: Request) {
       deleted: deletedCount
     });
 
-  } catch (err: any) {
+  } catch (err) {
     console.error("Import error:", err);
     if (client) {
       try { await client.query('ROLLBACK'); client.release(); } catch (e) { console.error("Rollback failed:", e); }
     }
     return NextResponse.json(
-      { error: err.message || "Failed to import file" },
+      { error: "Failed to import file" },
       { status: 500 }
     );
   }

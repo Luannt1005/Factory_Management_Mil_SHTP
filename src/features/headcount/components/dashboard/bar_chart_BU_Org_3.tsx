@@ -19,7 +19,7 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
 
         const groupedData: Record<string, number> = {};
 
-        nodes.forEach((node: any) => {
+        nodes.forEach((node) => {
             // Use 'BU Org 3' from Supabase API, fallback to 'Dept' if not available
             const buOrg3 = node['BU Org 3'] || node['BU Org 3 '] || node['Dept'] || node['dept'] || 'Unknown';
             if (!groupedData[buOrg3]) groupedData[buOrg3] = 0;
@@ -83,7 +83,7 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
                             isAnimationActive={false}
                             contentStyle={chartTooltipStyle}
                             itemStyle={{ color: CHART_COLORS.text }}
-                            formatter={(value: any) => [value ?? 0, 'Employees']}
+                            formatter={(value) => [value ?? 0, 'Employees']}
                             labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
                             labelStyle={{ color: CHART_COLORS.textMuted, fontWeight: 600, marginBottom: '4px' }}
                         />
@@ -98,7 +98,7 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
                                 position="top"
                                 offset={10}
                                 style={{ fill: CHART_COLORS.text, fontWeight: 700, fontSize: 11 }}
-                                formatter={(val: any) => val > 0 ? val : ''}
+                                formatter={(val) => (Number(val) > 0 ? val : '')}
                             />
                         </Bar>
                     </BarChart>

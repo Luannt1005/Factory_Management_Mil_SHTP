@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LabelList, Tooltip, CartesianGrid } from 'recharts';
-import type { EmployeeFilter } from '../page';
+import type { HeadcountDashboardFilter as EmployeeFilter } from '@/types/headcount.types';
 import type { OrgNode } from '@/types/orgchart.types';
 import { ChartCard, CHART_COLORS, chartGridProps, chartAxisProps, chartTooltipStyle } from '@/components/dashboard';
 
@@ -67,7 +67,7 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
             min: bucket.min,
             max: bucket.max
         }));
-        nodes.forEach((node: any) => {
+        nodes.forEach((node) => {
             const joiningDate = node['Joining\r\n Date'] || node['Joining Date'] || '';
             if (!joiningDate) return;
             const dlIdlStaff = (node['DL/IDL/Staff'] || '').toLowerCase();
@@ -143,7 +143,7 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
                             isAnimationActive={false}
                             contentStyle={chartTooltipStyle}
                             itemStyle={{ color: CHART_COLORS.text }}
-                            formatter={(value: any, name: any) => [value, name]}
+                            formatter={(value, name) => [value, name]}
                             labelFormatter={(label) => chartData.find(d => d.name === label)?.fullName || label}
                             labelStyle={{ color: CHART_COLORS.textMuted, fontWeight: 600, marginBottom: '4px' }}
                         />
@@ -158,7 +158,7 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
                                 dataKey="Staff"
                                 position="inside"
                                 style={{ fill: '#FFFFFF', fontWeight: 700, fontSize: 11 }}
-                                formatter={(value: any) => value > 0 ? value : ''}
+                                formatter={(value) => (Number(value) > 0 ? value : '')}
                             />
                         </Bar>
                         <Bar
@@ -173,7 +173,7 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
                                 position="top"
                                 offset={8}
                                 style={{ fill: CHART_COLORS.text, fontWeight: 700, fontSize: 11 }}
-                                formatter={(value: any) => value > 0 ? value : ''}
+                                formatter={(value) => (Number(value) > 0 ? value : '')}
                             />
                         </Bar>
                     </BarChart>
