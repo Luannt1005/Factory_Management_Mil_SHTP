@@ -36,16 +36,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 const Input = (props: InputProps) => (
     <input
         {...props}
-        style={{
-            width: '100%',
-            padding: '10px 12px',
-            borderRadius: '6px',
-            border: '1px solid #e2e8f0',
-            fontSize: '14px',
-            backgroundColor: '#f8fafc',
-            color: '#1e293b',
-            outline: 'none',
-        }}
+        className="w-full py-2.5 px-3 rounded-md border border-slate-200 text-[14px] bg-slate-50 text-slate-800 outline-none"
         onFocus={(e) => (e.target.style.borderColor = '#db011c')}
         onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
         onClick={(e) => {
@@ -65,19 +56,10 @@ const Input = (props: InputProps) => (
 
 const InputLabel = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
     <label
-        style={{
-            display: 'block',
-            fontSize: '10px',
-            fontWeight: 700,
-            color: '#475569',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            marginBottom: '6px',
-            marginTop: '8px',
-        }}
+        className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5 mt-2"
     >
         {children}
-        {required && <span style={{ color: '#db011c', marginLeft: '4px' }}>*</span>}
+        {required && <span className="text-mwk ml-1">*</span>}
     </label>
 );
 
@@ -301,8 +283,8 @@ export function VisitorEditIntervieweeModal({
                                                         updated[idx].name = formatName(updated[idx].name || '');
                                                         setEditFormData({ ...editFormData, visitors: updated });
                                                     }}
-                                                    style={{ textTransform: 'capitalize' }}
-                                                    className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-mwk focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
+                                                    
+                                                    className="capitalize w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-mwk focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
                                                 />
                                             </td>
                                             <td className="py-1.5 px-2">
@@ -352,8 +334,8 @@ export function VisitorEditIntervieweeModal({
                                                         );
                                                         setEditFormData({ ...editFormData, visitors: updated });
                                                     }}
-                                                    style={{ textTransform: 'capitalize' }}
-                                                    className="w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-mwk focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
+                                                    
+                                                    className="capitalize w-full px-2.5 py-1.5 text-xs bg-gray-50/60 hover:bg-white focus:bg-white border border-gray-200 focus:border-mwk focus:ring-1 focus:ring-red-200 rounded-md outline-none transition-all font-medium text-[#0f172a]"
                                                 />
                                             </td>
                                             <td className="py-1.5 px-3 text-center">

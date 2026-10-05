@@ -47,7 +47,7 @@ export default function VisitorAnalyticsCharts({ trendData, buDistribution }: Vi
                                 isAnimationActive={false}
                                 contentStyle={chartTooltipStyle}
                                 itemStyle={{ color: CHART_COLORS.text }}
-                                formatter={(value: any) => [value, 'Visitors']}
+                                formatter={(value) => [value, 'Visitors']}
                                 labelStyle={{ color: CHART_COLORS.textMuted, fontWeight: 600, marginBottom: '4px' }}
                             />
                             <Area

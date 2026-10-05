@@ -5,6 +5,7 @@
   --color-mwk: var(--color-primary-mwk);
   --color-mwk-hover: var(--dashboard-primary-hover);
   --color-mwk-dark: var(--color-primary-mwk-dark);
+  --color-mwk-soft: var(--color-primary-mwk-soft);
   /* Request / approval status tones (used by getStatusPillClass / getStatusDotClass in src/utils/badge.ts) */
   --color-status-success: var(--dashboard-success);
   --color-status-error: var(--dashboard-error);
@@ -26,6 +27,7 @@
   --color-primary-mwk: #db011c;
   --color-primary-mwk-dark: #8a010f;
   --color-primary-mwk-light: #f8f9fa;
+  --color-primary-mwk-soft: #fff5f5; /* selected card / option background */
 
   --color-bg-page: #eaedf1;
   --color-bg-card: #FFFFFF;

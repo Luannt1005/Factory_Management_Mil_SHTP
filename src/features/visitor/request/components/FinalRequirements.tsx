@@ -16,41 +16,21 @@ export const FinalRequirements: React.FC<FinalRequirementsProps> = ({
     return (
         <>
             <SectionHeader title="Final Requirements" />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
+            <div className="grid grid-cols-[1fr_1fr] gap-y-4 gap-x-8">
                 <div>
                     <InputLabel>Factory Tour Requested?</InputLabel>
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div className="flex gap-3">
                         <button 
                             type="button" 
                             onClick={() => onUpdateDetail('factoryTour', 'Yes')} 
-                            style={{ 
-                                flex: 1, 
-                                padding: '10px', 
-                                borderRadius: '6px', 
-                                border: '1px solid #e2e8f0', 
-                                backgroundColor: details.factoryTour === 'Yes' ? '#db011c' : 'white', 
-                                color: details.factoryTour === 'Yes' ? 'white' : '#475569', 
-                                fontWeight: 700, 
-                                fontSize: '12px', 
-                                cursor: 'pointer' 
-                            }}
+                            className={`flex-1 p-2.5 rounded-md border border-slate-200 font-bold text-[12px] cursor-pointer ${details.factoryTour === 'Yes' ? 'bg-mwk text-white' : 'bg-white text-slate-600'}`}
                         >
                             YES
                         </button>
                         <button 
                             type="button" 
                             onClick={() => onUpdateDetail('factoryTour', 'No')} 
-                            style={{ 
-                                flex: 1, 
-                                padding: '10px', 
-                                borderRadius: '6px', 
-                                border: '1px solid #e2e8f0', 
-                                backgroundColor: details.factoryTour === 'No' ? '#db011c' : 'white', 
-                                color: details.factoryTour === 'No' ? 'white' : '#475569', 
-                                fontWeight: 700, 
-                                fontSize: '12px', 
-                                cursor: 'pointer' 
-                            }}
+                            className={`flex-1 p-2.5 rounded-md border border-slate-200 font-bold text-[12px] cursor-pointer ${details.factoryTour === 'No' ? 'bg-mwk text-white' : 'bg-white text-slate-600'}`}
                         >
                             NO
                         </button>
@@ -58,38 +38,18 @@ export const FinalRequirements: React.FC<FinalRequirementsProps> = ({
                 </div>
                 <div>
                     <InputLabel>Meal Registration?</InputLabel>
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div className="flex gap-3">
                         <button 
                             type="button" 
                             onClick={() => onUpdateDetail('mealRegistration', 'Yes')} 
-                            style={{ 
-                                flex: 1, 
-                                padding: '10px', 
-                                borderRadius: '6px', 
-                                border: '1px solid #e2e8f0', 
-                                backgroundColor: details.mealRegistration === 'Yes' ? '#db011c' : 'white', 
-                                color: details.mealRegistration === 'Yes' ? 'white' : '#475569', 
-                                fontWeight: 700, 
-                                fontSize: '12px', 
-                                cursor: 'pointer' 
-                            }}
+                            className={`flex-1 p-2.5 rounded-md border border-slate-200 font-bold text-[12px] cursor-pointer ${details.mealRegistration === 'Yes' ? 'bg-mwk text-white' : 'bg-white text-slate-600'}`}
                         >
                             YES
                         </button>
                         <button 
                             type="button" 
                             onClick={() => onUpdateDetail('mealRegistration', 'No')} 
-                            style={{ 
-                                flex: 1, 
-                                padding: '10px', 
-                                borderRadius: '6px', 
-                                border: '1px solid #e2e8f0', 
-                                backgroundColor: details.mealRegistration === 'No' ? '#db011c' : 'white', 
-                                color: details.mealRegistration === 'No' ? 'white' : '#475569', 
-                                fontWeight: 700, 
-                                fontSize: '12px', 
-                                cursor: 'pointer' 
-                            }}
+                            className={`flex-1 p-2.5 rounded-md border border-slate-200 font-bold text-[12px] cursor-pointer ${details.mealRegistration === 'No' ? 'bg-mwk text-white' : 'bg-white text-slate-600'}`}
                         >
                             NO
                         </button>

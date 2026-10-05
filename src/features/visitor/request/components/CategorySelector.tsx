@@ -22,7 +22,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
     onSelectCategory
 }) => {
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div className="grid grid-cols-[repeat(3,1fr)] gap-4 mb-6">
             {CATEGORIES.map(cat => {
                 const isActive = selectedCategory === cat.id || (cat.id === 'Vendor/Contractor' && (selectedCategory === 'Vendor' || selectedCategory === 'Contractor'));
                 const isDisabled = cat.id === 'Interviewee'
@@ -47,22 +47,12 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                                 onSelectCategory(cat.id);
                             }
                         }}
-                        style={{
-                            cursor: isDisabled ? 'not-allowed' : 'pointer', 
-                            padding: '20px', 
-                            borderRadius: '8px', 
-                            backgroundColor: isActive ? '#fff5f5' : (isDisabled ? '#f8fafc' : 'white'), 
-                            border: isActive ? '1px solid #db011c' : '1px solid #e2e8f0',
-                            textAlign: 'center', 
-                            transition: 'all 0.2s', 
-                            opacity: isDisabled ? 0.45 : 1,
-                            boxShadow: isActive ? '0 4px 12px rgba(219,1,28,0.1)' : '0 2px 4px rgba(0,0,0,0.02)'
-                        }}
+                        className={`p-5 rounded-lg border text-center transition-all duration-200 ${isDisabled ? 'cursor-not-allowed opacity-45' : 'cursor-pointer'} ${isActive ? 'bg-mwk-soft border-mwk shadow-[0_4px_12px_rgba(219,1,28,0.1)]' : `${isDisabled ? 'bg-slate-50' : 'bg-white'} border-slate-200 shadow-[0_2px_4px_rgba(0,0,0,0.02)]`}`}
                     >
-                        <div style={{ fontWeight: 700, fontSize: '13px', marginBottom: '6px', letterSpacing: '0.02em', color: isActive ? '#db011c' : (isDisabled ? '#94a3b8' : '#334155') }}>
+                        <div className={`font-bold text-[13px] mb-1.5 tracking-[0.02em] ${isActive ? 'text-mwk' : isDisabled ? 'text-slate-400' : 'text-slate-700'}`}>
                             {cat.label}
                         </div>
-                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        <div className="text-[11px] text-slate-400">
                             {isSecurity && cat.id !== 'Interviewee' ? 'Not permitted for Security' : cat.desc}
                         </div>
                     </div>

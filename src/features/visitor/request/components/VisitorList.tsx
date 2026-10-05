@@ -36,17 +36,17 @@ export const VisitorList: React.FC<VisitorListProps> = ({
 
     return (
         <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div className="flex flex-wrap gap-2.5 justify-between items-center mb-4">
                 {visitors.length < 15 ? (
                     <button 
                         type="button" 
                         onClick={onAddVisitor} 
-                        style={{ backgroundColor: 'transparent', color: '#db011c', border: '1px solid #db011c', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                        className="bg-transparent text-mwk border border-mwk py-1.5 px-3 rounded-md text-[11px] font-bold cursor-pointer"
                     >
                         + ADD ANOTHER VISITOR
                     </button>
                 ) : (
-                    <div style={{ fontSize: '11px', color: '#db011c', fontWeight: 700 }}>MAX 15 VISITORS REACHED</div>
+                    <div className="text-[11px] text-mwk font-bold">MAX 15 VISITORS REACHED</div>
                 )}
                 
                 <ExcelVisitorUpload 
@@ -56,12 +56,12 @@ export const VisitorList: React.FC<VisitorListProps> = ({
             </div>
             
             {visitors.map((visitor, idx) => (
-                <div key={idx} style={{ position: 'relative', marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center', borderBottom: visitors.length > 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '16px' }}>
-                    <div style={{ width: '80px', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', whiteSpace: 'nowrap' }}>VISITOR {idx + 1}</span>
+                <div key={idx} className={`relative mb-4 flex gap-4 items-center pb-4 ${visitors.length > 1 ? 'border-b border-dashed border-slate-200' : ''}`}>
+                    <div className="w-20 shrink-0 whitespace-nowrap">
+                        <span className="text-[12px] font-bold text-slate-500 whitespace-nowrap">VISITOR {idx + 1}</span>
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Full Name <span style={{ color: '#db011c' }}>*</span></label>
+                    <div className="flex-1 flex items-center gap-2">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">Full Name <span className="text-mwk">*</span></label>
                         <FormInput 
                             type="text" 
                             required 
@@ -69,11 +69,11 @@ export const VisitorList: React.FC<VisitorListProps> = ({
                             value={visitor.name} 
                             onChange={(e) => handleChange(idx, 'name', e.target.value)} 
                             onBlur={() => handleBlur(idx, 'name')} 
-                            style={{ textTransform: 'capitalize' }} 
+                            className="capitalize" 
                         />
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Company <span style={{ color: '#db011c' }}>*</span></label>
+                    <div className="flex-1 flex items-center gap-2">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">Company <span className="text-mwk">*</span></label>
                         <FormInput 
                             type="text" 
                             required 
@@ -83,8 +83,8 @@ export const VisitorList: React.FC<VisitorListProps> = ({
                             onBlur={() => handleBlur(idx, 'company')} 
                         />
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Title <span style={{ color: '#db011c' }}>*</span></label>
+                    <div className="flex-1 flex items-center gap-2">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">Title <span className="text-mwk">*</span></label>
                         <FormInput 
                             type="text" 
                             required 
@@ -95,17 +95,17 @@ export const VisitorList: React.FC<VisitorListProps> = ({
                         />
                     </div>
                     {visitors.length > 1 ? (
-                        <div style={{ width: '60px', flexShrink: 0, textAlign: 'right' }}>
+                        <div className="w-15 shrink-0 text-right">
                             <button 
                                 type="button" 
                                 onClick={() => onRemoveVisitor(idx)} 
-                                style={{ color: '#ef4444', background: 'none', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                                className="text-red-500 bg-transparent text-[11px] font-bold cursor-pointer"
                             >
                                 REMOVE
                             </button>
                         </div>
                     ) : (
-                        <div style={{ width: '60px', flexShrink: 0 }}></div>
+                        <div className="w-15 shrink-0"></div>
                     )}
                 </div>
             ))}

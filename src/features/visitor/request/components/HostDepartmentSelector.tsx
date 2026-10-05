@@ -30,14 +30,14 @@ export const HostDepartmentSelector: React.FC<HostDepartmentSelectorProps> = ({
     return (
         <>
             <SectionHeader title="Host Department" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+            <div className={"grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5"}>
                 <div>
                     <InputLabel required>BU</InputLabel>
                     <select 
                         required
                         value={bu}
                         onChange={e => onBuChange(e.target.value)}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none' }}
+                        className="w-full py-2.5 px-3 rounded-md border border-slate-200 text-[14px] bg-slate-50 outline-none"
                     >
                         <option value="" disabled>Select BU</option>
                         {[...new Set(hostDepartments.map(h => h.bu).filter(Boolean))].map(b => (
@@ -52,7 +52,7 @@ export const HostDepartmentSelector: React.FC<HostDepartmentSelectorProps> = ({
                         value={functionalDept}
                         onChange={e => onFunctionalDeptChange(e.target.value)}
                         disabled={!bu}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none', opacity: bu ? 1 : 0.5 }}
+                        className={`w-full py-2.5 px-3 rounded-md border border-slate-200 text-[14px] bg-slate-50 outline-none ${bu ? 'opacity-100' : 'opacity-50'}`}
                     >
                         <option value="" disabled>Select Functional Dept</option>
                         {[...new Set(hostDepartments.filter(h => h.bu === bu).map(h => h.functional_dept).filter(Boolean))].map(dept => (
@@ -67,7 +67,7 @@ export const HostDepartmentSelector: React.FC<HostDepartmentSelectorProps> = ({
                         value={department}
                         onChange={e => onDepartmentChange(e.target.value)}
                         disabled={!functionalDept}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#f8fafc', outline: 'none', opacity: functionalDept ? 1 : 0.5 }}
+                        className={`w-full py-2.5 px-3 rounded-md border border-slate-200 text-[14px] bg-slate-50 outline-none ${functionalDept ? 'opacity-100' : 'opacity-50'}`}
                     >
                         <option value="" disabled>Select Department</option>
                         {hostDepartments.filter(h => h.functional_dept === functionalDept).map((h, i) => (
@@ -78,14 +78,14 @@ export const HostDepartmentSelector: React.FC<HostDepartmentSelectorProps> = ({
             </div>
             
             {selectedHost && (
-                <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex flex-col gap-2 text-[13px]">
                     <div>
-                        <span style={{ color: '#64748b', fontWeight: 600 }}>Func Host Name:</span>
-                        <span style={{ color: '#0f172a', fontWeight: 700, marginLeft: '4px' }}>{selectedHost.functional_host_name || 'N/A'}</span>
+                        <span className="text-slate-500 font-semibold">Func Host Name:</span>
+                        <span className="text-slate-900 font-bold ml-1">{selectedHost.functional_host_name || 'N/A'}</span>
                     </div>
                     <div>
-                        <span style={{ color: '#64748b', fontWeight: 600 }}>Dept Host Name:</span>
-                        <span style={{ color: '#0f172a', fontWeight: 700, marginLeft: '4px' }}>{selectedHost.department_host_name || 'N/A'}</span>
+                        <span className="text-slate-500 font-semibold">Dept Host Name:</span>
+                        <span className="text-slate-900 font-bold ml-1">{selectedHost.department_host_name || 'N/A'}</span>
                     </div>
                 </div>
             )}

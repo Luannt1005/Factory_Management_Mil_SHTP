@@ -3,15 +3,15 @@
 import React from 'react';
 
 export const InputLabel = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
-    <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', marginTop: '8px' }}>
+    <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5 mt-2">
         {children}
-        {required && <span style={{ color: '#db011c', marginLeft: '4px' }}>*</span>}
+        {required && <span className="text-mwk ml-1">*</span>}
     </label>
 );
 
 export const SectionHeader = ({ title }: { title: string }) => (
-    <div style={{ borderBottom: '1.5px solid #db011c', marginBottom: '24px', marginTop: '40px' }}>
-        <h2 style={{ fontSize: '13px', fontWeight: 900, color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'inline-block' }}>
+    <div className="border-b-[1.5px] border-mwk mb-6 mt-10">
+        <h2 className="text-[13px] font-black text-slate-800 uppercase tracking-wider mb-2 inline-block">
             {title}
         </h2>
     </div>
@@ -19,28 +19,10 @@ export const SectionHeader = ({ title }: { title: string }) => (
 
 export interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-export const FormInput = ({ style, onFocus, onBlur, onClick, ...rest }: FormInputProps) => (
+export const FormInput = ({ className, onClick, ...rest }: FormInputProps) => (
     <input 
         {...rest} 
-        style={{ 
-            width: '100%', 
-            padding: '10px 12px', 
-            borderRadius: '6px', 
-            border: '1px solid #e2e8f0', 
-            fontSize: '14px', 
-            backgroundColor: '#f8fafc', 
-            color: '#1e293b', 
-            outline: 'none',
-            ...(style || {}) 
-        }}
-        onFocus={(e) => {
-            e.currentTarget.style.borderColor = '#db011c';
-            if (onFocus) onFocus(e);
-        }}
-        onBlur={(e) => {
-            e.currentTarget.style.borderColor = '#e2e8f0';
-            if (onBlur) onBlur(e);
-        }}
+        className={`w-full py-2.5 px-3 rounded-md border border-slate-200 text-[14px] bg-slate-50 text-slate-800 outline-none focus:border-mwk ${className ?? ''}`}
         onClick={(e) => {
             if (rest.type === 'date' || rest.type === 'time') {
                 try {

@@ -1,12 +1,13 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
+import type { MeetingRoom } from '@/types/rooms.types';
 
 export default function MeetingRoomCascader({ 
     meetingRooms, 
     value, 
     onChange 
 }: { 
-    meetingRooms: any[], 
+    meetingRooms: MeetingRoom[], 
     value: string, 
     onChange: (val: string) => void 
 }) {
@@ -19,7 +20,7 @@ export default function MeetingRoomCascader({
         if (!acc[room.floorName]) acc[room.floorName] = [];
         acc[room.floorName].push(room);
         return acc;
-    }, {} as Record<string, any[]>);
+    }, {} as Record<string, MeetingRoom[]>);
 
     const floors = Object.keys(groupedRooms);
 
@@ -81,7 +82,7 @@ export default function MeetingRoomCascader({
                                     <>
                                         <div className="p-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider sticky top-0 bg-white/95 backdrop-blur-sm z-10">Available Rooms</div>
                                         <ul className="pb-2">
-                                            {groupedRooms[hoveredFloor].map((room: any) => (
+                                            {groupedRooms[hoveredFloor].map((room) => (
                                                 <li 
                                                     key={room.id}
                                                     className="px-3 py-2.5 mx-2 rounded-lg text-sm text-gray-700 hover:bg-red-50 hover:text-mwk cursor-pointer font-medium transition-colors truncate"

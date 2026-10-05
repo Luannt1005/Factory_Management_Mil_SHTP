@@ -24,7 +24,7 @@ export async function POST(request: Request) {
         // Build list of candidates
         let candidateList: Array<{ name: string; jobTitle: string; interviewDepartment?: string; interviewerName?: string }> = [];
         if (Array.isArray(interviewees) && interviewees.length > 0) {
-            candidateList = interviewees.filter((c: any) => c.name && typeof c.name === 'string' && c.name.trim() !== '');
+            candidateList = interviewees.filter((c: { name?: unknown }) => c.name && typeof c.name === 'string' && c.name.trim() !== '');
         }
         if (candidateList.length === 0 && intervieweeName && typeof intervieweeName === 'string' && intervieweeName.trim() !== '') {
             candidateList = [{ 

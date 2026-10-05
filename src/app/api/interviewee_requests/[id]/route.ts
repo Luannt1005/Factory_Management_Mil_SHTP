@@ -72,7 +72,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
             const currentCompany = primaryVisitor.interviewDepartment || primaryVisitor.company || '';
 
             // Parse existing details
-            let existingDetails: any = {};
+            let existingDetails: Record<string, string | undefined> = {};
             try {
                 existingDetails = JSON.parse(vr.details || '{}');
             } catch (e) {}

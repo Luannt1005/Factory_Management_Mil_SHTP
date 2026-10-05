@@ -27,7 +27,7 @@ export const IntervieweeSchedule: React.FC<IntervieweeScheduleProps> = ({
     onInterviewAreaChange
 }) => {
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
+        <div className="grid grid-cols-[1fr_1fr] gap-y-4 gap-x-8">
             <div>
                 <InputLabel required>Start Date</InputLabel>
                 <FormInput 

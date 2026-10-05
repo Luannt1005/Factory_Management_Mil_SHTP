@@ -40,17 +40,17 @@ export const IntervieweeForm: React.FC<IntervieweeFormProps> = ({
 
     return (
         <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div className="flex flex-wrap gap-2.5 justify-between items-center mb-4">
                 {interviewees.length < 20 ? (
                     <button 
                         type="button" 
                         onClick={onAddInterviewee} 
-                        style={{ backgroundColor: 'transparent', color: '#db011c', border: '1px solid #db011c', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                        className="bg-transparent text-mwk border border-mwk py-1.5 px-3 rounded-md text-[11px] font-bold cursor-pointer"
                     >
                         + ADD ANOTHER CANDIDATE
                     </button>
                 ) : (
-                    <div style={{ fontSize: '11px', color: '#db011c', fontWeight: 700 }}>MAX 20 CANDIDATES REACHED</div>
+                    <div className="text-[11px] text-mwk font-bold">MAX 20 CANDIDATES REACHED</div>
                 )}
                 
                 <ExcelVisitorUpload 
@@ -60,12 +60,12 @@ export const IntervieweeForm: React.FC<IntervieweeFormProps> = ({
             </div>
             
             {interviewees.map((candidate, idx) => (
-                <div key={idx} style={{ position: 'relative', marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', borderBottom: interviewees.length > 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '16px' }}>
-                    <div style={{ width: '95px', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', whiteSpace: 'nowrap' }}>CANDIDATE {idx + 1}</span>
+                <div key={idx} className={`relative mb-4 flex gap-3 items-center pb-4 ${interviewees.length > 1 ? 'border-b border-dashed border-slate-200' : ''}`}>
+                    <div className="w-[95px] shrink-0 whitespace-nowrap">
+                        <span className="text-[12px] font-bold text-slate-500 whitespace-nowrap">CANDIDATE {idx + 1}</span>
                     </div>
-                    <div style={{ flex: 1.2, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Name <span style={{ color: '#db011c' }}>*</span></label>
+                    <div className="flex-[1.2] flex items-center gap-1.5">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">Name <span className="text-mwk">*</span></label>
                         <FormInput 
                             type="text" 
                             required 
@@ -73,11 +73,11 @@ export const IntervieweeForm: React.FC<IntervieweeFormProps> = ({
                             value={candidate.name} 
                             onChange={(e) => handleChange(idx, 'name', e.target.value)} 
                             onBlur={() => handleBlur(idx, 'name')} 
-                            style={{ textTransform: 'capitalize' }} 
+                            className="capitalize" 
                         />
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Job Title <span style={{ color: '#db011c' }}>*</span></label>
+                    <div className="flex-1 flex items-center gap-1.5">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">Job Title <span className="text-mwk">*</span></label>
                         <FormInput 
                             type="text" 
                             required 
@@ -87,8 +87,8 @@ export const IntervieweeForm: React.FC<IntervieweeFormProps> = ({
                             onBlur={() => handleBlur(idx, 'jobTitle')} 
                         />
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Department <span style={{ color: '#db011c' }}>*</span></label>
+                    <div className="flex-1 flex items-center gap-1.5">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">Department <span className="text-mwk">*</span></label>
                         <FormInput 
                             type="text" 
                             required 
@@ -98,8 +98,8 @@ export const IntervieweeForm: React.FC<IntervieweeFormProps> = ({
                             onBlur={() => handleBlur(idx, 'interviewDepartment')} 
                         />
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Interviewer <span style={{ color: '#db011c' }}>*</span></label>
+                    <div className="flex-1 flex items-center gap-1.5">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">Interviewer <span className="text-mwk">*</span></label>
                         <FormInput 
                             type="text" 
                             required 
@@ -107,21 +107,21 @@ export const IntervieweeForm: React.FC<IntervieweeFormProps> = ({
                             value={candidate.interviewerName} 
                             onChange={(e) => handleChange(idx, 'interviewerName', e.target.value)} 
                             onBlur={() => handleBlur(idx, 'interviewerName')} 
-                            style={{ textTransform: 'capitalize' }} 
+                            className="capitalize" 
                         />
                     </div>
                     {interviewees.length > 1 ? (
-                        <div style={{ width: '55px', flexShrink: 0, textAlign: 'right' }}>
+                        <div className="w-[55px] shrink-0 text-right">
                             <button 
                                 type="button" 
                                 onClick={() => onRemoveInterviewee(idx)} 
-                                style={{ color: '#ef4444', background: 'none', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                                className="text-red-500 bg-transparent text-[11px] font-bold cursor-pointer"
                             >
                                 REMOVE
                             </button>
                         </div>
                     ) : (
-                        <div style={{ width: '55px', flexShrink: 0 }}></div>
+                        <div className="w-[55px] shrink-0"></div>
                     )}
                 </div>
             ))}

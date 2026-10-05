@@ -96,13 +96,13 @@ export const ExcelVisitorUpload: React.FC<ExcelVisitorUploadProps> = ({
     };
 
     return (
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="flex gap-2.5">
             <button 
                 type="button" 
                 onClick={downloadTemplate} 
-                style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                className="bg-slate-100 text-slate-600 border border-slate-300 py-1.5 px-3 rounded-md text-[11px] font-bold cursor-pointer flex items-center gap-1.5"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                 </svg>
                 DOWNLOAD TEMPLATE
@@ -113,14 +113,14 @@ export const ExcelVisitorUpload: React.FC<ExcelVisitorUploadProps> = ({
                 accept=".xlsx, .xls" 
                 ref={fileInputRef} 
                 onChange={handleFileUpload} 
-                style={{ display: 'none' }} 
+                className="hidden" 
             />
             <button 
                 type="button" 
                 onClick={() => fileInputRef.current?.click()} 
-                style={{ backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                className="bg-sky-500 text-white py-1.5 px-3 rounded-md text-[11px] font-bold cursor-pointer flex items-center gap-1.5"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '14px', height: '14px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                 </svg>
                 UPLOAD EXCEL

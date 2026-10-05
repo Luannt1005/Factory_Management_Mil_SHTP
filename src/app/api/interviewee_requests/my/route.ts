@@ -25,7 +25,7 @@ export async function GET(request: Request) {
         const osNameMatch3 = session.user.email || '';
 
         let whereClause = 'WHERE (r."osName" = $1 OR r."osName" = $2 OR r."osName" = $3)';
-        const queryParams: any[] = [osNameMatch1, osNameMatch2, osNameMatch3];
+        const queryParams: (string | number)[] = [osNameMatch1, osNameMatch2, osNameMatch3];
         let paramCount = 3;
 
         if (startDate && endDate) {
@@ -83,7 +83,7 @@ export async function GET(request: Request) {
             }
         }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Fetch my interviewee requests error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
