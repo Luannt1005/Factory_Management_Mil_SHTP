@@ -1,14 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { User } from "@/types/database";
 import { orgchartApi } from "@/features/orgchart/services/orgchartApi";
+import type { CustomOrgChartProfile, OrgChartNode } from "@/types/orgchart.types";
 
-export interface OrgProfile {
-    orgchart_id: string;
-    orgchart_name: string;
-    created_at?: string;
-    is_public?: boolean;
-    [key: string]: any;
-}
+export type OrgProfile = CustomOrgChartProfile;
 
 interface UseOrgProfileManagerProps {
     user: User | null | undefined;
@@ -42,7 +37,7 @@ export function useOrgProfileManager({ user }: UseOrgProfileManagerProps) {
 
     /* ================= CREATE NEW ORGCHART ================= */
     // Helper to actually perform the POST (split for the empty data case override)
-    const performCreate = async (newOrgName: string, description: string, nodes: any[], username: string) => {
+    const performCreate = async (newOrgName: string, description: string, nodes: OrgChartNode[], username: string) => {
         const result = await orgchartApi.createCustomOrgchart({
             username,
             orgchart_name: newOrgName,

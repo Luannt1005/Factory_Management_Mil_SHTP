@@ -27,46 +27,6 @@ const Section = ({ dark, children, className = "" }: { dark?: boolean, children:
   </section>
 );
 
-// BRP Split Block (50/50 Image and Text)
-const SplitBlock = ({ img, title, desc, dark, reverse, badge }: any) => (
-  <div className={`grid grid-cols-1 lg:grid-cols-2 bg-white`}>
-    <div className={`relative h-[400px] lg:h-[600px] ${reverse ? "lg:order-last" : ""}`}>
-      <img src={img} alt={title} className="w-full h-full object-cover" />
-    </div>
-    <div className={`flex flex-col justify-center p-8 lg:p-24 text-[#212529] border-t lg:border-t-0 border-b border-gray-200`}>
-      <AnimatedSection direction={reverse ? "left" : "right"}>
-        {badge && <span className="block mb-4 text-mwk font-black uppercase tracking-widest text-sm">{badge}</span>}
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter mb-6 leading-[0.9]">
-          {title}
-        </h2>
-        <p className={`text-lg font-normal leading-relaxed text-gray-600`}>
-          {desc}
-        </p>
-      </AnimatedSection>
-    </div>
-  </div>
-);
-
-// BRP Split Video Block (50/50 Video and Text)
-const SplitVideoBlock = ({ video, title, desc, dark, reverse, badge }: any) => (
-  <div className={`grid grid-cols-1 lg:grid-cols-2 bg-[#f4f4f4]`}>
-    <div className={`relative h-[400px] lg:h-[600px] ${reverse ? "lg:order-last" : ""}`}>
-      <video src={video} controls autoPlay muted playsInline className="w-full h-full object-cover" />
-    </div>
-    <div className={`flex flex-col justify-center p-8 lg:p-24 text-[#212529] border-t lg:border-t-0 border-b border-gray-200`}>
-      <AnimatedSection direction={reverse ? "left" : "right"}>
-        {badge && <span className="block mb-4 text-mwk font-black uppercase tracking-widest text-sm">{badge}</span>}
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter mb-6 leading-[0.9]">
-          {title}
-        </h2>
-        <p className={`text-lg font-normal leading-relaxed text-gray-600`}>
-          {desc}
-        </p>
-      </AnimatedSection>
-    </div>
-  </div>
-);
-
 const constructionTabsData = [
   {
     id: "start",

@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { getDbConnection } from "@/lib/db";
+import type { CoreTeamEmployee } from "@/types/orgchart.types";
 import { isAuthenticated, unauthorizedResponse } from "@/lib/auth-server";
 
 // Trim leading zeros from ID
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
     
     // Fetch all employees (including resigned to keep key leaders like HRBP and OF)
     const queryStr = "SELECT emp_id, full_name, job_title, dept, location, line_manager, status FROM employees WHERE emp_id IS NOT NULL AND emp_id <> ''";
-    const result = await pool.query(queryStr);
+    const result = await pool.query<CoreTeamEmployee>(queryStr);
     const employees = result.rows;
 
     if (!employees || employees.length === 0) {
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
     }
 
     // Map of clean_id -> employee for quick lookup
-    const empMap: Record<string, any> = {};
+    const empMap: Record<string, CoreTeamEmployee> = {};
     employees.forEach(emp => {
       const cleanId = trimLeadingZeros(emp.emp_id);
       if (cleanId) {
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
     });
 
     // Helper to get line manager ID cleanly
-    const getManagerId = (emp: any): string | null => {
+    const getManagerId = (emp: CoreTeamEmployee): string | null => {
       if (!emp.line_manager) return null;
       return trimLeadingZeros(emp.line_manager.split(':')[0]);
     };
@@ -65,7 +66,7 @@ export async function GET(req: Request) {
     });
 
     // Group direct reports for all employees
-    const reportsData: Record<string, any[]> = {};
+    const reportsData: Record<string, CoreTeamEmployee[]> = {};
     
     // Initialize report arrays
     leaderIds.forEach(id => {
@@ -94,7 +95,7 @@ export async function GET(req: Request) {
     });
 
     // COMPUTE FULL SPAN OF CONTROL (Deep tree)
-    const childrenMap: Record<string, any[]> = {};
+    const childrenMap: Record<string, CoreTeamEmployee[]> = {};
     employees.forEach(emp => {
       const mgrId = getManagerId(emp);
       if (mgrId) {
@@ -178,12 +179,12 @@ export async function GET(req: Request) {
 
     response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
     return response;
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error loading ops support team:", err);
     return NextResponse.json(
       {
         success: false,
-        error: err.message || "Failed to load ops support team data",
+        error: "Failed to load ops support team data",
       },
       { status: 500 }
     );

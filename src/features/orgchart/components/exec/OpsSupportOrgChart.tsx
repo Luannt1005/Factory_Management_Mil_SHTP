@@ -198,9 +198,9 @@ export default function OpsSupportOrgChart() {
       <div className="flex flex-col items-center w-full relative">
         {showTopLine && (
           isDotted ? (
-            <div className="w-[2px] border-l-[2px] border-dotted border-red-500 relative z-0" style={{ height: "20px" }}></div>
+            <div className="w-[2px] border-l-[2px] border-dotted border-red-500 relative z-0 h-5"></div>
           ) : (
-            <div className="w-[2px] bg-red-600 relative z-0" style={{ height: "20px" }}></div>
+            <div className="w-[2px] bg-red-600 relative z-0 h-5"></div>
           )
         )}
         <div 
@@ -414,7 +414,7 @@ export default function OpsSupportOrgChart() {
         {/* Vertical Drop from Root */}
         {directReports && directReports.length > 0 && (
           <div className="w-full relative h-8">
-            <div className="absolute w-[2px] bg-red-600" style={{ left: "50%", top: "0", bottom: "0" }}></div>
+            <div className="absolute w-[2px] bg-red-600 left-1/2 top-0 bottom-0"></div>
           </div>
         )}
 

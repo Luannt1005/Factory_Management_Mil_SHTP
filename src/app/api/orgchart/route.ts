@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+import type { OrgChartNode } from '@/types/orgchart.types';
 import { NextResponse } from "next/server";
 import { getDbConnection } from "@/lib/db";
 import { getCachedData } from "@/lib/cache";
@@ -23,7 +24,7 @@ interface Employee {
   line_manager: string | null;
   joining_date: string | null;
   last_working_day: string | null;
-  [key: string]: any;
+  [key: string]: string | number | null | undefined;
 }
 
 // --- Helper Functions ---
@@ -36,7 +37,7 @@ const trimLeadingZeros = (value: string | null | undefined): string | null => {
 };
 
 // Format date to DD/MM/YYYY
-const formatDate = (value: any): string => {
+const formatDate = (value: unknown): string => {
   if (!value) return "";
   try {
     // Handle Excel serial number
@@ -104,7 +105,7 @@ export async function GET(req: Request) {
         console.log(`📡 [Cache MISS] Fetching employees from Azure SQL (dept: ${dept || 'all'})...`);
 
         const pool = await getDbConnection();
-        const queryValues: any[] = [];
+        const queryValues: string[] = [];
         let queryStr = "SELECT * FROM employees WHERE emp_id IS NOT NULL AND emp_id <> '' AND (status = 'Active' OR status IS NULL)";
 
         if (dept && dept !== "all") {
@@ -120,7 +121,7 @@ export async function GET(req: Request) {
         }
 
         // 2. Transform to Orgchart Nodes
-        const output: any[] = [];
+        const output: OrgChartNode[] = [];
         const deptMap = new Map();
 
         // 1.5 Create ID Set for lookup
@@ -249,13 +250,13 @@ export async function GET(req: Request) {
     );
 
     return response;
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error loading orgchart:", err);
     return NextResponse.json(
       {
         data: [],
         success: false,
-        error: err.message || "Failed to load data",
+        error: "Failed to load data",
       },
       { status: 500 }
     );

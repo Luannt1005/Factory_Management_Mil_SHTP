@@ -1,8 +1,9 @@
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import type { CustomOrgChartProfile } from '@/types/orgchart.types';
 
 interface CustomizeHeaderProps {
-    orgList: any[];
+    orgList: CustomOrgChartProfile[];
     orgId: string;
     setOrgId: (id: string) => void;
     lastSaveTime: string | null;

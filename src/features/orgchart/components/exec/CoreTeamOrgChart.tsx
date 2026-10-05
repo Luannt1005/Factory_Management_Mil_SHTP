@@ -202,9 +202,9 @@ export default function CoreTeamOrgChart() {
       <div className="flex flex-col items-center w-full relative">
         {showTopLine && (
           isDotted ? (
-            <div className="w-[2px] border-l-[2px] border-dotted border-red-500 relative z-0" style={{ height: "20px" }}></div>
+            <div className="w-[2px] border-l-[2px] border-dotted border-red-500 relative z-0 h-5"></div>
           ) : (
-            <div className="w-[2px] bg-red-600 relative z-0" style={{ height: "20px" }}></div>
+            <div className="w-[2px] bg-red-600 relative z-0 h-5"></div>
           )
         )}
         <div 
@@ -419,20 +419,20 @@ export default function CoreTeamOrgChart() {
         {/* Level 1 Horizontal Connecting Line */}
         <div className="w-full relative h-6">
           {/* Single Horizontal Line connecting Left Trunk (-20px), Left Column (9%), VP (50%), and Right Column (61%) */}
-          <div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "-20px", right: "39%" }}></div>
+          <div className="absolute bottom-0 h-[2px] bg-red-600 -left-5 right-[39%]"></div>
           {/* Vertical drop from VP down to this horizontal line exactly at 50% */}
-          <div className="absolute w-[2px] bg-red-600" style={{ left: "50%", top: "0", bottom: "0" }}></div>
+          <div className="absolute w-[2px] bg-red-600 left-1/2 top-0 bottom-0"></div>
         </div>
 
         {/* main horizontal splits: Left Column (Tien & Quyen) and Right Column (Jeff & 6 reports) */}
         <div className="flex w-full justify-between items-start relative mt-0">
           
           {/* The long vertical line routing around the outside left edge down to Level 3 */}
-          <div className="absolute w-[2px] bg-red-600" style={{ left: "-20px", top: "0", bottom: "-56px" }}></div>
+          <div className="absolute w-[2px] bg-red-600 -left-5 top-0 -bottom-14"></div>
 
           {/* Left Column Stack (Tien and Quyen) */}
-          <div style={{ width: "18%" }} className="flex flex-col items-center relative">
-            <div className="w-[2px] bg-red-600" style={{ height: "20px" }}></div>
+          <div className="flex flex-col items-center relative w-[18%]">
+            <div className="w-[2px] bg-red-600 h-5"></div>
             <div className="w-full mt-0">
               {ie_fmu_mif && renderLeaderCard(ie_fmu_mif)}
             </div>
@@ -440,35 +440,29 @@ export default function CoreTeamOrgChart() {
             <div className="w-full relative mt-6">
               {/* Horizontal line entering from the left trunk into Quyen's left side */}
               <div 
-                className="absolute bg-red-600" 
-                style={{ 
-                  left: "-20px", 
-                  width: "calc(50% - 65px)", 
-                  top: "40px",
-                  height: "2px" 
-                }}
+                className="absolute bg-red-600 -left-5 w-[calc(50%-65px)] top-10 h-[2px]"
               ></div>
               {factoryMgmt && renderLeaderCard(factoryMgmt, { showTopLine: false })}
             </div>
           </div>
 
           {/* Right Column Section (Jeff Searl and his 6 direct reports) */}
-          <div style={{ width: "78%" }} className="flex flex-col items-center">
+          <div className="flex flex-col items-center w-[78%]">
             
-            <div className="w-[2px] bg-red-600" style={{ height: "20px" }}></div>
+            <div className="w-[2px] bg-red-600 h-5"></div>
             <div className="flex flex-col items-center relative w-full">
               {globalOps && renderLeaderCard(globalOps)}
             </div>
 
             {/* Level 2 Connector Row */}
             <div className="grid grid-cols-6 gap-2 w-full h-8 relative z-10">
-              <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "50%", right: "-8px" }}></div></div>
+              <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600 left-1/2 -right-2"></div></div>
               {[2,3,4,5].map(i => (
-                 <div className="relative" key={i}><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "-8px" }}></div></div>
+                 <div className="relative" key={i}><div className="absolute bottom-0 h-[2px] bg-red-600 left-0 -right-2"></div></div>
               ))}
-              <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "50%" }}></div></div>
+              <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600 left-0 right-1/2"></div></div>
               {/* Vertical connector coming down from Jeff */}
-              <div className="absolute left-1/2 -translate-x-1/2 w-[2px] bg-red-600" style={{ top: "0", bottom: "0" }}></div>
+              <div className="absolute left-1/2 -translate-x-1/2 w-[2px] bg-red-600 top-0 bottom-0"></div>
             </div>
 
             {/* Level 2: Jeff's 6 Direct Reports Grid */}
@@ -487,13 +481,13 @@ export default function CoreTeamOrgChart() {
         {/* Level 3: Support Functions Divider */}
         <div className="grid grid-cols-5 gap-3 w-full max-w-[1200px] mx-auto h-8 relative z-10 mt-6">
           {/* Col 1 horizontal line extended to the far left to catch the outside drop line */}
-          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: "-20px", right: "-12px" }}></div></div>
-          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "-12px" }}></div></div>
-          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "-12px" }}></div></div>
-          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "-12px" }}></div></div>
+          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600 -left-5 -right-3"></div></div>
+          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600 left-0 -right-3"></div></div>
+          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600 left-0 -right-3"></div></div>
+          <div className="relative"><div className="absolute bottom-0 h-[2px] bg-red-600 left-0 -right-3"></div></div>
           
           <div className="relative">
-             <div className="absolute bottom-0 h-[2px] bg-red-600" style={{ left: 0, right: "50%" }}></div>
+             <div className="absolute bottom-0 h-[2px] bg-red-600 left-0 right-1/2"></div>
           </div>
         </div>
 

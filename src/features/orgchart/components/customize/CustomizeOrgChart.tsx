@@ -9,18 +9,20 @@ import CreateProfileModal from "./CreateProfileModal";
 import { useOrgProfileManager } from "../../hooks/useOrgProfileManager";
 import { useOrgChartEditor } from "../../hooks/useOrgChartEditor";
 import EditNodeModal from "./EditNodeModal";
+import type { EditorOrgNode, EditNodeSaveData } from "@/types/orgchart.types";
+import type { User } from "@/types/database";
 
 const CustomizeOrgChart = () => {
     const chartRef = useRef<HTMLDivElement>(null);
     const { groups, loading: groupsLoading, nodes: allNodes } = useOrgData();
 
     // State Hooks
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [orgId, setOrgId] = useState<string>("");
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-    const [selectedNodeData, setSelectedNodeData] = useState<any>(null);
+    const [selectedNodeData, setSelectedNodeData] = useState<EditorOrgNode | null>(null);
 
     const username = user?.username || "admin";
 
@@ -43,10 +45,10 @@ const CustomizeOrgChart = () => {
 
     // --- State for Edit Modal ---
     const [editModalOpen, setEditModalOpen] = useState(false);
-    const [selectedNodeDataForEdit, setSelectedNodeDataForEdit] = useState<any>(null); // Renamed to avoid conflict
+    const [selectedNodeDataForEdit, setSelectedNodeDataForEdit] = useState<EditorOrgNode | null>(null); // Renamed to avoid conflict
 
     // --- Handlers ---
-    const handleNodeClick = useCallback((nodeData: any) => {
+    const handleNodeClick = useCallback((nodeData: EditorOrgNode) => {
         setSelectedNodeDataForEdit(nodeData);
         setEditModalOpen(true);
     }, []);
@@ -86,7 +88,7 @@ const CustomizeOrgChart = () => {
         handleNodeClick // Pass custom click handler
     );
 
-    const handleSaveNode = (originalId: string, newData: any) => {
+    const handleSaveNode = (originalId: string | number, newData: EditNodeSaveData) => {
         if (updateNodeData) {
             updateNodeData(originalId, newData);
         }
@@ -101,8 +103,9 @@ const CustomizeOrgChart = () => {
             setShowCreateModal(false);
             alert(`✅ Đã tạo sơ đồ: ${newOrgName}`);
             if (result?.orgchart_id) setOrgId(result.orgchart_id);
-        } catch (err: any) {
-            if (err.message === "EMPTY_DATA_CONFIRMATION_NEEDED") {
+        } catch (err) {
+            const errMessage = err instanceof Error ? err.message : '';
+            if (errMessage === "EMPTY_DATA_CONFIRMATION_NEEDED") {
                 if (confirm("Phòng ban này không có dữ liệu. Bạn vẫn muốn tạo sơ đồ trống?")) {
                     try {
                         const description = newOrgDesc || `Tạo từ phòng ban ${selectedDept}`;
@@ -111,12 +114,12 @@ const CustomizeOrgChart = () => {
                         setShowCreateModal(false);
                         alert(`✅ Đã tạo sơ đồ: ${newOrgName}`);
                         if (result?.orgchart_id) setOrgId(result.orgchart_id);
-                    } catch (e: any) {
-                        alert(`❌ Lỗi tạo sơ đồ: ${e.message}`);
+                    } catch (e) {
+                        alert(`❌ Lỗi tạo sơ đồ: ${e instanceof Error ? e.message : String(e)}`);
                     }
                 }
             } else {
-                alert(`❌ Lỗi tạo sơ đồ: ${err.message || err}`);
+                alert(`❌ Lỗi tạo sơ đồ: ${errMessage || err}`);
             }
         }
     };
@@ -143,8 +146,8 @@ const CustomizeOrgChart = () => {
             }
             setOrgId("");
             setHasChanges(false);
-        } catch (err: any) {
-            alert(`❌ Lỗi xóa hồ sơ: ${err.message}`);
+        } catch (err) {
+            alert(`❌ Lỗi xóa hồ sơ: ${err instanceof Error ? err.message : String(err)}`);
         }
     };
 
@@ -347,8 +350,7 @@ const CustomizeOrgChart = () => {
                 {/* Chart Container */}
                 <div
                     ref={chartRef}
-                    className={`${styles.treeContainer} relative z-10 h-full w-full`}
-                    style={{ visibility: orgId ? 'visible' : 'hidden' }}
+                    className={`${styles.treeContainer} relative z-10 h-full w-full ${orgId ? 'visible' : 'invisible'}`}
                 />
 
                 {/* Loading Overlay for Chart Operations */}

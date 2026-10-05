@@ -150,3 +150,35 @@ export interface AddDepartmentPayload {
 // Aliases for compatibility
 export type OrgNode = OrgChartNode;
 export type CustomOrgChartProfile = CustomOrgChartRecord;
+
+/** Header/rows content of a "description_table" node in the custom org chart editor */
+export interface NodeDescriptionTable {
+    headers: string[];
+    rows: string[][];
+}
+
+/** Node as handled by the custom org chart editor (chart node + optional description table) */
+export interface EditorOrgNode extends OrgChartNode {
+    tableData?: NodeDescriptionTable;
+    table_html?: string;
+}
+
+/** Form state of the custom org chart node editor modal */
+export interface EditNodeFormData {
+    id: string | number;
+    pid: string | number | null;
+    stpid: string | number | null;
+    name: string;
+    title: string;
+    img: string;
+    dept: string;
+    description: string;
+    tags: string;
+}
+
+/** Payload emitted by the node editor modal when saving a node */
+export interface EditNodeSaveData extends Omit<EditNodeFormData, 'tags'> {
+    tags: string | string[];
+    tableData?: NodeDescriptionTable;
+    table_html?: string;
+}

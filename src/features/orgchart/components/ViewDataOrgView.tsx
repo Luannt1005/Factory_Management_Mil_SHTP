@@ -252,7 +252,7 @@ const ViewDataOrg = () => {
         >
           ← Previous
         </button>
-        <span style={{ margin: "0 15px", fontWeight: "bold" }}>
+        <span className="mx-[15px] font-bold">
           Page {currentPage} of {totalPages || 1}
         </span>
         <button

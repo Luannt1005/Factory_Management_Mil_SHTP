@@ -2,14 +2,15 @@ import { useEffect, useRef, useState, useCallback, RefObject } from "react";
 import OrgChart from "@/lib/orgchart";
 import { patchOrgChartTemplates } from "@/features/orgchart/utils/orgChartTemplates";
 import { orgchartApi } from "@/features/orgchart/services/orgchartApi";
+import type { OrgChartNode, EditorOrgNode, EditNodeSaveData } from "@/types/orgchart.types";
 
 export function useOrgChartEditor(
     chartContainerRef: RefObject<HTMLDivElement | null>,
     orgId: string,
     username: string,
-    allNodes: any[],
+    allNodes: OrgChartNode[],
     onChartNotFound?: () => void,
-    onNodeClick?: (nodeData: any) => void
+    onNodeClick?: (nodeData: EditorOrgNode) => void
 ) {
     const chartInstance = useRef<any>(null);
     const originalNodesRef = useRef<any[]>([]);
@@ -48,7 +49,7 @@ export function useOrgChartEditor(
 
     /* ================= HELPER: UPDATE NODE DATA ================= */
     // Exposed helper to allow external components (like a Modal) to update the chart
-    const updateNodeData = useCallback((originalId: string, newData: any) => {
+    const updateNodeData = useCallback((originalId: string | number, newData: EditNodeSaveData) => {
 
         // 1. Check if it's a Description Table
         const tableIndex = descriptionTablesRef.current.findIndex(t => t.id === originalId);
@@ -254,7 +255,7 @@ export function useOrgChartEditor(
         }
     }, [chartContainerRef]);
 
-    const removeNode = useCallback((nodeId: string) => {
+    const removeNode = useCallback((nodeId: string | number) => {
         // 1. Check Description Tables
         const tableIndex = descriptionTablesRef.current.findIndex(t => t.id === nodeId);
         if (tableIndex !== -1) {

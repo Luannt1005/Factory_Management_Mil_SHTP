@@ -79,7 +79,7 @@ export async function PUT(
         const pool = await getDbConnection();
 
         let setClauses = ["updated_at = CURRENT_TIMESTAMP"];
-        let queryValues: any[] = [id];
+        let queryValues: (string | boolean | null)[] = [id];
         let vIndex = 2;
 
         if (org_data !== undefined) {

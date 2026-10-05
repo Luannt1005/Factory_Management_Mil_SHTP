@@ -1,13 +1,14 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState, useEffect } from 'react';
+import type { EditorOrgNode, EditNodeFormData, EditNodeSaveData, OrgChartNode } from '@/types/orgchart.types';
 
 interface EditNodeModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (nodeId: string, data: any) => void;
-    onDelete?: (nodeId: string) => void;
-    nodeData: any | null;
-    allNodes: any[]; // For auto-mapping
+    onSave: (nodeId: string | number, data: EditNodeSaveData) => void;
+    onDelete?: (nodeId: string | number) => void;
+    nodeData: EditorOrgNode | null;
+    allNodes: OrgChartNode[]; // For auto-mapping
 }
 
 export default function EditNodeModal({
@@ -19,7 +20,7 @@ export default function EditNodeModal({
     nodeData,
     allNodes
 }: EditNodeModalProps) {
-    const [formData, setFormData] = useState<any>({});
+    const [formData, setFormData] = useState<EditNodeFormData>({ id: '', pid: null, stpid: null, name: '', title: '', img: '', dept: '', description: '', tags: '' });
     const [tableData, setTableData] = useState<{ headers: string[], rows: string[][] }>({
         headers: [],
         rows: []
@@ -49,13 +50,13 @@ export default function EditNodeModal({
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev: any) => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
 
         // Auto-mapping logic for ID change
         if (name === 'id') {
-            const employee = allNodes.find((n: any) => String(n.id) === String(value));
+            const employee = allNodes.find((n) => String(n.id) === String(value));
             if (employee) {
-                setFormData((prev: any) => ({
+                setFormData((prev) => ({
                     ...prev,
                     [name]: value, // Keep the ID typed
                     name: employee.name || prev.name,
@@ -114,6 +115,7 @@ export default function EditNodeModal({
     };
 
     const handleSave = () => {
+        if (!nodeData) return;
         if (!formData.id) {
             alert("ID is required!");
             return;
@@ -124,7 +126,7 @@ export default function EditNodeModal({
             ? formData.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t)
             : formData.tags;
 
-        const dataToSave = {
+        const dataToSave: EditNodeSaveData = {
             ...formData,
             tags: tagsArray,
             tableData: isDescriptionTable ? tableData : undefined
@@ -150,7 +152,6 @@ export default function EditNodeModal({
             });
             tableHtml += `</tbody></table>`;
 
-            // @ts-ignore
             dataToSave.table_html = tableHtml;
         }
 
