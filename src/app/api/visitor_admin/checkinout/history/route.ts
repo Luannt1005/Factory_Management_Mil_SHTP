@@ -74,7 +74,7 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
 
         // Default to approved requests
         let whereConditions: string[] = [];
-        const queryParams: any[] = [];
+        const queryParams: (string | number | string[])[] = [];
         let paramCount = 1;
 
         if (date) {
@@ -217,9 +217,8 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
             }
         }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Fetch check-in/out history error:', error);
-        require('fs').appendFileSync('c:\\Users\\luan.nguyen\\Desktop\\test org\\Orgchart_TTI_onprem\\scratch\\api_error.log', 'History Route Error: ' + error.stack + '\n');
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

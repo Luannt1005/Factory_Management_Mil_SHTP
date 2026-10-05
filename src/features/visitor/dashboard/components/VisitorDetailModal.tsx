@@ -1,5 +1,6 @@
 'use client';
 
+import { getStatusPillClass, getStatusDotClass, getStatusSoftClass } from '@/utils/badge';
 import React from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -38,17 +39,6 @@ interface VisitorItemInfo {
     interviewerName?: string;
 }
 
-const getStatusColor = (status: string) => {
-    switch (status) {
-        case 'APPROVED':
-        case 'COMPLETE':
-            return '#10b981'; // Green
-        case 'REJECTED':
-            return '#ef4444'; // Red
-        default:
-            return '#f59e0b'; // Amber
-    }
-};
 
 const parseDetails = (details: unknown): VisitorDashboardParsedDetails => {
     if (!details) return {};
@@ -174,15 +164,10 @@ export function VisitorDetailModal({
                                 />
                                 <DetailRow icon={TagIcon} label="Status">
                                     <span
-                                        className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5"
-                                        style={{
-                                            background: getStatusColor(request.status) + '15',
-                                            color: getStatusColor(request.status),
-                                        }}
+                                        className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 ${getStatusSoftClass(request.status)}`}
                                     >
                                         <span
-                                            className="w-1.5 h-1.5 rounded-full"
-                                            style={{ background: getStatusColor(request.status) }}
+                                            className={`w-1.5 h-1.5 rounded-full ${getStatusDotClass(request.status)}`}
                                         ></span>
                                         {request.status}
                                     </span>
@@ -246,12 +231,7 @@ export function VisitorDetailModal({
                                                 return (
                                                     <div key={app.id} className="flex flex-col items-end gap-0.5">
                                                         <span
-                                                            className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5"
-                                                            style={{
-                                                                color: getStatusColor(app.status),
-                                                                background: getStatusColor(app.status) + '15',
-                                                                border: `1px solid ${getStatusColor(app.status)}30`,
-                                                            }}
+                                                            className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 ${getStatusPillClass(app.status)}`}
                                                         >
                                                             {app.room_areas?.name ||
                                                                 (request.visitor_category !==
@@ -259,8 +239,7 @@ export function VisitorDetailModal({
                                                                     ? 'Manager Approval'
                                                                     : 'VP Approval')}
                                                             <span
-                                                                className="w-1.5 h-1.5 rounded-full ml-1"
-                                                                style={{ background: getStatusColor(app.status) }}
+                                                                className={`w-1.5 h-1.5 rounded-full ml-1 ${getStatusDotClass(app.status)}`}
                                                             ></span>
                                                         </span>
                                                         {isPendingManagerRouting ? (
@@ -332,15 +311,10 @@ export function VisitorDetailModal({
                                 />
                                 <DetailRow icon={TagIcon} label="Status">
                                     <span
-                                        className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5"
-                                        style={{
-                                            background: getStatusColor(request.status) + '15',
-                                            color: getStatusColor(request.status),
-                                        }}
+                                        className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 ${getStatusSoftClass(request.status)}`}
                                     >
                                         <span
-                                            className="w-1.5 h-1.5 rounded-full"
-                                            style={{ background: getStatusColor(request.status) }}
+                                            className={`w-1.5 h-1.5 rounded-full ${getStatusDotClass(request.status)}`}
                                         ></span>
                                         {request.status}
                                     </span>

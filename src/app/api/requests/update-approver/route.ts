@@ -67,7 +67,7 @@ export async function POST(request: Request) {
             updated_run_id: updatedRunId
         }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Update approver / run id error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

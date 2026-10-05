@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         const visitorPool = await getVisitorDbConnection();
 
         let whereClause = 'WHERE 1=1';
-        const queryParams: any[] = [];
+        const queryParams: (string | number)[] = [];
         let paramCount = 0;
 
         if (startDate && endDate) {
@@ -85,7 +85,7 @@ export async function GET(request: Request) {
             }
         }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Fetch interviewee requests error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -118,7 +118,7 @@ export async function PATCH(request: Request) {
 
         return NextResponse.json({ message: 'Status updated successfully' }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Update interviewee request status error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -149,7 +149,7 @@ export async function DELETE(request: Request) {
 
         return NextResponse.json({ message: 'Requests deleted successfully' }, { status: 200 });
 
-    } catch (err: any) {
+    } catch (err) {
         console.error('Delete interviewee requests error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

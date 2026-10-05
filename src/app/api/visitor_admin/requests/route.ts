@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
 import type { PoolClient } from 'pg';
+import type { Session } from 'next-auth';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { hasPageAccess } from '@/lib/auth-server';
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
 
         let whereClause = '';
         const conditions: string[] = [];
-        const queryParams: any[] = [];
+        const queryParams: (string | number | string[])[] = [];
         let paramCount = 1;
 
         if (startDate && endDate) {
@@ -216,7 +217,7 @@ export async function GET(request: Request) {
             }
         }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Fetch requests error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -237,7 +238,7 @@ async function sendAdminDecisionWebhook(
     visitorPool: Pick<PoolClient, 'query'>,
     requestId: string,
     decision: string,
-    adminUser: any
+    adminUser: Session['user']
 ) {
     const webhookUrl = process.env.POWER_AUTOMATE_ADMIN_DECISION_URL ||
         'https://default8b8cc6cf0eaa4b6498e46d4672c449.30.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/10/workflows/5bfc3984ba1f44fa965ef3fe5fd2547a/triggers/manual/paths/invoke?api-version=1';
@@ -255,14 +256,14 @@ async function sendAdminDecisionWebhook(
         if (reqRows.length === 0) return;
         const req = reqRows[0];
 
-        const { rows: appRows } = await visitorPool.query(`
+        const { rows: appRows } = await visitorPool.query<{ status: string; approverEmail: string; room_name: string | null }>(`
             SELECT ra.status, ra."approverEmail", rm.name as room_name
             FROM "RequestApproval" ra
             LEFT JOIN "RoomArea" rm ON ra."roomAreaId" = rm.id
             WHERE ra."requestId" = $1
         `, [requestId]);
 
-        let parsedVisitors: any[] = [];
+        let parsedVisitors: unknown[] = [];
         try {
             if (typeof req.visitors === 'string') {
                 parsedVisitors = JSON.parse(req.visitors);
@@ -303,7 +304,7 @@ async function sendAdminDecisionWebhook(
                 totalVisitors: (parsedVisitors && parsedVisitors.length > 0) ? parsedVisitors.length : 1
             },
             visitorsList: parsedVisitors,
-            roomApprovals: appRows.map((a: any) => ({
+            roomApprovals: appRows.map((a) => ({
                 roomName: a.room_name || 'Host Department Approval',
                 status: a.status,
                 approverEmail: a.approverEmail
@@ -413,7 +414,7 @@ export async function PATCH(request: Request) {
 
         return NextResponse.json({ message: 'Nothing updated' }, { status: 200 });
 
-    } catch (err: any) {
+    } catch (err) {
         console.error('Update status error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -445,7 +446,7 @@ export async function DELETE(request: Request) {
 
         return NextResponse.json({ message: 'Requests deleted successfully' }, { status: 200 });
 
-    } catch (err: any) {
+    } catch (err) {
         console.error('Delete requests error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

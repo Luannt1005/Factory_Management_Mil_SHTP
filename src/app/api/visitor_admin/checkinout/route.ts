@@ -77,7 +77,7 @@ const flattenVisitorCTE = `WITH FlattenedVisitors AS (
 )`;
 
         let whereConditions: string[] = [];
-        const queryParams: any[] = [];
+        const queryParams: (string | number | string[])[] = [];
         let paramCount = 1;
 
         if (date) {
@@ -194,9 +194,8 @@ const flattenVisitorCTE = `WITH FlattenedVisitors AS (
             }
         }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Fetch check-in/out visitors error:', error);
-        require('fs').appendFileSync('c:\\Users\\luan.nguyen\\Desktop\\test org\\Orgchart_TTI_onprem\\scratch\\api_error.log', 'CheckInOut Route Error: ' + error.stack + '\n');
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
@@ -345,7 +344,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
         }
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Check-in/out post error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

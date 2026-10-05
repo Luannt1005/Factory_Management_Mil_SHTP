@@ -5,6 +5,10 @@
   --color-mwk: var(--color-primary-mwk);
   --color-mwk-hover: var(--dashboard-primary-hover);
   --color-mwk-dark: var(--color-primary-mwk-dark);
+  /* Request / approval status tones (used by getStatusPillClass / getStatusDotClass in src/utils/badge.ts) */
+  --color-status-success: var(--dashboard-success);
+  --color-status-error: var(--dashboard-error);
+  --color-status-warning: var(--dashboard-warning);
 }
 
 

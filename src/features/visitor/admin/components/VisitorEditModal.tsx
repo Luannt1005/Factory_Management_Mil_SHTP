@@ -299,8 +299,8 @@ export default function VisitorEditModal({
                                         value={formData.interviewee_name} 
                                         onChange={e => setFormData({...formData, interviewee_name: cleanNameInput(e.target.value)})} 
                                         onBlur={e => setFormData({...formData, interviewee_name: formatName(e.target.value)})} 
-                                        style={{ textTransform: 'capitalize' }} 
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-mwk focus:border-mwk outline-none bg-white" 
+                                        
+                                        className="capitalize w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                         required 
                                     />
                                 </div>
@@ -353,8 +353,8 @@ export default function VisitorEditModal({
                                                 value={v.name || ''} 
                                                 onChange={e => handleVisitorChange(index, 'name', e.target.value)} 
                                                 onBlur={() => handleVisitorBlur(index, 'name')} 
-                                                style={{ textTransform: 'capitalize' }} 
-                                                className="w-full border border-gray-300 rounded-md p-1.5 text-xs font-semibold focus:ring-1 focus:ring-mwk focus:border-mwk outline-none bg-white" 
+                                                
+                                                className="capitalize w-full border border-gray-300 rounded-md p-1.5 text-xs font-semibold focus:ring-1 focus:ring-mwk focus:border-mwk outline-none bg-white" 
                                                 required 
                                             />
                                         </div>

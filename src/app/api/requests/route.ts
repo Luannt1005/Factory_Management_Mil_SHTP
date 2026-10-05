@@ -2,10 +2,12 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
 import type { PoolClient } from 'pg';
+import type { Session } from 'next-auth';
+import type { VisitorPayloadEntry } from '@/types/visitor-request.types';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
-async function getOrCreateVisitorProfile(user: any, pool: any) {
+async function getOrCreateVisitorProfile(user: NonNullable<Session['user']>, pool: Pick<PoolClient, 'query'>) {
     const email = formatEmail(user.email || user.username);
     if (!email) return null;
     
@@ -263,8 +265,8 @@ export async function POST(request: Request) {
             const hookUrl = powerAutomateUrl || powerAutomateNotificationUrl;
             if (hookUrl) {
                 try {
-                    const namesList = (visitors && visitors.length > 0) ? visitors.map((v: any) => v.name).join(', ') : visitorName;
-                    const titlesList = (visitors && visitors.length > 0) ? visitors.map((v: any) => `${v.name} (${v.title || 'Candidate'} - ${v.interviewDepartment || v.company || ''})`).join('; ') : `${visitorName} (${visitorTitle})`;
+                    const namesList = (visitors && visitors.length > 0) ? visitors.map((v: VisitorPayloadEntry) => v.name).join(', ') : visitorName;
+                    const titlesList = (visitors && visitors.length > 0) ? visitors.map((v: VisitorPayloadEntry) => `${v.name} (${v.title || 'Candidate'} - ${v.interviewDepartment || v.company || ''})`).join('; ') : `${visitorName} (${visitorTitle})`;
                     const paResponse = await fetch(hookUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -425,7 +427,7 @@ export async function GET(request: Request) {
         const submitterId = await getOrCreateVisitorProfile(session.user, visitorPool);
 
         let whereClause = 'WHERE r."submitterId" = $1';
-        const queryParams: any[] = [submitterId];
+        const queryParams: (string | number)[] = [submitterId];
         let paramCount = 2;
 
         const userAppRoles = session.user?.app_role_names || [];
@@ -512,7 +514,7 @@ export async function GET(request: Request) {
             }
         }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Fetch requests error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

@@ -110,3 +110,16 @@ export interface CreateVisitorRequestSuccessResponse {
 export interface VisitorRequestApiError {
     error: string;
 }
+
+/**
+ * Visitor / candidate entry as stored in the "VisitorRequest".visitors JSON column.
+ * Known fields are typed; extra form fields are preserved as-is.
+ */
+export interface VisitorPayloadEntry {
+    name?: string;
+    title?: string;
+    company?: string;
+    interviewDepartment?: string;
+    interviewerName?: string;
+    [field: string]: unknown;
+}

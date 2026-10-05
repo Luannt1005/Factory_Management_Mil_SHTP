@@ -1,3 +1,4 @@
+import { getStatusPillClass, getStatusDotClass } from '@/utils/badge';
 import React from 'react';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -35,16 +36,6 @@ const parseDetails = (details: unknown): Record<string, any> => {
     return {};
 };
 
-const getStatusColor = (status: string) => {
-    switch (status) {
-        case 'COMPLETE':
-        case 'APPROVED': return '#10b981';
-        case 'REJECTED': return '#ef4444';
-        case 'PENDING':
-        case 'IN PROCESS':
-        default: return '#f59e0b';
-    }
-};
 
 export default function VisitorAdminTable({
     activeTab,
@@ -64,7 +55,7 @@ export default function VisitorAdminTable({
     return (
         <div className="relative z-10 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-200 text-[#0f172a] max-w-[calc(100vw-2rem)]">
             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full min-w-[1360px] text-left border-collapse">
                     <thead>
                         {activeTab === 'general' ? (
                             <tr className="bg-[#1a1a1a] text-white border-b border-gray-800 text-[10px] font-black uppercase tracking-widest">
@@ -187,7 +178,7 @@ export default function VisitorAdminTable({
                                                     <div key={app.id} className="text-[9px] flex flex-col gap-0.5 text-gray-600 border border-gray-100 p-1 rounded bg-gray-50/50">
                                                         <div className="flex items-center justify-between gap-2">
                                                             <span className="font-bold flex items-center gap-1">
-                                                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
+                                                                <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotClass(app.status)}`}></span>
                                                                 <span className="truncate max-w-[80px]">
                                                                     {app.room_areas?.name || (request.visitor_category !== 'MIL/TTI Expat / SHTP Business trip' ? 'Manager Approval' : 'VP Approval')}
                                                                 </span>
@@ -206,11 +197,7 @@ export default function VisitorAdminTable({
                                         )}
                                     </td>
                                     <td className="px-3 py-2 text-center">
-                                        <span className="inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase" style={{
-                                            background: getStatusColor(request.status) + '15',
-                                            color: getStatusColor(request.status),
-                                            border: `1px solid ${getStatusColor(request.status)}30`
-                                        }}>
+                                        <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase ${getStatusPillClass(request.status)}`}>
                                             {request.status}
                                         </span>
                                         {(request.status === 'COMPLETE' || request.status === 'APPROVED') && request.updated_at && (
@@ -344,11 +331,7 @@ export default function VisitorAdminTable({
                                         })()}
                                     </td>
                                     <td className="px-3 py-2 text-center">
-                                        <span className="inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase" style={{
-                                            background: getStatusColor(request.status) + '15',
-                                            color: getStatusColor(request.status),
-                                            border: `1px solid ${getStatusColor(request.status)}30`
-                                        }}>
+                                        <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase ${getStatusPillClass(request.status)}`}>
                                             {request.status}
                                         </span>
                                         {(request.status === 'COMPLETE' || request.status === 'APPROVED') && (request.updated_at || request.created_at) && (

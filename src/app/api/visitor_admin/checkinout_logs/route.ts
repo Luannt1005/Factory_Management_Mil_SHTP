@@ -51,7 +51,7 @@ export async function GET(request: Request) {
         `);
 
         const whereConditions: string[] = [];
-        const queryParams: any[] = [];
+        const queryParams: (string | number)[] = [];
         let paramCount = 1;
 
         // Date and Time range filtering
@@ -191,7 +191,7 @@ export async function GET(request: Request) {
             operators
         }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Fetch checkinout action logs error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

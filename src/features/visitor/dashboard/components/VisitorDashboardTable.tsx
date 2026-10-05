@@ -1,5 +1,6 @@
 'use client';
 
+import { getStatusPillClass, getStatusDotClass, getStatusGlowClass } from '@/utils/badge';
 import React from 'react';
 import type {
     VisitorDashboardRequestRecord,
@@ -19,17 +20,6 @@ export interface VisitorDashboardTableProps {
     onEdit: (request: VisitorDashboardRequestRecord) => void;
 }
 
-const getStatusColor = (status: string) => {
-    switch (status) {
-        case 'APPROVED':
-        case 'COMPLETE':
-            return '#10b981'; // Green
-        case 'REJECTED':
-            return '#ef4444'; // Red
-        default:
-            return '#f59e0b'; // Amber
-    }
-};
 
 const parseDetails = (details: unknown): VisitorDashboardParsedDetails => {
     if (!details) return {};
@@ -124,11 +114,7 @@ export function VisitorDashboardTable({
                                 <div
                                     key={app.id}
                                     title={tooltip}
-                                    className="w-2.5 h-2.5 rounded-full border border-white shadow-sm cursor-pointer"
-                                    style={{
-                                        background: getStatusColor(app.status),
-                                        boxShadow: `0 0 4px ${getStatusColor(app.status)}55`,
-                                    }}
+                                    className={`w-2.5 h-2.5 rounded-full border border-white cursor-pointer ${getStatusDotClass(app.status)} ${getStatusGlowClass(app.status)}`}
                                 />
                             );
                         })}
@@ -139,12 +125,7 @@ export function VisitorDashboardTable({
                 </td>
                 <td className="px-6 py-5 text-center">
                     <span
-                        className="inline-block px-3 py-1 rounded-md text-[10px] font-black tracking-tighter uppercase"
-                        style={{
-                            background: getStatusColor(request.status) + '15',
-                            color: getStatusColor(request.status),
-                            border: `1px solid ${getStatusColor(request.status)}30`,
-                        }}
+                        className={`inline-block px-3 py-1 rounded-md text-[10px] font-black tracking-tighter uppercase ${getStatusPillClass(request.status)}`}
                     >
                         {request.status}
                     </span>
@@ -258,7 +239,7 @@ export function VisitorDashboardTable({
     return (
         <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-200 text-[#0f172a]">
             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full min-w-[1200px] text-left border-collapse">
                     <thead>
                         {activeTab === 'general' ? (
                             <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest">

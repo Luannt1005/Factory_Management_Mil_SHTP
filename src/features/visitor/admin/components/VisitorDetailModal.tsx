@@ -1,3 +1,4 @@
+import { getStatusPillClass, getStatusDotClass } from '@/utils/badge';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type {
@@ -26,16 +27,6 @@ const parseDetails = (details: unknown): Record<string, any> => {
     return {};
 };
 
-const getStatusColor = (status: string) => {
-    switch (status) {
-        case 'COMPLETE':
-        case 'APPROVED': return '#10b981';
-        case 'REJECTED': return '#ef4444';
-        case 'PENDING':
-        case 'IN PROCESS':
-        default: return '#f59e0b';
-    }
-};
 
 const getPowerAutomateRunUrl = (runId: string) => {
     if (!runId) return '#';
@@ -166,12 +157,8 @@ export default function VisitorDetailModal({
                                 <span className="text-sm font-medium">Status</span>
                             </div>
                             <div>
-                                <span className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5" style={{
-                                    background: getStatusColor(request.status) + '15',
-                                    color: getStatusColor(request.status),
-                                    border: `1px solid ${getStatusColor(request.status)}30`
-                                }}>
-                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(request.status) }}></span>
+                                <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5 ${getStatusPillClass(request.status)}`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotClass(request.status)}`}></span>
                                     {request.status}
                                 </span>
                             </div>
@@ -245,13 +232,9 @@ export default function VisitorDetailModal({
                                     <div className="flex flex-col gap-2 items-end">
                                         {request.request_approvals?.map((app: VisitorAdminApprovalRecord) => (
                                             <div key={app.id} className="flex flex-col items-end gap-0.5">
-                                                <span className="px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-2" style={{
-                                                    background: getStatusColor(app.status) + '15',
-                                                    color: getStatusColor(app.status),
-                                                    border: `1px solid ${getStatusColor(app.status)}35`
-                                                }}>
+                                                <span className={`px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-2 ${getStatusPillClass(app.status)}`}>
                                                     {app.room_areas?.name || (request.visitor_category === 'MIL/TTI Expat / SHTP Business trip' ? 'VP Approval (All Rooms)' : 'Manager Approval')}
-                                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(app.status) }}></span>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotClass(app.status)}`}></span>
                                                 </span>
                                                 {app.approver_email && (
                                                     <span className="text-[10px] text-gray-500 font-medium break-all">

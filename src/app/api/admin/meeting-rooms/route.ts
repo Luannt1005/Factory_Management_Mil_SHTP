@@ -64,7 +64,7 @@ export async function PATCH(request: Request) {
         const pool = await getVisitorDbConnection();
         
         let query = 'UPDATE "MeetingRoom" SET ';
-        const values: any[] = [];
+        const values: (string | number)[] = [];
         let index = 1;
 
         if (floorName !== undefined) {

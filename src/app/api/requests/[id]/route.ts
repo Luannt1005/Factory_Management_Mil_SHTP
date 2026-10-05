@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
 import { hasPageAccess } from '@/lib/auth-server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
+import type { VisitorPayloadEntry } from '@/types/visitor-request.types';
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -43,7 +44,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const existing = existingRows[0];
 
         // 2. Merge details object safely
-        let mergedDetails: any = {};
+        let mergedDetails: Record<string, unknown> = {};
         try {
             if (existing.details) {
                 mergedDetails = typeof existing.details === 'string' ? JSON.parse(existing.details) : existing.details;
@@ -56,7 +57,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const detailsStr = JSON.stringify(mergedDetails);
 
         // 3. Process visitors array and primary visitor fields
-        let finalVisitors: any[] = Array.isArray(visitors) ? [...visitors] : [];
+        let finalVisitors: VisitorPayloadEntry[] = Array.isArray(visitors) ? [...visitors] : [];
         if (finalVisitors.length === 0) {
             try {
                 finalVisitors = typeof existing.visitors === 'string' ? JSON.parse(existing.visitors) : (existing.visitors || []);
@@ -143,7 +144,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
         return NextResponse.json({ success: true, data: result.rows[0] });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Error updating request:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

@@ -184,7 +184,7 @@ export function FacilityRoomsTab({
                                     ) : (
                                         <>
                                             <td className="p-5">
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full uppercase font-bold" style={{ background: '#f8fafc', color: '#db011c', border: '1px solid #e2e8f0' }}>
+                                                <span className="text-[10px] px-2.5 py-1 rounded-full uppercase font-bold bg-slate-50 text-mwk border border-slate-200">
                                                     {room.category}
                                                 </span>
                                             </td>
