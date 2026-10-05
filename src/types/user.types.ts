@@ -50,3 +50,49 @@ export interface SessionUser {
     app_role_names?: string[];
     allowedPages?: string[];
 }
+
+/**
+ * Self-service profile shown on /profile
+ */
+export interface UserProfile {
+    username: string;
+    full_name: string;
+    role: string;
+    employee_id: string;
+    title: string;
+}
+
+/**
+ * Response envelope of /api/profile and /api/profile/password
+ */
+export interface ProfileApiResponse<T = undefined> {
+    success: boolean;
+    message?: string;
+    data?: T;
+}
+
+/**
+ * Payload accepted by PUT /api/profile/password
+ */
+export interface ChangePasswordPayload {
+    currentPassword: string;
+    newPassword: string;
+}
+
+/**
+ * Payload accepted by POST /api/signup
+ */
+export interface SignupPayload {
+    username: string;
+    password: string;
+    full_name: string;
+}
+
+/**
+ * Response envelope of POST /api/signup
+ */
+export interface SignupApiResponse {
+    success: boolean;
+    message?: string;
+    error?: string;
+}

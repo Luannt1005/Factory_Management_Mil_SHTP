@@ -8,6 +8,7 @@ import styles from "./signup.module.css";
 import { EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
 import { hashPassword } from "@/lib/password";
+import { accountApi } from "@/features/systemadmin/services/accountApi";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -51,17 +52,11 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username,
-          password,
-          full_name: fullName
-        })
+      const data = await accountApi.signup({
+        username,
+        password,
+        full_name: fullName
       });
-
-      const data = await res.json();
 
       if (!data.success) {
         throw new Error(data.error || "Unable to create account");
@@ -73,9 +68,9 @@ export default function SignupPage() {
         router.replace("/login");
       }, 2000);
 
-    } catch (err: any) {
+    } catch (err) {
       console.error("Signup error:", err);
-      setError(err.message || "Connection error. Please try again.");
+      setError((err instanceof Error && err.message) || "Connection error. Please try again.");
       setLoading(false);
     }
   };

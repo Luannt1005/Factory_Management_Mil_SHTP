@@ -149,7 +149,7 @@ export function RoleEditModal({
                     <Select
                         label="App Module"
                         value={formData.app_module}
-                        onChange={(val) => setFormData({ ...formData, app_module: val as any })}
+                        onChange={(val) => setFormData({ ...formData, app_module: val })}
                         options={[
                             { value: "Global", label: "Global" },
                             { value: "Orgchart", label: "OrgChart" },

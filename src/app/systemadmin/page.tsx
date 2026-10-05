@@ -2,9 +2,9 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import UserManagement from "./components/UserManagement";
-import RoleManagement from "./components/RoleManagement";
-import PendingApprovals from "./components/PendingApprovals";
+import UserManagement from "@/features/systemadmin/components/UserManagement";
+import RoleManagement from "@/features/systemadmin/components/RoleManagement";
+import PendingApprovals from "@/features/systemadmin/components/PendingApprovals";
 import { UsersIcon, ShieldCheckIcon, ClockIcon } from "@heroicons/react/24/outline";
 
 function SystemAdminContent() {

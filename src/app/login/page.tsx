@@ -57,9 +57,9 @@ function LoginContent() {
         router.replace(redirect);
       }, 2000);
 
-    } catch (err: any) {
+    } catch (err) {
       console.error("Login error:", err);
-      setError(err.message || "Connection error. Please try again.");
+      setError((err instanceof Error && err.message) || "Connection error. Please try again.");
       setLoading(false);
     }
   };
