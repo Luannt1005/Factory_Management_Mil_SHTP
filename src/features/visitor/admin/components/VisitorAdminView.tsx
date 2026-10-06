@@ -7,6 +7,7 @@ import VisitorAdminFilters from '@/features/visitor/admin/components/VisitorAdmi
 import VisitorAdminTable from '@/features/visitor/admin/components/VisitorAdminTable';
 import VisitorDetailModal from '@/features/visitor/admin/components/VisitorDetailModal';
 import VisitorEditModal from '@/features/visitor/admin/components/VisitorEditModal';
+import StatusConfirmModal from '@/features/visitor/admin/components/StatusConfirmModal';
 import type {
     VisitorAdminRequestRecord,
     VisitorAdminPagination,
@@ -32,6 +33,7 @@ export default function AdminDashboard() {
     const [selectedRequest, setSelectedRequest] = useState<VisitorAdminRequestRecord | null>(null);
     const [editingRequest, setEditingRequest] = useState<VisitorAdminRequestRecord | null>(null);
     const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+    const [pendingStatusChange, setPendingStatusChange] = useState<{ id: string; status: 'COMPLETE' | 'REJECTED' } | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -149,8 +151,8 @@ export default function AdminDashboard() {
                             'Visitor Company': v.company || r.current_company || '',
                             'Submitter Name': r.profile_name || r.profiles?.name || r.os_name || '',
                             'Submitter Department': details.submitterDept || r.profile_department || r.profiles?.department || '',
-                            'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : '',
-                            'End Date': r.end_date ? new Date(r.end_date).toLocaleDateString('vi-VN') : '',
+                            'Start Date': toExcelDate(r.start_date),
+                            'End Date': toExcelDate(r.end_date),
                             'Visitor Category': r.visitor_category || '',
                             'Purpose Of Visit': r.purpose_of_visit || '',
                             'Purpose Detail': r.purpose_detail || details.purpose || '',
@@ -165,8 +167,8 @@ export default function AdminDashboard() {
                             'Meal Registration': details.mealRegistration || '',
                             'Status': r.status || '',
                             'Approval Progress': approvalProgress,
-                            'Submit Date': r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '',
-                            'Completion Date': (isCompleted && r.updated_at) ? new Date(r.updated_at).toLocaleString('vi-VN') : ''
+                            'Submit Date': toExcelDate(r.created_at),
+                            'Completion Date': isCompleted ? toExcelDate(r.updated_at) : ''
                         };
                     });
                 } else {
@@ -184,8 +186,8 @@ export default function AdminDashboard() {
                         'Visitor Company': details.company || r.current_company || '',
                         'Submitter Name': r.profile_name || r.profiles?.name || r.os_name || '',
                         'Submitter Department': details.submitterDept || r.profile_department || r.profiles?.department || '',
-                        'Start Date': r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : '',
-                        'End Date': r.end_date ? new Date(r.end_date).toLocaleDateString('vi-VN') : (r.start_date ? new Date(r.start_date).toLocaleDateString('vi-VN') : ''),
+                        'Start Date': toExcelDate(r.start_date),
+                        'End Date': toExcelDate(r.end_date || r.start_date),
                         'Visitor Category': r.visitor_category || 'Interviewee',
                         'Purpose Of Visit': r.purpose_of_visit || 'Interview',
                         'Purpose Detail': r.purpose_detail || details.interviewArea || r.interview_area || '',
@@ -200,8 +202,8 @@ export default function AdminDashboard() {
                         'Meal Registration': details.mealRegistration || '',
                         'Status': r.status || '',
                         'Approval Progress': approvalProgress,
-                        'Submit Date': r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '',
-                        'Completion Date': (isCompleted && r.updated_at) ? new Date(r.updated_at).toLocaleString('vi-VN') : ''
+                        'Submit Date': toExcelDate(r.created_at),
+                        'Completion Date': isCompleted ? toExcelDate(r.updated_at) : ''
                     }];
                 }
             });
@@ -219,6 +221,16 @@ export default function AdminDashboard() {
 
                 exportData.forEach((dataRow: Record<string, unknown>) => {
                     worksheet.addRow(dataRow);
+                });
+
+                // Date columns: Excel "Short Date" format, right-aligned
+                DATE_EXPORT_COLUMNS.forEach((key) => {
+                    if (!columns.some(c => c.key === key)) return;
+                    const column = worksheet.getColumn(key);
+                    column.numFmt = 'dd/mm/yyyy';
+                    column.eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+                        if (rowNumber > 1) cell.alignment = { horizontal: 'right' };
+                    });
                 });
 
                 // Style the header row
@@ -257,14 +269,25 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleUpdateStatus = async (id: string, status: string) => {
+    // Approve / Reject buttons only open the confirmation modal; the update runs on confirm
+    const handleUpdateStatus = (id: string, status: string) => {
+        if (status === 'COMPLETE' || status === 'REJECTED') {
+            setPendingStatusChange({ id, status });
+        }
+    };
+
+    const confirmStatusChange = async () => {
+        if (!pendingStatusChange) return;
         try {
-            await visitorAdminApi.updateRequestStatus(id, status);
+            await visitorAdminApi.updateRequestStatus(pendingStatusChange.id, pendingStatusChange.status);
+            setPendingStatusChange(null);
             fetchRequests(pagination.page);
         } catch (err) {
             console.error(err);
         }
     };
+
+    const pendingStatusRequest = pendingStatusChange ? requests.find(r => r.id === pendingStatusChange.id) : undefined;
 
     const handleDeleteSelected = async () => {
         if (selectedRowIds.length === 0) return;
@@ -375,6 +398,15 @@ export default function AdminDashboard() {
                 onClose={() => setSelectedRequest(null)}
             />
 
+            {/* Approve / Reject confirmation */}
+            <StatusConfirmModal
+                status={pendingStatusChange?.status ?? null}
+                requestRef={((pendingStatusRequest?.request_code || pendingStatusChange?.id || '').replace(/^#/, '').split('-')[0]).toUpperCase()}
+                visitorName={pendingStatusRequest?.visitor_name || pendingStatusRequest?.interviewee_name}
+                onConfirm={confirmStatusChange}
+                onClose={() => setPendingStatusChange(null)}
+            />
+
             {/* Edit Modal */}
             {editingRequest && (
                 <VisitorEditModal
@@ -388,4 +420,17 @@ export default function AdminDashboard() {
             )}
         </div>
     );
+}
+
+const DATE_EXPORT_COLUMNS = ['Start Date', 'End Date', 'Submit Date', 'Completion Date'];
+
+/**
+ * Converts an API date/timestamp into a Date that Excel shows as the same calendar day.
+ * ExcelJS writes Dates as UTC, so the local (VN) calendar day is rebuilt as a UTC midnight.
+ */
+function toExcelDate(value?: string | null): Date | '' {
+    if (!value) return '';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '';
+    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 }

@@ -5,6 +5,7 @@
   "allowedCommands": [
     "node scripts/gemini_distiller.js tsc",
     "node scripts/gemini_distiller.js build",
+    "node scripts/antigravity_web_tester.js",
     "npm run dev",
     "npm run build",
     "npx tsc --noEmit",

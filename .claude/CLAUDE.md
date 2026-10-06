@@ -46,7 +46,9 @@
 ├── agents/                 # Specialized sub-agent personas
 │   ├── architect.md        # Architectural boundary & dependency auditor
 │   ├── reviewer.md         # Code review & contract protection inspector
-│   └── visitor-security.md # Visitor pre-registration & security gate domain specialist
+│   ├── visitor-security.md # Visitor pre-registration & security gate domain specialist
+│   ├── gemini-runner.md    # Antigravity Gemini Token-Saving Sub-Agent (Build/Log analysis)
+│   └── web-tester.md       # Antigravity Web & E2E Testing Agent (Powered by Gemini)
 └── skills/                 # Reusable domain tasks & automated recipes
     ├── verify-build.md     # Type checking and production build verification
     ├── export-excel.md     # Standard 25-column Excel export maintenance

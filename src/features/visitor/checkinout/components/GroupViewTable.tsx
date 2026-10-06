@@ -74,16 +74,6 @@ export default function GroupViewTable({
                                             >
                                                 {req.requestCode || req.requestId}
                                             </span>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onOpenModal(req);
-                                                }}
-                                                className="px-1.5 py-0.5 text-[9px] font-bold text-white bg-mwk hover:bg-mwk-hover rounded shadow-2xs shrink-0"
-                                                title="Mở Modal Check In/Out"
-                                            >
-                                                Modal
-                                            </button>
                                         </div>
                                     </td>
                                     <td className="py-4 px-4 text-xs font-bold text-gray-700 truncate max-w-[180px]" title={req.submitterName || '-'}>

@@ -106,138 +106,107 @@ export default function RequestCheckInModal({
         }
     };
 
+
+    const visitDates = `${formatDateShort(request.startDate)}${request.endDate && request.endDate !== request.startDate ? ` — ${formatDateShort(request.endDate)}` : ''}`;
+
+    const detailItems: { label: string; value: string }[] = [
+        { label: 'Submitter', value: request.submitterName || '-' },
+        { label: 'Department', value: request.submitterDepartment || '-' },
+        { label: 'Category', value: request.visitorCategory || '-' },
+        { label: 'Visit Dates', value: visitDates },
+        { label: 'Site', value: request.visitingSite || '-' },
+        { label: 'Purpose', value: request.purposeOfVisit || '-' },
+        { label: 'Detailed Purpose', value: request.purposeDetail || '-' },
+    ];
+
     return createPortal(
         <div
-            className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-5 md:p-8 bg-black/60 backdrop-blur-md transition-all duration-200 animate-in fade-in"
+            className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm sm:p-8"
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-2xl shadow-2xl border-t-[6px] border-t-mwk border-x border-b border-gray-100 w-full max-w-5xl max-h-[90vh] overflow-hidden relative text-[#0f172a] flex flex-col my-auto transition-all animate-in zoom-in-95 duration-200"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="checkinout-modal-title"
+                className="relative flex max-h-full w-full max-w-[1400px] flex-col overflow-hidden rounded-2xl border-t-[8px] border-t-mwk bg-white text-gray-900 shadow-2xl animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="p-4 sm:p-5 flex justify-between items-center bg-white border-b border-gray-100 shrink-0">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                        <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center text-mwk font-black text-sm">
-                            #
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <h2 className="text-base sm:text-lg font-black text-gray-900 tracking-tight">
-                                Check-In / Out: {request.requestCode || request.requestId}
-                            </h2>
-                            {request.visitorCategory && (
-                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-mwk border border-red-100">
-                                    {request.visitorCategory}
-                                </span>
-                            )}
-                            {request.visitingSite && (
-                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
-                                    Site: {request.visitingSite}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-
+                <div className="flex shrink-0 items-center justify-between px-6 pb-3 pt-4">
+                    <h2 id="checkinout-modal-title" className="flex items-baseline gap-2 whitespace-nowrap">
+                        <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Check-In / Check-Out</span>
+                        <span className="text-sm font-extrabold tracking-tight text-gray-900">#{request.requestCode || request.requestId}</span>
+                    </h2>
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-all cursor-pointer"
+                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
                         title="Close (Esc)"
+                        aria-label="Close"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="h-5 w-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
-                {/* Body scroll area */}
-                <div className="overflow-y-auto flex-1 p-4 sm:p-5 space-y-4">
-                    {/* Request Details Grid - All 5 items on the same row on desktop */}
-                    <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
-                            <div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Submitter</span>
-                                <div className="font-bold text-gray-900 truncate" title={request.submitterName}>
-                                    {request.submitterName || '-'}
-                                </div>
-                                {request.submitterDepartment && (
-                                    <div className="text-[11px] text-gray-500 font-medium truncate" title={request.submitterDepartment}>
-                                        {request.submitterDepartment}
-                                    </div>
-                                )}
+                <div className="custom-scrollbar flex-1 overflow-y-auto px-6 pb-6">
+                    {/* Request details: compact single strip, label above value */}
+                    <dl className="grid grid-cols-2 divide-gray-100 rounded-xl border border-gray-200 sm:grid-cols-4 lg:grid-cols-7 lg:divide-x">
+                        {detailItems.map((item) => (
+                            <div key={item.label} className="min-w-0 px-3 py-2">
+                                <dt className="whitespace-nowrap text-[10px] font-bold uppercase tracking-wider text-gray-400">{item.label}</dt>
+                                <dd className="mt-0.5 truncate whitespace-nowrap text-xs font-extrabold text-gray-900" title={item.value}>
+                                    {item.value}
+                                </dd>
                             </div>
+                        ))}
+                    </dl>
 
-                            <div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Company</span>
-                                <div className="font-bold text-gray-900 truncate" title={visitors[0]?.visitorCompany}>
-                                    {visitors[0]?.visitorCompany || '-'}
-                                </div>
-                            </div>
-
-                            <div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Visit Date</span>
-                                <div className="font-bold text-gray-900 whitespace-nowrap">
-                                    {formatDateShort(request.startDate)} {request.endDate && request.endDate !== request.startDate ? `→ ${formatDateShort(request.endDate)}` : ''}
-                                </div>
-                            </div>
-
-                            <div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Purpose</span>
-                                <div className="font-semibold text-gray-800 truncate" title={request.purposeOfVisit}>
-                                    {request.purposeOfVisit || '-'}
-                                </div>
-                            </div>
-
-                            <div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Detailed Purpose</span>
-                                <div className="font-medium text-gray-800 line-clamp-2 break-words" title={request.purposeDetail || '-'}>
-                                    {request.purposeDetail || '-'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Notification Banner */}
+                    {/* Notification */}
                     {notification && (
-                        <div className={`px-4 py-2.5 text-xs font-semibold rounded-xl flex items-center justify-between shadow-2xs ${
-                            notification.type === 'success'
-                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                : 'bg-red-50 text-red-800 border border-red-200'
-                        }`}>
-                            <span>{notification.message}</span>
-                            <button onClick={() => setNotification(null)} className="opacity-70 hover:opacity-100 ml-3 font-bold cursor-pointer">✕</button>
+                        <div
+                            role="status"
+                            className="mt-5 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-xs font-semibold text-gray-700"
+                        >
+                            <span className={`h-2 w-2 shrink-0 rounded-full ${notification.type === 'success' ? 'bg-emerald-500' : 'bg-mwk'}`} />
+                            <span className="flex-1">{notification.message}</span>
+                            <button
+                                onClick={() => setNotification(null)}
+                                className="cursor-pointer rounded p-0.5 text-gray-400 transition-colors hover:text-gray-700"
+                                aria-label="Dismiss"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="h-3.5 w-3.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
                     )}
 
-                    {/* Visitors Section Header & Bulk Actions */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                        <div className="flex items-center gap-3">
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                    {/* Visitors header & bulk actions */}
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+                            <h3 className="whitespace-nowrap text-xs font-bold uppercase tracking-wider text-gray-400">
                                 Visitors ({visitors.length})
                             </h3>
-                            <div className="flex gap-1.5 text-[11px] font-bold">
-                                <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/70">
-                                    Pending: {pendingVisitors.length}
-                                </span>
-                                <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/70">
-                                    Checked In: {checkedInVisitors.length}
-                                </span>
-                                <span className="text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">
-                                    Checked Out: {checkedOutVisitors.length}
-                                </span>
-                            </div>
+                            <span className="whitespace-nowrap text-xs font-medium text-gray-500">
+                                Pending <span className="font-extrabold text-gray-900">{pendingVisitors.length}</span>
+                            </span>
+                            <span className="whitespace-nowrap text-xs font-medium text-gray-500">
+                                Checked in <span className="font-extrabold text-gray-900">{checkedInVisitors.length}</span>
+                            </span>
+                            <span className="whitespace-nowrap text-xs font-medium text-gray-500">
+                                Checked out <span className="font-extrabold text-gray-900">{checkedOutVisitors.length}</span>
+                            </span>
                         </div>
 
-                        {/* Bulk Action Buttons */}
                         <div className="flex items-center gap-2">
                             {pendingVisitors.length > 0 && (
                                 <button
                                     disabled={bulkLoading}
                                     onClick={handleCheckInAll}
-                                    className="bg-mwk hover:bg-mwk-hover disabled:opacity-50 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                                    className="inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg bg-mwk px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-mwk-hover disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                    </svg>
+                                    {bulkLoading && <Spinner />}
                                     Check In All ({pendingVisitors.length})
                                 </button>
                             )}
@@ -245,65 +214,53 @@ export default function RequestCheckInModal({
                                 <button
                                     disabled={bulkLoading}
                                     onClick={handleCheckOutAll}
-                                    className="bg-gray-800 hover:bg-black disabled:opacity-50 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                                    className="inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                                    </svg>
+                                    {bulkLoading && <Spinner />}
                                     Check Out All ({checkedInVisitors.length})
                                 </button>
                             )}
                         </div>
                     </div>
 
-                    {/* Visitors Table */}
-                    <div className="border border-gray-200 rounded-xl overflow-hidden shadow-2xs">
-                        <div className="overflow-x-auto max-h-[42vh] overflow-y-auto">
-                            <table className="w-full text-left text-xs border-collapse">
-                                <thead className="bg-gray-50/95 text-[11px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 z-10 border-b border-gray-200">
-                                    <tr>
-                                        <th className="py-2.5 px-3 w-10 text-center">#</th>
-                                        <th className="py-2.5 px-3 min-w-[180px]">Visitor Name</th>
-                                        <th className="py-2.5 px-3 min-w-[140px]">Company / Title</th>
-                                        <th className="py-2.5 px-3 w-32">Card No.</th>
-                                        <th className="py-2.5 px-3 w-28 text-center">Status</th>
-                                        <th className="py-2.5 px-3 w-32 whitespace-nowrap">Check-In</th>
-                                        <th className="py-2.5 px-3 w-32 whitespace-nowrap">Check-Out</th>
-                                        <th className="py-2.5 px-3 w-44 text-right">Actions</th>
+                    {/* Visitors table: one field per column, no wrapping */}
+                    <div className="mt-3 overflow-hidden rounded-xl border border-gray-200">
+                        <div className="custom-scrollbar max-h-[55vh] overflow-auto">
+                            <table className="w-full border-collapse text-left text-xs">
+                                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                                    <tr className="[&>th]:whitespace-nowrap [&>th]:px-3 [&>th]:py-3">
+                                        <th className="w-10 text-center">#</th>
+                                        <th>Visitor Name</th>
+                                        <th>Visitor Code</th>
+                                        <th>Company</th>
+                                        <th>Title</th>
+                                        <th>Card No.</th>
+                                        <th>Status</th>
+                                        <th>Check-In</th>
+                                        <th>Check-Out</th>
+                                        <th className="sticky right-0 bg-gray-50 text-right shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 bg-white">
                                     {visitors.map((v) => {
                                         const loadingKey = `${request.requestId}-${v.visitorIndex}`;
                                         const isLoading = actionLoading === loadingKey || bulkLoading;
+                                        const isRowLoading = actionLoading === loadingKey;
                                         const currentCard = cardNumbers[loadingKey] !== undefined ? cardNumbers[loadingKey] : (v.cardNumber ?? '');
 
                                         return (
-                                            <tr key={v.visitorIndex} className="hover:bg-gray-50/70 transition-colors">
-                                                <td className="py-2.5 px-3 text-center text-gray-400 font-semibold">
-                                                    {v.visitorIndex + 1}
+                                            <tr key={v.visitorIndex} className="group transition-colors hover:bg-gray-50 [&>td]:whitespace-nowrap [&>td]:px-3 [&>td]:py-3">
+                                                <td className="text-center font-medium text-gray-400">{v.visitorIndex + 1}</td>
+                                                <td>
+                                                    <span className="flex items-center gap-2.5">
+                                                        <span className="h-2 w-2 shrink-0 rounded-full bg-mwk" />
+                                                        <span className="text-sm font-extrabold text-gray-900">{v.visitorName}</span>
+                                                    </span>
                                                 </td>
-                                                <td className="py-2.5 px-3">
-                                                    <div className="font-bold text-gray-900 flex items-center gap-1.5 flex-wrap">
-                                                        <span>{v.visitorName}</span>
-                                                        {v.visitorCode && (
-                                                            <span className="text-[10px] font-bold text-mwk bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
-                                                                {v.visitorCode}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="py-2.5 px-3">
-                                                    <div className="font-semibold text-gray-800" title={v.visitorCompany}>
-                                                        {v.visitorCompany || '-'}
-                                                    </div>
-                                                    {v.visitorTitle && (
-                                                        <div className="text-[11px] text-gray-500 font-normal" title={v.visitorTitle}>
-                                                            {v.visitorTitle}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="py-2.5 px-3">
+                                                <td className="font-mono font-semibold text-gray-600">{v.visitorCode || '-'}</td>
+                                                <td className="font-medium text-gray-700">{v.visitorCompany || '-'}</td>
+                                                <td className="font-medium text-gray-700">{v.visitorTitle || '-'}</td>
+                                                <td>
                                                     <input
                                                         type="text"
                                                         value={currentCard}
@@ -313,58 +270,43 @@ export default function RequestCheckInModal({
                                                                  onAction(request.requestId, v, 'UPDATE_CARD', request.requestCode);
                                                              }
                                                         }}
-                                                        placeholder="Card No..."
-                                                        className="w-28 px-2.5 py-1 text-xs font-semibold border border-gray-300 rounded-lg focus:ring-1 focus:ring-mwk focus:border-mwk outline-none bg-white shadow-2xs"
+                                                        placeholder="Card no."
+                                                        className="w-28 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-900 outline-none transition-colors placeholder:font-normal placeholder:text-gray-400 focus:border-mwk"
                                                     />
                                                 </td>
-                                                <td className="py-2.5 px-3 text-center">
-                                                    {v.checkInOutStatus === 'PENDING' && (
-                                                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200/70">
-                                                            Pending
-                                                        </span>
-                                                    )}
-                                                    {v.checkInOutStatus === 'CHECKED_IN' && (
-                                                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/70">
-                                                            Checked In
-                                                        </span>
-                                                    )}
-                                                    {v.checkInOutStatus === 'CHECKED_OUT' && (
-                                                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold text-gray-600 bg-gray-100 border border-gray-200">
-                                                            Checked Out
-                                                        </span>
-                                                    )}
+                                                <td>
+                                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-gray-700">
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[v.checkInOutStatus] ?? 'bg-gray-300'}`} />
+                                                        {STATUS_LABEL[v.checkInOutStatus] ?? v.checkInOutStatus}
+                                                    </span>
                                                 </td>
-                                                <td className="py-2.5 px-3 text-[11px] text-gray-600 whitespace-nowrap">
-                                                    {v.checkInTime ? formatDateTime(v.checkInTime) : '-'}
-                                                </td>
-                                                <td className="py-2.5 px-3 text-[11px] text-gray-600 whitespace-nowrap">
-                                                    {v.checkOutTime ? formatDateTime(v.checkOutTime) : '-'}
-                                                </td>
-                                                <td className="py-2.5 px-3 text-right">
+                                                <td className="text-gray-600">{v.checkInTime ? formatDateTime(v.checkInTime) : '-'}</td>
+                                                <td className="text-gray-600">{v.checkOutTime ? formatDateTime(v.checkOutTime) : '-'}</td>
+                                                <td className="sticky right-0 bg-white transition-colors group-hover:bg-gray-50 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
                                                     <div className="flex items-center justify-end gap-1.5">
-                                                        <button
-                                                            disabled={isLoading || v.checkInOutStatus !== 'PENDING'}
-                                                            onClick={() => onAction(request.requestId, v, 'CHECK_IN', request.requestCode)}
-                                                            className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
-                                                                v.checkInOutStatus !== 'PENDING'
-                                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                                                                    : 'bg-mwk hover:bg-mwk-hover text-white shadow-2xs'
-                                                            }`}
-                                                        >
-                                                            {isLoading && actionLoading === loadingKey ? '...' : 'Check In'}
-                                                        </button>
-
-                                                        <button
-                                                            disabled={isLoading || v.checkInOutStatus !== 'CHECKED_IN'}
-                                                            onClick={() => onAction(request.requestId, v, 'CHECK_OUT', request.requestCode)}
-                                                            className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
-                                                                v.checkInOutStatus !== 'CHECKED_IN'
-                                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                                                                    : 'bg-gray-800 hover:bg-black text-white shadow-2xs'
-                                                            }`}
-                                                        >
-                                                            {isLoading && actionLoading === loadingKey ? '...' : 'Check Out'}
-                                                        </button>
+                                                        {v.checkInOutStatus === 'PENDING' && (
+                                                            <button
+                                                                disabled={isLoading}
+                                                                onClick={() => onAction(request.requestId, v, 'CHECK_IN', request.requestCode)}
+                                                                className="inline-flex min-w-[88px] cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-mwk px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-mwk-hover disabled:cursor-not-allowed disabled:opacity-50"
+                                                            >
+                                                                {isRowLoading ? <Spinner /> : 'Check In'}
+                                                            </button>
+                                                        )}
+                                                        {v.checkInOutStatus === 'CHECKED_IN' && (
+                                                            <button
+                                                                disabled={isLoading}
+                                                                onClick={() => onAction(request.requestId, v, 'CHECK_OUT', request.requestCode)}
+                                                                className="inline-flex min-w-[88px] cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-[11px] font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                                            >
+                                                                {isRowLoading ? <Spinner /> : 'Check Out'}
+                                                            </button>
+                                                        )}
+                                                        {v.checkInOutStatus === 'CHECKED_OUT' && (
+                                                            <span className="inline-flex min-w-[88px] items-center justify-center text-[11px] font-semibold text-gray-400">
+                                                                Completed
+                                                            </span>
+                                                        )}
 
                                                         {!isSecurity && !isReceptionist && (
                                                             <button
@@ -375,7 +317,8 @@ export default function RequestCheckInModal({
                                                                     }
                                                                 }}
                                                                 title="Reset status"
-                                                                className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                                                                aria-label="Reset status"
+                                                                className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -394,10 +337,10 @@ export default function RequestCheckInModal({
                 </div>
 
                 {/* Footer */}
-                <div className="p-3.5 sm:p-4 px-5 flex items-center justify-end border-t border-gray-100 bg-gray-50/50 shrink-0">
+                <div className="flex shrink-0 items-center justify-end border-t border-gray-100 px-6 py-4">
                     <button
                         onClick={onClose}
-                        className="px-5 py-2 text-xs font-bold text-gray-700 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors shadow-2xs cursor-pointer"
+                        className="cursor-pointer rounded-lg border border-gray-200 bg-white px-5 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
                     >
                         Close
                     </button>
@@ -405,5 +348,26 @@ export default function RequestCheckInModal({
             </div>
         </div>,
         document.body
+    );
+}
+
+const STATUS_LABEL: Record<string, string> = {
+    PENDING: 'Pending',
+    CHECKED_IN: 'Checked In',
+    CHECKED_OUT: 'Checked Out',
+};
+
+const STATUS_DOT: Record<string, string> = {
+    PENDING: 'bg-gray-300',
+    CHECKED_IN: 'bg-emerald-500',
+    CHECKED_OUT: 'bg-gray-500',
+};
+
+function Spinner() {
+    return (
+        <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
     );
 }
