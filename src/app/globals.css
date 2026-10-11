@@ -10,6 +10,9 @@
   --color-status-success: var(--dashboard-success);
   --color-status-error: var(--dashboard-error);
   --color-status-warning: var(--dashboard-warning);
+  /* Visitor Card Studio badge tokens */
+  --color-badge-gold: #c9a227;
+  --font-badge: Impact, Haettenschweiler, "Arial Narrow Bold", "Arial Black", sans-serif;
 }
 
 

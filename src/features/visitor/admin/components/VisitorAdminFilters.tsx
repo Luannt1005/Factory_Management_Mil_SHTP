@@ -22,6 +22,7 @@ export interface VisitorAdminFiltersProps {
     onClearFilters: () => void;
     selectedRowIds: string[];
     onDeleteSelected: () => void;
+    onPrintCards: () => void;
     onExportExcel: () => void;
     exporting: boolean;
     currentCount: number;
@@ -67,6 +68,7 @@ export default function VisitorAdminFilters({
     onClearFilters,
     selectedRowIds,
     onDeleteSelected,
+    onPrintCards,
     onExportExcel,
     exporting,
     currentCount,
@@ -203,6 +205,15 @@ export default function VisitorAdminFilters({
                             className="text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-4 px-1"
                         >
                             Clear
+                        </button>
+                    )}
+                    {selectedRowIds.length > 0 && (
+                        <button
+                            onClick={onPrintCards}
+                            className="text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 px-3 py-2 rounded transition-all whitespace-nowrap h-full shadow-sm flex items-center gap-1.5"
+                            title="Open the ticked requests in the Visitor Card Studio"
+                        >
+                            Print Cards ({selectedRowIds.length})
                         </button>
                     )}
                     {selectedRowIds.length > 0 && (

@@ -59,6 +59,7 @@ export default function Sidebar() {
         { name: "Check In / Out", path: "/visitoradmin/checkinout", requiredRole: "admin" },
         { name: "Manage Room", path: "/visitoradmin/rooms", requiredRole: "admin" },
         { name: "Admin Settings", path: "/visitoradmin", requiredRole: "admin" },
+        { name: "Visitor Cards", path: "/visitoradmin/cards", requiredRole: "admin" },
         { name: "Dashboard", path: "/visitoranalytics", requiredRole: "admin" },
       ],
     },

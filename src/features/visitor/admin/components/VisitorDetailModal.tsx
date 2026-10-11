@@ -1,6 +1,8 @@
 import { getStatusPillClass, getStatusDotClass } from '@/utils/badge';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import Link from 'next/link';
+import { toCardRequestType } from '@/utils/visitorCategory';
 import type {
     VisitorAdminRequestRecord,
     VisitorAdminApprovalRecord,
@@ -75,6 +77,14 @@ export default function VisitorDetailModal({
             >
                 <div className="p-6 pb-2 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10">
                     <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{activeTab === 'general' ? `VISITORS (${visitorsList.length})` : 'INTERVIEWEE INFO'}</h2>
+                    <div className="flex items-center gap-2">
+                    <Link
+                        href={`/visitoradmin/cards?type=${activeTab === 'interviewee' ? 'interviewee' : toCardRequestType(request.visitor_category)}&requests=${encodeURIComponent((request.visitor_code || request.request_code || request.id).replace(/^#/, '').split('-')[0].toUpperCase())}`}
+                        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                        title="Open this request's visitors in the Visitor Card Studio"
+                    >
+                        Print cards
+                    </Link>
                     <button
                         onClick={onClose}
                         className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
@@ -83,6 +93,7 @@ export default function VisitorDetailModal({
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                     </button>
+                    </div>
                 </div>
 
                 <div className="px-6 py-2 flex-1">

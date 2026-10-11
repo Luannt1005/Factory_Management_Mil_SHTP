@@ -8,6 +8,8 @@ import VisitorAdminTable from '@/features/visitor/admin/components/VisitorAdminT
 import VisitorDetailModal from '@/features/visitor/admin/components/VisitorDetailModal';
 import VisitorEditModal from '@/features/visitor/admin/components/VisitorEditModal';
 import StatusConfirmModal from '@/features/visitor/admin/components/StatusConfirmModal';
+import { REQUEST_TYPE_LABELS, toCardRequestType } from '@/utils/visitorCategory';
+import type { CardRequestType } from '@/types/visitor-card.types';
 import type {
     VisitorAdminRequestRecord,
     VisitorAdminPagination,
@@ -33,6 +35,7 @@ export default function AdminDashboard() {
     const [selectedRequest, setSelectedRequest] = useState<VisitorAdminRequestRecord | null>(null);
     const [editingRequest, setEditingRequest] = useState<VisitorAdminRequestRecord | null>(null);
     const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+    const [printError, setPrintError] = useState<string | null>(null);
     const [pendingStatusChange, setPendingStatusChange] = useState<{ id: string; status: 'COMPLETE' | 'REJECTED' } | null>(null);
     const router = useRouter();
 
@@ -289,6 +292,35 @@ export default function AdminDashboard() {
 
     const pendingStatusRequest = pendingStatusChange ? requests.find(r => r.id === pendingStatusChange.id) : undefined;
 
+    /**
+     * Opens the Visitor Card Studio (print tab) for the ticked requests. All of them must be the same
+     * request category so the studio can apply the template made for that category.
+     */
+    const handlePrintCards = () => {
+        const selected = requests.filter((r) => selectedRowIds.includes(r.id));
+        if (selected.length === 0) {
+            setPrintError('The ticked requests are not on this page any more. Tick them again to print their cards.');
+            return;
+        }
+        const typeOf = (r: VisitorAdminRequestRecord): CardRequestType =>
+            activeTab === 'interviewee' ? 'interviewee' : toCardRequestType(r.visitor_category);
+
+        const counts = new Map<CardRequestType, number>();
+        selected.forEach((r) => counts.set(typeOf(r), (counts.get(typeOf(r)) ?? 0) + 1));
+        if (counts.size > 1) {
+            const summary = Array.from(counts.entries())
+                .map(([type, count]) => `${count} ${REQUEST_TYPE_LABELS[type]}`)
+                .join(', ');
+            setPrintError(`Cards can only be printed for one request category at a time. The selection mixes ${summary}. Tick requests of a single category.`);
+            return;
+        }
+
+        const [type] = Array.from(counts.keys());
+        const codes = selected.map((r) => (r.visitor_code || r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase());
+        setPrintError(null);
+        router.push(`/visitoradmin/cards?type=${type}&requests=${codes.map(encodeURIComponent).join(',')}`);
+    };
+
     const handleDeleteSelected = async () => {
         if (selectedRowIds.length === 0) return;
         if (!confirm('Are you sure you want to delete the selected requests?')) return;
@@ -370,11 +402,20 @@ export default function AdminDashboard() {
                 onClearFilters={handleClearFilters}
                 selectedRowIds={selectedRowIds}
                 onDeleteSelected={handleDeleteSelected}
+                onPrintCards={handlePrintCards}
                 onExportExcel={handleExportExcel}
                 exporting={exporting}
                 currentCount={requests.length}
                 totalCount={pagination.total}
             />
+
+            {printError && (
+                <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-800">
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-mwk" />
+                    <span className="flex-1">{printError}</span>
+                    <button type="button" onClick={() => setPrintError(null)} className="cursor-pointer text-red-400 hover:text-red-700" aria-label="Dismiss">✕</button>
+                </div>
+            )}
 
             {/* Table */}
             <VisitorAdminTable
