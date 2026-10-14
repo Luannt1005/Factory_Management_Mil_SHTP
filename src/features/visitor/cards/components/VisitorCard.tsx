@@ -13,6 +13,7 @@ import type {
     VisitorCardData,
 } from '@/types/visitor-card.types';
 import { resolveCardText } from '@/features/visitor/cards/utils/cardData';
+import { cardFont } from '@/features/visitor/cards/utils/cardFont';
 import CardQrCode from './CardQrCode';
 
 const BORDER_CLASS: Record<CardBorderColor, string> = {
@@ -58,7 +59,8 @@ export function customTextClass(settings: CardPresetSettings, t: CardCustomText)
         muted: bg.muted,
         accent: ACCENT_TEXT_CLASS[settings.style.borderColor],
     };
-    const font = t.font === 'impact' ? 'font-badge tracking-wide leading-[1.05]' : `leading-tight ${t.bold ? 'font-bold' : 'font-normal'}`;
+    // Every card text is Anton (single weight, set on the card root); "Headline" only spaces it wider
+    const font = t.font === 'impact' ? 'font-normal tracking-wide leading-[1.05]' : 'font-normal tracking-[0.02em] leading-tight';
     return `${ALIGN_CLASS[t.align].text} ${font} ${t.uppercase ? 'uppercase' : ''} ${tone[t.tone]}`;
 }
 
@@ -92,7 +94,7 @@ export default function VisitorCard({ card, settings, overlay, hiddenCustomTextI
 
     return (
         <div
-            className={`visitor-card relative shrink-0 overflow-hidden ${bg.card} ${bg.text}`}
+            className={`visitor-card relative shrink-0 overflow-hidden ${cardFont.className} ${bg.card} ${bg.text}`}
             style={{ width: `${size.widthMm}mm`, height: `${size.heightMm}mm` }}
         >
             {/* Footer first so other elements can sit on top of it */}
@@ -101,7 +103,7 @@ export default function VisitorCard({ card, settings, overlay, hiddenCustomTextI
                     className={`absolute flex items-center px-[2mm] ${ALIGN_CLASS[elements.footer.align].flex} ${FOOTER_CLASS[style.footerColor]}`}
                     style={boxStyle(elements.footer)}
                 >
-                    <span className="truncate font-badge tracking-[0.06em]" style={{ fontSize: mm(elements.footer.fontSize) }}>
+                    <span className="truncate tracking-[0.06em]" style={{ fontSize: mm(elements.footer.fontSize) }}>
                         {f.cardCode || 'VISITOR'}
                     </span>
                 </div>

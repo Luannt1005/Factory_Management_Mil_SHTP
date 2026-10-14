@@ -9,6 +9,8 @@ import VisitorDetailModal from '@/features/visitor/admin/components/VisitorDetai
 import VisitorEditModal from '@/features/visitor/admin/components/VisitorEditModal';
 import StatusConfirmModal from '@/features/visitor/admin/components/StatusConfirmModal';
 import { REQUEST_TYPE_LABELS, toCardRequestType } from '@/utils/visitorCategory';
+import { isVisitorAdmin } from '@/utils/visitorRoles';
+import { useUser } from '@/contexts/UserContext';
 import type { CardRequestType } from '@/types/visitor-card.types';
 import type {
     VisitorAdminRequestRecord,
@@ -38,6 +40,8 @@ export default function AdminDashboard() {
     const [printError, setPrintError] = useState<string | null>(null);
     const [pendingStatusChange, setPendingStatusChange] = useState<{ id: string; status: 'COMPLETE' | 'REJECTED' } | null>(null);
     const router = useRouter();
+    const { user } = useUser();
+    const canDelete = isVisitorAdmin(user);
 
     useEffect(() => {
         fetchRequests(1);
@@ -402,6 +406,7 @@ export default function AdminDashboard() {
                 onClearFilters={handleClearFilters}
                 selectedRowIds={selectedRowIds}
                 onDeleteSelected={handleDeleteSelected}
+                canDelete={canDelete}
                 onPrintCards={handlePrintCards}
                 onExportExcel={handleExportExcel}
                 exporting={exporting}

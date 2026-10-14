@@ -22,6 +22,8 @@ export interface VisitorAdminFiltersProps {
     onClearFilters: () => void;
     selectedRowIds: string[];
     onDeleteSelected: () => void;
+    /** Only Visitor admins may delete requests */
+    canDelete: boolean;
     onPrintCards: () => void;
     onExportExcel: () => void;
     exporting: boolean;
@@ -68,6 +70,7 @@ export default function VisitorAdminFilters({
     onClearFilters,
     selectedRowIds,
     onDeleteSelected,
+    canDelete,
     onPrintCards,
     onExportExcel,
     exporting,
@@ -210,13 +213,13 @@ export default function VisitorAdminFilters({
                     {selectedRowIds.length > 0 && (
                         <button
                             onClick={onPrintCards}
-                            className="text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 px-3 py-2 rounded transition-all whitespace-nowrap h-full shadow-sm flex items-center gap-1.5"
+                            className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition-all whitespace-nowrap h-full shadow-sm flex items-center"
                             title="Open the ticked requests in the Visitor Card Studio"
                         >
                             Print Cards ({selectedRowIds.length})
                         </button>
                     )}
-                    {selectedRowIds.length > 0 && (
+                    {canDelete && selectedRowIds.length > 0 && (
                         <button
                             onClick={onDeleteSelected}
                             className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition-all whitespace-nowrap h-full shadow-sm flex items-center"

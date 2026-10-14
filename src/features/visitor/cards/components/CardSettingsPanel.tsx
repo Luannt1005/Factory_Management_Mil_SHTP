@@ -68,8 +68,8 @@ const TONE_OPTIONS: { value: CardTextTone; label: string }[] = [
 ];
 
 const FONT_OPTIONS: { value: CardTextFont; label: string }[] = [
-    { value: 'standard', label: 'Standard' },
-    { value: 'impact', label: 'Impact' },
+    { value: 'standard', label: 'Regular' },
+    { value: 'impact', label: 'Headline' },
 ];
 
 const ALIGN_OPTIONS: { value: CardTextAlign; label: string }[] = [
@@ -209,7 +209,7 @@ export function CardLayersPanel({ settings, onChange, selection, onSelect }: Pan
         onSelect({ kind: 'custom', id: text.id });
     };
 
-    /** Adds a text bound to one data field (the visitor name uses the bold Impact badge font) */
+    /** Adds a text bound to one data field (the visitor name uses the large Headline style) */
     const addField = (key: CardFieldKey) => addCustomText(`{${key}}`, key === 'visitorName' ? 'impact' : 'standard');
     const scopedFields = fieldDefsForScope(settings.requestType);
     const full = settings.customTexts.length >= MAX_CUSTOM_TEXTS;
@@ -450,7 +450,7 @@ export function SelectedElementInspector({ settings, onChange, selection, onSele
                         {custom && (
                             <>
                                 <div>
-                                    <span className={labelClass}>Font</span>
+                                    <span className={labelClass}>Style (Anton)</span>
                                     <Segmented value={custom.font} options={FONT_OPTIONS} onChange={(font) => update({ font })} />
                                 </div>
                                 <div>
@@ -458,7 +458,6 @@ export function SelectedElementInspector({ settings, onChange, selection, onSele
                                     <Segmented value={custom.tone} options={TONE_OPTIONS} onChange={(tone) => update({ tone })} />
                                 </div>
                                 <div className="flex items-center gap-4">
-                                    {custom.font === 'standard' && <Toggle label="Bold" checked={custom.bold} onChange={(bold) => update({ bold })} />}
                                     <Toggle label="Uppercase" checked={custom.uppercase} onChange={(uppercase) => update({ uppercase })} />
                                 </div>
                             </>

@@ -6,6 +6,7 @@ import type { Session } from 'next-auth';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { hasPageAccess } from '@/lib/auth-server';
+import { isVisitorAdmin } from '@/utils/visitorRoles';
 
 export async function GET(request: Request) {
     try {
@@ -428,7 +429,8 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if (!(await hasPageAccess('/visitoradmin'))) {
+        // Deleting requests is limited to Visitor admins (not Receptionist / Security)
+        if (!(await hasPageAccess('/visitoradmin')) || !isVisitorAdmin(session.user)) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
