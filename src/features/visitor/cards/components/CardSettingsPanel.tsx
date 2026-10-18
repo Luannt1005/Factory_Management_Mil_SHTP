@@ -10,6 +10,7 @@ import type {
     CardPresetSettings,
     CardSelection,
     CardFieldKey,
+    CardFontFamily,
     CardTextAlign,
     CardTextFont,
     CardTextTone,
@@ -21,13 +22,21 @@ import {
     CARD_SIZE_PRESETS,
     CUSTOM_TEXT_MAX_LENGTH,
     FONT_SIZE_LIMITS,
+    LAYER_NAME_MAX_LENGTH,
+    LINE_HEIGHT_LIMITS,
     MAX_CUSTOM_TEXTS,
     NON_TEXT_ELEMENTS,
     PRESET_SCOPES,
     clampMm,
     clampToCard,
+    FONT_FAMILIES,
+    FONT_FAMILY_LABELS,
+    FONT_FAMILY_WEIGHTS,
+    FONT_WEIGHT_LABELS,
     createCustomText,
+    customTextLabel,
     resizeCardSettings,
+    supportedWeight,
 } from '@/features/visitor/cards/utils/cardPresetSettings';
 import { CARD_FIELD_GROUPS, CARD_SCOPE_LABELS, fieldDefsForScope } from '@/features/visitor/cards/utils/cardFields';
 
@@ -68,8 +77,8 @@ const TONE_OPTIONS: { value: CardTextTone; label: string }[] = [
 ];
 
 const FONT_OPTIONS: { value: CardTextFont; label: string }[] = [
-    { value: 'standard', label: 'Regular' },
-    { value: 'impact', label: 'Headline' },
+    { value: 'standard', label: 'Normal' },
+    { value: 'impact', label: 'Wide' },
 ];
 
 const ALIGN_OPTIONS: { value: CardTextAlign; label: string }[] = [
@@ -155,6 +164,68 @@ function SwatchRow<T extends string>({ label, value, options, onChange }: { labe
                         />
                     );
                 })}
+            </div>
+        </div>
+    );
+}
+
+/** Quick colours for element fills / texts (stored as hex; any other colour via the picker) */
+const COLOUR_SWATCHES: { value: string; label: string; swatch: string }[] = [
+    { value: '#db011c', label: 'Milwaukee Red', swatch: 'bg-[#db011c]' },
+    { value: '#000000', label: 'Black', swatch: 'bg-[#000000]' },
+    { value: '#ffffff', label: 'White', swatch: 'bg-[#ffffff]' },
+];
+
+interface ColourFieldProps {
+    label: string;
+    value: string | null;
+    /** Label of the "no custom colour" option, e.g. "Auto" or "None" */
+    emptyLabel: string;
+    onChange: (value: string | null) => void;
+}
+
+function ColourField({ label, value, emptyLabel, onChange }: ColourFieldProps) {
+    const isCustom = value !== null && !COLOUR_SWATCHES.some((s) => s.value === value);
+    const ring = (active: boolean) => (active ? 'border-gray-900 ring-2 ring-gray-900/20 ring-offset-1' : 'border-gray-300 hover:scale-110');
+    return (
+        <div>
+            <span className={labelClass}>{label}</span>
+            <div className="flex flex-wrap items-center gap-1.5" role="radiogroup" aria-label={label}>
+                <button
+                    type="button"
+                    role="radio"
+                    aria-checked={value === null}
+                    onClick={() => onChange(null)}
+                    className={`h-5 cursor-pointer rounded-full border px-2 text-[10px] font-bold transition-colors ${
+                        value === null ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-300 text-gray-500 hover:text-gray-800'
+                    }`}
+                >
+                    {emptyLabel}
+                </button>
+                {COLOUR_SWATCHES.map((s) => (
+                    <button
+                        key={s.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={value === s.value}
+                        title={s.label}
+                        onClick={() => onChange(s.value)}
+                        className={`h-5 w-5 cursor-pointer rounded-full border transition-all ${s.swatch} ${ring(value === s.value)}`}
+                    />
+                ))}
+                <label
+                    title="Custom colour"
+                    className={`relative flex h-5 w-5 cursor-pointer items-center justify-center overflow-hidden rounded-full border bg-[conic-gradient(#ef4444,#eab308,#22c55e,#3b82f6,#a855f7,#ef4444)] transition-all ${ring(isCustom)}`}
+                >
+                    <input
+                        type="color"
+                        value={value ?? '#ffffff'}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                        aria-label={`${label}: custom colour`}
+                    />
+                </label>
+                {value && <code className="ml-1 font-mono text-[10px] text-gray-400">{value}</code>}
             </div>
         </div>
     );
@@ -299,7 +370,7 @@ export function CardLayersPanel({ settings, onChange, selection, onSelect }: Pan
                                         className="min-w-0 flex-1 cursor-pointer truncate text-left text-xs font-medium"
                                         title={t.text}
                                     >
-                                        {t.text.split('\n')[0] || 'Empty text'}
+                                        {customTextLabel(t)}
                                     </button>
                                     <button
                                         type="button"
@@ -387,7 +458,7 @@ export function SelectedElementInspector({ settings, onChange, selection, onSele
         <div className="space-y-4">
             <div className="flex items-center justify-between gap-2">
                 <p className="truncate text-sm font-bold text-gray-900">
-                    {selection.kind === 'element' ? CARD_ELEMENT_LABELS[selection.key] : 'Custom text'}
+                    {selection.kind === 'element' ? CARD_ELEMENT_LABELS[selection.key] : custom ? customTextLabel(custom) : 'Custom text'}
                 </p>
                 <button type="button" className="cursor-pointer text-[11px] font-semibold text-gray-400 hover:text-gray-700" onClick={() => onSelect(null)}>
                     Deselect
@@ -396,6 +467,17 @@ export function SelectedElementInspector({ settings, onChange, selection, onSele
 
             {custom && (
                 <div className="space-y-2">
+                    <label className="block">
+                        <span className={labelClass}>Name</span>
+                        <input
+                            value={custom.name}
+                            maxLength={LAYER_NAME_MAX_LENGTH}
+                            onChange={(e) => update({ name: e.target.value })}
+                            placeholder={custom.text.split('\n')[0].trim() || 'e.g. Visitor name'}
+                            className={controlClass}
+                        />
+                    </label>
+                    <span className={labelClass}>Content</span>
                     <textarea
                         ref={textRef}
                         rows={3}
@@ -447,16 +529,57 @@ export function SelectedElementInspector({ settings, onChange, selection, onSele
                                 <Segmented value={layout.align} options={ALIGN_OPTIONS} onChange={(align) => update({ align })} />
                             </div>
                         </div>
+                        <div>
+                            <span className={labelClass}>Font</span>
+                            <select
+                                value={layout.fontFamily}
+                                onChange={(e) => {
+                                    const fontFamily = e.target.value as CardFontFamily;
+                                    update({ fontFamily, fontWeight: supportedWeight(fontFamily, layout.fontWeight) });
+                                }}
+                                className={`${controlClass} cursor-pointer`}
+                                aria-label="Font"
+                            >
+                                {FONT_FAMILIES.map((f) => (
+                                    <option key={f} value={f}>{FONT_FAMILY_LABELS[f]}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <span className={labelClass}>Weight</span>
+                            {FONT_FAMILY_WEIGHTS[layout.fontFamily].length > 1 ? (
+                                <Segmented
+                                    value={layout.fontWeight}
+                                    options={FONT_FAMILY_WEIGHTS[layout.fontFamily].map((w) => ({ value: w, label: FONT_WEIGHT_LABELS[w] }))}
+                                    onChange={(fontWeight) => update({ fontWeight })}
+                                />
+                            ) : (
+                                <p className="text-[11px] text-gray-400">{FONT_FAMILY_LABELS[layout.fontFamily]} has a single weight.</p>
+                            )}
+                        </div>
+                        <div className="w-1/2 pr-1">
+                            <NumberField
+                                label="Line spacing"
+                                value={layout.lineHeight}
+                                min={LINE_HEIGHT_LIMITS.min}
+                                max={LINE_HEIGHT_LIMITS.max}
+                                step={0.1}
+                                suffix="×"
+                                onChange={(lineHeight) => update({ lineHeight })}
+                            />
+                        </div>
                         {custom && (
                             <>
                                 <div>
-                                    <span className={labelClass}>Style (Anton)</span>
+                                    <span className={labelClass}>Letter spacing</span>
                                     <Segmented value={custom.font} options={FONT_OPTIONS} onChange={(font) => update({ font })} />
                                 </div>
-                                <div>
-                                    <span className={labelClass}>Colour</span>
-                                    <Segmented value={custom.tone} options={TONE_OPTIONS} onChange={(tone) => update({ tone })} />
-                                </div>
+                                {custom.textColor === null && (
+                                    <div>
+                                        <span className={labelClass}>Default tone</span>
+                                        <Segmented value={custom.tone} options={TONE_OPTIONS} onChange={(tone) => update({ tone })} />
+                                    </div>
+                                )}
                                 <div className="flex items-center gap-4">
                                     <Toggle label="Uppercase" checked={custom.uppercase} onChange={(uppercase) => update({ uppercase })} />
                                 </div>
@@ -465,6 +588,21 @@ export function SelectedElementInspector({ settings, onChange, selection, onSele
                     </div>
                 </div>
             )}
+
+            <div>
+                <p className={`${sectionTitleClass} mb-2`}>Colours</p>
+                <div className="space-y-2.5">
+                    {isText && (
+                        <ColourField label="Text colour" value={layout.textColor} emptyLabel="Auto" onChange={(textColor) => update({ textColor })} />
+                    )}
+                    <ColourField
+                        label="Background"
+                        value={layout.backgroundColor}
+                        emptyLabel={selection.kind === 'element' && selection.key === 'footer' ? 'Banner' : isQr ? 'White' : 'None'}
+                        onChange={(backgroundColor) => update({ backgroundColor })}
+                    />
+                </div>
+            </div>
 
             {custom && (
                 <button

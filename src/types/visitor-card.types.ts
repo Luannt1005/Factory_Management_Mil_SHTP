@@ -16,7 +16,12 @@ export type CardTextTone = 'primary' | 'muted' | 'accent';
 /** Fixed layout elements; all visitor information is added by the user as custom text / data fields */
 export type CardElementKey = 'logo' | 'qr' | 'footer';
 
+/** Letter spacing style of a custom text: 'standard' = normal, 'impact' = wide (headline) */
 export type CardTextFont = 'standard' | 'impact';
+
+/** Typefaces offered on cards (all support Vietnamese); Arial / Times are system fonts */
+export type CardFontFamily = 'anton' | 'roboto' | 'montserrat' | 'oswald' | 'arial' | 'times';
+export type CardFontWeight = 'light' | 'regular' | 'bold';
 
 /** Box of one element on the card (mm). For the QR code w and h are kept equal. */
 export interface CardElementLayout {
@@ -28,11 +33,22 @@ export interface CardElementLayout {
     /** Main text size in mm (ignored by logo / QR) */
     fontSize: number;
     align: CardTextAlign;
+    /** Typeface and weight of the text (texts only) */
+    fontFamily: CardFontFamily;
+    fontWeight: CardFontWeight;
+    /** Line spacing as a multiple of the font size (texts only) */
+    lineHeight: number;
+    /** Text colour "#rrggbb"; null = the template's default text colour */
+    textColor: string | null;
+    /** Box fill "#rrggbb"; null = default (transparent, footer banner colour, or white behind the QR) */
+    backgroundColor: string | null;
 }
 
 /** Free text added by the user; supports {fieldKey} placeholders for every CardFieldKey */
 export interface CardCustomText extends CardElementLayout {
     id: string;
+    /** Layer name shown in the designer ('' = use the first line of the text) */
+    name: string;
     text: string;
     bold: boolean;
     uppercase: boolean;
@@ -126,6 +142,10 @@ export interface VisitorCardData {
     /** Local id used for React keys and per-card edits */
     id: string;
     fields: CardFields;
+    /** Custom card: belongs to no request category, so it prints with any template */
+    custom: boolean;
+    /** How many identical copies of this card are printed */
+    copies: number;
 }
 
 /** Fields of the card content that can be changed for all cards at once */

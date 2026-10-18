@@ -2,19 +2,24 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
 import { hasPageAccess } from '@/lib/auth-server';
+import { canDesignVisitorCards, canPrintVisitorCards } from '@/utils/visitorRoles';
 
 /** Card presets are managed from Visitor Admin (same access as /visitoradmin/cards) */
 export const CARD_PRESETS_PAGE = '/visitoradmin';
 
 export const PRESET_COLUMNS = 'id, name, settings, created_by, created_at, updated_at';
 
-/** Returns an error response when the caller may not manage presets, otherwise the user's display name */
-export async function authorizeCardPresets(): Promise<{ error: NextResponse } | { user: string }> {
+/**
+ * Returns an error response when the caller may not use presets, otherwise the user's display name.
+ * 'read' (Print Cards tab): Visitor admins and Receptionists; 'write' (Card Design tab): Visitor admins only.
+ */
+export async function authorizeCardPresets(access: 'read' | 'write'): Promise<{ error: NextResponse } | { user: string }> {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
         return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
     }
-    if (!(await hasPageAccess(CARD_PRESETS_PAGE))) {
+    const allowed = access === 'write' ? canDesignVisitorCards(session.user) : canPrintVisitorCards(session.user);
+    if (!allowed || !(await hasPageAccess(CARD_PRESETS_PAGE))) {
         return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) };
     }
     return { user: session.user.name || session.user.email || 'unknown' };

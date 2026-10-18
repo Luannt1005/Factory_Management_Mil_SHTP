@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
 import { hasPageAccess } from '@/lib/auth-server';
+import { canPrintVisitorCards } from '@/utils/visitorRoles';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
 import { completeCardFields, toCardRequestType } from '@/features/visitor/cards/utils/cardFields';
 import type { CardFields, CardSourceRecord } from '@/types/visitor-card.types';
@@ -182,7 +183,8 @@ export async function GET(request: Request) {
     if (!session?.user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (!(await hasPageAccess('/visitoradmin'))) {
+    // Card lookups serve the Print Cards tab: Visitor admins and Receptionists
+    if (!canPrintVisitorCards(session.user) || !(await hasPageAccess('/visitoradmin'))) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

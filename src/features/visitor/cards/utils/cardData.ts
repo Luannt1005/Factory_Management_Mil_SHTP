@@ -3,9 +3,12 @@
  */
 
 import type { CardFields, CardPresetScope, CardRequestType, CardSize, CardSourceRecord, VisitorCardData } from '@/types/visitor-card.types';
-import { completeCardFields } from './cardFields';
+import { cardMatchesScope, completeCardFields } from './cardFields';
 
 export { formatCardDate, formatCardDateRange, resolveCardText } from './cardFields';
+
+/** Upper bound of copies printed from one card */
+export const MAX_CARD_COPIES = 500;
 
 /** A4 portrait */
 export const PAGE_WIDTH_MM = 210;
@@ -40,6 +43,8 @@ export function computeSheetGrid(size: CardSize): SheetGrid {
 export const SAMPLE_CARDS: Record<CardRequestType, VisitorCardData> = {
     vendor: {
         id: 'sample-vendor',
+        custom: false,
+        copies: 1,
         fields: completeCardFields({
             visitorName: 'Nguyen Van An',
             visitorTitle: 'Technician',
@@ -62,6 +67,8 @@ export const SAMPLE_CARDS: Record<CardRequestType, VisitorCardData> = {
     },
     expat: {
         id: 'sample-expat',
+        custom: false,
+        copies: 1,
         fields: completeCardFields({
             visitorName: 'John Carter',
             visitorTitle: 'Quality Director',
@@ -91,6 +98,8 @@ export const SAMPLE_CARDS: Record<CardRequestType, VisitorCardData> = {
     },
     interviewee: {
         id: 'sample-interviewee',
+        custom: false,
+        copies: 1,
         fields: completeCardFields({
             visitorName: 'Le Thi Mai',
             visitorTitle: 'Process Engineer',
@@ -145,15 +154,35 @@ export function sourceToCard(source: CardSourceRecord): VisitorCardData {
     fields.dateFrom = toInputDate(fields.dateFrom);
     fields.dateTo = toInputDate(fields.dateTo) || fields.dateFrom;
     if (!fields.qrValue) fields.qrValue = fields.cardCode;
-    return { id: newCardId(), fields };
+    return { id: newCardId(), fields, custom: false, copies: 1 };
 }
 
-export function createBlankCard(category = 'Visitor'): VisitorCardData {
+/** Custom card: no request category, content typed by the user, prints with any template */
+export function createCustomCard(): VisitorCardData {
     const today = toInputDate(new Date().toISOString());
     return {
         id: newCardId(),
-        fields: completeCardFields({ visitorName: 'VISITOR NAME', category, dateFrom: today, dateTo: today }),
+        fields: completeCardFields({ visitorName: 'VISITOR NAME', dateFrom: today, dateTo: today }),
+        custom: true,
+        copies: 1,
     };
+}
+
+/** Whether a card may be printed with a template of this category (custom cards fit every template) */
+export function cardFitsScope(card: VisitorCardData, scope: CardPresetScope): boolean {
+    return card.custom || cardMatchesScope(card.fields, scope);
+}
+
+/** Clamps a copy count into 1..MAX_CARD_COPIES */
+export function clampCopies(value: number): number {
+    return Number.isFinite(value) ? Math.min(MAX_CARD_COPIES, Math.max(1, Math.round(value))) : 1;
+}
+
+/** One entry per printed card: a card with N copies appears N times (each with its own key) */
+export function expandCopies(cards: VisitorCardData[]): VisitorCardData[] {
+    return cards.flatMap((card) =>
+        Array.from({ length: clampCopies(card.copies) }, (_, i) => (i === 0 ? card : { ...card, id: `${card.id}#${i}` }))
+    );
 }
 
 /** Returns a copy of the card with some fields replaced */

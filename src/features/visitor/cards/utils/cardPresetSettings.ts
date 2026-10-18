@@ -12,6 +12,8 @@ import type {
     CardCustomText,
     CardElementKey,
     CardElementLayout,
+    CardFontFamily,
+    CardFontWeight,
     CardFooterColor,
     CardPresetScope,
     CardPresetSettings,
@@ -27,6 +29,35 @@ export const FOOTER_COLORS: readonly CardFooterColor[] = ['red', 'black', 'gold'
 export const TEXT_ALIGNS: readonly CardTextAlign[] = ['left', 'center', 'right'];
 export const TEXT_TONES: readonly CardTextTone[] = ['primary', 'muted', 'accent'];
 export const TEXT_FONTS: readonly CardTextFont[] = ['standard', 'impact'];
+export const FONT_FAMILIES: readonly CardFontFamily[] = ['anton', 'roboto', 'montserrat', 'oswald', 'arial', 'times'];
+export const FONT_WEIGHTS: readonly CardFontWeight[] = ['light', 'regular', 'bold'];
+
+export const FONT_FAMILY_LABELS: Record<CardFontFamily, string> = {
+    anton: 'Anton',
+    roboto: 'Roboto',
+    montserrat: 'Montserrat',
+    oswald: 'Oswald',
+    arial: 'Arial',
+    times: 'Times New Roman',
+};
+
+export const FONT_WEIGHT_LABELS: Record<CardFontWeight, string> = { light: 'Light', regular: 'Regular', bold: 'Bold' };
+
+/** Weights each typeface really has (Anton is single-weight; the system fonts have no light) */
+export const FONT_FAMILY_WEIGHTS: Record<CardFontFamily, readonly CardFontWeight[]> = {
+    anton: ['regular'],
+    roboto: FONT_WEIGHTS,
+    montserrat: FONT_WEIGHTS,
+    oswald: FONT_WEIGHTS,
+    arial: ['regular', 'bold'],
+    times: ['regular', 'bold'],
+};
+
+/** Closest weight the typeface supports */
+export function supportedWeight(family: CardFontFamily, weight: CardFontWeight): CardFontWeight {
+    const allowed = FONT_FAMILY_WEIGHTS[family];
+    return allowed.includes(weight) ? weight : allowed.includes('regular') ? 'regular' : allowed[0];
+}
 export const PRESET_SCOPES: readonly CardPresetScope[] = ['all', 'expat', 'vendor', 'interviewee'];
 
 export const CARD_ELEMENT_KEYS: readonly CardElementKey[] = ['logo', 'qr', 'footer'];
@@ -43,9 +74,13 @@ export const NON_TEXT_ELEMENTS: readonly CardElementKey[] = ['logo', 'qr'];
 export const PRESET_NAME_MAX_LENGTH = 120;
 export const CARD_SIZE_LIMITS = { min: 25, max: 150 } as const;
 export const FONT_SIZE_LIMITS = { min: 1, max: 20 } as const;
+export const LINE_HEIGHT_LIMITS = { min: 0.8, max: 3 } as const;
+/** Default line spacing of Regular / Headline texts */
+export const DEFAULT_LINE_HEIGHT: Record<CardTextFont, number> = { standard: 1.3, impact: 1.1 };
 export const MIN_ELEMENT_SIZE_MM = 2;
 export const MAX_CUSTOM_TEXTS = 20;
 export const CUSTOM_TEXT_MAX_LENGTH = 200;
+export const LAYER_NAME_MAX_LENGTH = 60;
 
 /** Common badge sizes; any custom size within CARD_SIZE_LIMITS is also allowed */
 export const CARD_SIZE_PRESETS: { label: string; size: CardSize }[] = [
@@ -55,11 +90,14 @@ export const CARD_SIZE_PRESETS: { label: string; size: CardSize }[] = [
     { label: 'A7 (74 × 105 mm)', size: { widthMm: 74, heightMm: 105 } },
 ];
 
+/** Font, line spacing and colours of an element that uses the template defaults */
+const NO_COLOURS = { fontFamily: 'anton', fontWeight: 'regular', lineHeight: 1.2, textColor: null, backgroundColor: null } as const;
+
 /** Layout of the fixed elements on a 54 × 86 mm badge */
 const DEFAULT_ELEMENTS: Record<CardElementKey, CardElementLayout> = {
-    logo: { visible: true, x: 13.5, y: 4, w: 27, h: 9, fontSize: 3, align: 'center' },
-    qr: { visible: true, x: 32, y: 51, w: 18.5, h: 18.5, fontSize: 3, align: 'center' },
-    footer: { visible: true, x: 0, y: 76, w: 54, h: 10, fontSize: 5, align: 'center' },
+    logo: { visible: true, x: 13.5, y: 4, w: 27, h: 9, fontSize: 3, align: 'center', ...NO_COLOURS },
+    qr: { visible: true, x: 32, y: 51, w: 18.5, h: 18.5, fontSize: 3, align: 'center', ...NO_COLOURS },
+    footer: { visible: true, x: 0, y: 76, w: 54, h: 10, fontSize: 5, align: 'center', ...NO_COLOURS },
 };
 
 /** Settings of a brand-new (unsaved) template */
@@ -106,6 +144,18 @@ function pickNumber(value: unknown, fallback: number, min: number, max: number):
     return clampMm(n, min, max);
 }
 
+const HEX_COLOUR = /^#[0-9a-f]{6}$/i;
+
+/** "#rrggbb" (lower-case) or null for anything else */
+export function pickColour(value: unknown): string | null {
+    return typeof value === 'string' && HEX_COLOUR.test(value) ? value.toLowerCase() : null;
+}
+
+function pickFont(src: Record<string, unknown>, fallback: CardElementLayout): Pick<CardElementLayout, 'fontFamily' | 'fontWeight'> {
+    const fontFamily = pickEnum(src.fontFamily, FONT_FAMILIES, fallback.fontFamily);
+    return { fontFamily, fontWeight: supportedWeight(fontFamily, pickEnum(src.fontWeight, FONT_WEIGHTS, fallback.fontWeight)) };
+}
+
 function normalizeLayout(input: unknown, fallback: CardElementLayout, size: CardSize, square = false): CardElementLayout {
     const src = isRecord(input) ? input : {};
     const w = pickNumber(src.w, fallback.w, MIN_ELEMENT_SIZE_MM, size.widthMm);
@@ -118,6 +168,10 @@ function normalizeLayout(input: unknown, fallback: CardElementLayout, size: Card
         h,
         fontSize: pickNumber(src.fontSize, fallback.fontSize, FONT_SIZE_LIMITS.min, FONT_SIZE_LIMITS.max),
         align: pickEnum(src.align, TEXT_ALIGNS, fallback.align),
+        ...pickFont(src, fallback),
+        lineHeight: pickNumber(src.lineHeight, fallback.lineHeight, LINE_HEIGHT_LIMITS.min, LINE_HEIGHT_LIMITS.max),
+        textColor: pickColour(src.textColor),
+        backgroundColor: pickColour(src.backgroundColor),
     };
 }
 
@@ -158,8 +212,18 @@ export function normalizeCardSettings(input: unknown): CardPresetSettings {
         .slice(0, MAX_CUSTOM_TEXTS)
         .filter(isRecord)
         .map((t, i) => ({
-            ...normalizeLayout(t, { visible: true, x: 3.5, y: 40, w: 47, h: 5, fontSize: 2.6, align: 'center' }, size),
+            ...normalizeLayout(
+                t,
+                {
+                    visible: true, x: 3.5, y: 40, w: 47, h: 5, fontSize: 2.6, align: 'center',
+                    ...NO_COLOURS,
+                    // Texts saved before line spacing existed keep the spacing they were designed with
+                    lineHeight: DEFAULT_LINE_HEIGHT[pickEnum(t.font, TEXT_FONTS, 'standard')],
+                },
+                size
+            ),
             id: typeof t.id === 'string' && t.id ? t.id.slice(0, 64) : `text-${i}`,
+            name: pickText(t.name, LAYER_NAME_MAX_LENGTH),
             text: pickText(t.text, CUSTOM_TEXT_MAX_LENGTH),
             bold: pickBool(t.bold, true),
             uppercase: pickBool(t.uppercase, false),
@@ -237,6 +301,11 @@ export function clampToCard<T extends CardElementLayout>(el: T, size: CardSize, 
     };
 }
 
+/** Name of a custom text in the layer list: its own name, else the first line of its content */
+export function customTextLabel(t: Pick<CardCustomText, 'name' | 'text'>): string {
+    return t.name.trim() || t.text.split('\n')[0].trim() || 'Empty text';
+}
+
 /** New custom text placed below the existing ones (optionally with initial content) */
 export function createCustomText(size: CardSize, existingCount: number, text = 'Custom text', font: CardTextFont = 'standard'): CardCustomText {
     const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `text-${Date.now()}`;
@@ -246,6 +315,7 @@ export function createCustomText(size: CardSize, existingCount: number, text = '
     return clampToCard(
         {
             id,
+            name: '',
             text,
             visible: true,
             x: (size.widthMm - w) / 2,
@@ -254,6 +324,11 @@ export function createCustomText(size: CardSize, existingCount: number, text = '
             h,
             fontSize,
             align: 'center',
+            fontFamily: 'anton',
+            fontWeight: 'regular',
+            lineHeight: DEFAULT_LINE_HEIGHT[font],
+            textColor: null,
+            backgroundColor: null,
             bold: true,
             uppercase: font === 'impact',
             tone: 'primary',

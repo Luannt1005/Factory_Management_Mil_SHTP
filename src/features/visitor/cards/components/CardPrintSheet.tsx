@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { CardPresetSettings, VisitorCardData } from '@/types/visitor-card.types';
-import { computeSheetGrid, paginateCards } from '@/features/visitor/cards/utils/cardData';
+import { computeSheetGrid, expandCopies, paginateCards } from '@/features/visitor/cards/utils/cardData';
 import VisitorCard from './VisitorCard';
 
 /**
@@ -39,7 +39,7 @@ export default function CardPrintSheet({ cards, settings }: CardPrintSheetProps)
 
     const { widthMm, heightMm } = settings.size;
     const { cols, rows, perPage, offsetX, offsetY } = computeSheetGrid(settings.size);
-    const pages = paginateCards(cards, perPage);
+    const pages = paginateCards(expandCopies(cards), perPage);
 
     // Cut guides run edge-to-edge so a paper trimmer can be aligned on the margin marks
     const verticalCuts = Array.from({ length: cols + 1 }, (_, i) => offsetX + i * widthMm);

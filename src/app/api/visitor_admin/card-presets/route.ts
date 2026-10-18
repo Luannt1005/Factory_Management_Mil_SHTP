@@ -10,7 +10,7 @@ import { authorizeCardPresets, presetErrorResponse, PRESET_COLUMNS } from './_sh
  * Shared badge presets (built-in presets live in the client and are not stored here)
  */
 export async function GET() {
-    const auth = await authorizeCardPresets();
+    const auth = await authorizeCardPresets('read');
     if ('error' in auth) return auth.error;
 
     try {
@@ -29,7 +29,7 @@ export async function GET() {
  * Body: { name, settings }
  */
 export async function POST(request: Request) {
-    const auth = await authorizeCardPresets();
+    const auth = await authorizeCardPresets('write');
     if ('error' in auth) return auth.error;
 
     try {

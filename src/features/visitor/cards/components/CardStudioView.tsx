@@ -2,18 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useUser } from '@/contexts/UserContext';
+import { canDesignVisitorCards, canPrintVisitorCards } from '@/utils/visitorRoles';
 import type { CardBulkEditPayload, CardPresetSettings, CardSelection, VisitorCardData, CardPresetScope } from '@/types/visitor-card.types';
 import { useCardPresets } from '@/features/visitor/cards/hooks/useCardPresets';
 import { cardStudioApi } from '@/features/visitor/cards/services/cardStudioApi';
 import { DEFAULT_CARD_SETTINGS, PRESET_SCOPES, areSettingsEqual } from '@/features/visitor/cards/utils/cardPresetSettings';
-import { computeSheetGrid, createBlankCard, paginateCards, sampleCardFor, sourceToCard, withFields } from '@/features/visitor/cards/utils/cardData';
-import { CARD_SCOPE_DEFAULT_CATEGORY, CARD_SCOPE_LABELS, cardMatchesScope } from '@/features/visitor/cards/utils/cardFields';
+import { cardFitsScope, computeSheetGrid, createCustomCard, expandCopies, paginateCards, sampleCardFor, sourceToCard, withFields } from '@/features/visitor/cards/utils/cardData';
+import { CARD_SCOPE_LABELS } from '@/features/visitor/cards/utils/cardFields';
 import VisitorCard from './VisitorCard';
 import { CardLayersPanel, CardStyleInspector, SelectedElementInspector } from './CardSettingsPanel';
 import CardDesigner from './CardDesigner';
 import CardEditModal from './CardEditModal';
 import CardBulkEditModal from './CardBulkEditModal';
 import CardPrintSheet from './CardPrintSheet';
+import AccessDoorTab from './AccessDoorTab';
 import PresetNameModal, { type PresetNameMode } from './PresetNameModal';
 import StudioModal, { studioInputClass, studioPrimaryButtonClass, studioSecondaryButtonClass } from './StudioModal';
 
@@ -58,10 +61,14 @@ function writePrefs(prefs: StudioPrefs): void {
 }
 
 type Notice = { type: 'success' | 'error'; message: string } | null;
-type StudioTab = 'design' | 'print';
+type StudioTab = 'design' | 'print' | 'access';
 
 export default function CardStudioView() {
     const searchParams = useSearchParams();
+    const { user } = useUser();
+    // Card Design (templates): Visitor admins; Print Cards: Visitor admins and Receptionists
+    const canDesign = canDesignVisitorCards(user);
+    const canPrint = canPrintVisitorCards(user);
     const { presets, mode, loading: presetsLoading, loadError, createPreset, updatePreset, deletePreset, suggestCopyName } = useCardPresets();
 
     /** null = a new template that has not been saved yet */
@@ -75,7 +82,9 @@ export default function CardStudioView() {
         if (next) setInspectorTab('element');
     }, []);
     // Opening the studio for a request (?request=...) starts on the print tab
-    const [tab, setTab] = useState<StudioTab>(() => (searchParams.get('request') || searchParams.get('requests') ? 'print' : 'design'));
+    const [requestedTab, setTab] = useState<StudioTab>(() =>
+        searchParams.get('tab') === 'access' ? 'access' : searchParams.get('request') || searchParams.get('requests') ? 'print' : 'design'
+    );
     const [cards, setCards] = useState<VisitorCardData[]>([]);
     const cardsRef = useRef<VisitorCardData[]>([]);
     useEffect(() => {
@@ -100,6 +109,8 @@ export default function CardStudioView() {
     const savedSettings = selectedPreset?.settings ?? DEFAULT_CARD_SETTINGS;
     const templateName = selectedPreset?.name ?? 'Untitled template';
     const isDirty = !areSettingsEqual(workingSettings, savedSettings);
+    /** Users who cannot design (not Visitor admins) only ever see the print tab; Access Door is Visitor admins only too */
+    const tab: StudioTab = canDesign ? requestedTab : 'print';
 
     // ===============================
     // Opened from Admin Settings: ?requests=V06102623,V06102624&type=vendor (or legacy ?request=)
@@ -170,7 +181,7 @@ export default function CardStudioView() {
                     continue;
                 }
                 // A category template only accepts cards of its own category
-                const matching = all.filter((c) => cardMatchesScope(c.fields, activeScope));
+                const matching = all.filter((c) => cardFitsScope(c, activeScope));
                 if (matching.length === 0) {
                     wrongCategory.push(code);
                     continue;
@@ -235,10 +246,12 @@ export default function CardStudioView() {
             addFromCodes(
                 initialCodes,
                 initialScope,
-                `No saved template for ${CARD_SCOPE_LABELS[initialScope]} yet, so an untitled ${CARD_SCOPE_LABELS[initialScope]} template is used. Design and save it in Card Design.`
+                `No saved template for ${CARD_SCOPE_LABELS[initialScope]} yet, so an untitled ${CARD_SCOPE_LABELS[initialScope]} template is used. ${
+                    canDesign ? 'Design and save it in Card Design.' : 'Ask a visitor admin to create one.'
+                }`
             );
         }
-    }, [initialCodes, initialScope, presets, presetsLoading, addFromCodes]);
+    }, [initialCodes, initialScope, presets, presetsLoading, addFromCodes, canDesign]);
 
     // ===============================
     // Preset actions
@@ -253,13 +266,13 @@ export default function CardStudioView() {
         const preset = presets.find((p) => p.id === id);
         if (!preset) return;
         const nextScope = preset.settings.requestType;
-        const mismatched = cardsRef.current.filter((c) => !cardMatchesScope(c.fields, nextScope));
+        const mismatched = cardsRef.current.filter((c) => !cardFitsScope(c, nextScope));
         if (mismatched.length > 0) {
             const ok = window.confirm(
                 `"${preset.name}" is for ${CARD_SCOPE_LABELS[nextScope]} cards only. Remove ${mismatched.length} card${mismatched.length === 1 ? '' : 's'} of other categories from the print list?`
             );
             if (!ok) return;
-            setCards((prev) => prev.filter((c) => cardMatchesScope(c.fields, nextScope)));
+            setCards((prev) => prev.filter((c) => cardFitsScope(c, nextScope)));
         }
         setSelectedPresetId(preset.id);
         setWorkingSettings(preset.settings);
@@ -340,9 +353,10 @@ export default function CardStudioView() {
     const removeCard = (id: string) => setCards((prev) => prev.filter((c) => c.id !== id));
 
     const sheetGrid = computeSheetGrid(workingSettings.size);
-    const pageCount = paginateCards(cards, sheetGrid.perPage).length;
-    const previewCard = cards.find((c) => cardMatchesScope(c.fields, scope)) ?? sampleCardFor(scope);
-    const mismatchedCards = cards.filter((c) => !cardMatchesScope(c.fields, scope));
+    const printCount = expandCopies(cards).length;
+    const pageCount = paginateCards(expandCopies(cards), sheetGrid.perPage).length;
+    const previewCard = cards.find((c) => cardFitsScope(c, scope)) ?? sampleCardFor(scope);
+    const mismatchedCards = cards.filter((c) => !cardFitsScope(c, scope));
 
     const presetSelect = (id: string) => (
         <select
@@ -366,9 +380,25 @@ export default function CardStudioView() {
     );
 
     const tabs: { key: StudioTab; label: string; count?: number }[] = [
-        { key: 'design', label: 'Card Design' },
+        ...(canDesign ? [{ key: 'design' as const, label: 'Card Design' }] : []),
         { key: 'print', label: 'Print Cards', count: cards.length },
+        ...(canDesign ? [{ key: 'access' as const, label: 'Access Door' }] : []),
     ];
+
+    // The user profile loads from the session; wait for it instead of flashing "no access"
+    if (!user) {
+        return <div className="p-6 text-sm font-medium text-gray-500">Loading…</div>;
+    }
+    if (!canPrint) {
+        return (
+            <div className="flex min-h-full items-center justify-center p-6">
+                <div className="max-w-sm rounded-2xl border border-gray-200 bg-white px-6 py-8 text-center shadow-sm">
+                    <p className="text-sm font-bold text-gray-900">No access to Visitor Cards</p>
+                    <p className="mt-1 text-xs text-gray-500">Visitor cards can only be designed by visitor admins and printed by visitor admins or receptionists.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-full bg-[var(--color-bg-page)] p-4 sm:p-6">
@@ -393,7 +423,7 @@ export default function CardStudioView() {
                 ))}
             </div>
 
-            {(mode === 'local' || loadError) && (
+            {tab !== 'access' && (mode === 'local' || loadError) && (
                 <div className="mb-4 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-medium text-gray-600">
                     {loadError
                         ? `Could not load shared settings: ${loadError}`
@@ -401,7 +431,9 @@ export default function CardStudioView() {
                 </div>
             )}
 
-            {tab === 'design' ? (
+            {tab === 'access' ? (
+                <AccessDoorTab />
+            ) : tab === 'design' ? (
                 <>
                     {notice && renderNotice()}
 
@@ -467,7 +499,7 @@ export default function CardStudioView() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:h-[calc(100vh-17rem)] lg:min-h-[560px] lg:grid-cols-[220px_minmax(0,1fr)_480px]">
+                        <div className="grid grid-cols-1 lg:h-[calc(100vh-17rem)] lg:min-h-[680px] lg:grid-cols-[260px_310px_minmax(0,1fr)]">
                             {/* Layers */}
                             <div className="custom-scrollbar border-b border-gray-200 p-3 lg:overflow-y-auto lg:border-b-0 lg:border-r">
                                 <CardLayersPanel settings={workingSettings} onChange={setWorkingSettings} selection={selection} onSelect={setSelection} />
@@ -516,8 +548,8 @@ export default function CardStudioView() {
                                         selection={selection}
                                         onSelect={setSelection}
                                         onChange={setWorkingSettings}
-                                        maxWidthPx={360}
-                                        maxHeightPx={456}
+                                        maxWidthPx={440}
+                                        maxHeightPx={540}
                                     />
                                 </div>
                                 <p className="shrink-0 border-t border-gray-200 bg-white px-4 py-2 text-center text-[11px] text-gray-400">
@@ -537,9 +569,11 @@ export default function CardStudioView() {
                             {CARD_SCOPE_LABELS[scope]}
                         </span>
                         {dirtyBadge}
-                        <button type="button" className="cursor-pointer whitespace-nowrap text-xs font-bold text-gray-400 hover:text-mwk" onClick={() => setTab('design')}>
-                            Edit design →
-                        </button>
+                        {canDesign && (
+                            <button type="button" className="cursor-pointer whitespace-nowrap text-xs font-bold text-gray-400 hover:text-mwk" onClick={() => setTab('design')}>
+                                Edit design →
+                            </button>
+                        )}
                         <div className="ml-auto flex items-center gap-2">
                             <button type="button" className={studioSecondaryButtonClass} onClick={() => setBulkOpen(true)} disabled={cards.length === 0}>
                                 Bulk edit
@@ -568,7 +602,7 @@ export default function CardStudioView() {
                             <button
                                 type="button"
                                 className="cursor-pointer rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100"
-                                onClick={() => setCards((prev) => prev.filter((c) => cardMatchesScope(c.fields, scope)))}
+                                onClick={() => setCards((prev) => prev.filter((c) => cardFitsScope(c, scope)))}
                             >
                                 Remove {mismatchedCards.length} card{mismatchedCards.length === 1 ? '' : 's'}
                             </button>
@@ -595,8 +629,17 @@ export default function CardStudioView() {
                                     {lookupLoading ? 'Searching…' : 'Add cards'}
                                 </button>
                             </form>
-                            <button type="button" className={studioSecondaryButtonClass} onClick={() => setCards((prev) => [...prev, createBlankCard(CARD_SCOPE_DEFAULT_CATEGORY[scope])])}>
-                                Blank card
+                            <button
+                                type="button"
+                                className={studioSecondaryButtonClass}
+                                title="A card that belongs to no request category: type its content and choose how many copies to print"
+                                onClick={() => {
+                                    const card = createCustomCard();
+                                    setCards((prev) => [...prev, card]);
+                                    setEditingCard(card);
+                                }}
+                            >
+                                + Custom card
                             </button>
                             <button
                                 type="button"
@@ -616,6 +659,11 @@ export default function CardStudioView() {
                         <div className="flex items-center justify-between px-4 pt-3 text-xs text-gray-500">
                             <span>
                                 <span className="font-extrabold text-gray-900">{cards.length}</span> card{cards.length === 1 ? '' : 's'} ·{' '}
+                                {printCount !== cards.length && (
+                                    <>
+                                        <span className="font-extrabold text-gray-900">{printCount}</span> to print ·{' '}
+                                    </>
+                                )}
                                 <span className="font-extrabold text-gray-900">{pageCount}</span> A4 page{pageCount === 1 ? '' : 's'}
                             </span>
                             {cards.length > 0 && <span>Click a card to edit its content</span>}
@@ -640,6 +688,16 @@ export default function CardStudioView() {
                                         >
                                             <VisitorCard card={card} settings={workingSettings} />
                                         </button>
+                                        {(card.custom || card.copies > 1) && (
+                                            <div className="pointer-events-none absolute -left-2 -top-2 flex gap-1">
+                                                {card.custom && (
+                                                    <span className="rounded-full bg-gray-900 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">Custom</span>
+                                                )}
+                                                {card.copies > 1 && (
+                                                    <span className="rounded-full bg-mwk px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">×{card.copies}</span>
+                                                )}
+                                            </div>
+                                        )}
                                         <button
                                             type="button"
                                             onClick={() => removeCard(card.id)}

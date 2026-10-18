@@ -4,15 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import type { CardCustomText, CardElementLayout, CardPresetSettings, CardSelection, VisitorCardData } from '@/types/visitor-card.types';
 import { CARD_ELEMENT_KEYS, CARD_ELEMENT_LABELS, CUSTOM_TEXT_MAX_LENGTH, clampToCard } from '@/features/visitor/cards/utils/cardPresetSettings';
-import VisitorCard, { boxStyle, customTextClass } from './VisitorCard';
+import VisitorCard, { boxStyle, customTextClass, textStyle } from './VisitorCard';
 
 /** CSS pixels per millimetre at 96 dpi */
 const PX_PER_MM = 96 / 25.4;
 const SNAP_MM = 0.5;
 /** Pointer travel (px) below which a press counts as a click, not a drag */
 const CLICK_TOLERANCE_PX = 3;
-/** Line height used for custom text (matches leading-tight) */
-const LINE_HEIGHT = 1.25;
 
 const snap = (value: number) => Math.round(value / SNAP_MM) * SNAP_MM;
 
@@ -94,7 +92,7 @@ export default function CardDesigner({
     /** Updates the typed text and grows the box when new lines no longer fit */
     const updateText = (t: CardCustomText, text: string) => {
         const lines = text.split('\n').length;
-        const needed = lines * t.fontSize * LINE_HEIGHT + 0.6;
+        const needed = lines * t.fontSize * t.lineHeight + 0.6;
         const h = needed > t.h ? Math.min(size.heightMm - t.y, Math.ceil(needed * 2) / 2) : t.h;
         onChange({
             ...settings,
@@ -198,8 +196,8 @@ export default function CardDesigner({
                                 onPointerDown={(e) => e.stopPropagation()}
                                 placeholder="Type here"
                                 aria-label="Custom text"
-                                className={`block h-full w-full resize-none overflow-hidden bg-white/10 leading-tight text-inherit outline-none placeholder:text-current/40 ${customTextClass(settings, text)}`}
-                                style={{ fontSize: `${text.fontSize}mm` }}
+                                className={`block h-full w-full resize-none overflow-hidden bg-white/10 text-inherit outline-none placeholder:text-current/40 ${customTextClass(settings, text)}`}
+                                style={textStyle(text)}
                             />
                         )}
                         {active && !editing && (

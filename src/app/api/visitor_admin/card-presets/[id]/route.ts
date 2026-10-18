@@ -12,7 +12,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
  * Body: { name?, settings? } - rename and/or overwrite the stored settings
  */
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
-    const auth = await authorizeCardPresets();
+    const auth = await authorizeCardPresets('write');
     if ('error' in auth) return auth.error;
 
     const { id } = await context.params;
@@ -60,7 +60,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
  * DELETE /api/visitor_admin/card-presets/[id]
  */
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-    const auth = await authorizeCardPresets();
+    const auth = await authorizeCardPresets('write');
     if ('error' in auth) return auth.error;
 
     const { id } = await context.params;
