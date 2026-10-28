@@ -3,6 +3,7 @@
  * Orgchart_TTI_onprem
  */
 
+import type { DateRangeValue } from '@/types/date-range.types';
 import type { Visitor, VisitorCheckInOutStatus, VisitorRequestData } from './visitor.types';
 
 export type { VisitorCheckInOutStatus };
@@ -54,7 +55,11 @@ export interface CheckInOutPagination {
 }
 
 export interface CheckInOutHistoryParams {
+    /** Single day (requests whose visit covers it) */
     date?: string;
+    /** Date range: requests whose visit overlaps dateFrom..dateTo */
+    dateFrom?: string;
+    dateTo?: string;
     category?: string;
     site?: string;
     search?: string;
@@ -77,7 +82,8 @@ export interface CheckInOutStats {
 export type CheckInOutViewMode = 'group' | 'visitor';
 
 export interface CheckInOutFilterState {
-    date: string;
+    /** Visit date range (preset such as Today / This week, or custom From - To) */
+    dates: DateRangeValue;
     search: string;
     visitorName: string;
 }

@@ -19,6 +19,9 @@ export async function GET(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date'); // YYYY-MM-DD
+        // Optional range (YYYY-MM-DD): requests whose visit overlaps dateFrom..dateTo
+        const dateFrom = searchParams.get('dateFrom');
+        const dateTo = searchParams.get('dateTo');
         const category = searchParams.get('category');
         const site = searchParams.get('site');
         const search = searchParams.get('search'); // Request ID or submitter name
@@ -81,6 +84,12 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
             whereConditions.push(`r."startDate"::date <= $${paramCount}::date AND r."endDate"::date >= $${paramCount}::date`);
             queryParams.push(date);
             paramCount += 1;
+        } else if (dateFrom || dateTo) {
+            const from = dateFrom || dateTo;
+            const to = dateTo || dateFrom;
+            whereConditions.push(`r."startDate"::date <= $${paramCount + 1}::date AND r."endDate"::date >= $${paramCount}::date`);
+            queryParams.push(from as string, to as string);
+            paramCount += 2;
         }
 
         if (category) {

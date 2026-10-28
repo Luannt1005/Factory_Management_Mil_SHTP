@@ -52,6 +52,37 @@ export function buildOrgPaths(orgs: HikOrg[]): (HikOrg & { path: string })[] {
     return orgs.map((o) => ({ ...o, path: path(o) })).sort((a, b) => a.path.localeCompare(b.path));
 }
 
+/** Visitors only go into guest departments ("TTI Guest / SHTP ENG", ...) */
+export function isGuestOrg(org: { path: string }): boolean {
+    return /guest/i.test(org.path);
+}
+
+/** Words of a name, ignoring case, punctuation and hidden characters ("IE-MIF-FMU" -> ie, mif, fmu) */
+function nameWords(text: string): string[] {
+    return text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+}
+
+/**
+ * Guest department matching the host functional dept: "ENG" -> "TTI Guest / SHTP ENG".
+ * Every word of the functional dept must be in the department name (any order); a department
+ * that also names the visiting site wins, then the closest name. '' when nothing matches.
+ */
+export function matchGuestOrg(guestOrgs: (HikOrg & { path: string })[], functionalDept: string, site: string): string {
+    const deptWords = nameWords(functionalDept);
+    if (deptWords.length === 0) return '';
+    const siteWords = nameWords(site);
+    const ranked = guestOrgs
+        .map((o) => ({ o, words: nameWords(o.orgName) }))
+        .filter(({ words }) => deptWords.every((w) => words.includes(w)))
+        .map(({ o, words }) => {
+            const pathWords = nameWords(o.path);
+            const sameSite = siteWords.length > 0 && siteWords.every((w) => pathWords.includes(w));
+            return { o, sameSite, extra: words.length - deptWords.length };
+        })
+        .sort((a, b) => Number(b.sameSite) - Number(a.sameSite) || a.extra - b.extra);
+    return ranked[0]?.o.orgIndexCode ?? '';
+}
+
 /** Characters HikCentral rejects in names: ' / \ : * ? " < > | */
 export function cleanHikText(value: string, maxLength: number): string {
     return value.replace(/['/\\:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, maxLength);
@@ -94,6 +125,31 @@ export function toFactoryLocal(iso: string): string {
     if (Number.isNaN(d.getTime())) return '';
     const shifted = new Date(d.getTime() + 7 * 60 * 60 * 1000);
     return shifted.toISOString().slice(0, 16);
+}
+
+/** ISO -> "dd/MM/yyyy HH:mm" in factory time */
+export function formatFactoryDateTime(iso: string | null): string {
+    if (!iso) return '';
+    const local = toFactoryLocal(iso);
+    if (!local) return '';
+    const [date, time] = local.split('T');
+    const [y, m, d] = date.split('-');
+    return `${d}/${m}/${y} ${time}`;
+}
+
+/** "YYYY-MM-DD" -> "dd/MM/yyyy" */
+export function formatDayKey(value: string): string {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : value;
+}
+
+/** Splits pasted / typed codes on commas, semicolons, spaces and new lines (upper-cased, unique) */
+export function parseCodeList(input: string, max = 100): string[] {
+    const codes = input
+        .split(/[\s,;]+/)
+        .map((c) => c.trim().replace(/^#/, '').toUpperCase())
+        .filter((c) => /^[A-Z0-9_-]{1,60}$/.test(c));
+    return Array.from(new Set(codes)).slice(0, max);
 }
 
 /** Validates an assign request; returns the cleaned payload or an error message */

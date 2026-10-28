@@ -39,6 +39,8 @@ export function buildHistoryQueryString(params?: CheckInOutHistoryParams): strin
     if (!params) return searchParams.toString();
 
     if (params.date) searchParams.set('date', params.date);
+    if (params.dateFrom) searchParams.set('dateFrom', params.dateFrom);
+    if (params.dateTo) searchParams.set('dateTo', params.dateTo);
     if (params.category) searchParams.set('category', params.category);
     if (params.site) searchParams.set('site', params.site);
     if (params.search) searchParams.set('search', params.search);

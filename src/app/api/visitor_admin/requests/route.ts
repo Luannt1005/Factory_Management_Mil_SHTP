@@ -34,6 +34,9 @@ export async function GET(request: Request) {
         const submitter = searchParams.get('submitter');
         const completeStartDate = searchParams.get('completeStartDate');
         const completeEndDate = searchParams.get('completeEndDate');
+        // Submit date = when the request was created (optional range, inclusive)
+        const submitStartDate = searchParams.get('submitStartDate');
+        const submitEndDate = searchParams.get('submitEndDate');
         const isExport = limit > 1000; // if limit is very high, it's likely an export
 
         const visitorPool = await getVisitorDbConnection();
@@ -147,6 +150,17 @@ export async function GET(request: Request) {
         } else if (completeEndDate) {
             conditions.push(`r.status IN ('COMPLETE', 'APPROVED') AND (r."updatedAt"::date <= $${paramCount}::date)`);
             queryParams.push(completeEndDate);
+            paramCount += 1;
+        }
+
+        if (submitStartDate) {
+            conditions.push(`r."createdAt"::date >= $${paramCount}::date`);
+            queryParams.push(submitStartDate);
+            paramCount += 1;
+        }
+        if (submitEndDate) {
+            conditions.push(`r."createdAt"::date <= $${paramCount}::date`);
+            queryParams.push(submitEndDate);
             paramCount += 1;
         }
 

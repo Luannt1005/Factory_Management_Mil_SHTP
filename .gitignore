@@ -43,3 +43,5 @@ nginx.conf
 
 # scratch scripts
 /scratch
+# PM2 config is per server
+ecosystem.config.js

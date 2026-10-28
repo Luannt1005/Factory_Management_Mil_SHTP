@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
+import DateRangeFilter, { PAST_DATE_PRESETS, type DateRangeValue } from '@/components/ui/DateRangeFilter';
 
 export interface VisitorAdminFiltersProps {
     activeTab: 'general' | 'interviewee';
@@ -7,12 +8,15 @@ export interface VisitorAdminFiltersProps {
     onCodeChange: (val: string) => void;
     submitter: string;
     onSubmitterChange: (val: string) => void;
-    startDate: string;
-    onStartDateChange: (val: string) => void;
-    completeStartDate: string;
-    onCompleteStartDateChange: (val: string) => void;
-    completeEndDate: string;
-    onCompleteEndDateChange: (val: string) => void;
+    /** Visit date range (preset or custom From - To) */
+    visitDates: DateRangeValue;
+    onVisitDatesChange: (val: DateRangeValue) => void;
+    /** Approval / completion date range (preset or custom From - To) */
+    completeDates: DateRangeValue;
+    onCompleteDatesChange: (val: DateRangeValue) => void;
+    /** Submit (request creation) date range */
+    submitDates: DateRangeValue;
+    onSubmitDatesChange: (val: DateRangeValue) => void;
     sites: string[];
     onSitesChange: (val: string[]) => void;
     categories: string[];
@@ -55,12 +59,12 @@ export default function VisitorAdminFilters({
     onCodeChange,
     submitter,
     onSubmitterChange,
-    startDate,
-    onStartDateChange,
-    completeStartDate,
-    onCompleteStartDateChange,
-    completeEndDate,
-    onCompleteEndDateChange,
+    visitDates,
+    onVisitDatesChange,
+    completeDates,
+    onCompleteDatesChange,
+    submitDates,
+    onSubmitDatesChange,
     sites,
     onSitesChange,
     categories,
@@ -107,9 +111,12 @@ export default function VisitorAdminFilters({
     }, [localSubmitter, submitter, onSubmitterChange]);
 
     const hasActiveFilters = Boolean(
-        startDate ||
-        completeStartDate ||
-        completeEndDate ||
+        visitDates.from ||
+        visitDates.to ||
+        completeDates.from ||
+        completeDates.to ||
+        submitDates.from ||
+        submitDates.to ||
         sites.length > 0 ||
         categories.length > 0 ||
         localCode ||
@@ -140,34 +147,14 @@ export default function VisitorAdminFilters({
                         className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-mwk transition-all"
                     />
                 </div>
-                <div className="flex-1 min-w-[130px] max-w-[160px]">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">From</label>
-                    <input 
-                        type="date" 
-                        value={startDate}
-                        onChange={(e) => onStartDateChange(e.target.value)}
-                        className="w-full px-2 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-mwk transition-all"
-                    />
+                <div className="flex-1 min-w-[150px] max-w-[190px]">
+                    <DateRangeFilter label="Submit Date" value={submitDates} onChange={onSubmitDatesChange} presets={PAST_DATE_PRESETS} />
                 </div>
-                <div className="flex-[1.4] min-w-[240px] max-w-[280px]">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Complete Date</label>
-                    <div className="flex items-center gap-1.5 h-[38px]">
-                        <input 
-                            type="date" 
-                            value={completeStartDate}
-                            onChange={(e) => onCompleteStartDateChange(e.target.value)}
-                            title="Complete Date From"
-                            className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-mwk transition-all"
-                        />
-                        <span className="text-gray-400 text-xs">-</span>
-                        <input 
-                            type="date" 
-                            value={completeEndDate}
-                            onChange={(e) => onCompleteEndDateChange(e.target.value)}
-                            title="Complete Date To"
-                            className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded text-sm h-full focus:outline-none focus:border-mwk transition-all"
-                        />
-                    </div>
+                <div className="flex-1 min-w-[150px] max-w-[190px]">
+                    <DateRangeFilter label="From" value={visitDates} onChange={onVisitDatesChange} />
+                </div>
+                <div className="flex-1 min-w-[150px] max-w-[190px]">
+                    <DateRangeFilter label="Complete Date" value={completeDates} onChange={onCompleteDatesChange} presets={PAST_DATE_PRESETS} />
                 </div>
                 <div className="flex-1 min-w-[110px] max-w-[150px]">
                     <MultiSelectDropdown 

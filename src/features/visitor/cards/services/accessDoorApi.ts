@@ -14,6 +14,8 @@ import type {
     AccessSettings,
     AccessSettingsResponse,
     AssignCardPayload,
+    CardLookupResponse,
+    CardReleaseResponse,
 } from '@/types/visitor-access.types';
 
 const BASE = '/api/visitor_admin/access';
@@ -84,6 +86,22 @@ export const accessDoorApi = {
             body: JSON.stringify({ action: 'revoke' }),
         });
         return (await handleResponse<AccessAssignmentResponse>(res, 'Failed to revoke the card')).assignment;
+    },
+
+    /** Who holds a card (HikCentral person, employee or visitor) and its Access Door history */
+    async lookupCard(cardNo: string): Promise<CardLookupResponse> {
+        const res = await fetch(`${BASE}/card-lookup?cardNo=${encodeURIComponent(cardNo.trim())}`, { cache: 'no-store' });
+        return handleResponse<CardLookupResponse>(res, 'Failed to look up the card');
+    },
+
+    /** Releases a card from its holder (visitor: revoked; employee: only the card is removed) */
+    async releaseCard(cardNo: string, personId: string): Promise<CardReleaseResponse> {
+        const res = await fetch(`${BASE}/card-lookup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cardNo, personId }),
+        });
+        return handleResponse<CardReleaseResponse>(res, 'Failed to remove the card');
     },
 
     async check(id: string): Promise<AccessCheckResponse> {

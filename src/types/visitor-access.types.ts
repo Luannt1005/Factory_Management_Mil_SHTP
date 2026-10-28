@@ -75,6 +75,39 @@ export interface HikAccessLevel {
     description: string;
 }
 
+/** A HikCentral person (employee or visitor) holding a given card */
+export interface HikCardHolder {
+    personId: string;
+    /** Employee ID, or the visitor code for visitors created by Access Door */
+    personCode: string;
+    personName: string;
+    orgIndexCode: string;
+    beginTime: string;
+    endTime: string;
+    remark: string;
+    cardNos: string[];
+}
+
+/** GET /api/visitor_admin/access/card-lookup */
+export interface CardLookupResponse {
+    cardNo: string;
+    /** Who holds the card in HikCentral right now */
+    holders: HikCardHolder[];
+    /** Set when HikCentral could not be asked (the history below is still returned) */
+    hikError: string | null;
+    /** Access Door records of this card, newest first (active one included) */
+    history: AccessAssignment[];
+}
+
+/**
+ * POST /api/visitor_admin/access/card-lookup  { cardNo, personId }
+ * visitor-revoked: an Access Door visitor - the person was deleted (card freed, record revoked)
+ * card-removed: an employee / other person - only this card was taken off the person
+ */
+export interface CardReleaseResponse {
+    mode: 'visitor-revoked' | 'card-removed';
+}
+
 /** Live lists from HikCentral; each part reports its own error (e.g. API not granted to the app key) */
 export interface AccessOptionsResponse {
     configured: boolean;

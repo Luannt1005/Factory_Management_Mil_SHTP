@@ -79,8 +79,13 @@ export interface GetVisitorAdminRequestsParams {
     tab: 'general' | 'interviewee';
     page: number;
     limit: number;
+    /** Visit date range: requests whose visit overlaps startDate..endDate (one day when only startDate) */
     startDate?: string;
+    endDate?: string;
     completeStartDate?: string;
+    /** Submit (creation) date range, inclusive */
+    submitStartDate?: string;
+    submitEndDate?: string;
     completeEndDate?: string;
     site?: string;
     category?: string;

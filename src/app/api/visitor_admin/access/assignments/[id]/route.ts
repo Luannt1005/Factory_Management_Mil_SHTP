@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getVisitorDbConnection } from '@/lib/visitor-db';
-import { deletePerson, getApplicationStatus, removePersonFromAccessLevel } from '@/lib/hikcentral/client';
+import { getApplicationStatus } from '@/lib/hikcentral/client';
 import { fromAssignmentRow } from '@/features/visitor/cards/utils/accessDoor';
 import type { AccessAssignmentRow, AccessCheckResponse } from '@/types/visitor-access.types';
-import { ASSIGNMENT_COLUMNS, accessErrorResponse, authorizeAccessDoor, errorMessage } from '../../_shared';
+import { ASSIGNMENT_COLUMNS, accessErrorResponse, authorizeAccessDoor } from '../../_shared';
+import { revokeAssignmentRow } from '../../_revoke';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -49,34 +50,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         if (row.status !== 'active' && row.status !== 'failed') {
             return NextResponse.json({ error: `This assignment is already ${row.status}` }, { status: 409 });
         }
-        if (row.person_id) {
-            if (row.privilege_group_id) {
-                try {
-                    await removePersonFromAccessLevel(row.privilege_group_id, row.person_id);
-                } catch (err) {
-                    // Deleting the person below also drops its access levels; only the delete must succeed
-                    console.warn('[access-door] remove from access level failed, deleting the person anyway:', err);
-                }
-            }
-            try {
-                await deletePerson(row.person_id);
-            } catch (err) {
-                await pool.query(
-                    'UPDATE visitor_access_assignments SET last_error = $2, updated_at = NOW() WHERE id = $1',
-                    [id, `Revoke failed: ${errorMessage(err)}`]
-                );
-                throw err;
-            }
-        }
-
-        const { rows: updated } = await pool.query<AccessAssignmentRow>(
-            `UPDATE visitor_access_assignments
-             SET status = 'revoked', revoked_by = $2, revoked_at = NOW(), last_error = NULL, updated_at = NOW()
-             WHERE id = $1
-             RETURNING ${ASSIGNMENT_COLUMNS}`,
-            [id, auth.user]
-        );
-        return NextResponse.json({ assignment: fromAssignmentRow(updated[0]) }, { status: 200 });
+        const updated = await revokeAssignmentRow(pool, row, auth.user);
+        return NextResponse.json({ assignment: fromAssignmentRow(updated) }, { status: 200 });
     } catch (err) {
         return accessErrorResponse(err, `PATCH ${String(action)}`);
     }

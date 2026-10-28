@@ -11,6 +11,7 @@ import StatusConfirmModal from '@/features/visitor/admin/components/StatusConfir
 import { REQUEST_TYPE_LABELS, toCardRequestType } from '@/utils/visitorCategory';
 import { isVisitorAdmin } from '@/utils/visitorRoles';
 import { useUser } from '@/contexts/UserContext';
+import type { DateRangeValue } from '@/components/ui/DateRangeFilter';
 import type { CardRequestType } from '@/types/visitor-card.types';
 import type {
     VisitorAdminRequestRecord,
@@ -25,9 +26,9 @@ export default function AdminDashboard() {
     const [requests, setRequests] = useState<VisitorAdminRequestRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState<VisitorAdminPagination>({ total: 0, page: 1, limit: 15, totalPages: 0 });
-    const [startDate, setStartDate] = useState('');
-    const [completeStartDate, setCompleteStartDate] = useState('');
-    const [completeEndDate, setCompleteEndDate] = useState('');
+    const [visitDates, setVisitDates] = useState<DateRangeValue>({ from: '', to: '' });
+    const [completeDates, setCompleteDates] = useState<DateRangeValue>({ from: '', to: '' });
+    const [submitDates, setSubmitDates] = useState<DateRangeValue>({ from: '', to: '' });
     const [sites, setSites] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [code, setCode] = useState('');
@@ -45,7 +46,7 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchRequests(1);
-    }, [startDate, completeStartDate, completeEndDate, sites, categories, code, submitter, statusFilters, activeTab]);
+    }, [visitDates, completeDates, submitDates, sites, categories, code, submitter, statusFilters, activeTab]);
 
     const fetchRequests = async (page: number) => {
         setLoading(true);
@@ -55,9 +56,12 @@ export default function AdminDashboard() {
                 tab: activeTab,
                 page,
                 limit: pagination.limit,
-                startDate: startDate || undefined,
-                completeStartDate: completeStartDate || undefined,
-                completeEndDate: completeEndDate || undefined,
+                startDate: visitDates.from || undefined,
+                endDate: visitDates.to || undefined,
+                completeStartDate: completeDates.from || undefined,
+                completeEndDate: completeDates.to || undefined,
+                submitStartDate: submitDates.from || undefined,
+                submitEndDate: submitDates.to || undefined,
                 site: sites.length > 0 ? sites.join(',') : undefined,
                 category: categories.length > 0 ? categories.join(',') : undefined,
                 code: code || undefined,
@@ -98,9 +102,12 @@ export default function AdminDashboard() {
                 tab: activeTab,
                 page: 1,
                 limit: 999999,
-                startDate: startDate || undefined,
-                completeStartDate: completeStartDate || undefined,
-                completeEndDate: completeEndDate || undefined,
+                startDate: visitDates.from || undefined,
+                endDate: visitDates.to || undefined,
+                completeStartDate: completeDates.from || undefined,
+                completeEndDate: completeDates.to || undefined,
+                submitStartDate: submitDates.from || undefined,
+                submitEndDate: submitDates.to || undefined,
                 site: sites.length > 0 ? sites.join(',') : undefined,
                 category: categories.length > 0 ? categories.join(',') : undefined,
                 code: code || undefined,
@@ -340,9 +347,9 @@ export default function AdminDashboard() {
     };
 
     const handleClearFilters = () => {
-        setStartDate('');
-        setCompleteStartDate('');
-        setCompleteEndDate('');
+        setVisitDates({ from: '', to: '' });
+        setCompleteDates({ from: '', to: '' });
+        setSubmitDates({ from: '', to: '' });
         setSites([]);
         setCategories([]);
         setCode('');
@@ -391,12 +398,12 @@ export default function AdminDashboard() {
                 onCodeChange={setCode}
                 submitter={submitter}
                 onSubmitterChange={setSubmitter}
-                startDate={startDate}
-                onStartDateChange={setStartDate}
-                completeStartDate={completeStartDate}
-                onCompleteStartDateChange={setCompleteStartDate}
-                completeEndDate={completeEndDate}
-                onCompleteEndDateChange={setCompleteEndDate}
+                visitDates={visitDates}
+                onVisitDatesChange={setVisitDates}
+                completeDates={completeDates}
+                onCompleteDatesChange={setCompleteDates}
+                submitDates={submitDates}
+                onSubmitDatesChange={setSubmitDates}
                 sites={sites}
                 onSitesChange={setSites}
                 categories={categories}

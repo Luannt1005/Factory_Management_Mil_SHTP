@@ -10,7 +10,7 @@
 
 import crypto from 'node:crypto';
 import https from 'node:https';
-import type { HikAccessLevel, HikOrg, AccessApplicationFailure } from '@/types/visitor-access.types';
+import type { HikAccessLevel, HikCardHolder, HikOrg, AccessApplicationFailure } from '@/types/visitor-access.types';
 
 const ACCEPT = 'application/json';
 const CONTENT_TYPE = 'application/json;charset=UTF-8';
@@ -203,6 +203,66 @@ export async function findPersonIdByCode(personCode: string): Promise<string | n
         // 128 = "The request resource does not exist" (verified against the plant server); anything else is a real error
         if (err instanceof HikCentralError && err.code === PERSON_NOT_FOUND_CODE) return null;
         throw err;
+    }
+}
+
+/**
+ * Persons (employees or visitors) holding this card number. The platform matches the card number
+ * exactly (verified against the plant server), so this is normally 0 or 1 person.
+ */
+export async function findPersonsByCard(cardNo: string): Promise<HikCardHolder[]> {
+    const data = await hikRequest<PagedData<Record<string, unknown>>>('/artemis/api/resource/v1/person/advance/personList', {
+        pageNo: 1,
+        pageSize: 10,
+        cardNo,
+    });
+    return (data?.list ?? []).map((p) => {
+        const cards = Array.isArray(p.cards) ? p.cards : p.cards ? [p.cards] : [];
+        return {
+            personId: text(p.personId),
+            personCode: text(p.personCode),
+            personName: text(p.personName) || `${text(p.personFamilyName)} ${text(p.personGivenName)}`.trim(),
+            orgIndexCode: text(p.orgIndexCode),
+            beginTime: text(p.beginTime),
+            endTime: text(p.endTime),
+            remark: text(p.remark),
+            cardNos: cards.map((c) => text((c as Record<string, unknown>).cardNo)).filter(Boolean),
+        };
+    });
+}
+
+/**
+ * Removes one card from a person and keeps everything else (name, department, validity, other
+ * cards; faces / fingerprints are not part of the update). Used for employees, who must never be
+ * deleted. The result is read back so a change the platform ignored is reported, not assumed.
+ */
+export async function removeCardFromPerson(personId: string, cardNo: string): Promise<void> {
+    const data = await hikRequest<PagedData<Record<string, unknown>>>('/artemis/api/resource/v1/person/advance/personList', {
+        pageNo: 1,
+        pageSize: 10,
+        cardNo,
+    });
+    const person = (data?.list ?? []).find((p) => text(p.personId) === personId);
+    if (!person) throw new HikCentralError('not-holder', `Card ${cardNo} is no longer held by this person`);
+
+    const cards = (Array.isArray(person.cards) ? person.cards : person.cards ? [person.cards] : [])
+        .map((c) => text((c as Record<string, unknown>).cardNo))
+        .filter((c) => c && c !== cardNo);
+
+    const body: Record<string, unknown> = { personId, cards: cards.map((c) => ({ cardNo: c })) };
+    // Send the current values back unchanged so the update cannot blank them
+    for (const key of ['personCode', 'personFamilyName', 'personGivenName', 'orgIndexCode', 'phoneNo', 'email', 'remark', 'beginTime', 'endTime']) {
+        const value = text(person[key]);
+        if (value) body[key] = value;
+    }
+    const gender = Number(person.gender);
+    if (Number.isFinite(gender)) body.gender = gender;
+
+    await hikRequest('/artemis/api/resource/v1/person/single/update', body);
+
+    const after = await findPersonsByCard(cardNo);
+    if (after.some((h) => h.personId === personId)) {
+        throw new HikCentralError('not-removed', `HikCentral still shows card ${cardNo} on this person. Remove it in the HikCentral client.`);
     }
 }
 

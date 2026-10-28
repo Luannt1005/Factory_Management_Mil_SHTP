@@ -2,6 +2,7 @@
 
 import React from 'react';
 import MultiSelectDropdown, { MultiSelectOption } from '@/components/MultiSelectDropdown';
+import DateRangeFilter, { dayKey, presetRange } from '@/components/ui/DateRangeFilter';
 import type { CheckInOutFilterState, CheckInOutViewMode } from '@/types/checkinout.types';
 
 export const STATUS_OPTIONS: MultiSelectOption[] = [
@@ -56,7 +57,9 @@ export default function CheckInOutFilters({
     totalCount,
     onClearAllFilters,
 }: CheckInOutFiltersProps) {
-    const todayStr = new Date().toISOString().split('T')[0];
+    // Local date (toISOString would give yesterday's date before 07:00 in Vietnam)
+    const todayStr = dayKey(new Date());
+    const isToday = filters.dates.from === todayStr && filters.dates.to === todayStr;
     const hasActiveFilters = Boolean(
         filters.search ||
         filters.visitorName ||
@@ -90,21 +93,20 @@ export default function CheckInOutFilters({
                     />
                 </div>
                 <div className="w-full">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Date</label>
-                    <div className="flex w-full">
-                        <input
-                            type="date"
-                            className="w-full min-w-0 px-2 py-2 bg-white border border-gray-300 rounded-l text-sm focus:outline-none focus:border-mwk"
-                            value={filters.date}
-                            onChange={(e) => onFiltersChange({ ...filters, date: e.target.value })}
-                        />
-                        <button
-                            onClick={() => onFiltersChange({ ...filters, date: todayStr })}
-                            className={`px-2.5 text-xs font-bold uppercase rounded-r transition-colors border border-l-0 ${filters.date === todayStr ? 'bg-mwk text-white border-mwk' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 border-gray-300'}`}
-                        >
-                            Today
-                        </button>
-                    </div>
+                    <DateRangeFilter
+                        label="Date"
+                        value={filters.dates}
+                        onChange={(dates) => onFiltersChange({ ...filters, dates })}
+                        addon={
+                            <button
+                                type="button"
+                                onClick={() => onFiltersChange({ ...filters, dates: presetRange('today') })}
+                                className={`px-2.5 text-xs font-bold uppercase rounded-r transition-colors border border-l-0 ${isToday ? 'bg-mwk text-white border-mwk' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 border-gray-300'}`}
+                            >
+                                Today
+                            </button>
+                        }
+                    />
                 </div>
                 <div className="w-full">
                     <MultiSelectDropdown

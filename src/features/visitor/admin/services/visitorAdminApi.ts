@@ -44,8 +44,11 @@ export function buildRequestsQueryString(params: GetVisitorAdminRequestsParams):
     searchParams.set('limit', String(params.limit));
 
     if (params.startDate) searchParams.set('startDate', params.startDate);
+    if (params.endDate) searchParams.set('endDate', params.endDate);
     if (params.completeStartDate) searchParams.set('completeStartDate', params.completeStartDate);
     if (params.completeEndDate) searchParams.set('completeEndDate', params.completeEndDate);
+    if (params.submitStartDate) searchParams.set('submitStartDate', params.submitStartDate);
+    if (params.submitEndDate) searchParams.set('submitEndDate', params.submitEndDate);
     if (params.site) searchParams.set('site', params.site);
     if (params.category) searchParams.set('category', params.category);
     if (params.code) searchParams.set('code', params.code);

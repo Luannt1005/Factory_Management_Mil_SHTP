@@ -19,6 +19,7 @@ import type {
     CheckInOutVisitorRecord,
     VisitorCheckInOutStatus,
 } from '@/types/checkinout.types';
+import { presetRange } from '@/components/ui/DateRangeFilter';
 import {
     CheckInOutApiError,
     getCheckInOutHistory,
@@ -37,7 +38,7 @@ export default function CheckInOutManagement() {
 
     // Filters and View State
     const [filters, setFilters] = useState<CheckInOutFilterState>({
-        date: new Date().toISOString().split('T')[0],
+        dates: presetRange('today'),
         search: '',
         visitorName: ''
     });
@@ -68,7 +69,8 @@ export default function CheckInOutManagement() {
         setLoading(true);
         try {
             const data = await getCheckInOutHistory({
-                date: filters.date,
+                dateFrom: filters.dates.from || undefined,
+                dateTo: filters.dates.to || undefined,
                 limit: 500,
             });
             setHistory(data.requests || []);
@@ -81,7 +83,7 @@ export default function CheckInOutManagement() {
         } finally {
             setLoading(false);
         }
-    }, [filters.date, router]);
+    }, [filters.dates, router]);
 
     useEffect(() => {
         fetchHistory();
