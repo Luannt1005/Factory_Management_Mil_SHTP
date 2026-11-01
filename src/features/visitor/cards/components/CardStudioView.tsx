@@ -10,6 +10,7 @@ import { cardStudioApi } from '@/features/visitor/cards/services/cardStudioApi';
 import { DEFAULT_CARD_SETTINGS, PRESET_SCOPES, areSettingsEqual } from '@/features/visitor/cards/utils/cardPresetSettings';
 import { cardFitsScope, computeSheetGrid, createCustomCard, expandCopies, paginateCards, sampleCardFor, sourceToCard, withFields } from '@/features/visitor/cards/utils/cardData';
 import { CARD_SCOPE_LABELS } from '@/features/visitor/cards/utils/cardFields';
+import { parseCodeList } from '@/features/visitor/cards/utils/accessDoor';
 import VisitorCard from './VisitorCard';
 import { CardLayersPanel, CardStyleInspector, SelectedElementInspector } from './CardSettingsPanel';
 import CardDesigner from './CardDesigner';
@@ -127,6 +128,11 @@ export default function CardStudioView() {
                 .map((c) => c.trim().replace(/^#/, '').toUpperCase())
                 .filter((c) => /^[A-Z0-9_-]{1,60}$/.test(c))
                 .slice(0, MAX_URL_CODES),
+        [searchParams]
+    );
+    // Opened from Admin Settings "Assign Cards": ?tab=access&assign=V06102623,V06102624
+    const assignCodes = useMemo(
+        () => parseCodeList(searchParams.get('assign') || '', MAX_URL_CODES),
         [searchParams]
     );
 
@@ -432,7 +438,7 @@ export default function CardStudioView() {
             )}
 
             {tab === 'access' ? (
-                <AccessDoorTab />
+                <AccessDoorTab initialCodes={assignCodes} />
             ) : tab === 'design' ? (
                 <>
                     {notice && renderNotice()}

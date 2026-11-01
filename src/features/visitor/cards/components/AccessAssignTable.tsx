@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AccessAssignment, AccessSettings, HikAccessLevel, HikOrg } from '@/types/visitor-access.types';
 import type { CardRequestType, VisitorCardData } from '@/types/visitor-card.types';
 import { accessDoorApi } from '@/features/visitor/cards/services/accessDoorApi';
@@ -45,6 +45,8 @@ interface AccessAssignTableProps {
     activeByCard: Map<string, AccessAssignment>;
     onAssigned: () => Promise<void>;
     notify: (type: 'success' | 'error', message: string) => void;
+    /** Codes loaded once on open (passed only after the defaults above are ready) */
+    initialCodes?: string[];
 }
 
 /**
@@ -60,6 +62,7 @@ export default function AccessAssignTable({
     activeByCard,
     onAssigned,
     notify,
+    initialCodes,
 }: AccessAssignTableProps) {
     const [codesInput, setCodesInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -79,10 +82,8 @@ export default function AccessAssignTable({
     // ===============================
     // Load visitors
     // ===============================
-    const handleAdd = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const codes = parseCodeList(codesInput);
-        if (codes.length === 0) return;
+    /** Adds the visitors of these visitor / request codes as rows; true when at least one was added */
+    const addCodes = async (codes: string[]): Promise<boolean> => {
         setLoading(true);
         const existing = new Set(rows.map((r) => r.card.fields.cardCode));
         const added: AssignRow[] = [];
@@ -122,13 +123,28 @@ export default function AccessAssignTable({
 
         setRows((prev) => [...prev, ...added]);
         setLoading(false);
-        if (added.length > 0) setCodesInput('');
         const parts = [`Added ${added.length} visitor${added.length === 1 ? '' : 's'}.`];
         if (notFound.length) parts.push(`No visitors found for ${notFound.join(', ')}.`);
         if (failed) parts.push(`${failed} lookup${failed === 1 ? '' : 's'} failed.`);
         notify(added.length > 0 ? 'success' : 'error', parts.join(' '));
         if (added[0]) requestAnimationFrame(() => cardInputs.current.get(added[0].card.fields.cardCode)?.focus());
+        return added.length > 0;
     };
+
+    const handleAdd = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const codes = parseCodeList(codesInput);
+        if (codes.length === 0) return;
+        if (await addCodes(codes)) setCodesInput('');
+    };
+
+    // Requests ticked in Admin Settings ("Assign Cards"): load them once
+    const initialLoadedRef = useRef(false);
+    useEffect(() => {
+        if (initialLoadedRef.current || !initialCodes || initialCodes.length === 0) return;
+        initialLoadedRef.current = true;
+        void addCodes(initialCodes);
+    });
 
     // ===============================
     // Validation

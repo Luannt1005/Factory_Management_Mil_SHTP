@@ -29,6 +29,8 @@ export interface VisitorAdminFiltersProps {
     /** Only Visitor admins may delete requests */
     canDelete: boolean;
     onPrintCards: () => void;
+    /** Opens Access Door with the ticked requests (Visitor admins only, so optional) */
+    onAssignCards?: () => void;
     onExportExcel: () => void;
     exporting: boolean;
     currentCount: number;
@@ -76,6 +78,7 @@ export default function VisitorAdminFilters({
     onDeleteSelected,
     canDelete,
     onPrintCards,
+    onAssignCards,
     onExportExcel,
     exporting,
     currentCount,
@@ -204,6 +207,15 @@ export default function VisitorAdminFilters({
                             title="Open the ticked requests in the Visitor Card Studio"
                         >
                             Print Cards ({selectedRowIds.length})
+                        </button>
+                    )}
+                    {onAssignCards && selectedRowIds.length > 0 && (
+                        <button
+                            onClick={onAssignCards}
+                            className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition-all whitespace-nowrap h-full shadow-sm flex items-center"
+                            title="Open the ticked requests in Access Door to give them physical cards"
+                        >
+                            Assign Cards ({selectedRowIds.length})
                         </button>
                     )}
                     {canDelete && selectedRowIds.length > 0 && (

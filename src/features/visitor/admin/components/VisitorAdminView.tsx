@@ -21,6 +21,10 @@ import type {
     HostDepartment,
 } from '@/types/visitor-admin.types';
 
+/** Request / visitor code the Card Studio looks a ticked request up by (e.g. "#V06102623-1" -> "V06102623") */
+const cardCodeOf = (r: VisitorAdminRequestRecord): string =>
+    (r.visitor_code || r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase();
+
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<'general' | 'interviewee'>('general');
     const [requests, setRequests] = useState<VisitorAdminRequestRecord[]>([]);
@@ -327,9 +331,21 @@ export default function AdminDashboard() {
         }
 
         const [type] = Array.from(counts.keys());
-        const codes = selected.map((r) => (r.visitor_code || r.request_code || r.id).replace(/^#/, '').split('-')[0].toUpperCase());
+        const codes = selected.map(cardCodeOf);
         setPrintError(null);
         router.push(`/visitoradmin/cards?type=${type}&requests=${codes.map(encodeURIComponent).join(',')}`);
+    };
+
+    /** Opens Access Door (Assign cards) in the Visitor Card Studio with the ticked requests already loaded */
+    const handleAssignCards = () => {
+        const selected = requests.filter((r) => selectedRowIds.includes(r.id));
+        if (selected.length === 0) {
+            setPrintError('The ticked requests are not on this page any more. Tick them again to assign their cards.');
+            return;
+        }
+        const codes = Array.from(new Set(selected.map(cardCodeOf)));
+        setPrintError(null);
+        router.push(`/visitoradmin/cards?tab=access&assign=${codes.map(encodeURIComponent).join(',')}`);
     };
 
     const handleDeleteSelected = async () => {
@@ -415,6 +431,7 @@ export default function AdminDashboard() {
                 onDeleteSelected={handleDeleteSelected}
                 canDelete={canDelete}
                 onPrintCards={handlePrintCards}
+                onAssignCards={canDelete ? handleAssignCards : undefined}
                 onExportExcel={handleExportExcel}
                 exporting={exporting}
                 currentCount={requests.length}

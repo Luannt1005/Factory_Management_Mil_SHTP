@@ -16,7 +16,12 @@ type AccessView = 'assign' | 'cards' | 'lookup';
  * Access Door: gives visitors (by visitor code) physical cards in HikCentral - in bulk from a
  * table - and shows which card is with which visitor, with bulk revoke. Visitor admins only.
  */
-export default function AccessDoorTab() {
+interface AccessDoorTabProps {
+    /** Visitor / request codes loaded into "Assign cards" on open (from Admin Settings "Assign Cards") */
+    initialCodes?: string[];
+}
+
+export default function AccessDoorTab({ initialCodes }: AccessDoorTabProps) {
     const [view, setView] = useState<AccessView>('assign');
     const [options, setOptions] = useState<AccessOptionsResponse | null>(null);
     const [optionsLoading, setOptionsLoading] = useState(true);
@@ -26,6 +31,9 @@ export default function AccessDoorTab() {
     const [active, setActive] = useState<AccessAssignment[]>([]);
     const [refreshKey, setRefreshKey] = useState(0);
     const [notice, setNotice] = useState<Notice>(null);
+    // Defaults for loaded rows (department, access level, current card) need these first
+    const [settingsLoaded, setSettingsLoaded] = useState(false);
+    const [activeLoaded, setActiveLoaded] = useState(false);
 
     const accessLevels = useMemo(() => options?.accessLevels ?? [], [options]);
     const orgOptions = useMemo(() => buildOrgPaths(options?.orgs ?? []), [options]);
@@ -56,6 +64,8 @@ export default function AccessDoorTab() {
             setStorageError(null);
         } catch (err) {
             setStorageError(err instanceof Error ? err.message : 'Failed to load access settings');
+        } finally {
+            setSettingsLoaded(true);
         }
     }, []);
 
@@ -66,6 +76,8 @@ export default function AccessDoorTab() {
             setStorageError(null);
         } catch (err) {
             setStorageError(err instanceof Error ? err.message : 'Failed to load card assignments');
+        } finally {
+            setActiveLoaded(true);
         }
     }, []);
 
@@ -168,6 +180,7 @@ export default function AccessDoorTab() {
                     activeByCard={activeByCard}
                     onAssigned={refreshAssignments}
                     notify={notify}
+                    initialCodes={!optionsLoading && settingsLoaded && activeLoaded ? initialCodes : undefined}
                 />
             </div>
             <div className={view === 'cards' ? '' : 'hidden'}>
