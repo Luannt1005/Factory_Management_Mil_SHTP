@@ -13,13 +13,40 @@ import type { OrgChartNode } from "@/types/orgchart.types";
 export interface OrgChartCanvasProps {
   selectedGroup?: string;
   selectedType?: string;
+  /** Employee to expand the chart to and center on */
+  focusRequest?: { id: string; nonce: number } | null;
+  /** Called when the requested employee is hidden by the current filters */
+  onFocusHidden?: (id: string) => void;
+  /** Employee shown opened one level down whenever the chart loads */
+  rootId?: string;
+  /** When set, only these node ids are drawn (the branch under `rootId`) */
+  scopeIds?: Set<string> | null;
 }
 
-export default function OrgChartCanvas({ selectedGroup, selectedType }: OrgChartCanvasProps) {
+/** Nodes above `node` on screen: department group (stpid) first, then the manager (pid) */
+function pathAbove(byId: Map<string, OrgChartNode>, node: OrgChartNode): (string | number)[] {
+  const ancestors: (string | number)[] = [];
+  let current: OrgChartNode | undefined = node;
+  while (current && ancestors.length < 200) {
+    const up: string | number | null | undefined = current.stpid ?? current.pid;
+    if (up == null || ancestors.includes(up)) break;
+    ancestors.push(up);
+    current = byId.get(String(up));
+  }
+  return ancestors;
+}
+
+export default function OrgChartCanvas({ selectedGroup, selectedType, focusRequest, onFocusHidden, rootId, scopeIds }: OrgChartCanvasProps) {
   const treeRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<OrgChart | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedNodeData, setSelectedNodeData] = useState<OrgChartNode | null>(null);
+  // Search jump bookkeeping, read when the chart (re)loads so the jump is not overridden
+  const handledFocusRef = useRef<number | null>(null);
+  const focusRequestRef = useRef(focusRequest);
+  useEffect(() => {
+    focusRequestRef.current = focusRequest;
+  }, [focusRequest]);
 
   // Use SWR cached data with client-side filtering
   // selectedGroup === "all" means show all data, otherwise filter by group
@@ -28,7 +55,13 @@ export default function OrgChartCanvas({ selectedGroup, selectedType }: OrgChart
 
   // Transform and memoize nodes for OrgChart compatibility
   const nodes = useMemo(() => {
-    let filteredRawNodes = rawNodes;
+    // Only the branch under the root employee; the root itself becomes the top of the chart
+    const scopedNodes = scopeIds
+      ? rawNodes
+        .filter((item: OrgChartNode) => scopeIds.has(String(item.id)))
+        .map((item: OrgChartNode) => String(item.id) === rootId ? { ...item, pid: null, stpid: null } : item)
+      : rawNodes;
+    let filteredRawNodes = scopedNodes;
 
     if (selectedType && selectedType !== 'all') {
       const selectedTypes = selectedType.toLowerCase().split(',');
@@ -45,7 +78,7 @@ export default function OrgChartCanvas({ selectedGroup, selectedType }: OrgChart
       };
 
       // Step 1: Filter nodes by selected types (IDL/Staff)
-      const matchingNodes = rawNodes.filter((item: OrgChartNode) => {
+      const matchingNodes = scopedNodes.filter((item: OrgChartNode) => {
         const nodeType = (item.type || "").toLowerCase();
         // Only filter non-group nodes by type
         if (!isGroupNode(item)) {
@@ -62,7 +95,7 @@ export default function OrgChartCanvas({ selectedGroup, selectedType }: OrgChart
         // Add direct parent (pid)
         if (nodeId != null && !visitedNodes.has(nodeId)) {
           visitedNodes.add(nodeId);
-          const parent = rawNodes.find((n: OrgChartNode) => n.id === nodeId);
+          const parent = scopedNodes.find((n: OrgChartNode) => n.id === nodeId);
           if (parent) {
             if (isGroupNode(parent)) {
               parentGroupIds.add(parent.id);
@@ -74,7 +107,7 @@ export default function OrgChartCanvas({ selectedGroup, selectedType }: OrgChart
         // Add stpid parent (group container)
         if (nodeStpid != null && !visitedNodes.has(nodeStpid)) {
           visitedNodes.add(nodeStpid);
-          const stpidParent = rawNodes.find((n: OrgChartNode) => n.id === nodeStpid);
+          const stpidParent = scopedNodes.find((n: OrgChartNode) => n.id === nodeStpid);
           if (stpidParent) {
             if (isGroupNode(stpidParent)) {
               parentGroupIds.add(stpidParent.id);
@@ -91,7 +124,7 @@ export default function OrgChartCanvas({ selectedGroup, selectedType }: OrgChart
       });
 
       // Step 3: Include matching nodes + their parent groups
-      filteredRawNodes = rawNodes.filter((item: OrgChartNode) => {
+      filteredRawNodes = scopedNodes.filter((item: OrgChartNode) => {
         const nodeType = (item.type || "").toLowerCase();
 
         // Include groups that are parents of matching nodes
@@ -121,11 +154,14 @@ export default function OrgChartCanvas({ selectedGroup, selectedType }: OrgChart
       BU: item.BU || null,
       type: item.type || "",
       location: item.location || null,
+      email: item.email || null,
+      display_name: item.display_name || null,
+      cost_center: item.cost_center || null,
       description: item.description || "",
       joiningDate: item.joiningDate || item.joining_date || "",
       lineManager: item.lineManager || item.line_manager || ""
     } as OrgChartNode));
-  }, [rawNodes, selectedType]);
+  }, [rawNodes, selectedType, scopeIds, rootId]);
 
   // Revalidate data after mutations (using SWR mutate)
   const revalidateData = useCallback(async () => {
@@ -195,10 +231,25 @@ export default function OrgChartCanvas({ selectedGroup, selectedType }: OrgChart
       return getWeight(a) - getWeight(b);
     });
 
+    // Open the root employee one level down (their department groups and direct reports) and center on them.
+    // Skipped while a search jump is pending, which expands its own path.
+    const openRoot = () => {
+      const chart = chartRef.current;
+      const pending = focusRequestRef.current && focusRequestRef.current.nonce !== handledFocusRef.current;
+      if (!chart || !rootId || pending) return;
+      const byId = new Map(chartNodes.map((n) => [String(n.id), n as OrgChartNode]));
+      const root = byId.get(rootId);
+      if (!root) return;
+      const childGroups = chartNodes
+        .filter((n) => String(n.pid) === rootId && (n.tags.includes('group') || n.tags.includes('indirect_group')))
+        .map((n) => n.id);
+      chart.expandCollapse(root.id, [...pathAbove(byId, root), root.id, ...childGroups], [], () => chart.center(root.id));
+    };
+
     // If chart already exists, just update the data instead of recreating
     if (chartRef.current) {
       console.log("♻️ Reusing existing OrgChart instance, updating data...");
-      chartRef.current.load(chartNodes as OrgChartNode[]);
+      chartRef.current.load(chartNodes as OrgChartNode[], openRoot);
       return;
     }
 
@@ -250,6 +301,8 @@ export default function OrgChartCanvas({ selectedGroup, selectedType }: OrgChart
         const rootNode = chartNodes.find((n: any) => !n.pid && !n.stpid) || chartNodes[0];
         sender.center(rootNode.id);
       }
+      // The first load() never calls its callback, so open the root employee from here
+      setTimeout(openRoot, 0);
     });
 
     // Custom click handler
@@ -398,7 +451,39 @@ export default function OrgChartCanvas({ selectedGroup, selectedType }: OrgChart
         treeRef.current.innerHTML = "";
       }
     };
-  }, [nodes, loading, revalidateData]);
+  }, [nodes, loading, revalidateData, rootId]);
+
+  // Jump to a searched employee: expand the managers above them, center and ripple the node
+  const hiddenReportedRef = useRef<number | null>(null);
+  const onFocusHiddenRef = useRef(onFocusHidden);
+  useEffect(() => {
+    onFocusHiddenRef.current = onFocusHidden;
+  }, [onFocusHidden]);
+  useEffect(() => {
+    if (!focusRequest || handledFocusRef.current === focusRequest.nonce || loading) return;
+    const target = nodes.find((n: OrgChartNode) => String(n.id) === focusRequest.id);
+    if (!target) {
+      if (hiddenReportedRef.current !== focusRequest.nonce) {
+        hiddenReportedRef.current = focusRequest.nonce;
+        onFocusHiddenRef.current?.(focusRequest.id);
+      }
+      return;
+    }
+    // Nodes shown on screen hang under their department group (stpid) first, then the manager (pid).
+    // center()'s own parent expansion follows pid only, misses the groups and draws an empty chart,
+    // so expand the real path ourselves and center afterwards.
+    const byId = new Map(nodes.map((n: OrgChartNode) => [String(n.id), n]));
+    const ancestors = pathAbove(byId, target);
+
+    // Let a pending chart.load() draw first
+    const timer = setTimeout(() => {
+      const chart = chartRef.current;
+      if (!chart) return;
+      handledFocusRef.current = focusRequest.nonce;
+      chart.expandCollapse(target.id, [...ancestors, target.id], [], () => chart.center(target.id));
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [focusRequest, nodes, loading]);
 
   // Show loading screen while data is loading
   if (loading) {

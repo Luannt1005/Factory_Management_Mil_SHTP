@@ -18,7 +18,7 @@ declare module "@/lib/orgchart" {
         static events: any;
         static randomId(): string;
 
-        load(data: any[]): void;
+        load(data: any[], callback?: () => void): void;
         on(event: string, callback: (...args: any[]) => void): void;
         get(id: string | number): any;
         getNode(id: string | number): any;
@@ -27,6 +27,10 @@ declare module "@/lib/orgchart" {
         removeNode(id: string | number): void;
         destroy(): void;
         draw(action: any): void;
+        /** Expands to and centers a node (options: parentState, childrenState, rippleId, vertical, horizontal) */
+        center(id: string | number, options?: { parentState?: number; childrenState?: number; rippleId?: string | number; vertical?: boolean; horizontal?: boolean }, callback?: () => void): void;
+        /** Expands `expandIds` and collapses `collapseIds` in one redraw */
+        expandCollapse(id: string | number, expandIds: (string | number)[], collapseIds: (string | number)[], callback?: () => void): void;
 
         // Config properties
         config: any;

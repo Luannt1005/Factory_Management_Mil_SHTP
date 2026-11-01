@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic';
 import type { OrgChartNode } from '@/types/orgchart.types';
 import { NextResponse } from "next/server";
-import { getDbConnection } from "@/lib/db";
+import { isActiveRecord, loadEmployeeRecords } from "@/lib/employees/source";
+import type { EmployeeRecord } from "@/types/employee-source.types";
 import { getCachedData } from "@/lib/cache";
 import { isAuthenticated, unauthorizedResponse } from "@/lib/auth-server";
 
@@ -9,23 +10,7 @@ import { isAuthenticated, unauthorizedResponse } from "@/lib/auth-server";
 const ORGCHART_CACHE_TTL = 15 * 60 * 1000;
 const IMAGE_BASE_URL = "/api/uploads/";
 
-interface Employee {
-  id: string;
-  emp_id: string;
-  full_name: string | null;
-  job_title: string | null;
-  dept: string | null;
-  bu: string | null;
-  bu_org_3: string | null;
-  dl_idl_staff: string | null;
-  location: string | null;
-  employee_type: string | null;
-  is_direct: string | null;
-  line_manager: string | null;
-  joining_date: string | null;
-  last_working_day: string | null;
-  [key: string]: string | number | null | undefined;
-}
+type Employee = EmployeeRecord;
 
 // --- Helper Functions ---
 
@@ -102,19 +87,12 @@ export async function GET(req: Request) {
     const data = await getCachedData(
       cacheKey,
       async () => {
-        console.log(`📡 [Cache MISS] Fetching employees from Azure SQL (dept: ${dept || 'all'})...`);
+        console.log(`📡 [Cache MISS] Fetching employees from the employee database (dept: ${dept || 'all'})...`);
 
-        const pool = await getDbConnection();
-        const queryValues: string[] = [];
-        let queryStr = "SELECT * FROM employees WHERE emp_id IS NOT NULL AND emp_id <> '' AND (status = 'Active' OR status IS NULL)";
-
-        if (dept && dept !== "all") {
-          queryStr += " AND dept = $1";
-          queryValues.push(dept);
-        }
-
-        const result = await pool.query(queryStr, queryValues);
-        const employees = result.rows;
+        // Active employees with an ID (HR master data merged with the app's edits)
+        const employees = (await loadEmployeeRecords()).filter(
+          (emp) => emp.emp_id && emp.emp_id !== '' && isActiveRecord(emp) && (!dept || dept === "all" || emp.dept === dept)
+        );
 
         if (!employees || employees.length === 0) {
           return [];
@@ -194,6 +172,9 @@ export async function GET(req: Request) {
             bu: emp.bu || null,
             type: emp.dl_idl_staff || null,
             location: emp.location || null,
+            email: emp.email || null,
+            display_name: emp.display_name || null,
+            cost_center: emp.cost_center || null,
             description: emp.employee_type || "",
             joining_date: joiningDate,
             line_manager: emp.line_manager

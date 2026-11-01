@@ -1,19 +1,33 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
-import { getDbConnection } from "@/lib/db";
-import { getCachedData, invalidateCachePrefix } from "@/lib/cache";
+import { getCachedData } from "@/lib/cache";
+import {
+  addManualRows,
+  findEmployeeRecord,
+  isActiveRecord,
+  loadEmployeeRecords,
+  removeAllManualRows,
+  removeEmployee,
+  resolvePendingLineManagers,
+  saveEmployeeEdit,
+} from "@/lib/employees/source";
+import type { EmployeeEdit, EmployeeRecord } from "@/types/employee-source.types";
 
-import { retryOperation } from "@/lib/retry";
 import { isAuthenticated, unauthorizedResponse, getCurrentUser } from "@/lib/auth-server";
+
+/*
+ * Employees come from the employee master database (HR, read only) merged with the app's edits:
+ * edits on HR employees are stored as overrides, added rows / open headcount as manual rows
+ * (see src/lib/employees/source.ts). Request and response shapes are unchanged.
+ */
 
 // Cache TTL: 15 minutes for employee list
 const EMPLOYEES_CACHE_TTL = 15 * 60 * 1000;
 
-// Columns to select for listing - all employee data columns
-const LIST_COLUMNS = 'id, emp_id, full_name, job_title, dept, bu, bu_org_3, dl_idl_staff, location, employee_type, line_manager, joining_date, last_working_day, line_manager_status, pending_line_manager, is_direct, requester, status';
+const SHEET_HEADERS = ["id", "Emp ID", "FullName ", "Job Title", "Dept", "BU", "DL/IDL/Staff", "Location", "Employee Type", "Line Manager", "Is Direct", "Joining\r\n Date", "Last Working\r\nDay"];
 
-// Whitelist of allowed filter params -> database columns
-const FILTER_MAPPING: { [key: string]: string } = {
+// Whitelist of allowed filter params -> employee fields
+const FILTER_MAPPING: { [key: string]: keyof EmployeeRecord } = {
   'Dept': 'dept',
   'BU': 'bu',
   'DL/IDL/Staff': 'dl_idl_staff',
@@ -40,6 +54,49 @@ const FILTER_MAPPING: { [key: string]: string } = {
   'is_direct': 'is_direct'
 };
 
+// Transform to match expected format
+const toSheetRow = (emp: EmployeeRecord) => ({
+  id: emp.id,
+  "Emp ID": emp.emp_id,
+  "FullName ": emp.full_name,
+  "Job Title": emp.job_title,
+  "Dept": emp.dept,
+  "BU": emp.bu,
+  "BU Org 3": emp.bu_org_3,
+  "DL/IDL/Staff": emp.dl_idl_staff,
+  "Location": emp.location,
+  "Employee Type": emp.employee_type,
+  "Line Manager": emp.line_manager,
+  "Is Direct": emp.is_direct,
+  "Joining\r\n Date": emp.joining_date,
+  "Last Working\r\nDay": emp.last_working_day,
+  lineManagerStatus: emp.line_manager_status,
+  pendingLineManager: emp.pending_line_manager,
+  requester: emp.requester,
+  Status: emp.status
+});
+
+/** Sheet form data ("Emp ID", "FullName ", ...) -> employee fields; only filled values, like before */
+type SheetData = Record<string, string | null | undefined>;
+const fromSheetData = (data: SheetData): EmployeeEdit => {
+  const edit: EmployeeEdit = {};
+  const set = (field: keyof EmployeeEdit, value: string | null | undefined) => {
+    if (value) edit[field] = value;
+  };
+  set('emp_id', data["Emp ID"]);
+  set('full_name', data["FullName "] || data["FullName"]);
+  set('job_title', data["Job Title"]);
+  set('dept', data["Dept"]);
+  set('bu', data["BU"]);
+  set('dl_idl_staff', data["DL/IDL/Staff"]);
+  set('location', data["Location"]);
+  set('employee_type', data["Employee Type"]);
+  set('line_manager', data["Line Manager"]);
+  set('is_direct', data["Is Direct"]);
+  set('joining_date', data["Joining\r\n Date"] || data["Joining Date"]);
+  return edit;
+};
+
 /**
  * GET /api/sheet
  * Fetch employees with optional pagination and filtering
@@ -53,20 +110,19 @@ export async function GET(req: Request) {
     const id = searchParams.get("id");
     const page = parseInt(searchParams.get("page") || "0");
     const limit = parseInt(searchParams.get("limit") || "0");
-    const pool = await getDbConnection();
 
     // ======= SINGLE EMPLOYEE FETCH =======
     if (id) {
-      const result = await pool.query("SELECT * FROM employees WHERE id = $1", [id]);
+      const employee = await findEmployeeRecord(id);
 
-      if (result.rows.length === 0) {
+      if (!employee) {
         return NextResponse.json(
           { success: false, error: "Employee not found" },
           { status: 404 }
         );
       }
 
-      return NextResponse.json({ success: true, data: result.rows[0] });
+      return NextResponse.json({ success: true, data: employee });
     }
 
     // ======= PAGINATED FETCH =======
@@ -83,69 +139,30 @@ export async function GET(req: Request) {
       });
 
       const hasFilters = Object.keys(filters).length > 0;
-      let whereClause = "(status = 'Active' OR status IS NULL)";
-      const queryValues: (string | number)[] = [];
 
-      Object.entries(filters).forEach(([key, value]) => {
-        const dbColumn = FILTER_MAPPING[key];
-        if (dbColumn) {
-          if (dbColumn === 'line_manager_status' || dbColumn === 'dl_idl_staff') {
-            whereClause += ` AND ${dbColumn} = $${queryValues.length + 1}`;
-            queryValues.push(value);
-          } else {
-            whereClause += ` AND ${dbColumn} LIKE $${queryValues.length + 1}`;
-            queryValues.push(`%${value}%`);
-          }
-        }
+      // Same rules as the former SQL: exact match for status / type, LIKE '%value%' otherwise
+      const matching = (await loadEmployeeRecords()).filter((emp) => {
+        if (!isActiveRecord(emp)) return false;
+        return Object.entries(filters).every(([key, value]) => {
+          const field = FILTER_MAPPING[key];
+          const fieldValue = emp[field];
+          if (field === 'line_manager_status' || field === 'dl_idl_staff') return fieldValue === value;
+          return typeof fieldValue === 'string' && fieldValue.includes(value);
+        });
       });
 
-      // Count query
-      const countResult = await pool.query(`SELECT COUNT(*) as count FROM employees WHERE ${whereClause}`, queryValues);
-      const totalCount = countResult.rows[0].count;
-
-      // Data query with pagination
+      // Data with pagination (records are already sorted by full name)
       const offset = (page - 1) * limit;
-      // Note: ORDER BY is mandatory for OFFSET FETCH
-      const dataResult = await pool.query(`
-          SELECT ${LIST_COLUMNS} 
-          FROM employees 
-          WHERE ${whereClause} 
-          ORDER BY full_name ASC 
-          LIMIT $${queryValues.length + 1} OFFSET $${queryValues.length + 2}
-      `, [...queryValues, limit, offset]);
+      const transformedEmployees = matching.slice(offset, offset + limit).map(toSheetRow);
 
-      const employees = dataResult.rows;
-
-      // Transform to match expected format
-      const transformedEmployees = (employees || []).map(emp => ({
-        id: emp.id,
-        "Emp ID": emp.emp_id,
-        "FullName ": emp.full_name,
-        "Job Title": emp.job_title,
-        "Dept": emp.dept,
-        "BU": emp.bu,
-        "BU Org 3": emp.bu_org_3,
-        "DL/IDL/Staff": emp.dl_idl_staff,
-        "Location": emp.location,
-        "Employee Type": emp.employee_type,
-        "Line Manager": emp.line_manager,
-        "Is Direct": emp.is_direct,
-        "Joining\r\n Date": emp.joining_date,
-        "Last Working\r\nDay": emp.last_working_day,
-        lineManagerStatus: emp.line_manager_status,
-        pendingLineManager: emp.pending_line_manager,
-        requester: emp.requester,
-        Status: emp.status
-      }));
-
-      const total = totalCount || 0;
+      const total = matching.length;
       const totalPages = Math.ceil(total / limit);
 
       console.log(`📄 Page ${page}: ${transformedEmployees.length} records`);
 
       const response = NextResponse.json({
         success: true,
-        headers: ["id", "Emp ID", "FullName ", "Job Title", "Dept", "BU", "DL/IDL/Staff", "Location", "Employee Type", "Line Manager", "Is Direct", "Joining\r\n Date", "Last Working\r\nDay"],
+        headers: SHEET_HEADERS,
         data: transformedEmployees,
         page,
         limit,
@@ -167,35 +184,12 @@ export async function GET(req: Request) {
       async () => {
         console.log("📡 Fetching all employees for dashboard...");
 
-        const result = await pool.query(`SELECT ${LIST_COLUMNS} FROM employees WHERE status = 'Active' OR status IS NULL ORDER BY full_name ASC`);
-        const employees = result.rows;
-
-        // Transform
-        const transformedEmployees = (employees || []).map(emp => ({
-          id: emp.id,
-          "Emp ID": emp.emp_id,
-          "FullName ": emp.full_name,
-          "Job Title": emp.job_title,
-          "Dept": emp.dept,
-          "BU": emp.bu,
-          "BU Org 3": emp.bu_org_3,
-          "DL/IDL/Staff": emp.dl_idl_staff,
-          "Location": emp.location,
-          "Employee Type": emp.employee_type,
-          "Line Manager": emp.line_manager,
-          "Is Direct": emp.is_direct,
-          "Joining\r\n Date": emp.joining_date,
-          "Last Working\r\nDay": emp.last_working_day,
-          lineManagerStatus: emp.line_manager_status,
-          pendingLineManager: emp.pending_line_manager,
-          requester: emp.requester,
-          Status: emp.status
-        }));
+        const transformedEmployees = (await loadEmployeeRecords()).filter(isActiveRecord).map(toSheetRow);
 
         console.log(`✅ Loaded ${transformedEmployees.length} employees`);
         return {
           employees: transformedEmployees,
-          headers: ["id", "Emp ID", "FullName ", "Job Title", "Dept", "BU", "DL/IDL/Staff", "Location", "Employee Type", "Line Manager", "Is Direct", "Joining\r\n Date", "Last Working\r\nDay"]
+          headers: SHEET_HEADERS
         };
       },
       EMPLOYEES_CACHE_TTL
@@ -233,7 +227,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { action, data } = body;
-    const pool = await getDbConnection();
 
     if (!action || !data) {
       return NextResponse.json(
@@ -254,46 +247,15 @@ export async function POST(req: Request) {
       }
 
       const timestamp = Date.now();
-      let insertedCount = 0;
-
-      const client = await pool.connect();
-      await client.query('BEGIN');
-
-      try {
-        for (let i = 0; i < quantity; i++) {
-          const empId = `HC-${timestamp}-${i + 1}`;
-          await client.query(`
-                    INSERT INTO employees (
-                        emp_id, full_name, job_title, dept, bu, dl_idl_staff, location, employee_type, 
-                        line_manager, is_direct, joining_date
-                    ) VALUES (
-                        $1, $2, $3, $4, $5, $6, $7, 'hc_open',
-                        $8, $9, $10
-                    )
-                `, [
-            empId,
-            data["FullName "] || data["FullName"] || "Vacant Position",
-            data["Job Title"] || null,
-            data["Dept"] || null,
-            data["BU"] || null,
-            data["DL/IDL/Staff"] || null,
-            data["Location"] || null,
-            data["Line Manager"] || null,
-            data["Is Direct"] || "YES",
-            data["Joining\r\n Date"] || data["Joining Date"] || null
-          ]);
-          insertedCount++;
-        }
-        await client.query('COMMIT');
-      } catch (err) {
-        await client.query('ROLLBACK');
-        throw err;
-      } finally {
-        client.release();
-      }
-
-      invalidateCachePrefix('employees');
-      invalidateCachePrefix('orgchart');
+      const base = fromSheetData(data);
+      const rows: EmployeeEdit[] = Array.from({ length: quantity }, (_, i) => ({
+        ...base,
+        emp_id: `HC-${timestamp}-${i + 1}`,
+        full_name: base.full_name || "Vacant Position",
+        employee_type: 'hc_open',
+        is_direct: base.is_direct || "YES",
+      }));
+      const insertedCount = (await addManualRows(rows, currentUser)).length;
 
       return NextResponse.json({
         success: true,
@@ -303,33 +265,12 @@ export async function POST(req: Request) {
     }
 
     if (action === "add") {
-      const emp_id = data["Emp ID"] || `EMP-${Date.now()}`;
-
-      const result = await pool.query(`
-            INSERT INTO employees (
-                emp_id, full_name, job_title, dept, bu, dl_idl_staff, location, employee_type,
-                line_manager, is_direct, joining_date
-            ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8,
-                $9, $10, $11
-            ) RETURNING id
-        `, [
-        emp_id,
-        data["FullName "] || data["FullName"] || null,
-        data["Job Title"] || null,
-        data["Dept"] || null,
-        data["BU"] || null,
-        data["DL/IDL/Staff"] || null,
-        data["Location"] || null,
-        data["Employee Type"] || null,
-        data["Line Manager"] || null,
-        data["Is Direct"] || "YES",
-        data["Joining\r\n Date"] || data["Joining Date"] || null
-      ]);
-
-      const insertedId = result.rows[0]?.id;
-      invalidateCachePrefix('employees');
-      invalidateCachePrefix('orgchart');
+      const edit = fromSheetData(data);
+      const [insertedId] = await addManualRows([{
+        ...edit,
+        emp_id: edit.emp_id || `EMP-${Date.now()}`,
+        is_direct: edit.is_direct || "YES",
+      }], currentUser);
 
       return NextResponse.json({
         success: true,
@@ -340,18 +281,7 @@ export async function POST(req: Request) {
 
     // Reject all pending approval requests
     if (action === "rejectAll") {
-      const result = await pool.query(`
-            UPDATE employees 
-            SET line_manager_status = 'rejected', pending_line_manager = NULL, requester = NULL
-            WHERE line_manager_status = 'pending'
-        `);
-
-      const count = result.rowCount;
-
-      invalidateCachePrefix('employees');
-      invalidateCachePrefix('orgchart');
-
-      // console.log(`🚫 Rejected ${count} pending requests`);
+      const count = await resolvePendingLineManagers(false);
 
       return NextResponse.json({
         success: true,
@@ -362,22 +292,8 @@ export async function POST(req: Request) {
 
     // Approve all pending approval requests
     if (action === "approveAll") {
-      // We need to update line_manager to pending_line_manager value
-      const result = await pool.query(`
-          UPDATE employees
-          SET line_manager = pending_line_manager,
-              line_manager_status = 'approved',
-              pending_line_manager = NULL,
-              requester = NULL
-          WHERE line_manager_status = 'pending'
-      `);
-
-      const count = result.rowCount;
-
-      invalidateCachePrefix('employees');
-      invalidateCachePrefix('orgchart');
-
-      // console.log(`✅ Approved ${count} pending requests`);
+      // line_manager takes the pending_line_manager value
+      const count = await resolvePendingLineManagers(true);
 
       return NextResponse.json({
         success: true,
@@ -413,7 +329,6 @@ export async function PUT(req: Request) {
   try {
     const body = await req.json();
     const { id, data } = body;
-    const pool = await getDbConnection();
 
     if (!id || !data) {
       return NextResponse.json(
@@ -422,75 +337,13 @@ export async function PUT(req: Request) {
       );
     }
 
-    let setClauses = [];
-    let queryValues: (string | number | null)[] = [id];
-    let vIndex = 2; // since $1 is id
+    const edit = fromSheetData(data);
+    // Approval workflow fields can also be cleared (null)
+    if (data["lineManagerStatus"] !== undefined) edit.line_manager_status = data["lineManagerStatus"];
+    if (data["pendingLineManager"] !== undefined) edit.pending_line_manager = data["pendingLineManager"];
+    if (data["requester"] !== undefined) edit.requester = data["requester"];
 
-    // Map data fields to columns
-    if (data["Emp ID"]) {
-      queryValues.push(data["Emp ID"]);
-      setClauses.push(`emp_id = $${vIndex++}`);
-    }
-    if (data["FullName "] || data["FullName"]) {
-      queryValues.push(data["FullName "] || data["FullName"]);
-      setClauses.push(`full_name = $${vIndex++}`);
-    }
-    if (data["Job Title"]) {
-      queryValues.push(data["Job Title"]);
-      setClauses.push(`job_title = $${vIndex++}`);
-    }
-    if (data["Dept"]) {
-      queryValues.push(data["Dept"]);
-      setClauses.push(`dept = $${vIndex++}`);
-    }
-    if (data["BU"]) {
-      queryValues.push(data["BU"]);
-      setClauses.push(`bu = $${vIndex++}`);
-    }
-    if (data["DL/IDL/Staff"]) {
-      queryValues.push(data["DL/IDL/Staff"]);
-      setClauses.push(`dl_idl_staff = $${vIndex++}`);
-    }
-    if (data["Location"]) {
-      queryValues.push(data["Location"]);
-      setClauses.push(`location = $${vIndex++}`);
-    }
-    if (data["Employee Type"]) {
-      queryValues.push(data["Employee Type"]);
-      setClauses.push(`employee_type = $${vIndex++}`);
-    }
-    if (data["Line Manager"]) {
-      queryValues.push(data["Line Manager"]);
-      setClauses.push(`line_manager = $${vIndex++}`);
-    }
-    if (data["Is Direct"]) {
-      queryValues.push(data["Is Direct"]);
-      setClauses.push(`is_direct = $${vIndex++}`);
-    }
-    if (data["Joining\r\n Date"] || data["Joining Date"]) {
-      queryValues.push(data["Joining\r\n Date"] || data["Joining Date"]);
-      setClauses.push(`joining_date = $${vIndex++}`);
-    }
-
-    if (data["lineManagerStatus"] !== undefined) {
-      queryValues.push(data["lineManagerStatus"]);
-      setClauses.push(`line_manager_status = $${vIndex++}`);
-    }
-    if (data["pendingLineManager"] !== undefined) {
-      queryValues.push(data["pendingLineManager"]);
-      setClauses.push(`pending_line_manager = $${vIndex++}`);
-    }
-    if (data["requester"] !== undefined) {
-      queryValues.push(data["requester"]);
-      setClauses.push(`requester = $${vIndex++}`);
-    }
-
-    if (setClauses.length > 0) {
-      await pool.query(`UPDATE employees SET ${setClauses.join(', ')} WHERE id = $1`, queryValues);
-    }
-
-    invalidateCachePrefix('employees');
-    invalidateCachePrefix('orgchart');
+    await saveEmployeeEdit(String(id), edit, currentUser);
 
     return NextResponse.json({
       success: true,
@@ -508,6 +361,7 @@ export async function PUT(req: Request) {
 
 /**
  * DELETE /api/sheet - Delete employee
+ * Added rows are deleted; HR employees are hidden from the app (HR data is never changed).
  */
 export async function DELETE(req: Request) {
   if (!await isAuthenticated()) {
@@ -520,18 +374,10 @@ export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const deleteAll = searchParams.get("deleteAll");
-    const pool = await getDbConnection();
 
-    // Delete ALL employees
+    // Delete ALL added rows (HR employees come back from HR anyway)
     if (deleteAll === "true") {
-      // Only delete if we need to? Or just truncate? 
-      // Note: TRUNCATE is faster but might require more perms or break FKs if any. 
-      // Using delete with always true.
-      const result = await pool.query("DELETE FROM employees");
-      const count = result.rowCount;
-
-      invalidateCachePrefix('employees');
-      invalidateCachePrefix('orgchart');
+      const count = await removeAllManualRows();
 
       return NextResponse.json({
         success: true,
@@ -548,10 +394,7 @@ export async function DELETE(req: Request) {
       );
     }
 
-    await pool.query("DELETE FROM employees WHERE id = $1", [id]);
-
-    invalidateCachePrefix('employees');
-    invalidateCachePrefix('orgchart');
+    await removeEmployee(id, currentUser);
 
     return NextResponse.json({
       success: true,

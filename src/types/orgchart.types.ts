@@ -19,6 +19,9 @@ export interface OrgChartNode {
     BU?: string | null;
     type?: string | null;
     location?: string | null;
+    email?: string | null;
+    display_name?: string | null;
+    cost_center?: string | null;
     description?: string | null;
     joining_date?: string | null;
     joiningDate?: string | null;

@@ -80,21 +80,20 @@ export function patchOrgChartTemplates(enableEditFeatures = false) {
   // ------------------------------
   OrgChart.templates.big.img_0 = `
 <clipPath id="{randId}">
-  <rect x="45" y="85" width="140" height="170"
-        rx="2" ry="2" fill="#ffffff"></rect>
+  <circle cx="115" cy="170" r="80"></circle>
 </clipPath>
 
+<!-- Photos synced from Teams have a faded round edge: draw the image slightly larger than the circle to crop it -->
 <image preserveAspectRatio="xMidYMid slice"
        clip-path="url(#{randId})"
        xlink:href="{val}"
-       x="45" y="85"
-       width="140" height="170"></image>
+       x="27" y="82"
+       width="176" height="176"></image>
 
-<rect x="45" y="85" width="140" height="170"
-      rx="2" ry="2"
-      fill="none"
-      stroke="#DB011C"
-      stroke-width="3"></rect>
+<circle cx="115" cy="170" r="80"
+        fill="none"
+        stroke="#DB011C"
+        stroke-width="3"></circle>
 `;
 
   // ------------------------------

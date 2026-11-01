@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
-import { getDbConnection } from "@/lib/db";
+import { loadEmployeeRecords } from "@/lib/employees/source";
 import type { CoreTeamEmployee } from "@/types/orgchart.types";
 import { isAuthenticated, unauthorizedResponse } from "@/lib/auth-server";
 
@@ -17,12 +17,10 @@ export async function GET(req: Request) {
   }
 
   try {
-    const pool = await getDbConnection();
-    
     // Fetch all employees (including resigned to keep key leaders like HRBP and OF)
-    const queryStr = "SELECT emp_id, full_name, job_title, dept, location, line_manager, status FROM employees WHERE emp_id IS NOT NULL AND emp_id <> ''";
-    const result = await pool.query<CoreTeamEmployee>(queryStr);
-    const employees = result.rows;
+    const employees: CoreTeamEmployee[] = (await loadEmployeeRecords())
+      .filter((emp) => emp.emp_id && emp.emp_id !== '')
+      .map(({ emp_id, full_name, job_title, dept, location, line_manager, status }) => ({ emp_id, full_name, job_title, dept, location, line_manager, status }));
 
     if (!employees || employees.length === 0) {
       return NextResponse.json({ success: true, vp: null, globalOps: null, ie_fmu_mif: null, factoryMgmt: null, jeffReports: [], supportFunctions: [], reports: {} });

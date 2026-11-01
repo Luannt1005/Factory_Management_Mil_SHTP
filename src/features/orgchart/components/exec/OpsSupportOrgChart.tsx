@@ -147,7 +147,7 @@ export default function OpsSupportOrgChart() {
     setImgErrors(prev => ({ ...prev, [id]: true }));
   };
 
-  const renderPhoto = (id: string, name: string, className: string = "w-9 h-11 sm:w-11 sm:h-13") => {
+  const renderPhoto = (id: string, name: string, className: string = "w-10 h-10 sm:w-12 sm:h-12") => {
     const cleanId = id.trim().replace(/^0+/, '');
     const isError = imgErrors[cleanId];
     const photoUrl = `/api/uploads/${cleanId}.webp`;
@@ -157,7 +157,7 @@ export default function OpsSupportOrgChart() {
         <img
           src={photoUrl}
           alt={name}
-          className={`${className} object-cover border border-gray-300 rounded shadow-sm`}
+          className={`${className} object-cover border border-gray-300 rounded-full shrink-0 shadow-sm`}
           onError={() => handleImgError(cleanId)}
         />
       );
@@ -172,7 +172,7 @@ export default function OpsSupportOrgChart() {
       .toUpperCase() || name.slice(0, 2).toUpperCase();
 
     return (
-      <div className={`${className} bg-gradient-to-br from-mwk to-[#900112] text-white flex flex-col items-center justify-center font-black text-xs rounded border border-red-700 select-none shadow-md shrink-0`}>
+      <div className={`${className} bg-gradient-to-br from-mwk to-[#900112] text-white flex flex-col items-center justify-center font-black text-xs rounded-full border border-red-700 select-none shadow-md shrink-0`}>
         <span className="text-[7px] opacity-70 tracking-widest leading-none mb-0.5">MIL</span>
         <span>{initials}</span>
       </div>
@@ -400,7 +400,7 @@ export default function OpsSupportOrgChart() {
           {root && (
             <div className="flex flex-col items-center bg-mwk text-white p-1.5 sm:p-2 rounded-lg shadow-md border border-red-700 w-full max-w-[170px]">
               <div className="flex gap-2 items-center">
-                {renderPhoto(root.emp_id, mapNameToChart(root), "w-9 h-11 border border-white/20")}
+                {renderPhoto(root.emp_id, mapNameToChart(root), "w-10 h-10 border border-white/20")}
                 <div className="text-left">
                   <span className="text-[7.5px] font-bold tracking-widest text-red-200 uppercase">Head of Operations</span>
                   <h3 className="text-[11px] font-black tracking-tight mt-0.5">{mapNameToChart(root)}</h3>

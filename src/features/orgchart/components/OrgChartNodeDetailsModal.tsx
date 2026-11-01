@@ -199,8 +199,22 @@ export default function OrgChartNodeDetailsModal({
                                         </div>
 
                                         <div className="col-span-2 sm:col-span-1">
-                                            <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Business Unit</p>
-                                            <p className="font-medium text-[var(--color-text-body)]">{nodeData.BU || nodeData.bu || "-"}</p>
+                                            <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Email</p>
+                                            {nodeData.email ? (
+                                                <a href={`mailto:${nodeData.email}`} className="font-medium text-mwk hover:underline break-all">{nodeData.email}</a>
+                                            ) : (
+                                                <p className="font-medium text-[var(--color-text-body)]">-</p>
+                                            )}
+                                        </div>
+
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Display Name</p>
+                                            <p className="font-medium text-[var(--color-text-body)] break-words">{nodeData.display_name || "-"}</p>
+                                        </div>
+
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Cost Center</p>
+                                            <p className="font-medium text-[var(--color-text-body)]">{nodeData.cost_center || "-"}</p>
                                         </div>
 
                                         <div className="col-span-2 sm:col-span-1">
