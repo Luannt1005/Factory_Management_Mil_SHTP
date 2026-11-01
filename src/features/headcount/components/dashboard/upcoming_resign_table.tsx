@@ -205,14 +205,14 @@ const UpcomingResignTable: React.FC<UpcomingResignTableProps> = ({ className, no
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                         {paginatedEmployees.map((emp, index) => (
-                            <tr key={emp.empId || index} className="group hover:bg-indigo-50/30 transition-colors">
+                            <tr key={emp.empId || index} className="group hover:bg-slate-50 transition-colors">
                                 {/* Employee Column */}
                                 <td className="py-2.5 px-4 align-middle">
                                     <div className="flex items-center gap-3">
                                         <img
                                             src={emp.imageUrl}
                                             alt={emp.fullName}
-                                            className="w-9 h-9 rounded-full object-cover border border-gray-100 shadow-sm group-hover:border-indigo-100 transition-colors"
+                                            className="w-9 h-9 rounded-full object-cover border border-gray-100 shadow-sm group-hover:border-red-100 transition-colors"
                                             onError={(e) => {
                                                 const initials = emp.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || '?';
                                                 const colors = ['#EF4444', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4'];
@@ -247,7 +247,7 @@ const UpcomingResignTable: React.FC<UpcomingResignTableProps> = ({ className, no
 
                                 {/* LWD Column */}
                                 <td className="py-2.5 px-4 align-middle text-center whitespace-nowrap">
-                                    <span className="inline-block px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100 shadow-sm group-hover:bg-rose-100 transition-colors">
+                                    <span className="inline-block px-2.5 py-1 rounded-md text-[10px] font-bold bg-red-50 text-red-700 border border-red-200 group-hover:bg-red-100 transition-colors">
                                         {formatDate(emp.lastWorkingDay)}
                                     </span>
                                 </td>

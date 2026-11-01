@@ -12,7 +12,7 @@ import ManagerFilter from '@/features/headcount/components/dashboard/ManagerFilt
 import TitleFilter from '@/features/headcount/components/dashboard/TitleFilter';
 import BUFilter from '@/features/headcount/components/dashboard/BUFilter';
 import { useSheetData, getSubordinatesRecursive } from '@/hooks/useSheetData';
-import { DashboardContainer, PageHeader, FilterBar, TableCard } from '@/components/dashboard';
+import { DashboardContainer, FilterBar, TableCard } from '@/components/dashboard';
 import type { HeadcountDashboardFilter as EmployeeFilter, HeadcountFilterState as FilterState } from '@/types/headcount.types';
 
 export default function DashboardPage() {
@@ -153,37 +153,55 @@ export default function DashboardPage() {
     };
 
     return (
-        <DashboardContainer>
-            {/* ===== DASHBOARD HEADER ===== */}
-            <PageHeader
-                kicker="ORGANIZATION & WORKFORCE"
-                title="OrgChart Dashboard"
-                description="Real-time headcount, seniority distribution, and departmental analytics"
-                actions={
-                    <div className="flex flex-wrap items-center gap-3">
-                        {/* Title Filter */}
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Title:</span>
+        <DashboardContainer className="px-4 sm:px-6 pt-4 min-h-screen">
+            {/* Top Navigation Tab */}
+            <div className="flex items-center gap-2 border-b border-gray-200">
+                <span className="flex items-center gap-2 pb-3 px-4 text-sm font-bold border-b-2 border-mwk text-mwk -mb-px">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Workforce Overview
+                    {!nodesLoading && (
+                        <span className="ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-red-100 text-mwk">
+                            {filteredDashboardNodes.length.toLocaleString()} employees
+                        </span>
+                    )}
+                </span>
+            </div>
+
+            {/* Filters Row */}
+            <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Filters:</span>
+
+                    {/* Title Filter */}
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                        <span className="text-[11px] font-semibold text-gray-500 w-16 sm:w-auto shrink-0">Title</span>
+                        <div className="flex-1 sm:flex-none">
                             <TitleFilter
                                 nodes={dashboardNodes}
                                 onSelect={handleTitleSelect}
                                 selectedTitle={filters.title}
                             />
                         </div>
+                    </div>
 
-                        {/* BU Filter */}
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">BU:</span>
+                    {/* BU Filter */}
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                        <span className="text-[11px] font-semibold text-gray-500 w-16 sm:w-auto shrink-0">BU</span>
+                        <div className="flex-1 sm:flex-none">
                             <BUFilter
                                 nodes={dashboardNodes}
                                 onSelect={handleBUSelect}
                                 selectedBU={filters.bu}
                             />
                         </div>
+                    </div>
 
-                        {/* Manager Filter */}
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Hierarchy:</span>
+                    {/* Manager Filter */}
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                        <span className="text-[11px] font-semibold text-gray-500 w-16 sm:w-auto shrink-0">Hierarchy</span>
+                        <div className="flex-1 sm:flex-none min-w-0">
                             <ManagerFilter
                                 nodes={nodes}
                                 onSelect={handleManagerSelect}
@@ -191,8 +209,7 @@ export default function DashboardPage() {
                             />
                         </div>
                     </div>
-                }
-            />
+                </div>
 
             {/* Active Filters */}
             {(hasActiveFilters || selectedManagerId) && (
@@ -202,12 +219,12 @@ export default function DashboardPage() {
                         <>
                             {/* Manager Badge */}
                             {selectedManagerId && (
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium border border-purple-200">
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-mwk rounded-lg text-xs font-semibold border border-red-200">
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    <span className="max-w-[120px] truncate">{selectedManagerName}</span>
-                                    <button onClick={clearManagerFilter} className="hover:text-purple-900 p-0.5 cursor-pointer" aria-label="Clear manager filter">
+                                    <span className="max-w-[160px] truncate">{selectedManagerName}</span>
+                                    <button onClick={clearManagerFilter} className="hover:text-red-900 p-0.5 cursor-pointer" aria-label="Clear manager filter">
                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -217,9 +234,9 @@ export default function DashboardPage() {
 
                             {/* Title Badge Using Filter State */}
                             {filters.title && (
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200">
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-mwk rounded-lg text-xs font-semibold border border-red-200">
                                     <span>Title: {filters.title}</span>
-                                    <button onClick={() => clearIndividualFilter('title')} className="hover:text-blue-900 p-0.5 cursor-pointer" aria-label="Clear title filter">
+                                    <button onClick={() => clearIndividualFilter('title')} className="hover:text-red-900 p-0.5 cursor-pointer" aria-label="Clear title filter">
                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -229,9 +246,9 @@ export default function DashboardPage() {
 
                             {/* BU Badge */}
                             {filters.bu && (
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium border border-emerald-200">
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-mwk rounded-lg text-xs font-semibold border border-red-200">
                                     <span>BU: {filters.bu}</span>
-                                    <button onClick={() => clearIndividualFilter('bu')} className="hover:text-emerald-900 p-0.5 cursor-pointer" aria-label="Clear BU filter">
+                                    <button onClick={() => clearIndividualFilter('bu')} className="hover:text-red-900 p-0.5 cursor-pointer" aria-label="Clear BU filter">
                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -241,9 +258,9 @@ export default function DashboardPage() {
 
                             {/* Other Category Badges */}
                             {filters.category && (
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-orange-50 text-orange-700 rounded-lg text-xs font-medium border border-orange-200">
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-mwk rounded-lg text-xs font-semibold border border-red-200">
                                     <span className="uppercase">{filters.category}</span>
-                                    <button onClick={() => clearIndividualFilter('category')} className="hover:text-orange-900 p-0.5 cursor-pointer" aria-label="Clear category filter">
+                                    <button onClick={() => clearIndividualFilter('category')} className="hover:text-red-900 p-0.5 cursor-pointer" aria-label="Clear category filter">
                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -254,11 +271,12 @@ export default function DashboardPage() {
                     }
                 />
             )}
+            </div>
 
-            {/* ===== ROW 1: KPI STATS CARDS ===== */}
+            {/* ROW 1: KPI Stat Cards */}
             <section aria-label="Key Performance Indicators">
                 <StatsCards
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-3"
+                    className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-7 gap-4"
                     onFilterChange={handleFilterChange}
                     activeFilter={legacyActiveFilterState}
                     nodes={dashboardNodes}
@@ -267,50 +285,41 @@ export default function DashboardPage() {
                 />
             </section>
 
-            {/* ===== MAIN CONTENT GRID: Left (Charts) & Right (Tables) ===== */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* ROW 2: Tenure trend and Employee Type donut */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <SeniorityChart
+                    className="lg:col-span-2"
+                    onFilterChange={handleFilterChange}
+                    nodes={filteredDashboardNodes}
+                    loading={nodesLoading}
+                />
+                <DonutChart
+                    onFilterChange={handleFilterChange}
+                    nodes={filteredDashboardNodes}
+                    loading={nodesLoading}
+                />
+            </div>
 
-                {/* ===== LEFT COLUMN: Charts (7 cols) ===== */}
-                <div className="lg:col-span-7 flex flex-col gap-6">
+            {/* ROW 3: Departments */}
+            <BUOrg3Chart
+                nodes={filteredDashboardNodes}
+                loading={nodesLoading}
+            />
 
-                    {/* Donut + Seniority */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-h-[300px]">
-                        <DonutChart
-                            onFilterChange={handleFilterChange}
-                            nodes={filteredDashboardNodes}
-                            loading={nodesLoading}
-                        />
-                        <SeniorityChart
-                            onFilterChange={handleFilterChange}
-                            nodes={filteredDashboardNodes}
-                            loading={nodesLoading}
-                        />
-                    </div>
-
-                    {/* BU Org Chart */}
-                    <div className="min-h-[320px]">
-                        <BUOrg3Chart
-                            nodes={filteredDashboardNodes}
-                            loading={nodesLoading}
-                        />
-                    </div>
-                </div>
-
-                {/* ===== RIGHT COLUMN: Tables (5 cols) ===== */}
-                <div className="lg:col-span-5 flex flex-col gap-6">
-
-                    {/* Employee Table */}
-                    <TableCard
-                        kicker="ROSTER"
-                        title="Employee Roster"
-                        badge={
-                            (!selectedManagerId && !hasActiveFilters)
-                                ? 'Server-side pagination'
-                                : `${filteredDashboardNodes?.length || 0} total`
-                        }
-                        className="min-h-[460px]"
-                    >
-                        <div className="flex-1 min-h-[380px] overflow-hidden">
+            {/* ROW 4: Roster and Upcoming Resignations */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+                <TableCard
+                    kicker="ROSTER"
+                    title="Employee Roster"
+                    badge={
+                        (!selectedManagerId && !hasActiveFilters)
+                            ? 'Server-side pagination'
+                            : `${filteredDashboardNodes?.length || 0} total`
+                    }
+                    className="lg:col-span-2 min-h-[460px]"
+                >
+                    <div className="h-full min-h-[400px] overflow-x-auto">
+                        <div className="h-full min-w-[560px]">
                             {!selectedManagerId && !hasActiveFilters ? (
                                 <PaginatedEmployeeTable
                                     pageSize={10}
@@ -325,23 +334,22 @@ export default function DashboardPage() {
                                 />
                             )}
                         </div>
-                    </TableCard>
+                    </div>
+                </TableCard>
 
-                    {/* Upcoming Resignations */}
-                    <TableCard
-                        kicker="DEPARTURES"
-                        title="Upcoming Resignations"
-                        className="min-h-[280px]"
-                    >
-                        <div className="flex-1 min-h-[220px] overflow-hidden">
-                            <UpcomingResignTable
-                                nodes={filteredDashboardNodes}
-                                loading={nodesLoading}
-                                className="h-full"
-                            />
-                        </div>
-                    </TableCard>
-                </div>
+                <TableCard
+                    kicker="DEPARTURES"
+                    title="Upcoming Resignations"
+                    className="min-h-[460px]"
+                >
+                    <div className="h-full min-h-[400px] overflow-hidden">
+                        <UpcomingResignTable
+                            nodes={filteredDashboardNodes}
+                            loading={nodesLoading}
+                            className="h-full"
+                        />
+                    </div>
+                </TableCard>
             </div>
         </DashboardContainer>
     );

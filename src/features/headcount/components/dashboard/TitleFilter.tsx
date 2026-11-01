@@ -66,13 +66,13 @@ const TitleFilter: React.FC<TitleFilterProps> = ({ nodes, onSelect, selectedTitl
         <div className="relative" ref={dropdownRef}>
             <button
                 className={`
-                    w-48 py-1.5 px-3 text-xs font-medium text-left
-                    bg-(--color-bg-card) border rounded-lg flex items-center justify-between
-                    focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent
+                    w-full sm:w-48 py-1.5 px-3 text-xs font-medium text-left shadow-sm cursor-pointer
+                    bg-white border rounded-lg flex items-center justify-between
+                    focus:outline-none focus:ring-1 focus:ring-mwk
                     transition-all duration-200
                     ${selectedTitle
-                        ? 'border-blue-300 bg-blue-50 text-blue-700'
-                        : 'border-(--color-border-light) text-body hover:border-gray-300'
+                        ? 'border-red-200 bg-red-50 text-mwk'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
                     }
                 `}
                 onClick={() => setIsOpen(!isOpen)}
@@ -81,7 +81,7 @@ const TitleFilter: React.FC<TitleFilterProps> = ({ nodes, onSelect, selectedTitl
 
                 {selectedTitle ? (
                     <div
-                        className="p-0.5 rounded-full hover:bg-blue-200 text-blue-500 hover:text-blue-700 shrink-0"
+                        className="p-0.5 rounded-full hover:bg-red-100 text-red-400 hover:text-mwk shrink-0"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleClear();
@@ -106,13 +106,13 @@ const TitleFilter: React.FC<TitleFilterProps> = ({ nodes, onSelect, selectedTitl
                         availableCategories.map((cat) => (
                             <button
                                 key={cat.value}
-                                className={`w-full text-left px-3 py-2 hover:bg-blue-50 flex items-center justify-between transition-colors border-b border-(--color-border-light) last:border-0 text-xs font-medium ${selectedTitle === cat.value ? 'bg-blue-50 text-blue-700' : 'text-body'
+                                className={`w-full text-left px-3 py-2 hover:bg-red-50 cursor-pointer flex items-center justify-between transition-colors border-b border-(--color-border-light) last:border-0 text-xs font-medium ${selectedTitle === cat.value ? 'bg-red-50 text-mwk' : 'text-body'
                                     }`}
                                 onClick={() => handleSelect(cat)}
                             >
                                 <span>{cat.label}</span>
                                 {selectedTitle === cat.value && (
-                                    <svg className="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-3 h-3 text-mwk" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
                                 )}

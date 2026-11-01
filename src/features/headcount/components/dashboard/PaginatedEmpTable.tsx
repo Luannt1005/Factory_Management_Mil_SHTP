@@ -120,7 +120,7 @@ const PaginatedEmployeeTable: React.FC<PaginatedEmployeeTableProps> = ({
                     </thead>
                     <tbody className="divide-y divide-[var(--color-border-light)]">
                         {employees.map((emp, index) => (
-                            <tr key={emp.empId || index} className="hover:bg-gray-50 dark:hover:bg-blue-900/10 transition-colors [&>td]:p-2!">
+                            <tr key={emp.empId || index} className="hover:bg-gray-50 transition-colors [&>td]:p-2!">
                                 {/* Name + Avatar */}
                                 <td className="px-3">
                                     <div className="flex items-center gap-2">
@@ -163,7 +163,7 @@ const PaginatedEmployeeTable: React.FC<PaginatedEmployeeTableProps> = ({
                                 {/* Tenure */}
                                 <td className="px-2 text-center">
                                     <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-medium ${emp.experience.includes('year')
-                                        ? 'bg-purple-50 text-purple-700'
+                                        ? 'bg-red-50 text-red-700'
                                         : 'bg-gray-100 text-gray-600'
                                         }`}>
                                         {emp.experience}

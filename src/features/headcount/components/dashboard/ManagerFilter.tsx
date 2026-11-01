@@ -61,8 +61,8 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
     }, [nodes]);
 
     return (
-        <div className="flex items-center gap-2">
-            <div className="relative" ref={dropdownRef}>
+        <div className="flex flex-wrap items-center gap-2">
+            <div className="relative w-full sm:w-auto" ref={dropdownRef}>
                 <div className="relative group">
                     {/* Selected Avatar Overlay */}
                     {selectedManager && (
@@ -70,7 +70,7 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
                             <img
                                 src={getAvatarUrl(selectedManager)}
                                 alt=""
-                                className="w-6 h-6 rounded-full object-cover border border-purple-200"
+                                className="w-6 h-6 rounded-full object-cover border border-red-200"
                                 onError={(e) => {
                                     (e.target as HTMLImageElement).style.visibility = 'hidden';
                                 }}
@@ -82,13 +82,13 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
                         type="text"
                         placeholder="Search person..."
                         className={`
-                            w-44 py-1.5 text-xs font-medium
+                            w-full sm:w-44 py-1.5 text-xs font-medium shadow-sm
                             bg-[var(--color-bg-card)] border rounded-lg
-                            focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent
+                            focus:outline-none focus:ring-1 focus:ring-mwk
                             transition-all duration-200
                             ${selectedManagerId
-                                ? 'border-purple-300 bg-purple-50 text-purple-700 pl-9 pr-8' // Padding for avatar + close button
-                                : 'border-[var(--color-border-light)] text-body px-3'
+                                ? 'border-red-200 bg-red-50 text-mwk pl-9 pr-8' // Padding for avatar + close button
+                                : 'border-gray-200 text-gray-700 px-3'
                             }
                         `}
                         value={selectedManager ? selectedManager.name : searchTerm}
@@ -103,7 +103,7 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
 
                     {selectedManagerId ? (
                         <button
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-600 transition-colors p-0.5 rounded-full hover:bg-purple-100"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-red-400 hover:text-mwk transition-colors p-0.5 rounded-full hover:bg-red-100"
                             onClick={() => {
                                 onSelect(null);
                                 setSearchTerm('');
@@ -125,7 +125,7 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
                         {filteredNodes.map((node) => (
                             <button
                                 key={node.id}
-                                className="w-full text-left px-3 py-2 hover:bg-purple-50 flex items-center gap-2 transition-colors border-b border-gray-50 last:border-0"
+                                className="w-full text-left px-3 py-2 hover:bg-red-50 cursor-pointer flex items-center gap-2 transition-colors border-b border-gray-50 last:border-0"
                                 onClick={() => {
                                     onSelect(node.id, node.name);
                                     setSearchTerm('');
@@ -135,10 +135,10 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
                                 <img
                                     src={getAvatarUrl(node)}
                                     alt={node.name}
-                                    className="w-6 h-6 rounded-full object-cover bg-purple-100 shrink-0"
+                                    className="w-6 h-6 rounded-full object-cover bg-red-50 shrink-0"
                                     onError={(e) => {
                                         const initials = node.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-                                        (e.target as HTMLImageElement).src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect fill='%23F3E8FF' width='24' height='24'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%237E22CE' font-weight='bold'%3E${initials}%3C/text%3E%3C/svg%3E`;
+                                        (e.target as HTMLImageElement).src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect fill='%23FEF2F2' width='24' height='24'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%23DB011C' font-weight='bold'%3E${initials}%3C/text%3E%3C/svg%3E`;
                                     }}
                                 />
                                 <div className="flex flex-col min-w-0">
@@ -158,19 +158,19 @@ const ManagerFilter: React.FC<ManagerFilterProps> = ({ nodes, onSelect, selected
                         <button
                             key={manager.id}
                             onClick={() => onSelect(manager.id, manager.name)}
-                            className="group flex items-center gap-1.5 pl-1 pr-2.5 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border-light)] hover:border-purple-300 hover:bg-purple-50 rounded-full transition-all shadow-sm"
+                            className="group flex items-center gap-1.5 pl-1 pr-2.5 py-1 bg-white border border-gray-200 hover:border-red-200 hover:bg-red-50 cursor-pointer rounded-full transition-all shadow-sm"
                             title={manager.title}
                         >
                             <img
                                 src={getAvatarUrl(manager)}
                                 alt={manager.name}
-                                className="w-6 h-6 rounded-full object-cover border border-gray-100 group-hover:border-purple-200"
+                                className="w-6 h-6 rounded-full object-cover border border-gray-100 group-hover:border-red-200"
                                 onError={(e) => {
                                     const initials = manager.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-                                    (e.target as HTMLImageElement).src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect fill='%23F3E8FF' width='24' height='24'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%237E22CE' font-weight='bold'%3E${initials}%3C/text%3E%3C/svg%3E`;
+                                    (e.target as HTMLImageElement).src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect fill='%23FEF2F2' width='24' height='24'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%23DB011C' font-weight='bold'%3E${initials}%3C/text%3E%3C/svg%3E`;
                                 }}
                             />
-                            <span className="text-[10px] font-semibold text-gray-600 group-hover:text-purple-700 truncate max-w-[80px]">
+                            <span className="text-[10px] font-semibold text-gray-600 group-hover:text-mwk truncate max-w-[80px]">
                                 {manager.name.split(' ').slice(0, 2).join(' ')}
                             </span>
                         </button>

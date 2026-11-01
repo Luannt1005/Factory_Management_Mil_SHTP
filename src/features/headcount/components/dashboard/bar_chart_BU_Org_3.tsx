@@ -43,6 +43,7 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
             className={className}
             kicker="DEPARTMENT ALLOCATION"
             title="Departments (BU Org 3)"
+            subtitle="Headcount per department, largest first"
             action={
                 <span className="text-xs font-semibold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-200">
                     {chartData.length} depts
@@ -52,17 +53,12 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
             empty={!chartData || chartData.length === 0}
             emptyMessage="No department data"
         >
+            <div className="h-[340px] w-full">
             <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={chartData}
-                        margin={{ top: 25, right: 10, left: 10, bottom: 60 }}
+                        margin={{ top: 25, right: 10, left: 10, bottom: 0 }}
                     >
-                        <defs>
-                            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={CHART_COLORS.accentBlue} stopOpacity={1} />
-                                <stop offset="100%" stopColor={CHART_COLORS.accentIndigo} stopOpacity={1} />
-                            </linearGradient>
-                        </defs>
                         <CartesianGrid {...chartGridProps} />
                         <YAxis hide domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.15) + 2]} />
                         <XAxis
@@ -89,9 +85,9 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
                         />
                         <Bar
                             dataKey="count"
-                            fill="url(#barGradient)"
+                            fill={CHART_COLORS.primary}
                             radius={[4, 4, 0, 0]}
-                            barSize={32}
+                            maxBarSize={36}
                         >
                             <LabelList
                                 dataKey="count"
@@ -103,6 +99,7 @@ const BUOrg3Chart: React.FC<BUOrg3ChartProps> = ({ className, nodes, loading = f
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
+            </div>
         </ChartCard>
     );
 };

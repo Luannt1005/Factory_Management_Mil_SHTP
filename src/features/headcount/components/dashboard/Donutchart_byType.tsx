@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import type { PieLabelRenderProps } from 'recharts';
 import type { HeadcountDashboardFilter as EmployeeFilter } from '@/types/headcount.types';
 import type { OrgNode } from '@/types/orgchart.types';
@@ -12,7 +12,14 @@ interface DonutChartProps {
     loading?: boolean;
 }
 
-const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, nodes, loading = false }) => {
+// Same palette as the visitor analytics (MIL red / Share Function charcoal)
+const TYPE_COLORS: Record<string, string> = {
+    Staff: CHART_COLORS.primary,
+    IDL: CHART_COLORS.secondary,
+    DL: CHART_COLORS.axis,
+};
+
+const DonutChart: React.FC<DonutChartProps> =({ className, onFilterChange, nodes, loading = false }) => {
     // Calculate counts by type
     const chartData = useMemo(() => {
         if (!nodes || nodes.length === 0) return [];
@@ -84,92 +91,66 @@ const DonutChart: React.FC<DonutChartProps> = ({ className, onFilterChange, node
             className={className}
             kicker="WORKFORCE COMPOSITION"
             title="Employee Type"
+            subtitle="Staff, IDL and DL proportion of the headcount"
             loading={loading}
             empty={!chartData || chartData.length === 0}
             emptyMessage="No data available"
-            contentClassName="flex-1 min-h-0 relative"
+            contentClassName="flex-1 flex flex-col items-center justify-center"
         >
+            <div className="relative w-full h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                        <defs>
-                            <linearGradient id="gradStaff" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={CHART_COLORS.accentPurple} stopOpacity={1} />
-                                <stop offset="100%" stopColor={CHART_COLORS.accentPurpleLight} stopOpacity={1} />
-                            </linearGradient>
-                            <linearGradient id="gradIDL" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={CHART_COLORS.accentSky} stopOpacity={1} />
-                                <stop offset="100%" stopColor={CHART_COLORS.accentSkyLight} stopOpacity={1} />
-                            </linearGradient>
-                            <linearGradient id="gradDL" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={CHART_COLORS.accentBlue} stopOpacity={1} />
-                                <stop offset="100%" stopColor={CHART_COLORS.accentBlueLight} stopOpacity={1} />
-                            </linearGradient>
-                        </defs>
                         <Pie
                             data={chartData}
                             cx="50%"
                             cy="50%"
-                            innerRadius="55%"
-                            outerRadius="75%"
-                            paddingAngle={3}
+                            innerRadius={60}
+                            outerRadius={85}
+                            stroke="none"
+                            paddingAngle={2}
                             dataKey="value"
                             animationDuration={600}
                             labelLine={false}
                             label={renderCustomizedLabel}
                         >
-                            {chartData.map((entry, index) => {
-                                let fillUrl = 'url(#gradDL)';
-                                if (entry.name === 'Staff') fillUrl = 'url(#gradStaff)';
-                                else if (entry.name === 'IDL') fillUrl = 'url(#gradIDL)';
-
-                                return (
-                                    <Cell
-                                        key={`cell-${index}`}
-                                        fill={fillUrl}
-                                        style={{ outline: 'none', cursor: 'pointer' }}
-                                        onClick={() => onFilterChange?.({ type: 'type', value: entry.name, label: `Type: ${entry.value}` })}
-                                    />
-                                );
-                            })}
+                            {chartData.map((entry, index) => (
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={TYPE_COLORS[entry.name] ?? CHART_COLORS.axis}
+                                    style={{ outline: 'none', cursor: 'pointer' }}
+                                    onClick={() => onFilterChange?.({ type: 'type', value: entry.name, label: `Type: ${entry.value}` })}
+                                />
+                            ))}
                         </Pie>
                         <Tooltip
                             isAnimationActive={false}
                             contentStyle={chartTooltipStyle}
                             itemStyle={{ color: CHART_COLORS.text }}
                         />
-                        <Legend
-                            verticalAlign="bottom"
-                            height={36}
-                            content={({ payload }) => (
-                                <div className="flex justify-center gap-6 mt-4">
-                                    {payload?.map((entry, index: number) => {
-                                        const data = chartData.find(d => d.name === entry.value);
-                                        let dotColor: string = CHART_COLORS.accentBlue;
-                                        if (entry.value === 'Staff') dotColor = CHART_COLORS.accentPurple;
-                                        if (entry.value === 'IDL') dotColor = CHART_COLORS.accentSky;
-
-                                        return (
-                                            <button
-                                                key={`legend-${index}`}
-                                                className="flex items-center gap-2 text-xs hover:opacity-70 transition-opacity"
-                                                onClick={() => onFilterChange?.({ type: 'type', value: entry.value, label: `Type: ${entry.value}` })}
-                                            >
-                                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: dotColor }}></span>
-                                                <span className="text-slate-800 font-bold">{entry.value}</span>
-                                                <span className="text-slate-500 font-medium">({data?.value} - {data?.percentage}%)</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        />
                     </PieChart>
                 </ResponsiveContainer>
 
-                <div className="absolute top-[50%] left-1/2 transform -translate-x-1/2 -translate-y-[60%] text-center pointer-events-none">
-                    <div className="text-3xl font-bold text-title tracking-tight">{total}</div>
-                    <div className="text-[11px] text-muted font-bold uppercase tracking-[0.1em] mt-0.5">Total</div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <div className="text-2xl font-black text-slate-900 tracking-tight leading-none">{total.toLocaleString()}</div>
+                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Total</div>
                 </div>
+            </div>
+
+            {/* Legend (click to filter) */}
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-2 w-full">
+                {chartData.map((entry) => (
+                    <button
+                        key={entry.name}
+                        type="button"
+                        className="flex items-center gap-2 text-xs font-semibold text-slate-800 hover:opacity-70 transition-opacity cursor-pointer"
+                        onClick={() => onFilterChange?.({ type: 'type', value: entry.name, label: `Type: ${entry.name}` })}
+                    >
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: TYPE_COLORS[entry.name] ?? CHART_COLORS.axis }}></span>
+                        {entry.name} — <span className="font-bold text-slate-900">{entry.value}</span>
+                        <span className="text-slate-400 font-medium">({entry.percentage}%)</span>
+                    </button>
+                ))}
+            </div>
         </ChartCard>
     );
 };

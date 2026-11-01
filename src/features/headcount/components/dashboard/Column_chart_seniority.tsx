@@ -23,8 +23,8 @@ const TENURE_BUCKETS = [
 
 // Colors mapped to shared Chart Theme
 const COLORS = {
-    Staff: CHART_COLORS.accentPurple,  // Violet / Staff
-    IDL: CHART_COLORS.accentSky        // Sky Blue / IDL
+    Staff: CHART_COLORS.primary,    // Milwaukee red / Staff
+    IDL: CHART_COLORS.secondary     // Charcoal / IDL
 };
 
 const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChange, nodes, loading = false }) => {
@@ -92,20 +92,22 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
 
     // Compact legend
     const renderLegend = () => (
-        <div className="flex justify-center gap-4 mb-2">
+        <div className="flex justify-center gap-4">
             <button
-                className="flex items-center gap-1.5 text-xs hover:opacity-70 transition-opacity"
+                type="button"
+                className="flex items-center gap-1.5 text-xs hover:opacity-70 transition-opacity cursor-pointer"
                 onClick={() => onFilterChange?.({ type: 'staff', value: 'Staff', label: 'Type: Staff' })}
             >
                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS.Staff }}></span>
-                <span className="text-body font-medium">Staff</span>
+                <span className="text-slate-800 font-semibold">Staff</span>
             </button>
             <button
-                className="flex items-center gap-1.5 text-xs hover:opacity-70 transition-opacity"
+                type="button"
+                className="flex items-center gap-1.5 text-xs hover:opacity-70 transition-opacity cursor-pointer"
                 onClick={() => onFilterChange?.({ type: 'idl', value: 'IDL', label: 'Type: IDL' })}
             >
                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS.IDL }}></span>
-                <span className="text-body font-medium">IDL</span>
+                <span className="text-slate-800 font-semibold">IDL</span>
             </button>
         </div>
     );
@@ -115,26 +117,19 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
             className={className}
             kicker="TENURE DISTRIBUTION"
             title="Headcount by Tenure"
+            subtitle="Length of service split by Staff and IDL"
             action={renderLegend()}
             loading={loading}
             error={error}
         >
+            <div className="h-[260px] w-full">
             <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={chartData}
-                        margin={{ top: 12, right: 10, left: 10, bottom: 0 }}
+                        margin={{ top: 20, right: 10, left: -20, bottom: 0 }}
                     >
-                        <defs>
-                            <linearGradient id="staffGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={CHART_COLORS.accentPurple} stopOpacity={1} />
-                                <stop offset="100%" stopColor={CHART_COLORS.accentPurpleLight} stopOpacity={1} />
-                            </linearGradient>
-                            <linearGradient id="idlGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={CHART_COLORS.accentSky} stopOpacity={1} />
-                                <stop offset="100%" stopColor={CHART_COLORS.accentSkyLight} stopOpacity={1} />
-                            </linearGradient>
-                        </defs>
                         <CartesianGrid {...chartGridProps} />
+                        <YAxis {...chartAxisProps} allowDecimals={false} />
                         <XAxis
                             dataKey="name"
                             {...chartAxisProps}
@@ -150,9 +145,9 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
                         <Bar
                             dataKey="Staff"
                             stackId="a"
-                            fill="url(#staffGradient)"
+                            fill={COLORS.Staff}
                             radius={[0, 0, 0, 0]}
-                            barSize={32}
+                            maxBarSize={40}
                         >
                             <LabelList
                                 dataKey="Staff"
@@ -164,9 +159,9 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
                         <Bar
                             dataKey="IDL"
                             stackId="a"
-                            fill="url(#idlGradient)"
+                            fill={COLORS.IDL}
                             radius={[4, 4, 0, 0]}
-                            barSize={32}
+                            maxBarSize={40}
                         >
                             <LabelList
                                 dataKey="IDL"
@@ -178,6 +173,7 @@ const SeniorityChart: React.FC<SeniorityChartProps> = ({ className, onFilterChan
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
+            </div>
         </ChartCard>
     );
 };

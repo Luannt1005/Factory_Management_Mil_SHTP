@@ -48,13 +48,13 @@ const BUFilter: React.FC<BUFilterProps> = ({ nodes, onSelect, selectedBU }) => {
         <div className="relative" ref={dropdownRef}>
             <button
                 className={`
-                    w-48 py-1.5 px-3 text-xs font-medium text-left
-                    bg-[var(--color-bg-card)] border rounded-lg flex items-center justify-between
-                    focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent
+                    w-full sm:w-48 py-1.5 px-3 text-xs font-medium text-left shadow-sm cursor-pointer
+                    bg-white border rounded-lg flex items-center justify-between
+                    focus:outline-none focus:ring-1 focus:ring-mwk
                     transition-all duration-200
                     ${selectedBU
-                        ? 'border-blue-300 bg-blue-50 text-blue-700'
-                        : 'border-[var(--color-border-light)] text-body hover:border-gray-300'
+                        ? 'border-red-200 bg-red-50 text-mwk'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
                     }
                 `}
                 onClick={() => setIsOpen(!isOpen)}
@@ -63,7 +63,7 @@ const BUFilter: React.FC<BUFilterProps> = ({ nodes, onSelect, selectedBU }) => {
 
                 {selectedBU ? (
                     <div
-                        className="p-0.5 rounded-full hover:bg-blue-200 text-blue-500 hover:text-blue-700 shrink-0"
+                        className="p-0.5 rounded-full hover:bg-red-100 text-red-400 hover:text-mwk shrink-0"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleClear();
@@ -88,13 +88,13 @@ const BUFilter: React.FC<BUFilterProps> = ({ nodes, onSelect, selectedBU }) => {
                         availableBUs.map((bu) => (
                             <button
                                 key={bu}
-                                className={`w-full text-left px-3 py-2 hover:bg-blue-50 flex items-center justify-between transition-colors border-b border-[var(--color-border-light)] last:border-0 text-xs font-medium ${selectedBU === bu ? 'bg-blue-50 text-blue-700' : 'text-body'
+                                className={`w-full text-left px-3 py-2 hover:bg-red-50 cursor-pointer flex items-center justify-between transition-colors border-b border-[var(--color-border-light)] last:border-0 text-xs font-medium ${selectedBU === bu ? 'bg-red-50 text-mwk' : 'text-body'
                                     }`}
                                 onClick={() => handleSelect(bu)}
                             >
                                 <span className="truncate" title={bu}>{bu}</span>
                                 {selectedBU === bu && (
-                                    <svg className="w-3 h-3 text-blue-600 shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-3 h-3 text-mwk shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
                                 )}
