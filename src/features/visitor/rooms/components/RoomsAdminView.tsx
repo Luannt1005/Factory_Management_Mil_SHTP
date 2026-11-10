@@ -45,7 +45,7 @@ export default function AdminRoomsPage() {
     const [rooms, setRooms] = useState<FacilityRoom[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
     const [editingRoom, setEditingRoom] = useState<FacilityRoom | null>(null);
-    const [newRoom, setNewRoom] = useState<FacilityRoomFormData>({ category: '', name: '', description: '', approver_email: '' });
+    const [newRoom, setNewRoom] = useState<FacilityRoomFormData>({ category: '', name: '', description: '', approver_email: '', approval_mode: 'send_all' });
 
     // Category State
     const [categories, setCategories] = useState<RoomCategory[]>([]);
@@ -161,7 +161,7 @@ export default function AdminRoomsPage() {
         try {
             await roomsAdminApi.createFacilityRoom(newRoom);
             fetchRooms();
-            setNewRoom({ category: categories.length > 0 ? categories[0].name : '', name: '', description: '', approver_email: '' });
+            setNewRoom({ category: categories.length > 0 ? categories[0].name : '', name: '', description: '', approver_email: '', approval_mode: 'send_all' });
             setIsRoomModalOpen(false);
         } catch {
             alert('Error creating room');

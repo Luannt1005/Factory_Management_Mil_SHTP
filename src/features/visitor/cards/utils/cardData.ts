@@ -154,7 +154,7 @@ export function sourceToCard(source: CardSourceRecord): VisitorCardData {
     fields.dateFrom = toInputDate(fields.dateFrom);
     fields.dateTo = toInputDate(fields.dateTo) || fields.dateFrom;
     if (!fields.qrValue) fields.qrValue = fields.cardCode;
-    return { id: newCardId(), fields, custom: false, copies: 1 };
+    return { id: newCardId(), fields, custom: false, copies: 1, visitorCode: fields.cardCode, lastPrintedAt: source.lastPrintedAt ?? null };
 }
 
 /** Custom card: no request category, content typed by the user, prints with any template */

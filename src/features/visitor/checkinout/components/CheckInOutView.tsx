@@ -7,15 +7,19 @@ import CheckInOutFilters from '@/features/visitor/checkinout/components/CheckInO
 import VisitorViewTable from '@/features/visitor/checkinout/components/VisitorViewTable';
 import GroupViewTable from '@/features/visitor/checkinout/components/GroupViewTable';
 import RequestCheckInModal from '@/features/visitor/checkinout/components/RequestCheckInModal';
+import { getCardIssueStatus } from '@/features/visitor/checkinout/utils/cardIssueStatus';
 import { removeAccents } from '@/utils/string';
 import { formatDateShort, formatDateTime } from '@/utils/date';
 import { getCategoryBadgeClass } from '@/utils/badge';
+import { toCardRequestType } from '@/utils/visitorCategory';
+import { canPrintVisitorCards } from '@/utils/visitorRoles';
 import type {
     CheckInOutAction,
     CheckInOutFilterState,
     CheckInOutProcessedVisitor,
     CheckInOutRequestRecord,
     CheckInOutViewMode,
+    PrintableRequest,
     CheckInOutVisitorRecord,
     VisitorCheckInOutStatus,
 } from '@/types/checkinout.types';
@@ -27,11 +31,15 @@ import {
     performCheckInOutAction,
 } from '@/features/visitor/checkinout/services/checkinoutApi';
 
+/** Other gates' check-ins appear without reloading the page */
+const AUTO_REFRESH_MS = 15_000;
+
 export default function CheckInOutManagement() {
     const router = useRouter();
     const { user } = useUser();
     const isSecurity = user?.app_role_names?.includes('Security') || false;
     const isReceptionist = user?.app_role_names?.includes('Receptionist') || false;
+    const canPrintCards = canPrintVisitorCards(user);
 
     const [history, setHistory] = useState<CheckInOutRequestRecord[]>([]);
     const [loading, setLoading] = useState(false);
@@ -43,6 +51,7 @@ export default function CheckInOutManagement() {
         visitorName: ''
     });
     const [statusFilters, setStatusFilters] = useState<string[]>([]);
+    const [cardStatuses, setCardStatuses] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [sites, setSites] = useState<string[]>([]);
     const [viewMode, setViewMode] = useState<CheckInOutViewMode>('visitor');
@@ -51,7 +60,6 @@ export default function CheckInOutManagement() {
 
     const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
-    const [cardNumbers, setCardNumbers] = useState<Record<string, string>>({});
 
     // Scanner Gun & Modal States (Runs silently in background)
     const [scanLoading, setScanLoading] = useState(false);
@@ -61,19 +69,33 @@ export default function CheckInOutManagement() {
     const barcodeBufferRef = useRef<string>('');
     const lastKeyTimeRef = useRef<number>(0);
 
-    const handleCardNumberChange = (requestId: string, visitorIndex: number, value: string) => {
-        setCardNumbers(prev => ({ ...prev, [`${requestId}-${visitorIndex}`]: value }));
-    };
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    /** Only the newest load may write the list (an older one can finish later) */
+    const fetchSeqRef = useRef(0);
+    /** Bumped by every saved gate action: a load started before it may not contain that action yet */
+    const mutationVersionRef = useRef(0);
+    const actionBusyRef = useRef(false);
+    useEffect(() => {
+        actionBusyRef.current = actionLoading !== null;
+    }, [actionLoading]);
 
-    const fetchHistory = useCallback(async () => {
-        setLoading(true);
+    /** silent: background refresh, no loading overlay */
+    const fetchHistory = useCallback(async (silent = false) => {
+        const seq = ++fetchSeqRef.current;
+        const version = mutationVersionRef.current;
+        if (!silent) setLoading(true);
         try {
             const data = await getCheckInOutHistory({
                 dateFrom: filters.dates.from || undefined,
                 dateTo: filters.dates.to || undefined,
                 limit: 500,
             });
-            setHistory(data.requests || []);
+            if (seq !== fetchSeqRef.current || version !== mutationVersionRef.current) return;
+            const requests = data.requests || [];
+            setHistory(requests);
+            // Keep the scan window in step; a request found by code outside the date range stays as it was
+            setScannedRequest(prev => (prev ? requests.find(r => r.requestId === prev.requestId) ?? prev : prev));
+            setLastUpdated(new Date());
         } catch (err: unknown) {
             if (err instanceof CheckInOutApiError && (err.status === 401 || err.status === 403)) {
                 router.push('/login?redirect=' + window.location.pathname);
@@ -81,7 +103,7 @@ export default function CheckInOutManagement() {
             }
             console.error('Failed to fetch history:', err);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     }, [filters.dates, router]);
 
@@ -89,17 +111,37 @@ export default function CheckInOutManagement() {
         fetchHistory();
     }, [fetchHistory]);
 
+    // Background refresh: skipped while a gate action is running or the tab is hidden, immediate when the tab is shown again
+    const fetchHistoryRef = useRef(fetchHistory);
+    useEffect(() => {
+        fetchHistoryRef.current = fetchHistory;
+    }, [fetchHistory]);
+    useEffect(() => {
+        const refresh = () => {
+            if (document.hidden || actionBusyRef.current) return;
+            fetchHistoryRef.current(true);
+        };
+        const timer = window.setInterval(refresh, AUTO_REFRESH_MS);
+        const onVisibilityChange = () => {
+            if (!document.hidden) refresh();
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return () => {
+            window.clearInterval(timer);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+        };
+    }, []);
+
     // Reset pagination to page 1 on filter or view mode changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [filters, statusFilters, categories, sites, viewMode]);
+    }, [filters, statusFilters, cardStatuses, categories, sites, viewMode]);
 
     const handleAction = async (requestId: string, v: CheckInOutVisitorRecord, action: CheckInOutAction, requestCode?: string) => {
         setActionLoading(`${requestId}-${v.visitorIndex}`);
         try {
-            const rawCardNumber = cardNumbers[`${requestId}-${v.visitorIndex}`];
-            const cardNumber = rawCardNumber !== undefined ? rawCardNumber : (v.cardNumber ?? '');
-            await performCheckInOutAction({
+            const cardNumber = v.cardNumber ?? '';
+            const result = await performCheckInOutAction({
                 action,
                 requestId,
                 requestCode: requestCode || (v as CheckInOutProcessedVisitor)._requestInfo?.requestCode || v.requestCode || requestId,
@@ -108,67 +150,51 @@ export default function CheckInOutManagement() {
                 visitorCode: v.visitorCode || `${requestId}V${v.visitorIndex + 1}`,
                 cardNumber
             });
+            mutationVersionRef.current += 1;
 
             const updatedStatus: VisitorCheckInOutStatus = action === 'CHECK_IN' ? 'CHECKED_IN' : action === 'CHECK_OUT' ? 'CHECKED_OUT' : 'PENDING';
             const nowIso = new Date().toISOString();
 
-            // 1. Refresh list locally
-            setHistory(prev => prev.map(req => {
-                if (req.requestId === requestId) {
-                    return {
-                        ...req,
-                        visitors: req.visitors?.map(visitor => {
-                            if (visitor.visitorIndex === v.visitorIndex) {
-                                if (action === 'RESET') {
-                                    return { ...visitor, checkInOutStatus: 'PENDING', checkInTime: null, checkOutTime: null };
-                                }
-                                if (action === 'UPDATE_CARD') {
-                                    return { ...visitor, cardNumber };
-                                }
-                                return {
-                                    ...visitor,
-                                    cardNumber,
-                                    checkInOutStatus: updatedStatus,
-                                    [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: nowIso
-                                };
-                            }
-                            return visitor;
-                        })
-                    };
+            const applyResult = <T extends CheckInOutVisitorRecord>(visitor: T): T => {
+                if (visitor.visitorIndex !== v.visitorIndex) return visitor;
+                if (action === 'RESET') {
+                    // The server removes the whole check-in row, card and issue time included
+                    return { ...visitor, checkInOutStatus: 'PENDING', checkInTime: null, checkOutTime: null, cardNumber: undefined, cardIssuedAt: null };
                 }
-                return req;
-            }));
+                if (action === 'ISSUE_CARD') {
+                    return { ...visitor, cardNumber: result.cardNumber ?? undefined, cardIssuedAt: result.cardIssuedAt ?? nowIso };
+                }
+                if (action === 'UPDATE_CARD') {
+                    return { ...visitor, cardNumber };
+                }
+                return {
+                    ...visitor,
+                    cardNumber,
+                    checkInOutStatus: updatedStatus,
+                    [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: nowIso
+                };
+            };
+
+            // 1. Refresh list locally
+            setHistory(prev => prev.map(req => (req.requestId === requestId ? { ...req, visitors: req.visitors?.map(applyResult) } : req)));
 
             // 2. Also refresh currently opened scannedRequest in Modal
-            setScannedRequest(prev => {
-                if (!prev || prev.requestId !== requestId) return prev;
-                return {
-                    ...prev,
-                    visitors: prev.visitors?.map(visitor => {
-                        if (visitor.visitorIndex === v.visitorIndex) {
-                            if (action === 'RESET') {
-                                return { ...visitor, checkInOutStatus: 'PENDING', checkInTime: null, checkOutTime: null };
-                            }
-                            if (action === 'UPDATE_CARD') {
-                                return { ...visitor, cardNumber };
-                            }
-                            return {
-                                ...visitor,
-                                cardNumber,
-                                checkInOutStatus: updatedStatus,
-                                [action === 'CHECK_IN' ? 'checkInTime' : 'checkOutTime']: nowIso
-                            };
-                        }
-                        return visitor;
-                    })
-                };
-            });
+            setScannedRequest(prev => (!prev || prev.requestId !== requestId ? prev : { ...prev, visitors: prev.visitors?.map(applyResult) }));
         } catch (err: unknown) {
             console.error('Failed to perform check in/out:', err);
             alert('Thao tác thất bại');
         } finally {
             setActionLoading(null);
         }
+    };
+
+    const handleIssueCard = (requestId: string, v: CheckInOutVisitorRecord, requestCode?: string) =>
+        handleAction(requestId, v, 'ISSUE_CARD', requestCode);
+
+    /** Print page with every visitor of the request; the user comes back here to click Issue */
+    const handlePrintRequest = (request: PrintableRequest) => {
+        const code = (request.requestCode || request.requestId).toUpperCase();
+        router.push(`/visitoradmin/cards?type=${toCardRequestType(request.visitorCategory)}&requests=${encodeURIComponent(code)}`);
     };
 
     const handleLookupRequest = async (rawCode: string) => {
@@ -288,6 +314,8 @@ export default function CheckInOutManagement() {
     const processedHistory = history.map(req => {
         const filteredVisitors = req.visitors?.filter((v: CheckInOutVisitorRecord) => {
             if (statusFilters.length > 0 && !statusFilters.includes(v.checkInOutStatus)) return false;
+            // Saved value on purpose: a row must not vanish while its number is still being typed
+            if (cardStatuses.length > 0 && !cardStatuses.includes(getCardIssueStatus(v))) return false;
             if (filters.visitorName && filters.visitorName.trim()) {
                 const nameMatch = removeAccents(v.visitorName || '').includes(removeAccents(filters.visitorName.trim()));
                 if (!nameMatch) return false;
@@ -331,7 +359,7 @@ export default function CheckInOutManagement() {
         if (filters.search && filters.search.trim()) {
             return req.filteredVisitors.length > 0;
         }
-        if (statusFilters.length > 0) {
+        if (statusFilters.length > 0 || cardStatuses.length > 0) {
             return req.filteredVisitors.length > 0;
         }
         return true;
@@ -348,6 +376,11 @@ export default function CheckInOutManagement() {
     const totalPages = viewMode === 'group'
         ? Math.ceil(processedHistory.length / ITEMS_PER_PAGE) || 1
         : Math.ceil(allVisitors.length / ITEMS_PER_PAGE) || 1;
+
+    // A refresh can shorten the list: stay on the last page that still exists
+    useEffect(() => {
+        if (currentPage > totalPages) setCurrentPage(totalPages);
+    }, [currentPage, totalPages]);
 
     const paginatedGroups = processedHistory.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
@@ -367,6 +400,7 @@ export default function CheckInOutManagement() {
     const handleClearAllFilters = () => {
         setFilters(prev => ({ ...prev, search: '', visitorName: '' }));
         setStatusFilters([]);
+        setCardStatuses([]);
         setCategories([]);
         setSites([]);
     };
@@ -402,6 +436,8 @@ export default function CheckInOutManagement() {
                     }}
                     statusFilters={statusFilters}
                     onStatusFiltersChange={setStatusFilters}
+                    cardStatuses={cardStatuses}
+                    onCardStatusesChange={setCardStatuses}
                     categories={categories}
                     onCategoriesChange={setCategories}
                     sites={sites}
@@ -411,6 +447,8 @@ export default function CheckInOutManagement() {
                     showingCount={viewMode === 'group' ? paginatedGroups.length : paginatedVisitors.length}
                     totalCount={viewMode === 'group' ? processedHistory.length : allVisitors.length}
                     onClearAllFilters={handleClearAllFilters}
+                    lastUpdated={lastUpdated}
+                    refreshSeconds={AUTO_REFRESH_MS / 1000}
                 />
 
                 {/* List Container */}
@@ -439,8 +477,9 @@ export default function CheckInOutManagement() {
                             {viewMode === 'visitor' && (
                                 <VisitorViewTable
                                     visitors={paginatedVisitors}
-                                    cardNumbers={cardNumbers}
-                                    onCardNumberChange={handleCardNumberChange}
+                                    canPrintCards={canPrintCards}
+                                    onIssueCard={handleIssueCard}
+                                    onPrintRequest={handlePrintRequest}
                                     onAction={handleAction}
                                     actionLoading={actionLoading}
                                     isSecurity={isSecurity}
@@ -455,8 +494,9 @@ export default function CheckInOutManagement() {
                                     groups={paginatedGroups}
                                     expandedRequest={expandedRequest}
                                     onToggleExpand={(reqId) => setExpandedRequest(expandedRequest === reqId ? null : reqId)}
-                                    cardNumbers={cardNumbers}
-                                    onCardNumberChange={handleCardNumberChange}
+                                    canPrintCards={canPrintCards}
+                                    onIssueCard={handleIssueCard}
+                                    onPrintRequest={handlePrintRequest}
                                     onAction={handleAction}
                                     actionLoading={actionLoading}
                                     isSecurity={isSecurity}
@@ -522,8 +562,9 @@ export default function CheckInOutManagement() {
                     setScannedRequest(null);
                 }}
                 request={scannedRequest}
-                cardNumbers={cardNumbers}
-                onCardNumberChange={handleCardNumberChange}
+                canPrintCards={canPrintCards}
+                onIssueCard={handleIssueCard}
+                onPrintRequest={handlePrintRequest}
                 onAction={handleAction}
                 actionLoading={actionLoading}
                 isSecurity={isSecurity}

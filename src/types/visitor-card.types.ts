@@ -23,13 +23,17 @@ export type CardTextFont = 'standard' | 'impact';
 export type CardFontFamily = 'anton' | 'roboto' | 'montserrat' | 'oswald' | 'arial' | 'times';
 export type CardFontWeight = 'light' | 'regular' | 'bold';
 
-/** Box of one element on the card (mm). For the QR code w and h are kept equal. */
-export interface CardElementLayout {
+/** Position and size of anything placed on the card (mm) */
+export interface CardBox {
     visible: boolean;
     x: number;
     y: number;
     w: number;
     h: number;
+}
+
+/** Box of one element on the card (mm). For the QR code w and h are kept equal. */
+export interface CardElementLayout extends CardBox {
     /** Main text size in mm (ignored by logo / QR) */
     fontSize: number;
     align: CardTextAlign;
@@ -58,6 +62,19 @@ export interface CardCustomText extends CardElementLayout {
     hideIfEmpty: boolean;
 }
 
+/** How an image fills its box: 'contain' shows all of it, 'cover' fills the box and crops the overflow */
+export type CardImageFit = 'contain' | 'cover';
+
+/** Picture imported by the user; drawn behind every other element, stored inside the template */
+export interface CardImage extends CardBox {
+    id: string;
+    /** Layer name shown in the designer */
+    name: string;
+    /** Base64 data URL (PNG / JPEG / WebP) */
+    src: string;
+    fit: CardImageFit;
+}
+
 export interface CardSize {
     widthMm: number;
     heightMm: number;
@@ -78,6 +95,7 @@ export interface CardPresetSettings {
     style: CardVisualStyle;
     elements: Record<CardElementKey, CardElementLayout>;
     customTexts: CardCustomText[];
+    images: CardImage[];
 }
 
 export interface CardPreset {
@@ -146,6 +164,10 @@ export interface VisitorCardData {
     custom: boolean;
     /** How many identical copies of this card are printed */
     copies: number;
+    /** Visitor code from the request (kept when the code on the card is edited); custom cards have none */
+    visitorCode?: string;
+    /** When this card was last confirmed as printed */
+    lastPrintedAt?: string | null;
 }
 
 /** Fields of the card content that can be changed for all cards at once */
@@ -155,14 +177,16 @@ export type CardBulkEditPayload = Partial<Pick<CardFields, 'dateFrom' | 'dateTo'
 export interface CardSourceRecord {
     requestType: CardRequestType;
     fields: CardFields;
+    /** When this card was last confirmed as printed */
+    lastPrintedAt?: string | null;
 }
 
 export interface CardSourcesApiResponse {
     cards: CardSourceRecord[];
 }
 
-/** Element currently selected in the designer: a built-in key or a custom text id */
-export type CardSelection = { kind: 'element'; key: CardElementKey } | { kind: 'custom'; id: string } | null;
+/** Element currently selected in the designer: a built-in key, a custom text id or an image id */
+export type CardSelection = { kind: 'element'; key: CardElementKey } | { kind: 'custom'; id: string } | { kind: 'image'; id: string } | null;
 
 /** Row shape of "visitor_card_presets" in Visitor_database */
 export interface CardPresetRow {

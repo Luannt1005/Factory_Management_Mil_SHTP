@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
-import type { CardCustomText, CardElementLayout, CardPresetSettings, CardSelection, VisitorCardData } from '@/types/visitor-card.types';
+import type { CardBox, CardCustomText, CardPresetSettings, CardSelection, VisitorCardData } from '@/types/visitor-card.types';
 import { CARD_ELEMENT_KEYS, CARD_ELEMENT_LABELS, CUSTOM_TEXT_MAX_LENGTH, clampToCard } from '@/features/visitor/cards/utils/cardPresetSettings';
 import VisitorCard, { boxStyle, customTextClass, textStyle } from './VisitorCard';
 
@@ -19,7 +19,7 @@ interface DragState {
     selection: NonNullable<CardSelection>;
     startX: number;
     startY: number;
-    start: CardElementLayout;
+    start: CardBox;
     moved: boolean;
 }
 
@@ -38,6 +38,7 @@ interface CardDesignerProps {
  * Live, editable badge preview on the real mm layout (scaled for display):
  * click an element to select it, drag to move, drag the corner handle to resize,
  * click a custom text to type into it directly (Enter = new line, Esc = done).
+ * Dragging the corner of an image keeps its proportions.
  */
 export default function CardDesigner({
     card,
@@ -74,13 +75,20 @@ export default function CardDesigner({
         }
     }, [editingId]);
 
-    const getLayout = (sel: NonNullable<CardSelection>): CardElementLayout | undefined =>
-        sel.kind === 'element' ? settings.elements[sel.key] : settings.customTexts.find((t) => t.id === sel.id);
+    const getLayout = (sel: NonNullable<CardSelection>): CardBox | undefined => {
+        if (sel.kind === 'element') return settings.elements[sel.key];
+        return sel.kind === 'image' ? settings.images.find((img) => img.id === sel.id) : settings.customTexts.find((t) => t.id === sel.id);
+    };
 
-    const applyLayout = (sel: NonNullable<CardSelection>, next: CardElementLayout) => {
+    const applyLayout = (sel: NonNullable<CardSelection>, next: CardBox) => {
         if (sel.kind === 'element') {
             const el = clampToCard({ ...settings.elements[sel.key], ...next }, size, sel.key === 'qr');
             onChange({ ...settings, elements: { ...settings.elements, [sel.key]: el } });
+        } else if (sel.kind === 'image') {
+            onChange({
+                ...settings,
+                images: settings.images.map((img) => (img.id === sel.id ? clampToCard({ ...img, ...next }, size) : img)),
+            });
         } else {
             onChange({
                 ...settings,
@@ -120,6 +128,10 @@ export default function CardDesigner({
         const dy = (e.clientY - d.startY) / (PX_PER_MM * scale);
         if (d.mode === 'move') {
             applyLayout(d.selection, { ...d.start, x: snap(d.start.x + dx), y: snap(d.start.y + dy) });
+        } else if (d.selection.kind === 'image') {
+            // Same factor on both sides, capped so the picture never outgrows the card
+            const k = Math.min((d.start.w + dx) / d.start.w, size.widthMm / d.start.w, size.heightMm / d.start.h);
+            applyLayout(d.selection, { ...d.start, w: d.start.w * k, h: d.start.h * k });
         } else {
             const square = d.selection.kind === 'element' && d.selection.key === 'qr';
             const w = snap(d.start.w + dx);
@@ -151,9 +163,15 @@ export default function CardDesigner({
         selection !== null &&
         (sel.kind === 'element'
             ? selection.kind === 'element' && selection.key === sel.key
-            : selection.kind === 'custom' && selection.id === sel.id);
+            : selection.kind === sel.kind && selection.id === sel.id);
 
-    const handles: { sel: NonNullable<CardSelection>; layout: CardElementLayout; label: string; text?: CardCustomText }[] = [
+    // Images first: they lie behind the other elements, so those stay clickable on top of them
+    const handles: { sel: NonNullable<CardSelection>; layout: CardBox; label: string; text?: CardCustomText }[] = [
+        ...settings.images.filter((img) => img.visible).map((img) => ({
+            sel: { kind: 'image' as const, id: img.id },
+            layout: img as CardBox,
+            label: img.name || 'Image',
+        })),
         ...CARD_ELEMENT_KEYS.filter((k) => settings.elements[k].visible).map((k) => ({
             sel: { kind: 'element' as const, key: k },
             layout: settings.elements[k],
@@ -161,7 +179,7 @@ export default function CardDesigner({
         })),
         ...settings.customTexts.filter((t) => t.visible).map((t) => ({
             sel: { kind: 'custom' as const, id: t.id },
-            layout: t as CardElementLayout,
+            layout: t as CardBox,
             label: 'Click to type · drag to move',
             text: t,
         })),

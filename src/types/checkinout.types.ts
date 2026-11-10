@@ -14,7 +14,8 @@ export type CheckInOutAction =
     | 'RESET' 
     | 'UPDATE_CARD' 
     | 'REVERSE' 
-    | 'INPUT_CARD';
+    | 'INPUT_CARD'
+    | 'ISSUE_CARD';
 
 export interface CheckInOutActionPayload {
     action: CheckInOutAction;
@@ -28,6 +29,9 @@ export interface CheckInOutActionPayload {
 
 export interface CheckInOutActionResponse {
     message: string;
+    /** ISSUE_CARD only */
+    cardIssuedAt?: string;
+    cardNumber?: string | null;
 }
 
 export interface CheckInOutVisitorRecord extends Visitor {
@@ -42,6 +46,9 @@ export interface CheckInOutRequestRecord extends VisitorRequestData {
     createdAt?: string;
     filteredVisitors?: CheckInOutVisitorRecord[];
 }
+
+/** What the print page needs to open all the cards of a request */
+export type PrintableRequest = Pick<VisitorRequestData, 'requestId' | 'requestCode' | 'visitorCategory'>;
 
 export interface CheckInOutProcessedVisitor extends CheckInOutVisitorRecord {
     _requestInfo: CheckInOutRequestRecord;

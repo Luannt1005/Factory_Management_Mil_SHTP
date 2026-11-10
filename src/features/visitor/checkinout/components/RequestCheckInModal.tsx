@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { VisitorRequestData as RequestData } from '@/types/visitor.types';
-import type { CheckInOutAction, CheckInOutRequestRecord, CheckInOutVisitorRecord } from '@/types/checkinout.types';
+import type { CheckInOutAction, CheckInOutRequestRecord, CheckInOutVisitorRecord, PrintableRequest } from '@/types/checkinout.types';
+import CardStatusCell from './CardStatusCell';
 
 export interface RequestCheckInModalProps {
     isOpen: boolean;
     onClose: () => void;
     request: CheckInOutRequestRecord | RequestData | null;
-    cardNumbers: Record<string, string>;
-    onCardNumberChange: (requestId: string, visitorIndex: number, value: string) => void;
+    canPrintCards: boolean;
+    onIssueCard: (requestId: string, v: CheckInOutVisitorRecord, requestCode?: string) => Promise<void>;
+    onPrintRequest: (request: PrintableRequest) => void;
     onAction: (requestId: string, v: CheckInOutVisitorRecord, action: CheckInOutAction, requestCode?: string) => Promise<void>;
     actionLoading: string | null;
     isSecurity?: boolean;
@@ -24,8 +26,9 @@ export default function RequestCheckInModal({
     isOpen,
     onClose,
     request,
-    cardNumbers,
-    onCardNumberChange,
+    canPrintCards,
+    onIssueCard,
+    onPrintRequest,
     onAction,
     actionLoading,
     isSecurity,
@@ -234,7 +237,8 @@ export default function RequestCheckInModal({
                                         <th>Visitor Code</th>
                                         <th>Company</th>
                                         <th>Title</th>
-                                        <th>Card No.</th>
+                                        <th>Issue Time</th>
+                                        <th>Card Status</th>
                                         <th>Status</th>
                                         <th>Check-In</th>
                                         <th>Check-Out</th>
@@ -246,7 +250,6 @@ export default function RequestCheckInModal({
                                         const loadingKey = `${request.requestId}-${v.visitorIndex}`;
                                         const isLoading = actionLoading === loadingKey || bulkLoading;
                                         const isRowLoading = actionLoading === loadingKey;
-                                        const currentCard = cardNumbers[loadingKey] !== undefined ? cardNumbers[loadingKey] : (v.cardNumber ?? '');
 
                                         return (
                                             <tr key={v.visitorIndex} className="group transition-colors hover:bg-gray-50 [&>td]:whitespace-nowrap [&>td]:px-3 [&>td]:py-3">
@@ -260,18 +263,14 @@ export default function RequestCheckInModal({
                                                 <td className="font-mono font-semibold text-gray-600">{v.visitorCode || '-'}</td>
                                                 <td className="font-medium text-gray-700">{v.visitorCompany || '-'}</td>
                                                 <td className="font-medium text-gray-700">{v.visitorTitle || '-'}</td>
+                                                <td className="text-gray-600">{v.cardIssuedAt ? formatDateTime(v.cardIssuedAt) : '-'}</td>
                                                 <td>
-                                                    <input
-                                                        type="text"
-                                                        value={currentCard}
-                                                        onChange={(e) => onCardNumberChange(request.requestId, v.visitorIndex, e.target.value)}
-                                                        onBlur={() => {
-                                                             if (currentCard !== (v.cardNumber ?? '')) {
-                                                                 onAction(request.requestId, v, 'UPDATE_CARD', request.requestCode);
-                                                             }
-                                                        }}
-                                                        placeholder="Card no."
-                                                        className="w-28 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-900 outline-none transition-colors placeholder:font-normal placeholder:text-gray-400 focus:border-mwk"
+                                                    <CardStatusCell
+                                                        visitor={v}
+                                                        saving={isLoading}
+                                                        canPrint={canPrintCards}
+                                                        onIssue={() => onIssueCard(request.requestId, v, request.requestCode)}
+                                                        onPrint={() => onPrintRequest(request)}
                                                     />
                                                 </td>
                                                 <td>

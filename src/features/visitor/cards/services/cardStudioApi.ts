@@ -21,6 +21,7 @@ import { normalizeCardSettings } from '@/features/visitor/cards/utils/cardPreset
 const ENDPOINTS = {
     PRESETS: '/api/visitor_admin/card-presets',
     CARD_SOURCES: '/api/visitor_admin/card-sources',
+    CARD_PRINTS: '/api/visitor_admin/card-prints',
 } as const;
 
 const LOCAL_PRESETS_KEY = 'visitorCardStudio.presets.v1';
@@ -199,5 +200,15 @@ export const cardStudioApi = {
         const res = await fetch(`${ENDPOINTS.CARD_SOURCES}?code=${encodeURIComponent(code)}`);
         const data = await handleResponse<CardSourcesApiResponse>(res, 'Failed to look up visitor request');
         return data.cards || [];
+    },
+
+    /** Records cards the user confirmed as printed */
+    async markCardsPrinted(visitorCodes: string[]): Promise<void> {
+        const res = await fetch(ENDPOINTS.CARD_PRINTS, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ visitorCodes }),
+        });
+        await handleResponse<{ saved: number }>(res, 'Failed to save the printed cards');
     },
 };

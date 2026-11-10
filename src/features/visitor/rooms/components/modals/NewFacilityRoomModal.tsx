@@ -3,6 +3,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import type { FacilityRoomFormData, RoomCategory } from '@/types/rooms.types';
+import { ROOM_APPROVAL_MODES, ROOM_APPROVAL_MODE_LABELS } from '@/utils/roomApprovers';
 
 export interface NewFacilityRoomModalProps {
     open: boolean;
@@ -83,6 +84,16 @@ export function NewFacilityRoomModal({
                                 onChange={e => onChange('approver_email', e.target.value)}
                                 placeholder="approver@ttigroup.com.vn"
                             />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Approve Selection</label>
+                            <select
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
+                                value={formData.approval_mode}
+                                onChange={e => onChange('approval_mode', e.target.value)}
+                            >
+                                {ROOM_APPROVAL_MODES.map(mode => <option key={mode} value={mode}>{ROOM_APPROVAL_MODE_LABELS[mode]}</option>)}
+                            </select>
                         </div>
                         <button
                             type="submit"

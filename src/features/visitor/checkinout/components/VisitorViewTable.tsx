@@ -6,14 +6,17 @@ import type {
     CheckInOutProcessedVisitor,
     CheckInOutRequestRecord,
     CheckInOutVisitorRecord,
+    PrintableRequest,
 } from '@/types/checkinout.types';
 import { formatDateShort, formatDateTime } from '@/utils/date';
 import { getCategoryBadgeClass } from '@/utils/badge';
+import CardStatusCell from './CardStatusCell';
 
 export interface VisitorViewTableProps {
     visitors: CheckInOutProcessedVisitor[];
-    cardNumbers: Record<string, string>;
-    onCardNumberChange: (requestId: string, visitorIndex: number, value: string) => void;
+    canPrintCards: boolean;
+    onIssueCard: (requestId: string, v: CheckInOutVisitorRecord, requestCode?: string) => Promise<void>;
+    onPrintRequest: (request: PrintableRequest) => void;
     onAction: (requestId: string, v: CheckInOutVisitorRecord, action: CheckInOutAction, requestCode?: string) => Promise<void>;
     actionLoading: string | null;
     isSecurity?: boolean;
@@ -26,8 +29,9 @@ export interface VisitorViewTableProps {
 
 export default function VisitorViewTable({
     visitors,
-    cardNumbers,
-    onCardNumberChange,
+    canPrintCards,
+    onIssueCard,
+    onPrintRequest,
     onAction,
     actionLoading,
     isSecurity,
@@ -39,7 +43,7 @@ export default function VisitorViewTable({
 }: VisitorViewTableProps) {
     return (
         <div className="overflow-x-auto w-full">
-            <table className="w-full text-left border-collapse min-w-[1360px]">
+            <table className="w-full text-left border-collapse min-w-[1500px]">
                 <thead>
                     <tr className="bg-[#1a1a1a] text-white font-bold text-[9px] uppercase tracking-wider">
                         <th className="py-3 px-4 w-[110px]">REQUEST</th>
@@ -50,7 +54,8 @@ export default function VisitorViewTable({
                         <th className="py-3 px-3 min-w-[120px]">COMPANY</th>
                         <th className="py-3 px-2 text-center w-[95px]">CATEGORY</th>
                         <th className="py-3 px-3 text-center w-[155px]">DATE</th>
-                        <th className="py-3 px-3 text-center w-[105px]">CARD NUMBER</th>
+                        <th className="py-3 px-3 text-center w-[120px]">ISSUE TIME</th>
+                        <th className="py-3 px-3 text-center w-[120px]">CARD STATUS</th>
                         <th className="py-3 px-3 text-center w-[120px]">TIME IN</th>
                         <th className="py-3 px-3 text-center w-[120px]">TIME OUT</th>
                         <th className="py-3 px-4 text-center w-[160px]">ACTION</th>
@@ -109,22 +114,19 @@ export default function VisitorViewTable({
                                         {formatDateShortCustom(req.startDate)} - {formatDateShortCustom(req.endDate)}
                                     </span>
                                 </td>
+                                <td className="py-3 px-3 text-center">
+                                    <span className={`text-[10px] font-bold whitespace-nowrap ${v.cardIssuedAt ? 'text-gray-600' : 'text-gray-400'}`}>
+                                        {formatDateTimeCustom(v.cardIssuedAt)}
+                                    </span>
+                                </td>
                                 <td className="py-3 px-3">
-                                    <div className="w-[90px] mx-auto">
-                                        <input
-                                            type="text"
-                                            placeholder="Card No."
-                                            className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-mwk text-center"
-                                            value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
-                                            onChange={(e) => onCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
-                                            onBlur={() => {
-                                                if (cardNumbers[`${req.requestId}-${v.visitorIndex}`] !== undefined) {
-                                                    onAction(req.requestId, v, 'UPDATE_CARD', req.requestCode);
-                                                }
-                                            }}
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                    </div>
+                                    <CardStatusCell
+                                        visitor={v}
+                                        saving={actionLoading === `${req.requestId}-${v.visitorIndex}`}
+                                        canPrint={canPrintCards}
+                                        onIssue={() => onIssueCard(req.requestId, v, req.requestCode)}
+                                        onPrint={() => onPrintRequest(req)}
+                                    />
                                 </td>
                                 <td className="py-3 px-3 text-center">
                                     <span className={`text-[10px] font-bold whitespace-nowrap ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>

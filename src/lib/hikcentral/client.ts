@@ -194,6 +194,11 @@ export interface HikPersonInput {
 
 const PERSON_NOT_FOUND_CODE = '128';
 
+/** The platform answered "The request resource does not exist" (e.g. a person ID that was deleted) */
+export function isPersonNotFoundError(err: unknown): boolean {
+    return err instanceof HikCentralError && err.code === PERSON_NOT_FOUND_CODE;
+}
+
 /** Person ID for a person code, or null when the code is not used on the platform */
 export async function findPersonIdByCode(personCode: string): Promise<string | null> {
     try {

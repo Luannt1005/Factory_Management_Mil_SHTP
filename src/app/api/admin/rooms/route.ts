@@ -4,6 +4,7 @@ import { getVisitorDbConnection } from '@/lib/visitor-db';
 import { getServerSession } from "next-auth/next";
 import { hasPageAccess } from '@/lib/auth-server';
 import { authOptions } from "@/lib/authOptions";
+import { isRoomApprovalMode } from '@/utils/roomApprovers';
 
 export async function GET(request: Request) {
     try {
@@ -15,8 +16,8 @@ export async function GET(request: Request) {
 
         const visitorPool = await getVisitorDbConnection();
         const query = showAll 
-            ? 'SELECT r.id, r.category, r.name, r.description, r."approverEmail" as approver_email, r."isActive" as is_active, c.site_location FROM "RoomArea" r LEFT JOIN "RoomCategory" c ON r.category = c.name ORDER BY r.category ASC'
-            : 'SELECT r.id, r.category, r.name, r.description, r."approverEmail" as approver_email, r."isActive" as is_active, c.site_location FROM "RoomArea" r LEFT JOIN "RoomCategory" c ON r.category = c.name WHERE r."isActive" = true ORDER BY r.category ASC';
+            ? 'SELECT r.id, r.category, r.name, r.description, r."approverEmail" as approver_email, r."approvalMode" as approval_mode, r."isActive" as is_active, c.site_location FROM "RoomArea" r LEFT JOIN "RoomCategory" c ON r.category = c.name ORDER BY r.category ASC'
+            : 'SELECT r.id, r.category, r.name, r.description, r."approverEmail" as approver_email, r."approvalMode" as approval_mode, r."isActive" as is_active, c.site_location FROM "RoomArea" r LEFT JOIN "RoomCategory" c ON r.category = c.name WHERE r."isActive" = true ORDER BY r.category ASC';
             
         const { rows: rooms } = await visitorPool.query(query);
 
@@ -32,12 +33,15 @@ export async function POST(request: Request) {
         if (!(await hasPageAccess('/visitoradmin/rooms'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const body = await request.json();
-        const { category, name, description, approver_email } = body;
+        const { category, name, description, approver_email, approval_mode } = body;
+        if (approval_mode !== undefined && !isRoomApprovalMode(approval_mode)) {
+            return NextResponse.json({ error: 'Invalid approval mode' }, { status: 400 });
+        }
         
         const visitorPool = await getVisitorDbConnection();
         const { rows } = await visitorPool.query(
-            'INSERT INTO "RoomArea" (id, category, name, description, "approverEmail", "isActive", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, $4, true, NOW()) RETURNING id, category, name, description, "approverEmail" as approver_email, "isActive" as is_active',
-            [category, name, description, approver_email]
+            'INSERT INTO "RoomArea" (id, category, name, description, "approverEmail", "approvalMode", "isActive", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, true, NOW()) RETURNING id, category, name, description, "approverEmail" as approver_email, "approvalMode" as approval_mode, "isActive" as is_active',
+            [category, name, description, approver_email, approval_mode ?? 'send_all']
         );
 
         return NextResponse.json({ message: 'Room created successfully', data: rows[0] }, { status: 201 });
@@ -53,12 +57,15 @@ export async function PATCH(request: Request) {
         if (!(await hasPageAccess('/visitoradmin/rooms'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
         const body = await request.json();
-        const { id, category, name, description, approver_email, is_active } = body;
+        const { id, category, name, description, approver_email, approval_mode, is_active } = body;
+        if (approval_mode !== undefined && !isRoomApprovalMode(approval_mode)) {
+            return NextResponse.json({ error: 'Invalid approval mode' }, { status: 400 });
+        }
         
         const visitorPool = await getVisitorDbConnection();
         const { rows } = await visitorPool.query(
-            'UPDATE "RoomArea" SET category=COALESCE($1, category), name=COALESCE($2, name), description=COALESCE($3, description), "approverEmail"=$4, "isActive"=COALESCE($5, "isActive"), "updatedAt"=NOW() WHERE id=$6 RETURNING id, category, name, description, "approverEmail" as approver_email, "isActive" as is_active',
-            [category, name, description, approver_email, is_active, id]
+            'UPDATE "RoomArea" SET category=COALESCE($1, category), name=COALESCE($2, name), description=COALESCE($3, description), "approverEmail"=$4, "approvalMode"=COALESCE($7, "approvalMode"), "isActive"=COALESCE($5, "isActive"), "updatedAt"=NOW() WHERE id=$6 RETURNING id, category, name, description, "approverEmail" as approver_email, "approvalMode" as approval_mode, "isActive" as is_active',
+            [category, name, description, approver_email, is_active, id, approval_mode]
         );
 
         return NextResponse.json({ message: 'Room updated successfully', data: rows[0] }, { status: 200 });

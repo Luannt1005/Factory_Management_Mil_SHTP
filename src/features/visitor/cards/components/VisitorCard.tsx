@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type {
     CardBackground,
     CardBorderColor,
+    CardBox,
     CardCustomText,
     CardElementLayout,
     CardFooterColor,
@@ -66,7 +67,7 @@ export function customTextClass(settings: CardPresetSettings, t: CardCustomText)
 }
 
 /** Box position / size in mm (data-driven, so it is applied as inline values) */
-export function boxStyle(el: CardElementLayout): CSSProperties {
+export function boxStyle(el: CardBox): CSSProperties {
     return { left: `${el.x}mm`, top: `${el.y}mm`, width: `${el.w}mm`, height: `${el.h}mm` };
 }
 
@@ -106,7 +107,7 @@ interface VisitorCardProps {
  * A4 print output are identical.
  */
 export default function VisitorCard({ card, settings, overlay, hiddenCustomTextId }: VisitorCardProps) {
-    const { size, style, elements, customTexts } = settings;
+    const { size, style, elements, customTexts, images } = settings;
     const bg = BACKGROUND_CLASS[style.background];
     const f = card.fields;
 
@@ -115,7 +116,15 @@ export default function VisitorCard({ card, settings, overlay, hiddenCustomTextI
             className={`visitor-card relative shrink-0 overflow-hidden ${cardFont.className} ${bg.card} ${bg.text}`}
             style={{ width: `${size.widthMm}mm`, height: `${size.heightMm}mm` }}
         >
-            {/* Footer first so other elements can sit on top of it */}
+            {/* Imported images lie behind everything, so one can serve as the card background */}
+            {images.filter((img) => img.visible).map((img) => (
+                <div key={img.id} className="absolute overflow-hidden" style={boxStyle(img)}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- data URL; plain img keeps print output identical to screen */}
+                    <img src={img.src} alt={img.name} className={`h-full w-full ${img.fit === 'cover' ? 'object-cover' : 'object-contain'}`} />
+                </div>
+            ))}
+
+            {/* Footer next so other elements can sit on top of it */}
             {elements.footer.visible && (
                 <div
                     className={`absolute flex items-center px-[2mm] ${ALIGN_CLASS[elements.footer.align].flex} ${FOOTER_CLASS[style.footerColor]}`}

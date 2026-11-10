@@ -38,6 +38,7 @@ export default function AdminDashboard() {
     const [code, setCode] = useState('');
     const [submitter, setSubmitter] = useState('');
     const [statusFilters, setStatusFilters] = useState<string[]>([]);
+    const [cardStatuses, setCardStatuses] = useState<string[]>([]);
     const [exporting, setExporting] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<VisitorAdminRequestRecord | null>(null);
     const [editingRequest, setEditingRequest] = useState<VisitorAdminRequestRecord | null>(null);
@@ -50,7 +51,7 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchRequests(1);
-    }, [visitDates, completeDates, submitDates, sites, categories, code, submitter, statusFilters, activeTab]);
+    }, [visitDates, completeDates, submitDates, sites, categories, code, submitter, statusFilters, cardStatuses, activeTab]);
 
     const fetchRequests = async (page: number) => {
         setLoading(true);
@@ -68,9 +69,10 @@ export default function AdminDashboard() {
                 submitEndDate: submitDates.to || undefined,
                 site: sites.length > 0 ? sites.join(',') : undefined,
                 category: categories.length > 0 ? categories.join(',') : undefined,
-                code: code || undefined,
+                visitorCode: code || undefined,
                 submitter: submitter || undefined,
                 status: statusFilters.length > 0 ? statusFilters.join(',') : undefined,
+                cardStatus: cardStatuses.length > 0 ? cardStatuses.join(',') : undefined,
             });
             setRequests(data.requests);
             setPagination(data.pagination);
@@ -114,9 +116,10 @@ export default function AdminDashboard() {
                 submitEndDate: submitDates.to || undefined,
                 site: sites.length > 0 ? sites.join(',') : undefined,
                 category: categories.length > 0 ? categories.join(',') : undefined,
-                code: code || undefined,
+                visitorCode: code || undefined,
                 submitter: submitter || undefined,
                 status: statusFilters.length > 0 ? statusFilters.join(',') : undefined,
+                cardStatus: cardStatuses.length > 0 ? cardStatuses.join(',') : undefined,
             });
 
             // Fetch host departments to map names
@@ -371,6 +374,7 @@ export default function AdminDashboard() {
         setCode('');
         setSubmitter('');
         setStatusFilters([]);
+        setCardStatuses([]);
     };
 
     const handleSelectRow = (id: string, selected: boolean) => {
@@ -426,6 +430,8 @@ export default function AdminDashboard() {
                 onCategoriesChange={setCategories}
                 statusFilters={statusFilters}
                 onStatusFiltersChange={setStatusFilters}
+                cardStatuses={cardStatuses}
+                onCardStatusesChange={setCardStatuses}
                 onClearFilters={handleClearFilters}
                 selectedRowIds={selectedRowIds}
                 onDeleteSelected={handleDeleteSelected}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type {
     CardBackground,
     CardBorderColor,
@@ -11,6 +11,8 @@ import type {
     CardSelection,
     CardFieldKey,
     CardFontFamily,
+    CardImage,
+    CardImageFit,
     CardTextAlign,
     CardTextFont,
     CardTextTone,
@@ -24,6 +26,7 @@ import {
     FONT_SIZE_LIMITS,
     LAYER_NAME_MAX_LENGTH,
     LINE_HEIGHT_LIMITS,
+    MAX_CARD_IMAGES,
     MAX_CUSTOM_TEXTS,
     NON_TEXT_ELEMENTS,
     PRESET_SCOPES,
@@ -33,12 +36,14 @@ import {
     FONT_FAMILY_LABELS,
     FONT_FAMILY_WEIGHTS,
     FONT_WEIGHT_LABELS,
+    createCardImage,
     createCustomText,
     customTextLabel,
     resizeCardSettings,
     supportedWeight,
 } from '@/features/visitor/cards/utils/cardPresetSettings';
 import { CARD_FIELD_GROUPS, CARD_SCOPE_LABELS, fieldDefsForScope } from '@/features/visitor/cards/utils/cardFields';
+import { CARD_IMAGE_ACCEPT, prepareCardImage } from '@/features/visitor/cards/utils/cardImage';
 
 // ===============================
 // Shared look
@@ -79,6 +84,11 @@ const TONE_OPTIONS: { value: CardTextTone; label: string }[] = [
 const FONT_OPTIONS: { value: CardTextFont; label: string }[] = [
     { value: 'standard', label: 'Normal' },
     { value: 'impact', label: 'Wide' },
+];
+
+const IMAGE_FIT_OPTIONS: { value: CardImageFit; label: string }[] = [
+    { value: 'contain', label: 'Show all' },
+    { value: 'cover', label: 'Fill & crop' },
 ];
 
 const ALIGN_OPTIONS: { value: CardTextAlign; label: string }[] = [
@@ -266,6 +276,10 @@ interface PanelProps {
 
 /** Element + custom text list (visibility toggles, click to select) */
 export function CardLayersPanel({ settings, onChange, selection, onSelect }: PanelProps) {
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [importing, setImporting] = useState(false);
+    const [imageError, setImageError] = useState<string | null>(null);
+
     const setElementVisible = (key: (typeof CARD_ELEMENT_KEYS)[number], visible: boolean) => {
         onChange({ ...settings, elements: { ...settings.elements, [key]: { ...settings.elements[key], visible } } });
         if (!visible && selection?.kind === 'element' && selection.key === key) onSelect(null);
@@ -284,6 +298,25 @@ export function CardLayersPanel({ settings, onChange, selection, onSelect }: Pan
     const addField = (key: CardFieldKey) => addCustomText(`{${key}}`, key === 'visitorName' ? 'impact' : 'standard');
     const scopedFields = fieldDefsForScope(settings.requestType);
     const full = settings.customTexts.length >= MAX_CUSTOM_TEXTS;
+    const imagesFull = settings.images.length >= MAX_CARD_IMAGES;
+
+    const importImage = async (file: File) => {
+        setImporting(true);
+        setImageError(null);
+        try {
+            const { src, width, height } = await prepareCardImage(file);
+            const image = createCardImage(settings.size, file.name.replace(/\.[^.]+$/, ''), src, width, height);
+            onChange({ ...settings, images: [...settings.images, image] });
+            onSelect({ kind: 'image', id: image.id });
+        } catch (err) {
+            setImageError(err instanceof Error ? err.message : 'Could not import this image.');
+        } finally {
+            setImporting(false);
+        }
+    };
+
+    const setImageVisible = (id: string, visible: boolean) =>
+        onChange({ ...settings, images: settings.images.map((img) => (img.id === id ? { ...img, visible } : img)) });
 
     const rowClass = (active: boolean, visible: boolean) =>
         `group flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors ${
@@ -320,6 +353,64 @@ export function CardLayersPanel({ settings, onChange, selection, onSelect }: Pan
                         );
                     })}
                 </ul>
+            </div>
+
+            <div>
+                <div className="mb-1.5 flex items-center justify-between px-2">
+                    <p className={sectionTitleClass}>Images</p>
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={imagesFull || importing}
+                        title={imagesFull ? `A template can hold up to ${MAX_CARD_IMAGES} images` : 'PNG, JPG or WebP'}
+                        className="cursor-pointer rounded px-1.5 py-0.5 text-[11px] font-bold text-mwk transition-colors hover:bg-mwk-soft disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        {importing ? 'Importing…' : '+ Import'}
+                    </button>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept={CARD_IMAGE_ACCEPT}
+                        className="hidden"
+                        aria-label="Import image"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            // Cleared so the same file can be picked again
+                            e.target.value = '';
+                            if (file) importImage(file);
+                        }}
+                    />
+                </div>
+                {imageError && <p className="mb-1 px-2 text-[11px] font-semibold text-red-600" role="alert">{imageError}</p>}
+                {settings.images.length === 0 ? (
+                    <p className="px-2 text-[11px] leading-relaxed text-gray-400">Import a logo, a stamp or a background picture (PNG, JPG or WebP).</p>
+                ) : (
+                    <ul className="space-y-0.5">
+                        {settings.images.map((img) => {
+                            const active = selection?.kind === 'image' && selection.id === img.id;
+                            return (
+                                <li key={img.id} className={rowClass(active, img.visible)}>
+                                    <button
+                                        type="button"
+                                        onClick={() => onSelect({ kind: 'image', id: img.id })}
+                                        className="min-w-0 flex-1 cursor-pointer truncate text-left text-xs font-medium"
+                                    >
+                                        {img.name || 'Image'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setImageVisible(img.id, !img.visible)}
+                                        title={img.visible ? 'Hide' : 'Show'}
+                                        aria-label={img.visible ? 'Hide image' : 'Show image'}
+                                        className={`cursor-pointer rounded p-0.5 transition-opacity ${active ? 'text-white/80 hover:text-white' : 'text-gray-400 hover:text-gray-700'} ${img.visible ? 'opacity-0 group-hover:opacity-100' : ''}`}
+                                    >
+                                        <EyeIcon open={img.visible} />
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
             </div>
 
             <div>
@@ -395,17 +486,88 @@ export function CardLayersPanel({ settings, onChange, selection, onSelect }: Pan
 // Selected element inspector
 // ===============================
 
+function ImageInspector({ image, settings, onChange, onSelect }: Pick<PanelProps, 'settings' | 'onChange' | 'onSelect'> & { image: CardImage }) {
+    const { size } = settings;
+    const update = (patch: Partial<CardImage>) =>
+        onChange({
+            ...settings,
+            images: settings.images.map((img) => (img.id === image.id ? clampToCard({ ...img, ...patch }, size) : img)),
+        });
+    const remove = () => {
+        onChange({ ...settings, images: settings.images.filter((img) => img.id !== image.id) });
+        onSelect(null);
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+                <p className="truncate text-sm font-bold text-gray-900">{image.name || 'Image'}</p>
+                <button type="button" className="cursor-pointer text-[11px] font-semibold text-gray-400 hover:text-gray-700" onClick={() => onSelect(null)}>
+                    Deselect
+                </button>
+            </div>
+
+            <label className="block">
+                <span className={labelClass}>Name</span>
+                <input
+                    value={image.name}
+                    maxLength={LAYER_NAME_MAX_LENGTH}
+                    onChange={(e) => update({ name: e.target.value })}
+                    placeholder="e.g. Partner logo"
+                    className={controlClass}
+                />
+            </label>
+
+            <div>
+                <p className={`${sectionTitleClass} mb-2`}>Position & size</p>
+                <div className="grid grid-cols-2 gap-2">
+                    <NumberField label="X" value={image.x} min={0} max={size.widthMm} onChange={(x) => update({ x })} />
+                    <NumberField label="Y" value={image.y} min={0} max={size.heightMm} onChange={(y) => update({ y })} />
+                    <NumberField label="Width" value={image.w} min={2} max={size.widthMm} onChange={(w) => update({ w })} />
+                    <NumberField label="Height" value={image.h} min={2} max={size.heightMm} onChange={(h) => update({ h })} />
+                </div>
+            </div>
+
+            <div>
+                <span className={labelClass}>Fit</span>
+                <Segmented value={image.fit} options={IMAGE_FIT_OPTIONS} onChange={(fit) => update({ fit })} />
+            </div>
+
+            <button
+                type="button"
+                onClick={() => update({ x: 0, y: 0, w: size.widthMm, h: size.heightMm, fit: 'cover' })}
+                className="w-full cursor-pointer rounded-md border border-gray-200 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-900"
+            >
+                Use as card background
+            </button>
+            <button
+                type="button"
+                onClick={remove}
+                className="w-full cursor-pointer rounded-md border border-gray-200 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            >
+                Delete image
+            </button>
+        </div>
+    );
+}
+
 export function SelectedElementInspector({ settings, onChange, selection, onSelect }: PanelProps) {
     const textRef = useRef<HTMLTextAreaElement | null>(null);
     const { size } = settings;
 
-    const layout: CardElementLayout | CardCustomText | undefined = selection
-        ? selection.kind === 'element'
-            ? settings.elements[selection.key]
-            : settings.customTexts.find((t) => t.id === selection.id)
-        : undefined;
+    if (selection?.kind === 'image') {
+        const image = settings.images.find((img) => img.id === selection.id);
+        if (image) return <ImageInspector image={image} settings={settings} onChange={onChange} onSelect={onSelect} />;
+    }
 
-    if (!selection || !layout) {
+    const layout: CardElementLayout | CardCustomText | undefined =
+        selection && selection.kind !== 'image'
+            ? selection.kind === 'element'
+                ? settings.elements[selection.key]
+                : settings.customTexts.find((t) => t.id === selection.id)
+            : undefined;
+
+    if (!selection || selection.kind === 'image' || !layout) {
         return (
             <div className="flex h-full flex-col items-center justify-center px-4 py-10 text-center">
                 <p className="text-xs font-semibold text-gray-700">Nothing selected</p>

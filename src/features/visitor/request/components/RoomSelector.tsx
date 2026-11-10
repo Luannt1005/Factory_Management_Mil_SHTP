@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { FacilityRoom } from '@/types/rooms.types';
+import { needsApproverChoice, parseApproverEmails } from '@/utils/roomApprovers';
 import { SectionHeader } from './FormControls';
 
 export interface RoomSelectorProps {
@@ -9,13 +10,96 @@ export interface RoomSelectorProps {
     visitingSite: string;
     selectedRoomIds: string[];
     onToggleRoom: (roomId: string) => void;
+    /** Approver picked per room, for rooms whose approval mode is "selected" */
+    roomApprovers: Record<string, string>;
+    onSelectApprover: (roomId: string, email: string) => void;
 }
+
+interface ApproverSelectProps {
+    emails: string[];
+    value: string | undefined;
+    onChange: (email: string) => void;
+}
+
+/** Compact dropdown: one approver of the room's list. Floats over the grid so the cards keep their size. */
+const ApproverSelect: React.FC<ApproverSelectProps> = ({ emails, value, onChange }) => {
+    const [open, setOpen] = useState(false);
+    const rootRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if (!open) return;
+        const onPointerDown = (e: MouseEvent) => {
+            if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+        };
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setOpen(false);
+        };
+        document.addEventListener('mousedown', onPointerDown);
+        document.addEventListener('keydown', onKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', onPointerDown);
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [open]);
+
+    return (
+        // A click here must not untick the room card around it
+        <div ref={rootRef} className="relative mt-2.5 cursor-default" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-1 text-[11px] font-bold text-slate-600">
+                Approver <span className="text-mwk">*</span>
+            </div>
+            <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                title={value}
+                className={`flex h-8 w-full cursor-pointer items-center justify-between gap-2 rounded-md border bg-white px-2.5 text-left text-xs transition-colors ${open ? 'border-mwk' : 'border-slate-300 hover:border-slate-400'}`}
+            >
+                <span className={`truncate ${value ? 'font-semibold text-slate-800' : 'text-slate-400'}`}>{value || 'Select approver'}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true">
+                    <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                </svg>
+            </button>
+            {open && (
+                <div role="listbox" aria-label="Approver" className="custom-scrollbar absolute left-0 right-0 top-full z-30 mt-1 max-h-52 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
+                    {emails.map((email) => {
+                        const active = email === value;
+                        return (
+                            <button
+                                key={email}
+                                type="button"
+                                role="option"
+                                aria-selected={active}
+                                title={email}
+                                onClick={() => {
+                                    onChange(email);
+                                    setOpen(false);
+                                }}
+                                className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-xs transition-colors ${active ? 'bg-mwk-soft font-semibold text-mwk' : 'text-slate-700 hover:bg-slate-100'}`}
+                            >
+                                <span className="truncate">{email}</span>
+                                {active && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+                                        <path fillRule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clipRule="evenodd" />
+                                    </svg>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+};
 
 export const RoomSelector: React.FC<RoomSelectorProps> = ({
     rooms,
     visitingSite,
     selectedRoomIds,
-    onToggleRoom
+    onToggleRoom,
+    roomApprovers,
+    onSelectApprover
 }) => {
     const filteredRooms = rooms.filter(
         room => visitingSite === 'SHTP/DDK' || room.site_location === visitingSite
@@ -31,7 +115,7 @@ export const RoomSelector: React.FC<RoomSelectorProps> = ({
                 <div className="text-[13px] text-slate-500 italic">No rooms available.</div>
             ) : (
                 <>
-                    <div className={"grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3"}>
+                    <div className={"grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] items-start gap-3"}>
                         {filteredRooms.map(room => {
                             const isSelected = selectedRoomIds.includes(room.id);
                             return (
@@ -53,6 +137,13 @@ export const RoomSelector: React.FC<RoomSelectorProps> = ({
                                         </div>
                                     </div>
                                     <div className="text-[11px] text-slate-500 pl-6">{room.description || 'No description'}</div>
+                                    {isSelected && needsApproverChoice(room.approval_mode, room.approver_email) && (
+                                        <ApproverSelect
+                                            emails={parseApproverEmails(room.approver_email)}
+                                            value={roomApprovers[room.id]}
+                                            onChange={(email) => onSelectApprover(room.id, email)}
+                                        />
+                                    )}
                                 </div>
                             );
                         })}

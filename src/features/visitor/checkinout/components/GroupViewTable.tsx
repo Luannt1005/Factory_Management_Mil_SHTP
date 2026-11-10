@@ -5,16 +5,20 @@ import type {
     CheckInOutAction,
     CheckInOutRequestRecord,
     CheckInOutVisitorRecord,
+    PrintableRequest,
 } from '@/types/checkinout.types';
 import { formatDateShort, formatDateTime } from '@/utils/date';
 import { getCategoryBadgeClass } from '@/utils/badge';
+
+import CardStatusCell from './CardStatusCell';
 
 export interface GroupViewTableProps {
     groups: (CheckInOutRequestRecord & { filteredVisitors?: CheckInOutVisitorRecord[] })[];
     expandedRequest: string | null;
     onToggleExpand: (requestId: string) => void;
-    cardNumbers: Record<string, string>;
-    onCardNumberChange: (requestId: string, visitorIndex: number, value: string) => void;
+    canPrintCards: boolean;
+    onIssueCard: (requestId: string, v: CheckInOutVisitorRecord, requestCode?: string) => Promise<void>;
+    onPrintRequest: (request: PrintableRequest) => void;
     onAction: (requestId: string, v: CheckInOutVisitorRecord, action: CheckInOutAction, requestCode?: string) => Promise<void>;
     actionLoading: string | null;
     isSecurity?: boolean;
@@ -29,8 +33,9 @@ export default function GroupViewTable({
     groups,
     expandedRequest,
     onToggleExpand,
-    cardNumbers,
-    onCardNumberChange,
+    canPrintCards,
+    onIssueCard,
+    onPrintRequest,
     onAction,
     actionLoading,
     isSecurity,
@@ -120,7 +125,8 @@ export default function GroupViewTable({
                                                                 <th className="py-2.5 px-3 min-w-[100px]">TITLE</th>
                                                                 <th className="py-2.5 px-3 min-w-[120px]">COMPANY</th>
                                                                 <th className="py-2.5 px-3 text-center w-[155px]">DATE</th>
-                                                                <th className="py-2.5 px-3 text-center w-[105px]">CARD NUMBER</th>
+                                                                <th className="py-2.5 px-3 text-center w-[120px]">ISSUE TIME</th>
+                                                                <th className="py-2.5 px-3 text-center w-[120px]">CARD STATUS</th>
                                                                 <th className="py-2.5 px-3 text-center w-[125px]">TIME IN</th>
                                                                 <th className="py-2.5 px-3 text-center w-[125px]">TIME OUT</th>
                                                                 <th className="py-2.5 px-4 text-center w-[160px]">ACTION</th>
@@ -135,22 +141,17 @@ export default function GroupViewTable({
                                                                     <td className="py-2.5 px-3 text-[11px] text-gray-600 truncate max-w-[120px]">{v.visitorTitle || '-'}</td>
                                                                     <td className="py-2.5 px-3 text-[11px] font-medium text-gray-600 truncate max-w-[140px]">{v.visitorCompany || req.visitingSite}</td>
                                                                     <td className="py-2.5 px-3 text-[10px] font-medium text-gray-600 text-center whitespace-nowrap">{formatDateShortCustom(req.startDate)} - {formatDateShortCustom(req.endDate)}</td>
+                                                                    <td className={`py-2.5 px-3 text-[10px] font-bold text-center whitespace-nowrap ${v.cardIssuedAt ? 'text-gray-600' : 'text-gray-400'}`}>
+                                                                        {formatDateTimeCustom(v.cardIssuedAt)}
+                                                                    </td>
                                                                     <td className="py-2.5 px-3 text-center">
-                                                                        <div className="w-[90px] mx-auto">
-                                                                            <input
-                                                                                type="text"
-                                                                                placeholder="Card No."
-                                                                                className="w-full text-[11px] px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:border-mwk text-center"
-                                                                                value={cardNumbers[`${req.requestId}-${v.visitorIndex}`] ?? v.cardNumber ?? ''}
-                                                                                onChange={(e) => onCardNumberChange(req.requestId, v.visitorIndex, e.target.value)}
-                                                                                onBlur={() => {
-                                                                                    if (cardNumbers[`${req.requestId}-${v.visitorIndex}`] !== undefined) {
-                                                                                        onAction(req.requestId, v, 'UPDATE_CARD', req.requestCode);
-                                                                                    }
-                                                                                }}
-                                                                                onClick={(e) => e.stopPropagation()}
-                                                                            />
-                                                                        </div>
+                                                                        <CardStatusCell
+                                                                            visitor={v}
+                                                                            saving={actionLoading === `${req.requestId}-${v.visitorIndex}`}
+                                                                            canPrint={canPrintCards}
+                                                                            onIssue={() => onIssueCard(req.requestId, v, req.requestCode)}
+                                                                            onPrint={() => onPrintRequest(req)}
+                                                                        />
                                                                     </td>
                                                                     <td className={`py-2.5 px-3 text-[10px] font-bold text-center whitespace-nowrap ${v.checkInTime ? 'text-green-600' : 'text-gray-400'}`}>
                                                                         {formatDateTimeCustom(v.checkInTime)}

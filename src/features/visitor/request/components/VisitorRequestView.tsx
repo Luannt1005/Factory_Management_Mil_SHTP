@@ -4,6 +4,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { visitorRequestApi } from '@/features/visitor/request/services/visitorRequestApi';
+import { needsApproverChoice } from '@/utils/roomApprovers';
 import type {
     VisitorRequestFormData,
     CreateVisitorRequestPayload,
@@ -47,6 +48,7 @@ const INITIAL_FORM_DATA: VisitorRequestFormData = {
         costCenter: ''
     },
     roomIds: [] as string[],
+    roomApprovers: {} as Record<string, string>,
     intervieweeName: '',
     jobTitle: '',
     interviewDepartment: '',
@@ -369,12 +371,21 @@ export default function VisitorRequestView({ dashboardSlot }: VisitorRequestView
     };
 
     const toggleRoom = (id: string) => {
-        setFormData(prev => ({
-            ...prev,
-            roomIds: prev.roomIds.includes(id)
-                ? prev.roomIds.filter(rid => rid !== id)
-                : [...prev.roomIds, id]
-        }));
+        setFormData(prev => {
+            // Unticking a room forgets the approver picked for it
+            const { [id]: _removed, ...otherApprovers } = prev.roomApprovers;
+            return {
+                ...prev,
+                roomIds: prev.roomIds.includes(id)
+                    ? prev.roomIds.filter(rid => rid !== id)
+                    : [...prev.roomIds, id],
+                roomApprovers: prev.roomIds.includes(id) ? otherApprovers : prev.roomApprovers
+            };
+        });
+    };
+
+    const selectRoomApprover = (roomId: string, email: string) => {
+        setFormData(prev => ({ ...prev, roomApprovers: { ...prev.roomApprovers, [roomId]: email } }));
     };
 
     const updateDetails = (key: string, value: string) => {
@@ -424,6 +435,18 @@ export default function VisitorRequestView({ dashboardSlot }: VisitorRequestView
                 const name = (v.name || '').trim();
                 if (name.length < 2) {
                     alert(`Vui lòng nhập họ và tên khách #${i + 1} hợp lệ (chỉ chứa chữ cái, tối thiểu 2 ký tự).`);
+                    return;
+                }
+            }
+
+            if (isExpatCategory) {
+                const missingApprover = rooms.find(room =>
+                    formData.roomIds.includes(room.id) &&
+                    needsApproverChoice(room.approval_mode, room.approver_email) &&
+                    !formData.roomApprovers[room.id]
+                );
+                if (missingApprover) {
+                    alert(`Vui lòng chọn email người duyệt cho phòng "${missingApprover.name}".`);
                     return;
                 }
             }
@@ -566,6 +589,8 @@ export default function VisitorRequestView({ dashboardSlot }: VisitorRequestView
                                                 visitingSite={formData.visitingSite}
                                                 selectedRoomIds={formData.roomIds}
                                                 onToggleRoom={toggleRoom}
+                                                roomApprovers={formData.roomApprovers}
+                                                onSelectApprover={selectRoomApprover}
                                             />
 
                                             <FinalRequirements

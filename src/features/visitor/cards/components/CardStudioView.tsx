@@ -105,6 +105,10 @@ export default function CardStudioView() {
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [bulkOpen, setBulkOpen] = useState(false);
     const [editingCard, setEditingCard] = useState<VisitorCardData | null>(null);
+    /** Visitor codes waiting for the "did they print?" answer after the print dialog closes */
+    const [printConfirmCodes, setPrintConfirmCodes] = useState<string[] | null>(null);
+    const [printSaving, setPrintSaving] = useState(false);
+    const [printSaveError, setPrintSaveError] = useState<string | null>(null);
 
     const selectedPreset = useMemo(() => presets.find((p) => p.id === selectedPresetId) ?? null, [presets, selectedPresetId]);
     const savedSettings = selectedPreset?.settings ?? DEFAULT_CARD_SETTINGS;
@@ -211,6 +215,8 @@ export default function CardStudioView() {
             parts.push(`Added ${fresh.length} card${fresh.length === 1 ? '' : 's'} from ${codes.length === 1 ? codes[0] : `${codes.length} requests`}.`);
             const notApproved = fresh.filter((c) => !['APPROVED', 'COMPLETE'].includes(c.fields.status.toUpperCase())).length;
             if (notApproved > 0) parts.push(`${notApproved} of them belong to a request that is not approved yet.`);
+            const printedBefore = fresh.filter((c) => c.lastPrintedAt).length;
+            if (printedBefore > 0) parts.push(`${printedBefore} of them ${printedBefore === 1 ? 'was' : 'were'} already printed.`);
         } else if (notFound.length === 0 && wrongCategory.length === 0 && failed === 0) {
             parts.push('These cards are already in the list.');
         }
@@ -228,6 +234,35 @@ export default function CardStudioView() {
     }, []);
 
     const addFromCode = useCallback((code: string) => addFromCodes([code]), [addFromCodes]);
+
+    // ===============================
+    // Printing: the browser cannot tell whether the job succeeded, so the user confirms afterwards
+    // ===============================
+    const handlePrint = () => {
+        const codes = Array.from(new Set(cards.map((c) => c.visitorCode).filter((code): code is string => Boolean(code))));
+        if (codes.length > 0) {
+            setPrintSaveError(null);
+            window.addEventListener('afterprint', () => setPrintConfirmCodes(codes), { once: true });
+        }
+        window.print();
+    };
+
+    const handleConfirmPrinted = async () => {
+        if (!printConfirmCodes) return;
+        setPrintSaving(true);
+        setPrintSaveError(null);
+        try {
+            await cardStudioApi.markCardsPrinted(printConfirmCodes);
+            const printedAt = new Date().toISOString();
+            setCards((prev) => prev.map((c) => (c.visitorCode && printConfirmCodes.includes(c.visitorCode) ? { ...c, lastPrintedAt: printedAt } : c)));
+            setNotice({ type: 'success', message: `Saved ${printConfirmCodes.length} card${printConfirmCodes.length === 1 ? '' : 's'} as printed.` });
+            setPrintConfirmCodes(null);
+        } catch (err) {
+            setPrintSaveError(err instanceof Error ? err.message : 'Failed to save the printed cards');
+        } finally {
+            setPrintSaving(false);
+        }
+    };
 
     // Pick the template of the requested category, then load the requests' cards
     const initialLoaded = useRef(false);
@@ -559,7 +594,7 @@ export default function CardStudioView() {
                                     />
                                 </div>
                                 <p className="shrink-0 border-t border-gray-200 bg-white px-4 py-2 text-center text-[11px] text-gray-400">
-                                    Click to select · Drag to move · Blue corner to resize · Click a custom text to type (Enter = new line, Esc = done)
+                                    Click to select · Drag to move · Blue corner to resize · Click a custom text to type (Enter = new line, Esc = done) · Import images from Layers
                                 </p>
                             </div>
                         </div>
@@ -587,7 +622,7 @@ export default function CardStudioView() {
                             <button
                                 type="button"
                                 className={studioPrimaryButtonClass}
-                                onClick={() => window.print()}
+                                onClick={handlePrint}
                                 disabled={cards.length === 0 || mismatchedCards.length > 0}
                                 title={mismatchedCards.length > 0 ? 'Remove cards of other categories first' : undefined}
                             >
@@ -732,6 +767,27 @@ export default function CardStudioView() {
             />
             <CardBulkEditModal open={bulkOpen} cardCount={cards.length} onApply={handleBulkApply} onClose={() => setBulkOpen(false)} />
             <CardEditModal card={editingCard} settings={workingSettings} onSave={handleSaveCard} onClose={() => setEditingCard(null)} />
+            <StudioModal
+                open={printConfirmCodes !== null}
+                title="Did the cards print correctly?"
+                eyebrow="Print Cards"
+                onClose={() => setPrintConfirmCodes(null)}
+                footer={
+                    <>
+                        <button type="button" className={studioSecondaryButtonClass} onClick={() => setPrintConfirmCodes(null)} disabled={printSaving}>
+                            Not printed
+                        </button>
+                        <button type="button" className={studioPrimaryButtonClass} onClick={handleConfirmPrinted} disabled={printSaving}>
+                            {printSaving ? 'Saving...' : 'Yes, mark as printed'}
+                        </button>
+                    </>
+                }
+            >
+                <p className="text-sm text-gray-600">
+                    {printConfirmCodes?.length} card{printConfirmCodes?.length === 1 ? '' : 's'} will show as printed in Admin Settings, and the gate can mark {printConfirmCodes?.length === 1 ? 'it' : 'them'} as handed out in one click. Custom cards are not recorded.
+                </p>
+                {printSaveError && <p role="alert" className="mt-2 text-xs font-semibold text-red-700">{printSaveError}</p>}
+            </StudioModal>
             <StudioModal
                 open={confirmDeleteOpen}
                 eyebrow="Delete setting"

@@ -5,6 +5,9 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { hasPageAccess } from '@/lib/auth-server';
 
+/** Card number saved when a printed card is handed out, so logs and reports keep showing it as before */
+const ISSUED_CARD_VALUE = 'đã phát';
+
 export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -316,6 +319,42 @@ export async function POST(request: Request) {
             }
 
             return NextResponse.json({ message: 'Reset status to PENDING successfully' });
+        } else if (action === 'ISSUE_CARD') {
+            const { rows: printRows } = await visitorPool.query(
+                'SELECT 1 FROM visitor_card_prints WHERE visitor_code = UPPER($1)',
+                [visitorCode]
+            );
+            if (printRows.length === 0) {
+                return NextResponse.json({ error: 'This card has not been printed yet' }, { status: 409 });
+            }
+
+            // An issued card stays issued: a repeated click keeps the first time and the existing value
+            const { rows: issuedRows } = await visitorPool.query(`
+                INSERT INTO "VisitorCheckInOut"
+                    ("requestId", "visitorIndex", "visitorName", "visitorCode", status, "updatedAt", "cardNumber", "cardIssuedAt")
+                VALUES
+                    ($1, $2, $3, $4, 'PENDING', NOW(), $5, NOW())
+                ON CONFLICT ("visitorCode")
+                DO UPDATE SET
+                    "updatedAt" = NOW(),
+                    "cardNumber" = COALESCE(NULLIF(TRIM("VisitorCheckInOut"."cardNumber"), ''), EXCLUDED."cardNumber"),
+                    "cardIssuedAt" = COALESCE("VisitorCheckInOut"."cardIssuedAt", EXCLUDED."cardIssuedAt")
+                RETURNING "cardIssuedAt", "cardNumber"
+            `, [requestId, visitorIndex, visitorName, visitorCode, ISSUED_CARD_VALUE]);
+
+            try {
+                // Logged as INPUT_CARD: the Check-in/out logs page and its filter know that action
+                await visitorPool.query(`
+                    INSERT INTO checkinout_action_history
+                        (request_id, request_code, visitor_index, visitor_code, visitor_name, action, card_number, performed_by, performed_by_name, details, created_at)
+                    VALUES
+                        ($1, $2, $3, $4, $5, 'INPUT_CARD', $6, $7, $8, $9, NOW())
+                `, [requestId, effectiveRequestCode, visitorIndex, visitorCode, visitorName, issuedRows[0].cardNumber, performedBy, performedByName, JSON.stringify({ action: 'ISSUE_CARD', cardNumber: issuedRows[0].cardNumber })]);
+            } catch (logErr) {
+                console.error('Failed to insert checkinout_action_history for ISSUE_CARD:', logErr);
+            }
+
+            return NextResponse.json({ message: 'Card issued successfully', cardIssuedAt: issuedRows[0].cardIssuedAt, cardNumber: issuedRows[0].cardNumber });
         } else if (action === 'UPDATE_CARD' || action === 'INPUT_CARD') {
             await visitorPool.query(`
                 INSERT INTO "VisitorCheckInOut" 

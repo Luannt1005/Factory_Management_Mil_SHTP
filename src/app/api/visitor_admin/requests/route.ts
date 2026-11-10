@@ -8,6 +8,12 @@ import { authOptions } from "@/lib/authOptions";
 import { hasPageAccess } from '@/lib/auth-server';
 import { isVisitorAdmin } from '@/utils/visitorRoles';
 
+/** Printing is recorded from this day on: earlier visits have no print history, so they are not "not printed" */
+const CARD_TRACKING_START = '2026-11-04';
+const VISITOR_COUNT_SQL = `GREATEST(CASE WHEN r.visitors IS NULL OR r.visitors = '' THEN 1 ELSE json_array_length(r.visitors::json) END, 1)`;
+const PRINTED_MATCH_SQL = `LEFT(cp.visitor_code, LENGTH(r.id::text) + 1) = UPPER(r.id::text) || 'V'`;
+const ASSIGNED_MATCH_SQL = `a.status = 'active' AND LEFT(UPPER(a.visitor_code), LENGTH(r.id::text) + 1) = UPPER(r.id::text) || 'V'`;
+
 export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -29,6 +35,7 @@ export async function GET(request: Request) {
         const category = searchParams.get('category');
         const tab = searchParams.get('tab');
         const code = searchParams.get('code');
+        const visitorCode = searchParams.get('visitorCode');
         const status = searchParams.get('status');
         const site = searchParams.get('site');
         const submitter = searchParams.get('submitter');
@@ -37,6 +44,7 @@ export async function GET(request: Request) {
         // Submit date = when the request was created (optional range, inclusive)
         const submitStartDate = searchParams.get('submitStartDate');
         const submitEndDate = searchParams.get('submitEndDate');
+        const cardStatus = searchParams.get('cardStatus');
         const isExport = limit > 1000; // if limit is very high, it's likely an export
 
         const visitorPool = await getVisitorDbConnection();
@@ -47,7 +55,7 @@ export async function GET(request: Request) {
         let paramCount = 1;
 
         if (startDate && endDate) {
-            conditions.push(`(r."startDate"::date <= $${paramCount + 1}::date AND r."endDate"::date >= $${paramCount}::date)`);
+            conditions.push(`(r."startDate"::date >= $${paramCount}::date AND r."startDate"::date <= $${paramCount + 1}::date)`);
             queryParams.push(startDate, endDate);
             paramCount += 2;
         } else if (startDate) {
@@ -93,6 +101,13 @@ export async function GET(request: Request) {
         if (code) {
             conditions.push(`CAST(r.id AS TEXT) ILIKE $${paramCount}`);
             queryParams.push(`${code}%`);
+            paramCount += 1;
+        }
+
+        if (visitorCode && visitorCode.trim()) {
+            // Visitor codes are not stored: "<request id>V<position in the visitor list>"
+            conditions.push(`EXISTS (SELECT 1 FROM generate_series(1, ${VISITOR_COUNT_SQL}) AS n WHERE STRPOS(UPPER(r.id::text) || 'V' || n, $${paramCount}) > 0)`);
+            queryParams.push(visitorCode.trim().replace(/^#/, '').toUpperCase());
             paramCount += 1;
         }
 
@@ -164,6 +179,26 @@ export async function GET(request: Request) {
             paramCount += 1;
         }
 
+        if (cardStatus) {
+            const cardConds: string[] = [];
+            const values = cardStatus.split(',').map(s => s.trim());
+            const printedCount = `(SELECT COUNT(*) FROM visitor_card_prints cp WHERE ${PRINTED_MATCH_SQL})`;
+            if (values.includes('not_printed')) {
+                cardConds.push(`(r.status <> 'REJECTED' AND r."startDate"::date >= $${paramCount}::date AND ${printedCount} < ${VISITOR_COUNT_SQL})`);
+                queryParams.push(CARD_TRACKING_START);
+                paramCount += 1;
+            }
+            if (values.includes('printed')) {
+                cardConds.push(`${printedCount} >= ${VISITOR_COUNT_SQL}`);
+            }
+            if (values.includes('assigned')) {
+                cardConds.push(`EXISTS (SELECT 1 FROM visitor_access_assignments a WHERE ${ASSIGNED_MATCH_SQL})`);
+            }
+            if (cardConds.length > 0) {
+                conditions.push(`(${cardConds.join(' OR ')})`);
+            }
+        }
+
         if (conditions.length > 0) {
             whereClause = `WHERE ${conditions.join(' AND ')}`;
         }
@@ -205,14 +240,21 @@ export async function GET(request: Request) {
                     FROM "RequestApproval" a
                     LEFT JOIN "RoomArea" ra ON a."roomAreaId" = ra.id
                     WHERE a."requestId" = r.id
-                ) as request_approvals
+                ) as request_approvals,
+                (SELECT COALESCE(json_agg(cp.visitor_code), '[]'::json) FROM visitor_card_prints cp WHERE ${PRINTED_MATCH_SQL}) as printed_codes,
+                (
+                    SELECT COALESCE(json_agg(json_build_object('visitor_code', UPPER(a.visitor_code), 'card_no', a.card_no)), '[]'::json)
+                    FROM visitor_access_assignments a
+                    WHERE ${ASSIGNED_MATCH_SQL}
+                ) as assigned_cards,
+                (r.status <> 'REJECTED' AND r."startDate"::date >= $${paramCount + 2}::date) as card_tracked
             FROM "VisitorRequest" r
             LEFT JOIN "User" p ON r."submitterId" = p.id
             ${whereClause}
             ORDER BY r."createdAt" DESC
             LIMIT $${paramCount} OFFSET $${paramCount + 1}
         `;
-        queryParams.push(limit, offset);
+        queryParams.push(limit, offset, CARD_TRACKING_START);
 
         const { rows } = await visitorPool.query(mainQuery, queryParams);
 

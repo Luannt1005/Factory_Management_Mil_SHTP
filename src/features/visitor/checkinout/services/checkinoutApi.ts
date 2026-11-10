@@ -76,7 +76,7 @@ export async function lookupCheckInOutRequest(
 }
 
 /**
- * Perform gate action: CHECK_IN, CHECK_OUT, RESET, UPDATE_CARD
+ * Perform gate action: CHECK_IN, CHECK_OUT, RESET, UPDATE_CARD, ISSUE_CARD
  */
 export async function performCheckInOutAction(
     payload: CheckInOutActionPayload

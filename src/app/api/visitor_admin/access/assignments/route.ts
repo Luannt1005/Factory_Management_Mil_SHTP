@@ -5,6 +5,7 @@ import {
     addPerson,
     addPersonToAccessLevel,
     findPersonIdByCode,
+    isPersonNotFoundError,
     removePersonFromAccessLevel,
     updatePerson,
     type HikPersonInput,
@@ -136,11 +137,24 @@ export async function POST(request: Request) {
     let personId: string | null = previous?.person_id ?? null;
     try {
         personId = personId ?? (await findPersonIdByCode(p.visitorCode));
-        if (personId) await updatePerson(personId, input);
-        else personId = await addPerson(input);
+        if (personId) {
+            try {
+                await updatePerson(personId, input);
+            } catch (err) {
+                // Only a stored person ID can be stale (deleted on the platform, not through this page): look the
+                // visitor code up again, or create the person. A real "does not exist" (e.g. the department) fails again below.
+                if (!previous?.person_id || !isPersonNotFoundError(err)) throw err;
+                console.warn(`[access-door] person ${personId} of ${p.visitorCode} no longer exists on HikCentral; looking it up again`);
+                personId = await findPersonIdByCode(p.visitorCode);
+                if (personId) await updatePerson(personId, input);
+                else personId = await addPerson(input);
+            }
+        } else {
+            personId = await addPerson(input);
+        }
 
         const previousLevel = previous?.privilege_group_id ?? '';
-        if (previous?.person_id && previousLevel && previousLevel !== p.privilegeGroupId) {
+        if (previous?.person_id && previous.person_id === personId && previousLevel && previousLevel !== p.privilegeGroupId) {
             try {
                 await removePersonFromAccessLevel(previousLevel, previous.person_id);
             } catch (err) {

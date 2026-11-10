@@ -6,6 +6,7 @@ import type { Session } from 'next-auth';
 import type { VisitorPayloadEntry } from '@/types/visitor-request.types';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { resolveRoomApprover } from '@/utils/roomApprovers';
 
 async function getOrCreateVisitorProfile(user: NonNullable<Session['user']>, pool: Pick<PoolClient, 'query'>) {
     const email = formatEmail(user.email || user.username);
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const {
             visitors, startDate, endDate,
-            purposeOfVisit, visitorCategory, details, roomIds,
+            purposeOfVisit, visitorCategory, details, roomIds, roomApprovers,
             visitingSite, purposeDetail, functionalDept, department, bu
         } = body;
 
@@ -158,9 +159,16 @@ export async function POST(request: Request) {
             const isVPApproval = (roomIds.length / totalRooms) > 0.6;
 
             const { rows: rooms } = await client.query(
-                'SELECT id, name, "approverEmail" FROM "RoomArea" WHERE id = ANY($1::text[])',
+                'SELECT id, name, "approverEmail", "approvalMode" FROM "RoomArea" WHERE id = ANY($1::text[])',
                 [roomIds]
             );
+
+            // "Selected" rooms go only to the approvers picked from that room's own list
+            const missingApprover = rooms.find((room) => resolveRoomApprover(room.approvalMode, room.approverEmail, roomApprovers?.[room.id]) === null && room.approverEmail);
+            if (missingApprover) {
+                await client.query('ROLLBACK');
+                return NextResponse.json({ error: `Please select an approver for room "${missingApprover.name}".` }, { status: 400 });
+            }
 
             const roomsPayload = [];
 
@@ -208,18 +216,19 @@ export async function POST(request: Request) {
 
             // 1. Standard loop for each room (always run this)
             for (const room of rooms) {
+                const roomApprover = resolveRoomApprover(room.approvalMode, room.approverEmail, roomApprovers?.[room.id]);
                 const { rows: approvalRows } = await client.query(
                     `INSERT INTO "RequestApproval" (id, "requestId", "roomAreaId", "approverEmail", status, "updatedAt")
                      VALUES (gen_random_uuid(), $1, $2, $3, 'PENDING', NOW())
                      RETURNING id`,
-                    [visitorRequestId, room.id, room.approverEmail]
+                    [visitorRequestId, room.id, roomApprover]
                 );
 
                 const approvalId = approvalRows[0].id;
 
                 roomsPayload.push({
                     approval_id: approvalId,
-                    approver_email: room.approverEmail,
+                    approver_email: roomApprover,
                     room_name: room.name
                 });
             }

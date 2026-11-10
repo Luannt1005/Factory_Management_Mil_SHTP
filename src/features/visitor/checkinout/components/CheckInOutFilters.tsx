@@ -11,6 +11,12 @@ export const STATUS_OPTIONS: MultiSelectOption[] = [
     { label: 'Checked Out (Đã rời đi)', value: 'CHECKED_OUT' }
 ];
 
+export const CARD_STATUS_OPTIONS: MultiSelectOption[] = [
+    { label: 'Issued', value: 'issued' },
+    { label: 'Printed, not issued', value: 'not_issued' },
+    { label: 'Not printed', value: 'not_printed' }
+];
+
 export const CATEGORY_OPTIONS: MultiSelectOption[] = [
     { label: 'Vendor', value: 'Vendor' },
     { label: 'Contractor', value: 'Contractor' },
@@ -30,6 +36,8 @@ export interface CheckInOutFiltersProps {
     onSearchKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
     statusFilters: string[];
     onStatusFiltersChange: (statuses: string[]) => void;
+    cardStatuses: string[];
+    onCardStatusesChange: (cardStatuses: string[]) => void;
     categories: string[];
     onCategoriesChange: (categories: string[]) => void;
     sites: string[];
@@ -39,6 +47,9 @@ export interface CheckInOutFiltersProps {
     showingCount: number;
     totalCount: number;
     onClearAllFilters: () => void;
+    /** Time of the last successful load (the list refreshes itself in the background) */
+    lastUpdated?: Date | null;
+    refreshSeconds?: number;
 }
 
 export default function CheckInOutFilters({
@@ -47,6 +58,8 @@ export default function CheckInOutFilters({
     onSearchKeyDown,
     statusFilters,
     onStatusFiltersChange,
+    cardStatuses,
+    onCardStatusesChange,
     categories,
     onCategoriesChange,
     sites,
@@ -56,6 +69,8 @@ export default function CheckInOutFilters({
     showingCount,
     totalCount,
     onClearAllFilters,
+    lastUpdated,
+    refreshSeconds,
 }: CheckInOutFiltersProps) {
     // Local date (toISOString would give yesterday's date before 07:00 in Vietnam)
     const todayStr = dayKey(new Date());
@@ -64,13 +79,14 @@ export default function CheckInOutFilters({
         filters.search ||
         filters.visitorName ||
         statusFilters.length > 0 ||
+        cardStatuses.length > 0 ||
         categories.length > 0 ||
         sites.length > 0
     );
 
     return (
         <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 items-end">
                 <div className="w-full">
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Search Req</label>
                     <input
@@ -115,6 +131,16 @@ export default function CheckInOutFilters({
                         selected={statusFilters}
                         onChange={onStatusFiltersChange}
                         placeholder="All Status"
+                        vertical={true}
+                    />
+                </div>
+                <div className="w-full">
+                    <MultiSelectDropdown
+                        label="Card"
+                        options={CARD_STATUS_OPTIONS}
+                        selected={cardStatuses}
+                        onChange={onCardStatusesChange}
+                        placeholder="All Cards"
                         vertical={true}
                     />
                 </div>
@@ -166,6 +192,11 @@ export default function CheckInOutFilters({
                         <>Showing <span className="text-gray-900 font-bold">{showingCount}</span> of <span className="text-gray-900 font-bold">{totalCount}</span> requests</>
                     ) : (
                         <>Showing <span className="text-gray-900 font-bold">{showingCount}</span> of <span className="text-gray-900 font-bold">{totalCount}</span> visitors</>
+                    )}
+                    {lastUpdated && (
+                        <span className="ml-2 text-gray-400" title={refreshSeconds ? `Refreshes every ${refreshSeconds} seconds` : undefined}>
+                            · Updated {lastUpdated.toLocaleTimeString('en-GB')}
+                        </span>
                     )}
                 </div>
                 {hasActiveFilters && (

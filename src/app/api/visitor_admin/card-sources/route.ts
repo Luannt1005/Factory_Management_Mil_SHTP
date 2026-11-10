@@ -273,7 +273,19 @@ export async function GET(request: Request) {
             ...irRows.map((row) => buildIntervieweeCard(row, cardNumbers)),
         ];
 
-        return NextResponse.json({ cards }, { status: 200 });
+        // Lets the studio warn about cards that were printed before
+        const printedAt = new Map<string, string>();
+        if (cards.length > 0) {
+            const { rows: printRows } = await pool.query<{ visitor_code: string; last_printed_at: string }>(
+                'SELECT visitor_code, last_printed_at FROM visitor_card_prints WHERE visitor_code = ANY($1::text[])',
+                [cards.map((c) => c.fields.cardCode)]
+            );
+            printRows.forEach((p) => printedAt.set(p.visitor_code, p.last_printed_at));
+        }
+
+        return NextResponse.json({
+            cards: cards.map((c) => ({ ...c, lastPrintedAt: printedAt.get(c.fields.cardCode) ?? null })),
+        }, { status: 200 });
     } catch (err) {
         console.error('[card-sources] GET error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -7,6 +7,7 @@ import type {
     VisitorAdminPagination,
     VisitorAdminApprovalRecord,
 } from '@/types/visitor-admin.types';
+import { getRequestCardStatus } from '@/features/visitor/admin/utils/cardStatus';
 
 export interface VisitorAdminTableProps {
     activeTab: 'general' | 'interviewee';
@@ -37,6 +38,28 @@ const parseDetails = (details: unknown): Record<string, any> => {
 };
 
 
+/** Printed and assigned counts of one request */
+function CardStatusCell({ request }: { request: VisitorAdminRequestRecord }) {
+    const s = getRequestCardStatus(request);
+    const notPrintedTitle = s.notPrintedNames.length > 0 ? `Not printed: ${s.notPrintedNames.join(', ')}` : 'All cards printed';
+    return (
+        <div className="flex flex-col items-center gap-1 whitespace-nowrap">
+            {s.printed === 0 && !s.tracked ? (
+                <span className="text-gray-400 text-[11px]" title="No print record">—</span>
+            ) : s.printed >= s.total ? (
+                <span className="text-[10px] font-bold text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200" title={notPrintedTitle}>Printed {s.printed}/{s.total}</span>
+            ) : s.printed > 0 ? (
+                <span className="text-[10px] font-bold text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200" title={notPrintedTitle}>Printed {s.printed}/{s.total}</span>
+            ) : (
+                <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200" title={notPrintedTitle}>Not printed</span>
+            )}
+            {s.assigned > 0 && (
+                <span className="text-[10px] font-bold text-cyan-700 bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200" title={`Access card: ${s.assignedCardNos.join(', ')}`}>Assigned {s.assigned}/{s.total}</span>
+            )}
+        </div>
+    );
+}
+
 export default function VisitorAdminTable({
     activeTab,
     requests,
@@ -55,7 +78,7 @@ export default function VisitorAdminTable({
     return (
         <div className="relative z-10 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-200 text-[#0f172a] max-w-[calc(100vw-2rem)]">
             <div className="overflow-x-auto">
-                <table className="w-full min-w-[1360px] text-left border-collapse">
+                <table className="w-full min-w-[1460px] text-left border-collapse">
                     <thead>
                         {activeTab === 'general' ? (
                             <tr className="bg-[#1a1a1a] text-white border-b border-gray-800 text-[10px] font-black uppercase tracking-widest">
@@ -78,6 +101,7 @@ export default function VisitorAdminTable({
                                 <th className="px-3 py-2 text-center">End Date</th>
                                 <th className="px-3 py-2 text-center">Factory Tour</th>
                                 <th className="px-3 py-2">Approval Progress</th>
+                                <th className="px-3 py-2 text-center">Card</th>
                                 <th className="px-3 py-2 text-center">Status</th>
                                 <th className="px-3 py-2 text-right">Actions</th>
                             </tr>
@@ -100,6 +124,7 @@ export default function VisitorAdminTable({
                                 <th className="px-3 py-2 text-center">Start Date</th>
                                 <th className="px-3 py-2 text-center">Start Time</th>
                                 <th className="px-3 py-2 text-center">Area</th>
+                                <th className="px-3 py-2 text-center">Card</th>
                                 <th className="px-3 py-2 text-center">Status</th>
                                 <th className="px-3 py-2 text-right">Actions</th>
                             </tr>
@@ -195,6 +220,9 @@ export default function VisitorAdminTable({
                                         ) : (
                                             <span className="text-gray-400 italic text-[10px]">No zones</span>
                                         )}
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                        <CardStatusCell request={request} />
                                     </td>
                                     <td className="px-3 py-2 text-center">
                                         <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase ${getStatusPillClass(request.status)}`}>
@@ -331,6 +359,9 @@ export default function VisitorAdminTable({
                                         })()}
                                     </td>
                                     <td className="px-3 py-2 text-center">
+                                        <CardStatusCell request={request} />
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
                                         <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase ${getStatusPillClass(request.status)}`}>
                                             {request.status}
                                         </span>
@@ -393,11 +424,11 @@ export default function VisitorAdminTable({
                             )
                         ))}
                         {loading && (
-                            <TableSkeleton rows={8} columns={14} />
+                            <TableSkeleton rows={8} columns={15} />
                         )}
                         {requests.length === 0 && !loading && (
                             <tr>
-                                <td colSpan={14} className="py-12">
+                                <td colSpan={15} className="py-12">
                                     <EmptyState
                                         title="No results matching your filters"
                                         description="Try adjusting your search criteria, status filters, or date range."

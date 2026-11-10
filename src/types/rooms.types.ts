@@ -47,12 +47,16 @@ export interface RoomCategoryUpdateData {
 }
 
 // --- Facility Rooms (RoomArea) ---
+/** send_all: everyone in approver_email approves; selected: the submitter picks from that list */
+export type RoomApprovalMode = 'send_all' | 'selected';
+
 export interface FacilityRoom {
     id: string;
     category: string;
     name: string;
     description: string | null;
     approver_email: string | null;
+    approval_mode: RoomApprovalMode;
     is_active: boolean;
     site_location?: string | null;
 }
@@ -62,6 +66,7 @@ export interface FacilityRoomFormData {
     name: string;
     description: string;
     approver_email: string;
+    approval_mode: RoomApprovalMode;
 }
 
 export interface FacilityRoomUpdateData {
@@ -70,6 +75,7 @@ export interface FacilityRoomUpdateData {
     name?: string;
     description?: string | null;
     approver_email?: string | null;
+    approval_mode?: RoomApprovalMode;
     is_active?: boolean;
 }
 

@@ -53,6 +53,12 @@ export interface VisitorAdminRequestRecord {
     profiles?: VisitorAdminUserProfile;
     request_approvals?: RequestApprovalRecord[];
     power_automate_run_id?: string | null;
+    /** Visitor codes of this request whose card was confirmed as printed */
+    printed_codes?: string[];
+    /** Active access cards given in Access Door */
+    assigned_cards?: { visitor_code: string; card_no: string }[];
+    /** false: rejected or started before printing was recorded */
+    card_tracked?: boolean;
 
     // Interviewee & legacy compatibility fields
     interviewee_name?: string;
@@ -90,8 +96,12 @@ export interface GetVisitorAdminRequestsParams {
     site?: string;
     category?: string;
     code?: string;
+    /** Finds the request of a visitor code, e.g. V04112607V2 (part of the code also matches) */
+    visitorCode?: string;
     submitter?: string;
     status?: string;
+    /** Comma list of not_printed, printed, assigned */
+    cardStatus?: string;
 }
 
 export interface GetVisitorAdminRequestsResponse {

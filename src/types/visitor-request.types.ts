@@ -56,6 +56,8 @@ export interface VisitorRequestFormData {
         costCenter: string;
     };
     roomIds: string[];
+    /** Approver picked per room id, for rooms whose approval mode is "selected" */
+    roomApprovers: Record<string, string>;
     intervieweeName: string;
     jobTitle: string;
     interviewDepartment: string;
@@ -88,6 +90,7 @@ export interface CreateVisitorRequestPayload {
     visitingSite: string;
     details: VisitorRequestDetails;
     roomIds?: string[];
+    roomApprovers?: Record<string, string>;
     bu?: string;
     functionalDept?: string;
     department?: string;

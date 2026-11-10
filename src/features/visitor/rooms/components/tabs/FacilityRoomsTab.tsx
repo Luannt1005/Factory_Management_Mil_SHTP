@@ -4,7 +4,8 @@ import React, { useState, useMemo } from 'react';
 import { ExcelColumnFilter } from '../ExcelColumnFilter';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
-import type { FacilityRoom, FacilityRoomUpdateData, RoomCategory } from '@/types/rooms.types';
+import type { FacilityRoom, FacilityRoomUpdateData, RoomApprovalMode, RoomCategory } from '@/types/rooms.types';
+import { ROOM_APPROVAL_MODES, ROOM_APPROVAL_MODE_LABELS } from '@/utils/roomApprovers';
 
 export interface FacilityRoomsTabProps {
     rooms: FacilityRoom[];
@@ -32,6 +33,7 @@ export function FacilityRoomsTab({
         name: [],
         description: [],
         approver_email: [],
+        approval_mode: [],
         is_active: []
     });
 
@@ -53,6 +55,9 @@ export function FacilityRoomsTab({
                 const val = room.approver_email || '(Blanks)';
                 if (!filters.approver_email.includes(val)) return false;
             }
+            if (filters.approval_mode.length > 0) {
+                if (!filters.approval_mode.includes(ROOM_APPROVAL_MODE_LABELS[room.approval_mode])) return false;
+            }
             if (filters.is_active.length > 0) {
                 const val = room.is_active ? 'Active' : 'Inactive';
                 if (!filters.is_active.includes(val)) return false;
@@ -65,10 +70,10 @@ export function FacilityRoomsTab({
         <div className="animate-in fade-in duration-300">
             <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-gray-100 text-[#0f172a]">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse table-fixed min-w-[900px]">
+                    <table className="w-full text-left border-collapse table-fixed min-w-[1040px]">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                <th className="p-4 w-[18%]">
+                                <th className="p-4 w-[16%]">
                                     <ExcelColumnFilter
                                         title="Category"
                                         allValues={rooms.map(r => r.category)}
@@ -76,7 +81,7 @@ export function FacilityRoomsTab({
                                         onFilterChange={(selected) => setFilters(prev => ({ ...prev, category: selected }))}
                                     />
                                 </th>
-                                <th className="p-4 w-[22%]">
+                                <th className="p-4 w-[18%]">
                                     <ExcelColumnFilter
                                         title="Room Name"
                                         allValues={rooms.map(r => r.name)}
@@ -84,7 +89,7 @@ export function FacilityRoomsTab({
                                         onFilterChange={(selected) => setFilters(prev => ({ ...prev, name: selected }))}
                                     />
                                 </th>
-                                <th className="p-4 w-[22%]">
+                                <th className="p-4 w-[18%]">
                                     <ExcelColumnFilter
                                         title="Description"
                                         allValues={rooms.map(r => r.description)}
@@ -100,6 +105,14 @@ export function FacilityRoomsTab({
                                         onFilterChange={(selected) => setFilters(prev => ({ ...prev, approver_email: selected }))}
                                     />
                                 </th>
+                                <th className="p-4 w-[10%]">
+                                    <ExcelColumnFilter
+                                        title="Approve Selection"
+                                        allValues={rooms.map(r => ROOM_APPROVAL_MODE_LABELS[r.approval_mode])}
+                                        selectedValues={filters.approval_mode}
+                                        onFilterChange={(selected) => setFilters(prev => ({ ...prev, approval_mode: selected }))}
+                                    />
+                                </th>
                                 <th className="p-4 text-center w-[10%]">
                                     <ExcelColumnFilter
                                         title="Status"
@@ -111,9 +124,9 @@ export function FacilityRoomsTab({
                                 <th className="p-4 text-right w-[8%]">
                                     <div className="flex items-center justify-end gap-2">
                                         <span>Action</span>
-                                        {(filters.category.length > 0 || filters.name.length > 0 || filters.description.length > 0 || filters.approver_email.length > 0 || filters.is_active.length > 0) && (
+                                        {(filters.category.length > 0 || filters.name.length > 0 || filters.description.length > 0 || filters.approver_email.length > 0 || filters.approval_mode.length > 0 || filters.is_active.length > 0) && (
                                             <button
-                                                onClick={() => setFilters({ category: [], name: [], description: [], approver_email: [], is_active: [] })}
+                                                onClick={() => setFilters({ category: [], name: [], description: [], approver_email: [], approval_mode: [], is_active: [] })}
                                                 className="text-[11px] font-bold text-red-600 hover:text-red-800 underline ml-2"
                                                 title="Reset all filters"
                                             >
@@ -126,7 +139,7 @@ export function FacilityRoomsTab({
                         </thead>
                         <tbody className="text-[0.875rem] font-medium bg-white">
                             {loading ? (
-                                <TableSkeleton rows={5} columns={6} />
+                                <TableSkeleton rows={5} columns={7} />
                             ) : filteredRooms.map((room) => (
                                 <tr key={room.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                     {editingRoom && editingRoom.id === room.id ? (
@@ -164,6 +177,16 @@ export function FacilityRoomsTab({
                                                     onChange={e => onEdit({ ...editingRoom, approver_email: e.target.value })}
                                                 />
                                             </td>
+                                            <td className="p-4">
+                                                <select
+                                                    className="w-full px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
+                                                    value={editingRoom.approval_mode}
+                                                    aria-label="Approve selection"
+                                                    onChange={e => onEdit({ ...editingRoom, approval_mode: e.target.value as RoomApprovalMode })}
+                                                >
+                                                    {ROOM_APPROVAL_MODES.map(mode => <option key={mode} value={mode}>{ROOM_APPROVAL_MODE_LABELS[mode]}</option>)}
+                                                </select>
+                                            </td>
                                             <td className="p-4 text-center">
                                                 <select
                                                     className="px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs"
@@ -193,6 +216,11 @@ export function FacilityRoomsTab({
                                             <td className="p-5 text-gray-600 truncate">
                                                 <span className={room.approver_email ? 'font-medium' : 'text-gray-400 italic'} title={room.approver_email || ''}>{room.approver_email || 'No email'}</span>
                                             </td>
+                                            <td className="p-5">
+                                                <span className={`text-[10px] px-2.5 py-1 rounded-full uppercase font-bold whitespace-nowrap border ${room.approval_mode === 'selected' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                                                    {ROOM_APPROVAL_MODE_LABELS[room.approval_mode]}
+                                                </span>
+                                            </td>
                                             <td className="p-5 text-xs font-bold text-center">
                                                 <span className={room.is_active ? 'text-green-500' : 'text-gray-400'}>{room.is_active ? '● Active' : '○ Inactive'}</span>
                                             </td>
@@ -208,7 +236,7 @@ export function FacilityRoomsTab({
                             ))}
                             {filteredRooms.length === 0 && !loading && (
                                 <tr>
-                                    <td colSpan={6} className="py-12">
+                                    <td colSpan={7} className="py-12">
                                         <EmptyState
                                             title="No rooms found"
                                             description="No facility rooms match the current filter."

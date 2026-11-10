@@ -9,12 +9,15 @@
 import type {
     CardBackground,
     CardBorderColor,
+    CardBox,
     CardCustomText,
     CardElementKey,
     CardElementLayout,
     CardFontFamily,
     CardFontWeight,
     CardFooterColor,
+    CardImage,
+    CardImageFit,
     CardPresetScope,
     CardPresetSettings,
     CardSize,
@@ -81,6 +84,12 @@ export const MIN_ELEMENT_SIZE_MM = 2;
 export const MAX_CUSTOM_TEXTS = 20;
 export const CUSTOM_TEXT_MAX_LENGTH = 200;
 export const LAYER_NAME_MAX_LENGTH = 60;
+export const MAX_CARD_IMAGES = 5;
+/** Longest stored data URL per image (about 500 KB); every template is loaded with the whole list */
+export const CARD_IMAGE_MAX_CHARS = 700_000;
+export const CARD_IMAGE_FITS: readonly CardImageFit[] = ['contain', 'cover'];
+/** Only raster formats are stored: they cannot carry scripts */
+const CARD_IMAGE_SRC = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
 
 /** Common badge sizes; any custom size within CARD_SIZE_LIMITS is also allowed */
 export const CARD_SIZE_PRESETS: { label: string; size: CardSize }[] = [
@@ -112,6 +121,7 @@ export const DEFAULT_CARD_SETTINGS: CardPresetSettings = {
         footer: { ...DEFAULT_ELEMENTS.footer },
     },
     customTexts: [],
+    images: [],
 };
 
 // ===============================
@@ -173,6 +183,29 @@ function normalizeLayout(input: unknown, fallback: CardElementLayout, size: Card
         textColor: pickColour(src.textColor),
         backgroundColor: pickColour(src.backgroundColor),
     };
+}
+
+/** Images with a missing, oversized or non-raster source are dropped */
+function normalizeImages(input: unknown, size: CardSize): CardImage[] {
+    return (Array.isArray(input) ? input : [])
+        .filter(isRecord)
+        .filter((img) => typeof img.src === 'string' && img.src.length <= CARD_IMAGE_MAX_CHARS && CARD_IMAGE_SRC.test(img.src))
+        .slice(0, MAX_CARD_IMAGES)
+        .map((img, i) => {
+            const w = pickNumber(img.w, size.widthMm, MIN_ELEMENT_SIZE_MM, size.widthMm);
+            const h = pickNumber(img.h, size.heightMm, MIN_ELEMENT_SIZE_MM, size.heightMm);
+            return {
+                id: typeof img.id === 'string' && img.id ? img.id.slice(0, 64) : `image-${i}`,
+                name: pickText(img.name, LAYER_NAME_MAX_LENGTH),
+                src: img.src as string,
+                visible: pickBool(img.visible, true),
+                x: pickNumber(img.x, 0, 0, size.widthMm - w),
+                y: pickNumber(img.y, 0, 0, size.heightMm - h),
+                w,
+                h,
+                fit: pickEnum(img.fit, CARD_IMAGE_FITS, 'contain'),
+            };
+        });
 }
 
 /** Templates saved before element positioning existed only had show/hide flags */
@@ -244,6 +277,7 @@ export function normalizeCardSettings(input: unknown): CardPresetSettings {
         },
         elements,
         customTexts,
+        images: normalizeImages(src.images, size),
     };
 }
 
@@ -285,11 +319,12 @@ export function resizeCardSettings(settings: CardPresetSettings, size: CardSize)
         size,
         elements,
         customTexts: settings.customTexts.map((t) => scaleLayout(t, sx, sy, false)),
+        images: settings.images.map((img) => ({ ...img, x: img.x * sx, y: img.y * sy, w: img.w * sx, h: img.h * sy })),
     });
 }
 
 /** Keeps an element box inside the card after a move / resize */
-export function clampToCard<T extends CardElementLayout>(el: T, size: CardSize, square = false): T {
+export function clampToCard<T extends CardBox>(el: T, size: CardSize, square = false): T {
     const w = clampMm(el.w, MIN_ELEMENT_SIZE_MM, size.widthMm);
     const h = square ? w : clampMm(el.h, MIN_ELEMENT_SIZE_MM, size.heightMm);
     return {
@@ -304,6 +339,18 @@ export function clampToCard<T extends CardElementLayout>(el: T, size: CardSize, 
 /** Name of a custom text in the layer list: its own name, else the first line of its content */
 export function customTextLabel(t: Pick<CardCustomText, 'name' | 'text'>): string {
     return t.name.trim() || t.text.split('\n')[0].trim() || 'Empty text';
+}
+
+/** New image centred on the card at up to 60% of its width, keeping the picture's proportions */
+export function createCardImage(size: CardSize, name: string, src: string, naturalWidth: number, naturalHeight: number): CardImage {
+    const ratio = naturalHeight / naturalWidth;
+    const w = Math.max(MIN_ELEMENT_SIZE_MM, Math.min(size.widthMm * 0.6, (size.heightMm * 0.6) / ratio));
+    const h = Math.max(MIN_ELEMENT_SIZE_MM, w * ratio);
+    const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `image-${Date.now()}`;
+    return clampToCard(
+        { id, name: name.slice(0, LAYER_NAME_MAX_LENGTH), src, visible: true, x: (size.widthMm - w) / 2, y: (size.heightMm - h) / 2, w, h, fit: 'contain' },
+        size
+    );
 }
 
 /** New custom text placed below the existing ones (optionally with initial content) */

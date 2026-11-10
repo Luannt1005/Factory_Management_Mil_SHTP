@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
 import type { VisitorRequestFormData } from '@/types/visitor-request.types';
 import type { FacilityRoom } from '@/types/rooms.types';
+import { needsApproverChoice } from '@/utils/roomApprovers';
 
 export interface RequestReviewModalProps {
     isOpen: boolean;
@@ -165,6 +166,9 @@ export const RequestReviewModal: React.FC<RequestReviewModalProps> = ({
                                     return r ? (
                                         <span key={rid} className="text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-1 rounded-full">
                                             {r.name}
+                                            {needsApproverChoice(r.approval_mode, r.approver_email) && (
+                                                <span className="font-medium break-all"> · {formData.roomApprovers[rid]}</span>
+                                            )}
                                         </span>
                                     ) : null;
                                 })}

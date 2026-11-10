@@ -52,8 +52,10 @@ export function buildRequestsQueryString(params: GetVisitorAdminRequestsParams):
     if (params.site) searchParams.set('site', params.site);
     if (params.category) searchParams.set('category', params.category);
     if (params.code) searchParams.set('code', params.code);
+    if (params.visitorCode) searchParams.set('visitorCode', params.visitorCode);
     if (params.submitter) searchParams.set('submitter', params.submitter);
     if (params.status) searchParams.set('status', params.status);
+    if (params.cardStatus) searchParams.set('cardStatus', params.cardStatus);
 
     return searchParams.toString();
 }

@@ -23,6 +23,9 @@ export interface VisitorAdminFiltersProps {
     onCategoriesChange: (val: string[]) => void;
     statusFilters: string[];
     onStatusFiltersChange: (val: string[]) => void;
+    /** Printed / assigned card filter */
+    cardStatuses: string[];
+    onCardStatusesChange: (val: string[]) => void;
     onClearFilters: () => void;
     selectedRowIds: string[];
     onDeleteSelected: () => void;
@@ -49,6 +52,12 @@ const STATUS_OPTIONS = [
     { label: 'REJECTED', value: 'REJECTED' }
 ];
 
+const CARD_STATUS_OPTIONS = [
+    { label: 'Not printed', value: 'not_printed' },
+    { label: 'Printed', value: 'printed' },
+    { label: 'Assigned', value: 'assigned' }
+];
+
 const SITE_OPTIONS = [
     { label: 'SHTP', value: 'SHTP' },
     { label: 'DDK', value: 'DDK' },
@@ -73,6 +82,8 @@ export default function VisitorAdminFilters({
     onCategoriesChange,
     statusFilters,
     onStatusFiltersChange,
+    cardStatuses,
+    onCardStatusesChange,
     onClearFilters,
     selectedRowIds,
     onDeleteSelected,
@@ -124,19 +135,20 @@ export default function VisitorAdminFilters({
         categories.length > 0 ||
         localCode ||
         localSubmitter ||
-        statusFilters.length > 0
+        statusFilters.length > 0 ||
+        cardStatuses.length > 0
     );
 
     return (
         <div className="relative z-30 bg-white/70 backdrop-blur-md p-3.5 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex flex-wrap items-end justify-between gap-3">
-                <div className="flex-1 min-w-[90px] max-w-[130px]">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Code</label>
+                <div className="flex-1 min-w-[120px] max-w-[160px]">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Visitor Code</label>
                     <input 
                         type="text" 
                         value={localCode}
                         onChange={(e) => setLocalCode(e.target.value)}
-                        placeholder="e.g. 2206"
+                        placeholder="e.g. V04112607V2"
                         className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm h-[38px] focus:outline-none focus:border-mwk transition-all"
                     />
                 </div>
@@ -154,7 +166,7 @@ export default function VisitorAdminFilters({
                     <DateRangeFilter label="Submit Date" value={submitDates} onChange={onSubmitDatesChange} presets={PAST_DATE_PRESETS} />
                 </div>
                 <div className="flex-1 min-w-[150px] max-w-[190px]">
-                    <DateRangeFilter label="From" value={visitDates} onChange={onVisitDatesChange} />
+                    <DateRangeFilter label="Start Date" value={visitDates} onChange={onVisitDatesChange} />
                 </div>
                 <div className="flex-1 min-w-[150px] max-w-[190px]">
                     <DateRangeFilter label="Complete Date" value={completeDates} onChange={onCompleteDatesChange} presets={PAST_DATE_PRESETS} />
@@ -188,6 +200,16 @@ export default function VisitorAdminFilters({
                         selected={statusFilters}
                         onChange={onStatusFiltersChange}
                         placeholder="All Status"
+                        vertical={true}
+                    />
+                </div>
+                <div className="flex-1 min-w-[110px] max-w-[150px]">
+                    <MultiSelectDropdown
+                        label="Card"
+                        options={CARD_STATUS_OPTIONS}
+                        selected={cardStatuses}
+                        onChange={onCardStatusesChange}
+                        placeholder="All Cards"
                         vertical={true}
                     />
                 </div>

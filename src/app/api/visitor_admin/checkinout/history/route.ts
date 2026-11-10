@@ -176,6 +176,8 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
                                         'visitorCode', r."requestId" || 'V' || v.idx,
                                         'checkInOutStatus', COALESCE(c.status, 'PENDING'),
                                         'cardNumber', c."cardNumber",
+                                        'cardPrintedAt', (SELECT cp.last_printed_at FROM visitor_card_prints cp WHERE cp.visitor_code = UPPER(r."requestId" || 'V' || v.idx)),
+                                        'cardIssuedAt', c."cardIssuedAt",
                                         'checkInTime', c."checkInTime",
                                         'checkOutTime', c."checkOutTime",
                                         'visitorIndex', (v.idx::int - 1)
@@ -197,6 +199,8 @@ const combinedRequestsCTE = `WITH CombinedRequests AS (
                                         'visitorCode', COALESCE(r."visitorCode_override", r."requestId"),
                                         'checkInOutStatus', COALESCE(c.status, 'PENDING'),
                                         'cardNumber', c."cardNumber",
+                                        'cardPrintedAt', (SELECT cp.last_printed_at FROM visitor_card_prints cp WHERE cp.visitor_code = UPPER(COALESCE(r."visitorCode_override", r."requestId" || 'V1'))),
+                                        'cardIssuedAt', c."cardIssuedAt",
                                         'checkInTime', c."checkInTime",
                                         'checkOutTime', c."checkOutTime",
                                         'visitorIndex', 0

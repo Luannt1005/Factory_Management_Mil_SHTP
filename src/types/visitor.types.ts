@@ -12,6 +12,10 @@ export interface Visitor {
     visitorCompany?: string;
     visitorCode?: string;
     cardNumber?: string;
+    /** When the card was last confirmed as printed; null = no print recorded */
+    cardPrintedAt?: string | null;
+    /** When the printed card was handed out at the gate */
+    cardIssuedAt?: string | null;
     checkInOutStatus: VisitorCheckInOutStatus;
     checkInTime?: string | null;
     checkOutTime?: string | null;
