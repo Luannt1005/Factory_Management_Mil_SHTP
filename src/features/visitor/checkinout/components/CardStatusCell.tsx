@@ -30,7 +30,8 @@ export default function CardStatusCell({ visitor, saving, canPrint, onIssue, onP
         );
         if (!onReverse) return issued;
         return (
-            <div className="flex flex-col items-center gap-1">
+            // Same box as the other buttons, so every row lines up; the icon hangs outside on the right
+            <div className="relative mx-auto w-[104px]">
                 {issued}
                 <button
                     type="button"
@@ -39,10 +40,13 @@ export default function CardStatusCell({ visitor, saving, canPrint, onIssue, onP
                         if (window.confirm('Reverse this issue? The card goes back to "Printed, not issued".')) onReverse();
                     }}
                     disabled={saving}
-                    title="Admin only: undo the issue"
-                    className="cursor-pointer text-[9px] font-bold uppercase text-red-600 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Reverse issue (admin only)"
+                    aria-label="Reverse issue"
+                    className="absolute left-full top-1/2 ml-1 -translate-y-1/2 rounded p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                 >
-                    Reverse
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
                 </button>
             </div>
         );
