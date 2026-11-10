@@ -107,7 +107,12 @@ export async function GET(request: Request) {
             }
         }
 
-        if (action && action !== 'ALL') {
+        if (action === 'ISSUE_CARD') {
+            // Issues were first logged as INPUT_CARD with details.action = 'ISSUE_CARD'
+            whereConditions.push(`(action = $${paramCount} OR (action = 'INPUT_CARD' AND details->>'action' = 'ISSUE_CARD'))`);
+            queryParams.push(action);
+            paramCount += 1;
+        } else if (action && action !== 'ALL') {
             whereConditions.push(`action = $${paramCount}`);
             queryParams.push(action);
             paramCount += 1;

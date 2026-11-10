@@ -13,6 +13,8 @@ export interface RequestCheckInModalProps {
     canPrintCards: boolean;
     onIssueCard: (requestId: string, v: CheckInOutVisitorRecord, requestCode?: string) => Promise<void>;
     onPrintRequest: (request: PrintableRequest) => void;
+    /** Visitor admins only */
+    onReverseIssueCard?: (requestId: string, v: CheckInOutVisitorRecord, requestCode?: string) => Promise<void>;
     onAction: (requestId: string, v: CheckInOutVisitorRecord, action: CheckInOutAction, requestCode?: string) => Promise<void>;
     actionLoading: string | null;
     isSecurity?: boolean;
@@ -29,6 +31,7 @@ export default function RequestCheckInModal({
     canPrintCards,
     onIssueCard,
     onPrintRequest,
+    onReverseIssueCard,
     onAction,
     actionLoading,
     isSecurity,
@@ -270,6 +273,7 @@ export default function RequestCheckInModal({
                                                         saving={isLoading}
                                                         canPrint={canPrintCards}
                                                         onIssue={() => onIssueCard(request.requestId, v, request.requestCode)}
+                                                        onReverse={onReverseIssueCard ? () => onReverseIssueCard(request.requestId, v, request.requestCode) : undefined}
                                                         onPrint={() => onPrintRequest(request)}
                                                     />
                                                 </td>

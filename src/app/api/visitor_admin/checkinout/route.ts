@@ -4,6 +4,7 @@ import { getVisitorDbConnection } from '@/lib/visitor-db';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { hasPageAccess } from '@/lib/auth-server';
+import { isVisitorAdmin } from '@/utils/visitorRoles';
 
 /** Card number saved when a printed card is handed out, so logs and reports keep showing it as before */
 const ISSUED_CARD_VALUE = 'đã phát';
@@ -343,18 +344,50 @@ export async function POST(request: Request) {
             `, [requestId, visitorIndex, visitorName, visitorCode, ISSUED_CARD_VALUE]);
 
             try {
-                // Logged as INPUT_CARD: the Check-in/out logs page and its filter know that action
                 await visitorPool.query(`
                     INSERT INTO checkinout_action_history
                         (request_id, request_code, visitor_index, visitor_code, visitor_name, action, card_number, performed_by, performed_by_name, details, created_at)
                     VALUES
-                        ($1, $2, $3, $4, $5, 'INPUT_CARD', $6, $7, $8, $9, NOW())
+                        ($1, $2, $3, $4, $5, 'ISSUE_CARD', $6, $7, $8, $9, NOW())
                 `, [requestId, effectiveRequestCode, visitorIndex, visitorCode, visitorName, issuedRows[0].cardNumber, performedBy, performedByName, JSON.stringify({ action: 'ISSUE_CARD', cardNumber: issuedRows[0].cardNumber })]);
             } catch (logErr) {
                 console.error('Failed to insert checkinout_action_history for ISSUE_CARD:', logErr);
             }
 
             return NextResponse.json({ message: 'Card issued successfully', cardIssuedAt: issuedRows[0].cardIssuedAt, cardNumber: issuedRows[0].cardNumber });
+        } else if (action === 'REVERSE_ISSUE_CARD') {
+            if (!isVisitorAdmin(session.user)) {
+                return NextResponse.json({ error: 'Only Visitor admins can reverse an issued card' }, { status: 403 });
+            }
+
+            // Clears the card and issue time only; check-in / check-out times stay as they are
+            const { rows: reversedRows } = await visitorPool.query<{ previousCardNumber: string | null; previousIssuedAt: string | null }>(`
+                WITH previous AS (
+                    SELECT "cardNumber", "cardIssuedAt" FROM "VisitorCheckInOut" WHERE "visitorCode" = $1 FOR UPDATE
+                )
+                UPDATE "VisitorCheckInOut" c
+                SET "cardNumber" = NULL, "cardIssuedAt" = NULL, "updatedAt" = NOW()
+                FROM previous
+                WHERE c."visitorCode" = $1
+                RETURNING previous."cardNumber" AS "previousCardNumber", previous."cardIssuedAt" AS "previousIssuedAt"
+            `, [visitorCode]);
+
+            if (reversedRows.length === 0 || ((reversedRows[0].previousCardNumber ?? '').trim() === '' && !reversedRows[0].previousIssuedAt)) {
+                return NextResponse.json({ error: 'This card has not been issued' }, { status: 409 });
+            }
+
+            try {
+                await visitorPool.query(`
+                    INSERT INTO checkinout_action_history
+                        (request_id, request_code, visitor_index, visitor_code, visitor_name, action, card_number, performed_by, performed_by_name, details, created_at)
+                    VALUES
+                        ($1, $2, $3, $4, $5, 'REVERSE_ISSUE_CARD', $6, $7, $8, $9, NOW())
+                `, [requestId, effectiveRequestCode, visitorIndex, visitorCode, visitorName, reversedRows[0].previousCardNumber, performedBy, performedByName, JSON.stringify({ action: 'REVERSE_ISSUE_CARD', previousCardNumber: reversedRows[0].previousCardNumber, previousIssuedAt: reversedRows[0].previousIssuedAt })]);
+            } catch (logErr) {
+                console.error('Failed to insert checkinout_action_history for REVERSE_ISSUE_CARD:', logErr);
+            }
+
+            return NextResponse.json({ message: 'Card issue reversed successfully', cardIssuedAt: null, cardNumber: null });
         } else if (action === 'UPDATE_CARD' || action === 'INPUT_CARD') {
             await visitorPool.query(`
                 INSERT INTO "VisitorCheckInOut" 

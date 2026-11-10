@@ -139,6 +139,24 @@ export default function CheckInOutLogsTable() {
                         INPUT CARD
                     </span>
                 );
+            case 'ISSUE_CARD':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black bg-green-50 text-green-700 border border-green-200/80 shadow-xs">
+                        <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        ISSUE CARD
+                    </span>
+                );
+            case 'REVERSE_ISSUE_CARD':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black bg-orange-50 text-orange-700 border border-orange-200/80 shadow-xs">
+                        <svg className="w-3.5 h-3.5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
+                        REVERSE ISSUE
+                    </span>
+                );
             case 'REVERSE':
             case 'RESET':
                 return (
@@ -296,6 +314,8 @@ export default function CheckInOutLogsTable() {
                                 <option value="CHECK_IN">Check In (CHECK_IN)</option>
                                 <option value="CHECK_OUT">Check Out (CHECK_OUT)</option>
                                 <option value="INPUT_CARD">Input Card (INPUT_CARD)</option>
+                                <option value="ISSUE_CARD">Issue Card (ISSUE_CARD)</option>
+                                <option value="REVERSE_ISSUE_CARD">Reverse Issue (REVERSE_ISSUE_CARD)</option>
                                 <option value="REVERSE">Reverse (REVERSE)</option>
                             </select>
                         </div>
@@ -646,6 +666,10 @@ export default function CheckInOutLogsTable() {
                                             <div className="text-[11px] text-gray-600 max-w-[280px] truncate" title={typeof log.details === 'object' ? JSON.stringify(log.details) : String(log.details || '-')}>
                                                 {log.action === 'INPUT_CARD' && log.cardNumber ? (
                                                     <span className="text-blue-600 font-medium">Assigned card: #{log.cardNumber}</span>
+                                                ) : log.action === 'ISSUE_CARD' ? (
+                                                    <span className="text-green-600 font-medium">Printed card handed to the visitor</span>
+                                                ) : log.action === 'REVERSE_ISSUE_CARD' ? (
+                                                    <span className="text-orange-600 font-medium">Card issue reversed</span>
                                                 ) : log.action === 'CHECK_IN' ? (
                                                     <span className="text-emerald-600 font-medium">Visitor entered facility</span>
                                                 ) : log.action === 'CHECK_OUT' ? (

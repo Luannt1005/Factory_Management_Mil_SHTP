@@ -11,20 +11,40 @@ export interface CardStatusCellProps {
     canPrint: boolean;
     onIssue: () => void;
     onPrint: () => void;
+    /** Visitor admins only: undo an issue. Without it the Issued button has no action. */
+    onReverse?: () => void;
 }
 
 const BUTTON_CLASS = 'mx-auto block w-[104px] whitespace-nowrap rounded px-1 py-1.5 text-center text-[11px] font-bold transition-colors';
 const PRINT_STATE_CLASS = 'text-[9px] font-medium';
 
 /** One button per visitor: print the card first, then hand it out. Issued cards cannot be clicked again. */
-export default function CardStatusCell({ visitor, saving, canPrint, onIssue, onPrint }: CardStatusCellProps) {
+export default function CardStatusCell({ visitor, saving, canPrint, onIssue, onPrint, onReverse }: CardStatusCellProps) {
     const status = getCardIssueStatus(visitor);
 
     if (status === 'issued') {
-        return (
+        const issued = (
             <button type="button" disabled title={visitor.cardNumber ?? undefined} className={`${BUTTON_CLASS} cursor-not-allowed bg-gray-200 text-gray-500`}>
                 ISSUED
             </button>
+        );
+        if (!onReverse) return issued;
+        return (
+            <div className="flex flex-col items-center gap-1">
+                {issued}
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Reverse this issue? The card goes back to "Printed, not issued".')) onReverse();
+                    }}
+                    disabled={saving}
+                    title="Admin only: undo the issue"
+                    className="cursor-pointer text-[9px] font-bold uppercase text-red-600 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    Reverse
+                </button>
+            </div>
         );
     }
 

@@ -12,7 +12,7 @@ import { removeAccents } from '@/utils/string';
 import { formatDateShort, formatDateTime } from '@/utils/date';
 import { getCategoryBadgeClass } from '@/utils/badge';
 import { toCardRequestType } from '@/utils/visitorCategory';
-import { canPrintVisitorCards } from '@/utils/visitorRoles';
+import { canPrintVisitorCards, isVisitorAdmin } from '@/utils/visitorRoles';
 import type {
     CheckInOutAction,
     CheckInOutFilterState,
@@ -40,6 +40,7 @@ export default function CheckInOutManagement() {
     const isSecurity = user?.app_role_names?.includes('Security') || false;
     const isReceptionist = user?.app_role_names?.includes('Receptionist') || false;
     const canPrintCards = canPrintVisitorCards(user);
+    const canReverseIssue = isVisitorAdmin(user);
 
     const [history, setHistory] = useState<CheckInOutRequestRecord[]>([]);
     const [loading, setLoading] = useState(false);
@@ -161,6 +162,9 @@ export default function CheckInOutManagement() {
                     // The server removes the whole check-in row, card and issue time included
                     return { ...visitor, checkInOutStatus: 'PENDING', checkInTime: null, checkOutTime: null, cardNumber: undefined, cardIssuedAt: null };
                 }
+                if (action === 'REVERSE_ISSUE_CARD') {
+                    return { ...visitor, cardNumber: undefined, cardIssuedAt: null };
+                }
                 if (action === 'ISSUE_CARD') {
                     return { ...visitor, cardNumber: result.cardNumber ?? undefined, cardIssuedAt: result.cardIssuedAt ?? nowIso };
                 }
@@ -190,6 +194,9 @@ export default function CheckInOutManagement() {
 
     const handleIssueCard = (requestId: string, v: CheckInOutVisitorRecord, requestCode?: string) =>
         handleAction(requestId, v, 'ISSUE_CARD', requestCode);
+
+    const handleReverseIssueCard = (requestId: string, v: CheckInOutVisitorRecord, requestCode?: string) =>
+        handleAction(requestId, v, 'REVERSE_ISSUE_CARD', requestCode);
 
     /** Print page with every visitor of the request; the user comes back here to click Issue */
     const handlePrintRequest = (request: PrintableRequest) => {
@@ -480,6 +487,7 @@ export default function CheckInOutManagement() {
                                     canPrintCards={canPrintCards}
                                     onIssueCard={handleIssueCard}
                                     onPrintRequest={handlePrintRequest}
+                                    onReverseIssueCard={canReverseIssue ? handleReverseIssueCard : undefined}
                                     onAction={handleAction}
                                     actionLoading={actionLoading}
                                     isSecurity={isSecurity}
@@ -497,6 +505,7 @@ export default function CheckInOutManagement() {
                                     canPrintCards={canPrintCards}
                                     onIssueCard={handleIssueCard}
                                     onPrintRequest={handlePrintRequest}
+                                    onReverseIssueCard={canReverseIssue ? handleReverseIssueCard : undefined}
                                     onAction={handleAction}
                                     actionLoading={actionLoading}
                                     isSecurity={isSecurity}
@@ -565,6 +574,7 @@ export default function CheckInOutManagement() {
                 canPrintCards={canPrintCards}
                 onIssueCard={handleIssueCard}
                 onPrintRequest={handlePrintRequest}
+                onReverseIssueCard={canReverseIssue ? handleReverseIssueCard : undefined}
                 onAction={handleAction}
                 actionLoading={actionLoading}
                 isSecurity={isSecurity}

@@ -15,7 +15,9 @@ export type CheckInOutAction =
     | 'UPDATE_CARD' 
     | 'REVERSE' 
     | 'INPUT_CARD'
-    | 'ISSUE_CARD';
+    | 'ISSUE_CARD'
+    /** Visitor admins only: the card goes back to "printed, not issued" */
+    | 'REVERSE_ISSUE_CARD';
 
 export interface CheckInOutActionPayload {
     action: CheckInOutAction;
@@ -29,8 +31,8 @@ export interface CheckInOutActionPayload {
 
 export interface CheckInOutActionResponse {
     message: string;
-    /** ISSUE_CARD only */
-    cardIssuedAt?: string;
+    /** ISSUE_CARD / REVERSE_ISSUE_CARD only (null after a reverse) */
+    cardIssuedAt?: string | null;
     cardNumber?: string | null;
 }
 

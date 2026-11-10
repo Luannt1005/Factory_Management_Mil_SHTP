@@ -19,6 +19,8 @@ export interface GroupViewTableProps {
     canPrintCards: boolean;
     onIssueCard: (requestId: string, v: CheckInOutVisitorRecord, requestCode?: string) => Promise<void>;
     onPrintRequest: (request: PrintableRequest) => void;
+    /** Visitor admins only */
+    onReverseIssueCard?: (requestId: string, v: CheckInOutVisitorRecord, requestCode?: string) => Promise<void>;
     onAction: (requestId: string, v: CheckInOutVisitorRecord, action: CheckInOutAction, requestCode?: string) => Promise<void>;
     actionLoading: string | null;
     isSecurity?: boolean;
@@ -36,6 +38,7 @@ export default function GroupViewTable({
     canPrintCards,
     onIssueCard,
     onPrintRequest,
+    onReverseIssueCard,
     onAction,
     actionLoading,
     isSecurity,
@@ -150,6 +153,7 @@ export default function GroupViewTable({
                                                                             saving={actionLoading === `${req.requestId}-${v.visitorIndex}`}
                                                                             canPrint={canPrintCards}
                                                                             onIssue={() => onIssueCard(req.requestId, v, req.requestCode)}
+                                                                            onReverse={onReverseIssueCard ? () => onReverseIssueCard(req.requestId, v, req.requestCode) : undefined}
                                                                             onPrint={() => onPrintRequest(req)}
                                                                         />
                                                                     </td>
